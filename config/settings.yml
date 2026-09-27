@@ -1,0 +1,49 @@
+# Genel ayarlar. Anahtarlar/gizli bilgiler burada DEĞİL, GitHub Secrets'ta durur.
+
+analysis:
+  enabled: true
+  # Hızlı ve ucuz sınıflandırma için Haiku; daha derin yorum istersen claude-sonnet-5 yaz.
+  model: claude-haiku-4-5-20251001
+  max_items_per_run: 40        # her çalıştırmada en fazla kaç yeni habere AI yorumu yapılsın (maliyet freni)
+  language: tr                 # yorumlar hangi dilde yazılsın
+
+notify:
+  telegram: true
+  min_confidence: 70           # bu güvenin altındaki sinyaller bildirilmez
+  only_directional: true       # nötr değerlendirmeleri bildirme
+  min_materiality: medium      # low | medium | high
+
+feed:
+  keep_items: 600              # panelde tutulacak en fazla kayıt
+  lookback_hours: 48           # ilk çalıştırmada ne kadar geriye bakılsın
+
+sources:
+  kap:
+    enabled: true
+    scope: watchlist           # watchlist | all  (all: tüm KAP bildirimleri panele düşer, AI sadece watchlist'e)
+  sec_edgar:
+    enabled: true
+    forms: ["8-K", "10-Q", "10-K", "4", "SC 13D", "SC 13G", "6-K", "S-1"]
+  google_news:
+    enabled: true
+  yahoo_finance_rss:
+    enabled: true
+  turkish_news_rss:
+    enabled: true
+    feeds:
+      - name: AA Ekonomi
+        url: https://www.aa.com.tr/tr/rss/default?cat=ekonomi
+      - name: Bloomberg HT
+        url: https://www.bloomberght.com/rss
+      - name: Dünya Gazetesi
+        url: https://www.dunya.com/rss
+  reddit:
+    enabled: true
+    subreddits: ["stocks", "wallstreetbets", "investing"]
+  stocktwits:
+    enabled: true
+  x_twitter:
+    enabled: true              # X_BEARER_TOKEN secret'ı yoksa sessizce atlanır
+    max_results_per_query: 10
+  reports_inbox:
+    enabled: true              # inbox/ klasörüne atılan PDF raporları (aracı kurum, değerleme) analiz edilir

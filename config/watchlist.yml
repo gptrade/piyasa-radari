@@ -1,0 +1,46 @@
+# İzleme listesi. Bir hisse eklemek için aynı formatta bir satır ekle ve commit et.
+# aliases: haber metninde bu hisseyi tanımak için aranacak isimler (büyük/küçük harf duyarsız).
+# yahoo: fiyat verisi için Yahoo Finance sembolü (BIST için .IS eki).
+
+bist:
+  - symbol: VAKBN
+    name: VakıfBank
+    aliases: ["VakıfBank", "Vakıfbank", "Türkiye Vakıflar Bankası"]
+  - symbol: TTKOM
+    name: Türk Telekom
+    aliases: ["Türk Telekom", "Türk Telekomünikasyon"]
+  - symbol: KLNMA
+    name: Türkiye Kalkınma ve Yatırım Bankası
+    aliases: ["Kalkınma ve Yatırım Bankası", "TKYB"]
+  - symbol: GOZDE
+    name: Gözde Girişim
+    aliases: ["Gözde Girişim"]
+  - symbol: GLRMK
+    name: Gülermak
+    aliases: ["Gülermak"]
+  - symbol: ENTRA
+    name: IC Enterra Yenilenebilir Enerji
+    aliases: ["Enterra", "IC Enterra"]
+  - symbol: A1CAP
+    name: A1 Capital Yatırım
+    aliases: ["A1 Capital"]
+  - symbol: THYAO
+    name: Türk Hava Yolları
+    aliases: ["Türk Hava Yolları", "THY"]
+
+us:
+  - symbol: NVDA
+    name: NVIDIA
+    aliases: ["Nvidia"]
+  - symbol: AAPL
+    name: Apple
+    aliases: ["Apple"]
+  - symbol: MSFT
+    name: Microsoft
+    aliases: ["Microsoft"]
+  - symbol: TSLA
+    name: Tesla
+    aliases: ["Tesla"]
+  - symbol: AMD
+    name: Advanced Micro Devices
+    aliases: ["AMD"]
