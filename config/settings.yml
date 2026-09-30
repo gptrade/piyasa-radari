@@ -7,7 +7,8 @@ analysis:
   # Sağlayıcı sırası: ilki kullanılamazsa (anahtar yok, kredi bitti, kota, erişim hatası) sıradakine geçilir.
   providers: [claude, gemini]
   gemini_model: gemini-3.8-flash
-  gemini_fallback_models: [gemini-flash-latest, gemini-3.7-flash]
+  # Model yoğun (503) ya da kotada (429) ise sırayla bunlar denenir
+  gemini_fallback_models: [gemini-3.7-flash, gemini-flash-latest, gemini-3.5-flash-lite]
   max_items_per_run: 40        # her çalıştırmada en fazla kaç yeni habere AI yorumu yapılsın (maliyet freni)
   language: tr                 # yorumlar hangi dilde yazılsın
 

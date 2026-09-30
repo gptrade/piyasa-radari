@@ -114,3 +114,32 @@ def test_both_down_returns_none(keys, monkeypatch):
     monkeypatch.setattr(GeminiProvider, "assess", lambda self, s, p: (_ for _ in ()).throw(ProviderDown("y")))
     a = Analyzer({"analysis": {}})
     assert a.assess(ITEM) is None and not a.can_run()
+
+
+def test_gemini_overloaded_model_tries_next(monkeypatch):
+    import requests
+    monkeypatch.setattr(analyze.time, "sleep", lambda s: None)
+    seen = []
+
+    def post(url, **kw):
+        m = url.split("/models/")[1].split(":")[0]
+        seen.append(m)
+        if m == "gemini-3.8-flash":
+            return FakeResp(503, {"error": {"code": 503, "message": "high demand"}})
+        return gemini_ok(GOOD)
+    monkeypatch.setattr(requests, "post", post)
+    g = GeminiProvider(["gemini-3.8-flash", "gemini-3.7-flash"], "k")
+    assert g.assess("s", "p")["sentiment"] == "bullish"
+    assert seen == ["gemini-3.8-flash"] * 3 + ["gemini-3.7-flash"] and g.model == "gemini-3.7-flash"
+    assert "gemini-3.8-flash" in g.models                # geçici hata: model listeden çıkarılmaz
+    seen.clear()
+    g.assess("s", "p")
+    assert seen == ["gemini-3.7-flash"]                   # sonraki kayıtta doğrudan çalışan model
+
+
+def test_gemini_all_models_overloaded_is_down(monkeypatch):
+    import requests
+    monkeypatch.setattr(analyze.time, "sleep", lambda s: None)
+    monkeypatch.setattr(requests, "post", lambda url, **kw: FakeResp(503, {"error": {"message": "busy"}}))
+    with pytest.raises(ProviderDown, match="busy"):
+        GeminiProvider(["a", "b"], "k").assess("s", "p")

@@ -174,6 +174,13 @@ def parse_json_text(text: str) -> dict | None:
     return None
 
 
+def _gemini_msg(r) -> str:
+    try:
+        return str(r.json()["error"]["message"])[:140]
+    except Exception:
+        return r.text[:140]
+
+
 class GeminiProvider:
     name = "Gemini"
 
@@ -203,22 +210,27 @@ class GeminiProvider:
                     continue
                 if r.status_code == 200:
                     self.model = model
+                    if self.models[0] != model:       # çalışan modeli bu tur için başa al (tekrar beklemesin)
+                        self.models.remove(model)
+                        self.models.insert(0, model)
                     data = r.json()
                     parts = ((data.get("candidates") or [{}])[0].get("content") or {}).get("parts") or []
                     text = "".join(p.get("text", "") for p in parts if not p.get("thought"))
                     return parse_json_text(text)
-                last = f"HTTP {r.status_code}: {r.text[:160]}"
-                if r.status_code == 404:              # model adı yok/emekli: sıradaki modeli dene
+                last = f"{model} HTTP {r.status_code}: {_gemini_msg(r)}"
+                if r.status_code == 404:              # model adı yok/emekli: listeden çıkar, sıradakini dene
                     self.models.remove(model)
                     break
-                if r.status_code in (429, 500, 502, 503) and attempt < 2:
-                    time.sleep(3 * (attempt + 1))
-                    continue
-                if r.status_code in (400,) and "API key" not in r.text:
+                if r.status_code in (429, 500, 502, 503, 504):
+                    if attempt < 2:
+                        time.sleep(3 * (attempt + 1))
+                        continue
+                    break                             # bu model yoğun/kotada: sıradaki modeli dene
+                if r.status_code == 400 and "API key" not in r.text:
                     raise RuntimeError(last)          # bu kayda özgü hata; sağlayıcı ayakta
-                raise ProviderDown(last)
+                raise ProviderDown(last)              # 401/403: anahtar geçersiz
             else:
-                raise ProviderDown(last)
+                continue                              # ağ hatası: sıradaki model
         raise ProviderDown(last or "Gemini modeli bulunamadı")
 
 
@@ -239,7 +251,7 @@ class Analyzer:
                 self.providers.append(ClaudeProvider(cfg.get("model", "claude-haiku-4-5-20251001")))
             if name == "gemini" and on and os.environ.get("GEMINI_API_KEY"):
                 models = [cfg.get("gemini_model", "gemini-3.8-flash"),
-                          *(cfg.get("gemini_fallback_models") or ["gemini-flash-latest", "gemini-3.7-flash"])]
+                          *(cfg.get("gemini_fallback_models") or ["gemini-3.7-flash", "gemini-flash-latest"])]
                 self.providers.append(GeminiProvider(models, os.environ["GEMINI_API_KEY"]))
         self.down: dict[str, str] = {}
         if not self.providers:
