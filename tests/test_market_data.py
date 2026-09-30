@@ -61,3 +61,24 @@ def test_source_tier_and_event():
     assert classify_event({"title": "PPK kararı", "source_type": "macro"}) == "macro"
     d = enrich({"title": "Tesla Q3 earnings beat", "source": "Yahoo Finance", "source_type": "news"})
     assert d["event"] == "earnings" and d["tier"] == 2
+
+
+def test_ema_tv_matches_tradingview_definition():
+    xs = [float(i) for i in range(1, 21)]
+    e = prices.ema_tv(xs, 5)
+    assert e[:4] == [None] * 4 and e[4] == 3.0          # SMA ile başlar
+    assert all(abs(v - (i + 1 - 2)) < 1e-9 for i, v in enumerate(e) if v is not None)   # doğrusal seride (n-1)/2 gecikme
+    assert prices.ema_tv([1.0, 2.0], 5) == [None, None]
+
+
+def test_ema_alignment_crosses_and_weekly():
+    up = [50 * (1.004 ** i) for i in range(320)]
+    ta = prices.technicals(bars(up))
+    assert ta["ema_align"] == "boğa" and ta["trend"] == "yukarı" and ta["weekly_trend"] == "yukarı"
+    assert all(ta["ema"][k]["above"] for k in ("14", "34", "55", "200"))
+    assert ta["view"] in ("al", "güçlü al")
+    # uzun düşüşten sonra sert dönüş: EMA14 EMA34'ü yukarı keser
+    v = [100 * (0.995 ** i) for i in range(300)] + [100 * (0.995 ** 300) * (1.03 ** i) for i in range(12)]
+    ta = prices.technicals(bars(v))
+    assert prices._cross([1, 2, 3, 5], [4, 4, 4, 4]) == "up" and prices._cross([5, 4, 3], [3.5] * 3) == "down"
+    assert ta["atr_pct"] is not None and ta["bb_pct"] is not None

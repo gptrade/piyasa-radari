@@ -109,3 +109,15 @@ def test_telegram_hello_sent_once(sandbox, monkeypatch):
     assert len(calls) == 1 and "bağlandı" in calls[0]
     feed = json.loads((sandbox / "feed.json").read_text())
     assert feed["sources"][-1]["name"] == "Telegram" and feed["sources"][-1]["ok"] is True
+
+
+def test_earnings_items_window():
+    from datetime import timedelta as td
+    from radar.config import Stock
+    today = now_utc().date()
+    st = [Stock("NVDA", "NVIDIA", "US", []), Stock("AAPL", "Apple", "US", []), Stock("THYAO", "THY", "BIST", [])]
+    px = {"NVDA": {"next_earnings": {"date": (today + td(days=3)).isoformat(), "eps_est": 1.2}},
+          "AAPL": {"next_earnings": {"date": (today + td(days=30)).isoformat()}}, "THYAO": {}}
+    items = pipeline.earnings_items(st, px, 7)
+    assert [i.tickers for i in items] == [["NVDA"]] and items[0].extra["no_ai"] and "EPS beklentisi 1.2" in items[0].title
+    assert items[0].id == pipeline.earnings_items(st, px, 7)[0].id      # aynı tarih → aynı kayıt, tekrar eklenmez

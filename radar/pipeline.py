@@ -68,6 +68,31 @@ def price_context(item: Item, px: dict[str, dict]) -> str:
     return "; ".join(parts)
 
 
+def earnings_items(stocks, px: dict, days_ahead: int) -> list[Item]:
+    from datetime import date
+    from .models import make_id
+    out = []
+    today = now_utc().date()
+    for st in stocks:
+        ne = (px.get(st.symbol) or {}).get("next_earnings")
+        if not ne:
+            continue
+        d = date.fromisoformat(ne["date"])
+        if not (0 <= (d - today).days <= days_ahead):
+            continue
+        est = f" · EPS beklentisi {ne['eps_est']}" if ne.get("eps_est") is not None else ""
+        gun = d.strftime("%d.%m.%Y")
+        out.append(Item(
+            id=make_id("earn", st.symbol, ne["date"]), source="Kazanç takvimi", source_type="news",
+            market=st.market, title=f"{st.symbol} bilançosu {gun} tarihinde bekleniyor{est}",
+            summary=f"{st.name} için bir sonraki finansal sonuç açıklaması {gun}.{est}",
+            url=f"https://finance.yahoo.com/quote/{st.yahoo}/", published=iso(now_utc()),
+            tickers=[st.symbol], lang="tr", extra={"earnings_date": ne["date"], "no_ai": True,
+                                                   "eps_est": ne.get("eps_est")},
+        ))
+    return out
+
+
 def run() -> dict:
     settings = load_settings()
     stocks = load_watchlist()
@@ -137,6 +162,17 @@ def run() -> dict:
         status.append({"name": "TCMB EVDS", "ok": False, "count": 0, "error": str(e)[:200]})
     watch_desc = ", ".join(f"{s.symbol} ({s.name})" for s in stocks)
 
+    # 3b) Yaklaşan bilançolar (Yahoo takvimi): N gün kala akışa bir kayıt
+    ecfg = (settings.get("sources") or {}).get("earnings_calendar") or {}
+    n_earn = 0
+    if ecfg.get("enabled", True):
+        for e in earnings_items(stocks, px, int(ecfg.get("days_ahead", 7))):
+            if e.id not in seen_ids:
+                seen_ids[e.id] = None
+                new.append(e)
+                n_earn += 1
+        status.append({"name": "Kazanç takvimi", "ok": True, "count": n_earn})
+
     # 4) AI değerlendirme — önce rapor & bildirim, sonra en yeni haberler
     analyzer = Analyzer(settings)
     watch = {s.symbol for s in stocks}
@@ -144,6 +180,8 @@ def run() -> dict:
     for it in queue:
         if not analyzer.can_run():
             break
+        if it.extra.get("no_ai"):
+            continue
         market_wide = it.source_type == "macro" and it.extra.get("tcmb") != "Başkanın Konuşmaları"
         if not (set(it.tickers) & watch) and not market_wide:
             continue
@@ -175,7 +213,7 @@ def run() -> dict:
     FEED.write_text(json.dumps({
         "generated": iso(now_utc()),
         "sources": status,
-        "watchlist": [{"symbol": s.symbol, "name": s.name, "market": s.market} for s in stocks],
+        "watchlist": [{"symbol": s.symbol, "name": s.name, "market": s.market, "tv": s.tv} for s in stocks],
         "ai": analyzer.status(),
         # Sadece tanımlı olup olmadıkları (değerler asla yazılmaz)
         "secrets": {k: bool(os.environ.get(k)) for k in (

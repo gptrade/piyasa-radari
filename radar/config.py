@@ -19,10 +19,15 @@ class Stock:
     name: str
     market: str            # BIST | US
     aliases: list[str]
+    tv_symbol: str | None = None    # TradingView sembolü, ör. NASDAQ:NVDA (boşsa varsayılan)
 
     @property
     def yahoo(self) -> str:
         return f"{self.symbol}.IS" if self.market == "BIST" else self.symbol
+
+    @property
+    def tv(self) -> str:
+        return self.tv_symbol or (f"BIST:{self.symbol}" if self.market == "BIST" else self.symbol)
 
 
 def load_settings() -> dict:
@@ -39,6 +44,7 @@ def load_watchlist() -> list[Stock]:
                 name=s.get("name", s["symbol"]),
                 market=market,
                 aliases=list(s.get("aliases") or []),
+                tv_symbol=s.get("tv"),
             ))
     return out
 

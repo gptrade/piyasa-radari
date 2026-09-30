@@ -145,6 +145,13 @@ def collect_google_news(ctx: Context) -> list[Item]:
         out += entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
                                 market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol],
                                 limit=int(ctx.cfg("google_news").get("max_per_stock", 8)))
+        # Doğrudan RSS'i olmayan siteler (ör. Barchart): Google News "site:" aramasıyla
+        for site in (ctx.cfg("google_news").get("sites") or {}).get(st.market, []):
+            q = f'"{st.symbol}" site:{site}' if st.market == "US" else f'"{st.name}" site:{site}'
+            hl = "hl=en-US&gl=US&ceid=US:en" if st.market == "US" else "hl=tr&gl=TR&ceid=TR:tr"
+            url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:7d&{hl}"
+            out += entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
+                                    market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol], limit=4)
     log.info("Google News: %d haber", len(out))
     return out
 
@@ -170,8 +177,15 @@ def collect_turkish_rss(ctx: Context) -> list[Item]:
         return []
     out: list[Item] = []
     for f in cfg.get("feeds") or []:
-        out += entries_to_items(fetch_feed(f["url"]), source=f["name"], source_type="news",
-                                market="BIST", since=ctx.since, lang="tr", matcher=ctx.matcher)
+        market = f.get("market", "BIST")          # BIST | US | ALL (akış iki piyasadan da haber içerir)
+        feed = fetch_feed(f["url"])
+        if market != "ALL":
+            out += entries_to_items(feed, source=f["name"], source_type="news", market=market,
+                                    since=ctx.since, lang=f.get("lang", "tr"), matcher=ctx.matcher)
+            continue
+        for m in ("BIST", "US"):                  # her piyasa için ayrı eşleştir; kayıt hissenin piyasasına düşer
+            out += entries_to_items(feed, source=f["name"], source_type="news", market=m,
+                                    since=ctx.since, lang=f.get("lang", "tr"), matcher=ctx.matcher)
     log.info("TR RSS: %d haber", len(out))
     return out
 

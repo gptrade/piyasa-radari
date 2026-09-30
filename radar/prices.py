@@ -69,12 +69,65 @@ def _rsi(xs: list[float], n: int = 14) -> float | None:
     return 100 - 100 / (1 + ag / al)
 
 
-def technicals(daily: list[list[float]], live: bool = False) -> dict | None:
+EMA_PERIODS = (14, 34, 55, 200)
+
+
+def ema_tv(xs: list[float], n: int) -> list[float | None]:
+    """TradingView ta.ema ile aynı: ilk n barın basit ortalamasıyla başlar, öncesi None."""
+    if len(xs) < n:
+        return [None] * len(xs)
+    k = 2 / (n + 1)
+    out: list[float | None] = [None] * (n - 1)
+    e = sum(xs[:n]) / n
+    out.append(e)
+    for x in xs[n:]:
+        e = x * k + e * (1 - k)
+        out.append(e)
+    return out
+
+
+def _atr(daily: list[list[float]], n: int = 14) -> float | None:
+    """Yalnız kapanış verisi var: gerçek aralık yerine kapanıştan kapanışa mutlak değişimin Wilder ortalaması."""
+    closes = [b[1] for b in daily]
+    if len(closes) <= n:
+        return None
+    tr = [abs(b - a) for a, b in zip(closes, closes[1:])]
+    a = sum(tr[:n]) / n
+    for x in tr[n:]:
+        a = (a * (n - 1) + x) / n
+    return a
+
+
+def _weekly(daily: list[list[float]]) -> list[float]:
+    """Günlük kapanışları haftalık kapanışa çevir (ISO hafta)."""
+    from datetime import datetime, timezone
+    weeks: dict[tuple, float] = {}
+    for b in daily:
+        d = datetime.fromtimestamp(b[0], tz=timezone.utc).isocalendar()
+        weeks[(d[0], d[1])] = b[1]
+    return [weeks[k] for k in sorted(weeks)]
+
+
+def _cross(a: list, b: list, lookback: int = 5) -> str | None:
+    """Son `lookback` barda a, b'yi yukarı ('up') ya da aşağı ('down') kesti mi?"""
+    for k in range(1, min(lookback + 1, len(a))):
+        a1, b1, a0, b0 = a[-k], b[-k], a[-k - 1], b[-k - 1]
+        if None in (a1, b1, a0, b0):
+            return None
+        if a1 > b1 and a0 <= b0:
+            return "up"
+        if a1 < b1 and a0 >= b0:
+            return "down"
+    return None
+
+
+def technicals(daily: list[list[float]], live: bool = False, periods=EMA_PERIODS) -> dict | None:
     """live=True: son günlük bar süren seansa ait (hacmi eksik); hacim oranı son tamamlanmış günden."""
     closes = [b[1] for b in daily]
     if len(closes) < 30:
         return None
     last = closes[-1]
+    r = lambda x, d=2: round(x, d) if x is not None else None
     sma20, sma50, sma200 = _sma(closes, 20), _sma(closes, 50), _sma(closes, 200)
     rsi = _rsi(closes)
     e12, e26 = _ema_series(closes, 12), _ema_series(closes, 26)
@@ -96,13 +149,57 @@ def technicals(daily: list[list[float]], live: bool = False) -> dict | None:
         vols = vols[:-1]
     vol_ratio = round(vols[-1] / (sum(vols[-21:-1]) / 20), 2) if len(vols) >= 21 and sum(vols[-21:-1]) else None
 
-    if sma20 and sma50 and last > sma20 > sma50:
-        trend = "yukarı"
-    elif sma20 and sma50 and last < sma20 < sma50:
-        trend = "aşağı"
+    # ── EMA'lar (TradingView ile aynı hesap)
+    emas = {n: ema_tv(closes, n) for n in periods}
+    ema_last = {n: s[-1] for n, s in emas.items()}
+    ema_info = {str(n): {"v": r(v), "dist": r((last / v - 1) * 100, 1) if v else None,
+                         "above": (last > v) if v else None}
+                for n, v in ema_last.items()}
+    ps = sorted(periods)
+    vals = [ema_last[n] for n in ps]
+    if all(v is not None for v in vals) and last > vals[0] and all(a > b for a, b in zip(vals, vals[1:])):
+        align = "boğa"          # fiyat > EMA14 > EMA34 > EMA55 > EMA200
+    elif all(v is not None for v in vals) and last < vals[0] and all(a < b for a, b in zip(vals, vals[1:])):
+        align = "ayı"
+    else:
+        align = "karışık"
+    crosses = []
+    def add_cross(a, b, name_up, name_down, lb=5):
+        c = _cross(a, b, lb)
+        if c:
+            crosses.append(name_up if c == "up" else name_down)
+    if 55 in emas and 200 in emas:
+        add_cross(emas[55], emas[200], "EMA55, EMA200'ü yukarı kesti (altın kesişim)",
+                  "EMA55, EMA200'ü aşağı kesti (ölüm kesişimi)", 10)
+    if 14 in emas and 34 in emas:
+        add_cross(emas[14], emas[34], "EMA14, EMA34'ü yukarı kesti", "EMA14, EMA34'ü aşağı kesti")
+    for n in (55, 200):
+        if n in emas:
+            add_cross(closes, emas[n], f"Fiyat EMA{n} üstüne çıktı", f"Fiyat EMA{n} altına indi", 3)
+
+    # ── oynaklık, bant, haftalık görünüm
+    atr = _atr(daily)
+    mid = sma20
+    sd = (sum((c - mid) ** 2 for c in closes[-20:]) / 20) ** 0.5 if mid else None
+    pct_b = ((last - (mid - 2 * sd)) / (4 * sd) * 100) if sd else None
+    wk = _weekly(daily)
+    w10, w30 = ema_tv(wk, 10), ema_tv(wk, 30)
+    if w10[-1] and w30[-1]:
+        wtrend = "yukarı" if wk[-1] > w10[-1] > w30[-1] else "aşağı" if wk[-1] < w10[-1] < w30[-1] else "yatay"
+    else:
+        wtrend = None
+    hi20, lo20 = max(closes[-20:]), min(closes[-20:])
+
+    if ema_last.get(55) and ema_last.get(200):
+        trend = "yukarı" if last > ema_last[55] > ema_last[200] else "aşağı" if last < ema_last[55] < ema_last[200] else "yatay"
+    elif sma20 and sma50:
+        trend = "yukarı" if last > sma20 > sma50 else "aşağı" if last < sma20 < sma50 else "yatay"
     else:
         trend = "yatay"
-    signals = []
+
+    signals = list(crosses)
+    if align != "karışık":
+        signals.append(f"EMA dizilimi: {align} (fiyat ve 14/34/55/200 sıralı)")
     if rsi is not None and rsi >= 70:
         signals.append(f"RSI {rsi:.0f}: aşırı alım")
     elif rsi is not None and rsi <= 30:
@@ -111,10 +208,10 @@ def technicals(daily: list[list[float]], live: bool = False) -> dict | None:
         signals.append("MACD yukarı kesti")
     elif cross == "sat":
         signals.append("MACD aşağı kesti")
-    if sma50 and len(closes) > 1:
-        prev_above, now_above = closes[-2] > sma50, last > sma50
-        if now_above != prev_above:
-            signals.append("50 günlük ortalamanın " + ("üstüne çıktı" if now_above else "altına indi"))
+    if pct_b is not None and pct_b > 100:
+        signals.append("Bollinger üst bandının üstünde")
+    elif pct_b is not None and pct_b < 0:
+        signals.append("Bollinger alt bandının altında")
     if hi != lo and (hi - last) / (hi - lo) < 0.03:
         signals.append("52 hafta zirvesine yakın")
     elif hi != lo and (last - lo) / (hi - lo) < 0.03:
@@ -122,16 +219,22 @@ def technicals(daily: list[list[float]], live: bool = False) -> dict | None:
     if vol_ratio and vol_ratio >= 2:
         signals.append(f"Hacim ortalamanın {vol_ratio:.1f} katı")
 
-    score = 0                                           # -3..+3 kaba teknik görünüm
+    score = 0                                           # -5..+5 kaba teknik görünüm
     score += {"yukarı": 1, "aşağı": -1}.get(trend, 0)
+    score += {"boğa": 1, "ayı": -1}.get(align, 0)
+    score += {"yukarı": 1, "aşağı": -1}.get(wtrend, 0)
     score += 1 if macd[-1] > sig[-1] else -1
     if rsi is not None:
         score += 1 if 50 < rsi < 70 else -1 if 30 < rsi < 50 else 0
-    r = lambda x, d=2: round(x, d) if x is not None else None
+    view = "güçlü al" if score >= 4 else "al" if score >= 2 else "güçlü sat" if score <= -4 else "sat" if score <= -2 else "nötr"
     return {
-        "trend": trend, "score": score, "rsi": r(rsi, 1), "sma20": r(sma20), "sma50": r(sma50),
-        "sma200": r(sma200), "macd": r(macd[-1], 3), "macd_signal": r(sig[-1], 3), "macd_cross": cross,
-        "hi52": hi, "lo52": lo, "pos52": r((last - lo) / (hi - lo) * 100, 0) if hi != lo else None,
+        "trend": trend, "weekly_trend": wtrend, "score": score, "view": view,
+        "ema": ema_info, "ema_align": align,
+        "rsi": r(rsi, 1), "sma20": r(sma20), "sma50": r(sma50), "sma200": r(sma200),
+        "macd": r(macd[-1], 3), "macd_signal": r(sig[-1], 3), "macd_hist": r(hist[-1], 3), "macd_cross": cross,
+        "atr_pct": r(atr / last * 100, 2) if atr else None, "bb_pct": r(pct_b, 0),
+        "hi20": hi20, "lo20": lo20, "hi52": hi, "lo52": lo,
+        "pos52": r((last - lo) / (hi - lo) * 100, 0) if hi != lo else None,
         "vol_ratio": vol_ratio, "signals": signals,
     }
 
@@ -140,21 +243,44 @@ def ta_context(p: dict | None) -> str:
     ta = (p or {}).get("ta")
     if not ta:
         return ""
-    return (f"trend {ta['trend']}, RSI {ta['rsi']}, 52h konum %{ta['pos52']}, "
-            f"hacim/ort {ta['vol_ratio']}; " + "; ".join(ta["signals"][:3]))
+    em = ", ".join(f"EMA{k} %{v['dist']:+.1f}" for k, v in (ta.get("ema") or {}).items() if v.get("dist") is not None)
+    return (f"günlük trend {ta['trend']}, haftalık {ta.get('weekly_trend')}, görünüm {ta.get('view')}, "
+            f"EMA dizilimi {ta.get('ema_align')} ({em}), RSI {ta['rsi']}, 52h konum %{ta['pos52']}, "
+            f"hacim/ort {ta['vol_ratio']}; " + "; ".join(ta["signals"][:4]))
 
 
 # ------------------------------------------------------------------ indirme
+def _next_earnings(tk) -> dict | None:
+    """Yahoo takviminden bir sonraki bilanço tarihi ve beklentiler (yoksa None)."""
+    try:
+        cal = tk.calendar
+    except Exception:
+        return None
+    if not isinstance(cal, dict):
+        return None
+    dates = cal.get("Earnings Date") or []
+    if not isinstance(dates, (list, tuple)):
+        dates = [dates]
+    today = now_utc().date()
+    fut = sorted(d for d in dates if hasattr(d, "isoformat") and d >= today)
+    if not fut:
+        return None
+    num = lambda v: round(float(v), 4) if isinstance(v, (int, float)) and v == v else None
+    return {"date": fut[0].isoformat(), "eps_est": num(cal.get("Earnings Average")),
+            "rev_est": num(cal.get("Revenue Average"))}
+
+
 def fetch(stock: Stock, yahoo: str | None = None) -> dict | None:
     import yfinance as yf
     try:
         tk = yf.Ticker(yahoo or stock.yahoo)
         intraday = _series(tk.history(period="5d", interval="5m", auto_adjust=False))
-        daily = _series(tk.history(period="1y", interval="1d", auto_adjust=False))
+        daily = _series(tk.history(period="5y", interval="1d", auto_adjust=False))   # EMA200 yakınsaması için uzun geçmiş
         try:
             currency = tk.fast_info.get("currency")
         except Exception:
             currency = None
+        next_earnings = _next_earnings(tk)
     except Exception as e:
         log.warning("%s fiyat alınamadı: %s", yahoo or stock.yahoo, e)
         return None
@@ -162,6 +288,10 @@ def fetch(stock: Stock, yahoo: str | None = None) -> dict | None:
         return None
     last = (intraday or daily)[-1][1]
     prev = daily[-2][1] if len(daily) >= 2 else None
+    keep = 130                                            # panelde ~6 aylık günlük grafik
+    closes = [b[1] for b in daily]
+    ema_overlay = {str(n): [round(v, 4) if v is not None else None for v in ema_tv(closes, n)[-keep:]]
+                   for n in EMA_PERIODS}
     return {
         "symbol": stock.symbol, "yahoo": yahoo or stock.yahoo, "market": stock.market,
         "currency": currency or ("TRY" if stock.market == "BIST" else "USD"),
@@ -169,7 +299,8 @@ def fetch(stock: Stock, yahoo: str | None = None) -> dict | None:
         "change_pct": round((last / prev - 1) * 100, 2) if prev else None,
         "ta": technicals(daily, live=bool(intraday) and now_utc().timestamp() - intraday[-1][0] < 20 * 60),
         # Panel için: gün içi 5 gün, günlük son ~6 ay yeter (dosya boyutu)
-        "intraday": intraday, "daily": daily[-130:], "updated": iso(now_utc()),
+        "intraday": intraday, "daily": daily[-keep:], "ema": ema_overlay, "updated": iso(now_utc()),
+        "next_earnings": next_earnings,
     }
 
 

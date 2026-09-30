@@ -25,7 +25,7 @@
   const state = {
     feed: null, digest: null, macro: null, prices: {},
     market: "ALL", view: "feed", sort: "time", ticker: null, ids: null, idsLabel: "", focusText: "",
-    types: new Set(), sents: new Set(), q: "", hideNoise: store.get("hideNoise", false),
+    types: new Set(), sents: new Set(), q: "", col: {}, hideNoise: store.get("hideNoise", false),
     open: new Set(), saved: new Set(store.get("saved", [])),
   };
 
@@ -34,8 +34,12 @@
   const fmtNum = (v, cur) => v == null ? "—" :
     new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v) +
     (cur === "TRY" ? " ₺" : cur === "USD" ? " $" : "");
-  const fmtPct = (v, d = 1) => v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(d)}%`;
-  const cls = v => v == null ? "" : v > 0 ? "pos" : v < 0 ? "neg" : "";
+  const fmtPct = (v, d = 1) => {
+    if (v == null) return "—";
+    const t = v.toFixed(d);
+    return /^-?0\.?0*$/.test(t) ? `${(0).toFixed(d)}%` : `${v > 0 ? "+" : ""}${t}%`;   // -0.0% gösterme
+  };
+  const cls = v => v == null || Math.abs(v) < 0.05 ? "" : v > 0 ? "pos" : "neg";
   const fmtTime = iso => new Date(iso).toLocaleString("tr-TR", { timeZone: TZ, day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
   const ageMin = iso => (Date.now() - new Date(iso)) / 60000;
   function ago(iso) {
@@ -87,6 +91,7 @@
       if (state.view === "signals" && !isSignal(it.analysis)) return false;
       if (state.types.size && !state.types.has(it.source_type)) return false;
       if (state.sents.size && !(it.analysis && state.sents.has(it.analysis.sentiment))) return false;
+      if (!colMatch(it)) return false;
       if (state.hideNoise && isNoise(it) && !state.saved.has(it.id)) return false;
       if (q) {
         const a = it.analysis || {};
@@ -97,6 +102,37 @@
     });
     if (state.sort === "impact") out = out.slice().sort((a, b) => impact(b) - impact(a));
     return out;
+  }
+
+  // Sütun başlığı filtreleri
+  function colMatch(it) {
+    const c = state.col, a = it.analysis;
+    if (c.dir && (c.dir === "none" ? a : !a || a.sentiment !== c.dir)) return false;
+    if (c.ev && it.event !== c.ev) return false;
+    if (c.imp) {
+      const w = a ? MAT_W[a.materiality] : 0;
+      if (c.imp === "3" ? w !== 3 : c.imp === "2" ? w < 2 : w !== 1) return false;
+    }
+    if (c.rx) {
+      const r = it.reaction, noT = !r || r.n_after === 0 || r.since == null;
+      if (c.rx === "none" ? !noT : noT || (c.rx === "up" ? r.since <= 0 : r.since >= 0)) return false;
+    }
+    if (c.tier && (c.tier === "3" ? it.tier !== 3 : c.tier === "1" ? it.tier !== 1 : it.tier === 3)) return false;
+    if (c.age && ageMin(it.published) > +c.age) return false;
+    return true;
+  }
+  function fillColFilters() {
+    const items = state.feed.items.filter(i => state.market === "ALL" || i.market === state.market);
+    const w = watchSet();
+    const tks = [...new Set(items.flatMap(relTickers))].sort((a, b) => (w.has(b) - w.has(a)) || a.localeCompare(b));
+    const tSel = $('select[data-f="tk"]');
+    tSel.innerHTML = `<option value="">Hisse</option>` + tks.map(t => `<option value="${esc(t)}">${esc(t)}${w.has(t) ? " ●" : ""}</option>`).join("");
+    tSel.value = state.ticker && tks.includes(state.ticker) ? state.ticker : "";
+    const evs = [...new Set(items.map(i => i.event).filter(Boolean))];
+    const eSel = $('select[data-f="ev"]');
+    eSel.innerHTML = `<option value="">Olay türü</option>` + evs.map(e => `<option value="${e}">${(EVENT[e] || EVENT.news).join(" ")}</option>`).join("");
+    eSel.value = state.col.ev && evs.includes(state.col.ev) ? state.col.ev : "";
+    $$("#colFilters select").forEach(sel => sel.classList.toggle("on", !!sel.value));
   }
 
   // ─────────────────────────────── satır
@@ -194,40 +230,120 @@
     return el;
   }
 
+  const EMA_KEYS = ["14", "34", "55", "200"];
   function seriesFor(p, range) {
-    if (!p) return [];
+    if (!p) return { bars: [], ema: null };
     const now = (p.intraday?.at(-1) || p.daily?.at(-1) || [0])[0];
-    if (range === "1A") return (p.daily || []).filter(b => b[0] >= now - 31 * 86400);
-    if (range === "3A") return (p.daily || []).filter(b => b[0] >= now - 93 * 86400);
-    if (range === "1H") return (p.intraday || []).filter(b => b[0] >= now - 7 * 86400);
+    const daily = p.daily || [];
+    const dailyRange = days => {
+      const idx = daily.map((b, i) => [b, i]).filter(([b]) => b[0] >= now - days * 86400).map(([, i]) => i);
+      const ema = p.ema ? Object.fromEntries(EMA_KEYS.filter(k => p.ema[k]).map(k => [k, idx.map(i => p.ema[k][i])])) : null;
+      return { bars: idx.map(i => daily[i]), ema };
+    };
+    if (range === "1A") return dailyRange(31);
+    if (range === "3A") return dailyRange(93);
+    if (range === "6A") return dailyRange(190);
+    if (range === "1H") return { bars: (p.intraday || []).filter(b => b[0] >= now - 7 * 86400), ema: null };
     const bars = p.intraday || [];
-    if (!bars.length) return (p.daily || []).slice(-2);
+    if (!bars.length) return { bars: daily.slice(-2), ema: null };
     const day = t => new Date(t * 1000).toLocaleDateString("tr-TR", { timeZone: TZ });
     const last = day(bars.at(-1)[0]);
-    return bars.filter(b => day(b[0]) === last);
+    return { bars: bars.filter(b => day(b[0]) === last), ema: null };
   }
 
-  function drawSpark(svg, bars, newsTs) {
+  function drawSpark(svg, { bars, ema }, newsTs) {
     svg.innerHTML = "";
     if (bars.length < 2) return null;
-    const W = 300, H = 76, pad = 5;
+    const W = 300, H = ema ? 110 : 76, pad = 6, padR = ema ? 26 : 0;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     const t0 = bars[0][0], t1 = bars.at(-1)[0];
     const vals = bars.map(b => b[1]);
-    const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
-    const x = t => ((t - t0) / (t1 - t0 || 1)) * W;
+    const all = vals.concat(...(ema ? Object.values(ema).map(a => a.filter(v => v != null)) : []));
+    const lo = Math.min(...all), hi = Math.max(...all), span = hi - lo || 1;
+    const x = t => ((t - t0) / (t1 - t0 || 1)) * (W - padR);
     const y = v => H - pad - ((v - lo) / span) * (H - pad * 2);
-    const color = vals.at(-1) >= vals[0] ? "var(--up)" : "var(--down)";
-    const d = bars.map((b, i) => `${i ? "L" : "M"}${x(b[0]).toFixed(1)},${y(b[1]).toFixed(1)}`).join("");
+    const up = vals.at(-1) >= vals[0];
+    const color = ema ? "var(--ink)" : up ? "var(--up)" : "var(--down)";
+    const path = pts => pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("");
+    const d = path(bars.map(b => [x(b[0]), y(b[1])]));
     const mk = (tag, attrs) => { const e = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); return e; };
-    svg.append(mk("path", { d: `${d}L${W},${H}L0,${H}Z`, class: "ar", fill: color }), mk("path", { d, class: "ln", stroke: color }));
+    if (!ema) svg.append(mk("path", { d: `${d}L${W},${H}L0,${H}Z`, class: "ar", fill: color }));
+    if (ema) {
+      EMA_KEYS.forEach((k, n) => {
+        const pts = (ema[k] || []).map((v, i) => v == null ? null : [x(bars[i][0]), y(v)]).filter(Boolean);
+        if (pts.length < 2) return;
+        svg.append(mk("path", { d: path(pts), class: `ln ema e${n + 1}` }));
+        const lbl = mk("text", { x: W - padR + 3, y: pts.at(-1)[1] + 3, class: `ema-lbl e${n + 1}` });
+        lbl.textContent = k;
+        svg.append(lbl);
+      });
+    }
+    svg.append(mk("path", { d, class: "ln", stroke: color }));
     if (newsTs >= t0 && newsTs <= t1) {
       const mx = x(newsTs).toFixed(1);
       svg.append(mk("line", { x1: mx, x2: mx, y1: 9, y2: H, class: "mk" }));
-      const lbl = mk("text", { x: Math.min(Math.max(+mx, 16), W - 16), y: 7, class: "mk-lbl", "text-anchor": "middle" });
+      const lbl = mk("text", { x: Math.min(Math.max(+mx, 16), W - padR - 16), y: 7, class: "mk-lbl", "text-anchor": "middle" });
       lbl.textContent = "haber";
       svg.append(lbl);
     }
     return (vals.at(-1) / vals[0] - 1) * 100;
+  }
+
+  const tvSymbol = (sym, market) => (state.feed.watchlist || []).find(w => w.symbol === sym)?.tv || (market === "BIST" ? `BIST:${sym}` : sym);
+  function extLinks(sym, market, p) {
+    const tv = tvSymbol(sym, market);
+    const links = [
+      ["TradingView", `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tv)}`],
+      ["Investing", `https://tr.investing.com/search/?q=${encodeURIComponent(sym)}`],
+      ["Yahoo", `https://finance.yahoo.com/quote/${encodeURIComponent(p?.yahoo || sym)}/`],
+    ];
+    if (market === "US") links.push(["Barchart", `https://www.barchart.com/stocks/quotes/${encodeURIComponent(sym)}`], ["Earnings Hub", "https://earningshub.com/"]);
+    links.push(["Godel", "https://app.godelterminal.com/"]);
+    if (market === "BIST") links.push(["MarketVisuals", "https://marketvisuals.net/"]);
+    return `<div class="ext-links">${links.map(([n, u]) => `<a href="${u}" target="_blank" rel="noopener">${n} ↗</a>`).join("")}</div>`;
+  }
+
+  function tvWidget(box, sym, market) {
+    // TradingView'in resmi "Teknik Analiz" bileşeni (gömme izinli). Tıklanınca yüklenir.
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light";
+    box.innerHTML = `<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div>`;
+    const sc = document.createElement("script");
+    sc.src = "https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js";
+    sc.async = true;
+    sc.textContent = JSON.stringify({ interval: "1D", width: "100%", height: 400, isTransparent: true, symbol: tvSymbol(sym, market),
+      showIntervalTabs: true, displayMode: "single", locale: "tr", colorTheme: dark ? "dark" : "light" });
+    box.firstElementChild.append(sc);
+  }
+
+  const VIEW_CLS = { "güçlü al": "bullish", "al": "bullish", "nötr": "neutral", "sat": "bearish", "güçlü sat": "bearish" };
+  function taHTML(ta, p) {
+    if (!ta) return "";
+    const em = ta.ema || {};
+    const emaRows = EMA_KEYS.filter(k => em[k]).map((k, n) => {
+      const e = em[k];
+      return `<tr><td><i class="sw e${n + 1}"></i>EMA${k}</td><td class="num">${e.v == null ? "—" : fmtNum(e.v)}</td>
+        <td class="num ${cls(e.dist)}">${e.dist == null ? "—" : fmtPct(e.dist)}</td><td>${e.above == null ? "" : e.above ? "▲ üstünde" : "▼ altında"}</td></tr>`;
+    }).join("");
+    const tile = (l, v, t = "") => `<div title="${esc(t)}"><small>${l}</small><b>${v}</b></div>`;
+    const ne = p?.next_earnings;
+    return `
+      <div class="ta-head"><span>Teknik görünüm</span>
+        <span class="pill ${VIEW_CLS[ta.view] || "neutral"}" title="Günlük/haftalık trend, EMA dizilimi, MACD ve RSI'dan kaba skor (${ta.score > 0 ? "+" : ""}${ta.score})">${esc((ta.view || "nötr").toLocaleUpperCase("tr"))}</span>
+        <span class="align ${ta.ema_align}" title="Fiyat ve EMA14/34/55/200 sıralaması">dizilim: ${esc(ta.ema_align || "—")}</span></div>
+      ${emaRows ? `<table class="ema-tbl"><thead><tr><th>Ortalama</th><th class="num">Değer</th><th class="num">Fiyata uzaklık</th><th></th></tr></thead><tbody>${emaRows}</tbody></table>` : ""}
+      <div class="ta">
+        ${tile("Günlük trend", esc(ta.trend), "Fiyat, EMA55 ve EMA200 sıralaması")}
+        ${tile("Haftalık trend", esc(ta.weekly_trend || "—"), "Haftalık kapanış, 10 ve 30 haftalık EMA")}
+        ${tile("RSI 14", ta.rsi ?? "—")}
+        ${tile("MACD hist.", ta.macd_hist ?? "—", "MACD − sinyal (12,26,9)")}
+        ${tile("Oynaklık", ta.atr_pct == null ? "—" : "%" + ta.atr_pct, "Günlük ortalama hareket (ATR14 benzeri, kapanıştan kapanışa)")}
+        ${tile("Bollinger %B", ta.bb_pct == null ? "—" : ta.bb_pct, "0 = alt bant, 100 = üst bant (20, 2σ)")}
+        ${tile("52h konum", ta.pos52 == null ? "—" : "%" + ta.pos52, `52 hafta: ${fmtNum(ta.lo52)} – ${fmtNum(ta.hi52)}`)}
+        ${tile("Hacim/ort.", ta.vol_ratio ? ta.vol_ratio + "×" : "—", "Son tamamlanmış gün / 20 gün ortalaması")}
+      </div>
+      ${ta.signals?.length ? `<ul class="ta-sig">${ta.signals.map(s => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}
+      ${ne ? `<p class="ne">Sonraki bilanço: <b>${new Date(ne.date + "T12:00:00Z").toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })}</b>${ne.eps_est != null ? ` · EPS beklentisi ${ne.eps_est}` : ""}</p>` : ""}
+      <p class="ta-note">20 gün yüksek/düşük: ${fmtNum(ta.lo20)} – ${fmtNum(ta.hi20)} · EMA'lar 5 yıllık günlük kapanıştan, TradingView ile aynı yöntemle hesaplanır.</p>`;
   }
 
   function pricePanel(it) {
@@ -241,25 +357,31 @@
       return box;
     }
     const p = state.prices[sym];
+    const market = p.market || it.market;
     const newsTs = Math.floor(new Date(it.published) / 1000);
     box.innerHTML = `
       <div class="px-head"><span class="px-sym">${esc(sym)} <small>/ ${esc(p.currency || "")}</small></span>
-        <div class="px-rng">${["1G", "1H", "1A", "3A"].map(r => `<button data-r="${r}">${r}</button>`).join("")}</div></div>
+        <div class="px-rng">${["1G", "1H", "1A", "3A", "6A"].map(r => `<button data-r="${r}" title="${["1A", "3A", "6A"].includes(r) ? "Günlük · EMA 14/34/55/200 ile" : ""}">${r}</button>`).join("")}</div></div>
       <div class="px-row"><span class="px-last"></span><span class="px chg"></span></div>
       <svg class="spark" viewBox="0 0 300 76" preserveAspectRatio="none" role="img" aria-label="${esc(sym)} fiyat grafiği, haber anı işaretli"></svg>
-      <div class="react-slot"></div><div class="ta-slot"></div>`;
+      <p class="ema-legend" hidden>${EMA_KEYS.map((k, n) => `<span><i class="sw e${n + 1}"></i>EMA${k}</span>`).join("")}<span><i class="sw px-sw"></i>Fiyat</span></p>
+      <div class="react-slot"></div><div class="ta-slot"></div>
+      <div class="tv-slot"><button class="tv-btn" type="button">TradingView teknik özetini göster</button></div>
+      ${extLinks(sym, market, p)}`;
     const paint = range => {
       $$(".px-rng button", box).forEach(b => b.classList.toggle("on", b.dataset.r === range));
-      const chg = drawSpark($(".spark", box), seriesFor(p, range), newsTs);
+      const ser = seriesFor(p, range);
+      const svg = $(".spark", box);
+      svg.classList.toggle("tall", !!ser.ema);
+      const chg = drawSpark(svg, ser, newsTs);
+      $(".ema-legend", box).hidden = !ser.ema;
       $(".px-last", box).textContent = fmtNum(p.last, p.currency);
       const shown = range === "1G" ? p.change_pct : chg;
       const c = $(".chg", box); c.textContent = fmtPct(shown, 2); c.className = "px chg " + cls(shown);
     };
     $$(".px-rng button", box).forEach(b => b.onclick = e => { e.stopPropagation(); paint(b.dataset.r); });
-    // Haber anı grafikte görünsün: haberi kapsayan en kısa aralıkla aç
     const age = Date.now() / 1000 - newsTs;
     paint(age < 20 * 3600 ? "1G" : age < 6 * 86400 ? "1H" : age < 30 * 86400 ? "1A" : "3A");
-
     const r = it.reaction;
     if (r && r.n_after === 0) {
       $(".react-slot", box).innerHTML = `<span class="chip">Haberden sonra henüz işlem olmadı (seans kapalı)</span>`;
@@ -270,17 +392,9 @@
       if (r.excess != null) parts.push(`fark <b class="${cls(r.excess)}">${fmtPct(r.excess)}</b>`);
       $(".react-slot", box).innerHTML = `<span class="chip" title="Haber anındaki fiyattan bu yana; hacim = haber günü / 20 gün ortalaması; fark = hisse − endeks">${parts.join(" · ")}</span>`;
     }
-    const ta = p.ta;
-    if (ta) {
-      $(".ta-slot", box).innerHTML = `
-        <div class="ta">
-          <div><small>Trend</small><b>${esc(ta.trend)}</b></div>
-          <div><small>RSI 14</small><b>${ta.rsi ?? "—"}</b></div>
-          <div><small>52h konum</small><b>${ta.pos52 == null ? "—" : "%" + ta.pos52}</b></div>
-          <div><small>Hacim/ort.</small><b>${ta.vol_ratio ? ta.vol_ratio + "×" : "—"}</b></div>
-        </div>
-        ${ta.signals?.length ? `<ul class="ta-sig">${ta.signals.map(s => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}`;
-    }
+    $(".ta-slot", box).innerHTML = taHTML(p.ta, p);
+    $(".tv-btn", box).onclick = e => { e.stopPropagation(); tvWidget($(".tv-slot", box), sym, market); };
+    $$(".ext-links a", box).forEach(a => a.onclick = e => e.stopPropagation());
     return box;
   }
 
@@ -511,7 +625,7 @@
   }
 
   function render() {
-    sidebar(); counts(); renderDigest(); renderHeatmap(); renderBubbles();
+    sidebar(); counts(); fillColFilters(); renderDigest(); renderHeatmap(); renderBubbles();
     const list = $("#list"); list.innerHTML = "";
     const items = filtered();
     const frag = document.createDocumentFragment();
@@ -534,7 +648,12 @@
       const v = b.dataset[key]; set.has(v) ? set.delete(v) : set.add(v); b.classList.toggle("on"); render();
     });
     toggle("#typeChips button", "type", state.types);
-    toggle("#sentChips button", "sent", state.sents);
+    $$("#colFilters select").forEach(sel => sel.onchange = () => {
+      const f = sel.dataset.f;
+      if (f === "tk") { state.ticker = sel.value || null; state.ids = null; state.idsLabel = ""; state.focusText = ""; }
+      else state.col[f] = sel.value;
+      render();
+    });
     const hn = $("#hideNoise"); hn.checked = state.hideNoise;
     hn.onchange = () => { state.hideNoise = hn.checked; store.set("hideNoise", hn.checked); render(); };
     let t; $("#q").oninput = e => { clearTimeout(t); t = setTimeout(() => { state.q = e.target.value.trim(); render(); }, 150); };

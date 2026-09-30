@@ -33,9 +33,16 @@ sources:
   google_news:
     enabled: true
     max_per_stock: 8           # her hisse için her turda en fazla kaç haber
+    # Doğrudan RSS'i olmayan siteler Google News "site:" aramasıyla izlenir
+    sites:
+      US: [barchart.com]
+      BIST: []
   yahoo_finance_rss:
     enabled: true
     max_per_stock: 8
+  earnings_calendar:
+    enabled: true              # yaklaşan bilanço tarihleri (Yahoo); bu kadar gün kala akışa düşer
+    days_ahead: 7
   press_wires:
     enabled: true              # PR Newswire + GlobeNewswire; "(NASDAQ: XXX)" etiketi ya da başlıkta şirket adı
   spk:
@@ -59,6 +66,13 @@ sources:
         url: https://www.aa.com.tr/tr/rss/default?cat=ekonomi
       - name: Bloomberg HT
         url: https://www.bloomberght.com/rss
+      # Investing.com Türkiye resmi RSS akışları (tr.investing.com/webmaster-tools/rss)
+      - {name: Investing · BİST, url: "https://tr.investing.com/rss/news_1067.rss", market: BIST}
+      - {name: Investing · Şirket haberleri, url: "https://tr.investing.com/rss/news_356.rss", market: ALL}
+      - {name: Investing · Insider işlemleri, url: "https://tr.investing.com/rss/news_357.rss", market: ALL}
+      - {name: Investing · Analist dereceleri, url: "https://tr.investing.com/rss/news_1061.rss", market: ALL}
+      - {name: Investing · Kazanç görüşmeleri, url: "https://tr.investing.com/rss/news_1063.rss", market: ALL}
+      - {name: Investing · Hisse analizleri, url: "https://tr.investing.com/rss/stock.rss", market: ALL}
       - name: Dünya Gazetesi
         url: https://www.dunya.com/rss
   reddit:

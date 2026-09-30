@@ -1,6 +1,6 @@
 # İzleme listesi. Bir hisse eklemek için aynı formatta bir satır ekle ve commit et.
 # aliases: haber metninde bu hisseyi tanımak için aranacak isimler (büyük/küçük harf duyarsız).
-# yahoo: fiyat verisi için Yahoo Finance sembolü (BIST için .IS eki).
+# tv: TradingView sembolü (ABD için borsa önekiyle, ör. NASDAQ:NVDA). BIST için otomatik BIST:KOD.
 
 bist:
   - symbol: VAKBN
@@ -30,17 +30,22 @@ bist:
 
 us:
   - symbol: NVDA
+    tv: NASDAQ:NVDA
     name: NVIDIA
     aliases: ["Nvidia"]
   - symbol: AAPL
+    tv: NASDAQ:AAPL
     name: Apple
     aliases: ["Apple"]
   - symbol: MSFT
+    tv: NASDAQ:MSFT
     name: Microsoft
     aliases: ["Microsoft"]
   - symbol: TSLA
+    tv: NASDAQ:TSLA
     name: Tesla
     aliases: ["Tesla"]
   - symbol: AMD
+    tv: NASDAQ:AMD
     name: Advanced Micro Devices
     aliases: ["AMD"]

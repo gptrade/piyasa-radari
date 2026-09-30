@@ -145,10 +145,12 @@
     const tx = rows.filter(r => r.kind === "tx");
     const prog = rows.filter(r => r.kind === "program");
     const total = tx.reduce((s, r) => s + (r.amount || 0), 0);
+    const qty = tx.reduce((s, r) => s + (r.qty || 0), 0);
     const top = agg.slice().sort((a, b) => b.amount - a.amount)[0];
     return `<div class="kpis">
       <div><small>Geri alım yapan şirket</small><b>${agg.length}</b></div>
       <div><small>İşlem bildirimi</small><b>${tx.length}</b></div>
+      <div><small>Toplam adet</small><b>${lots(qty)}</b><span>${nf(qty)} pay</span></div>
       <div><small>Toplam tutar</small><b>${tl(total)}</b></div>
       <div><small>En çok alan</small><b>${top ? esc(top.t) : "—"}</b>${top ? `<span>${tl(top.amount)}</span>` : ""}</div>
       <div><small>Yeni program / YK kararı</small><b>${prog.length}</b></div>

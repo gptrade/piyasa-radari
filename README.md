@@ -81,6 +81,11 @@ dakika kotasından düşer (15 dk'da bir ≈ 2.900 çalıştırma/ay).
 | Reddit, StockTwits | Herkese açık RSS / JSON | Söylenti riski: Claude güveni düşük tutar |
 | X (Twitter) | Resmi API v2 | Ücretli anahtar gerekir |
 | Fiyatlar | yfinance (Yahoo) | Gecikmeli; BIST için `.IS` eki |
+| Investing.com Türkiye | Resmi RSS: BİST, şirket haberleri, insider, analist dereceleri, kazanç görüşmeleri, hisse analizleri | Hem BIST hem ABD hisseleriyle eşleşir |
+| Barchart | Google News `site:barchart.com` araması | Barchart'ın açık RSS'i doğrulanamadı |
+| Kazanç takvimi | Yahoo takvimi | Bilançoya 7 gün kala akışa düşer; Earnings Hub'ın açık API'si yok |
+| TradingView | Resmi "Teknik Analiz" gömme bileşeni + grafik bağlantısı | Veri API'si yok; EMA 14/34/55/200 5 yıllık kapanıştan aynı yöntemle hesaplanır |
+| Godel Terminal, MarketVisuals | Sadece bağlantı | Üyelik/giriş gerektiriyor, API yok |
 | Aracı kurum raporları | `inbox/` | Kapalı portallara giriş yapılmaz; raporu sen yüklersin |
 
 **TradingView:** Haber akışı için resmi bir API yok ve üyelik bilgileriyle otomatik oturum açıp

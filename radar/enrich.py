@@ -32,12 +32,12 @@ _RULES = [
 
 # ① birincil / resmi kaynak, ② yerleşik finans medyası, ③ diğer / sosyal
 TIER1_SOURCES = ("KAP", "Borsa İstanbul", "SEC EDGAR", "SPK", "TCMB", "PR Newswire", "GlobeNewswire",
-                 "Rapor kutusu")
+                 "Rapor kutusu", "Kazanç takvimi")
 TIER2_OUTLETS = ("reuters", "bloomberg", "financial times", "ft.com", "wall street journal", "wsj",
                  "cnbc", "yahoo finance", "marketwatch", "barron", "seeking alpha", "investing.com",
                  "associated press", "ap news", "anadolu", "aa ", "aa ekonomi", "dünya", "ekonomim",
                  "para analiz", "bloomberght", "bloomberg ht", "forbes", "the economist", "nikkei",
-                 "morningstar", "zacks", "benzinga", "motley fool", "tipranks")
+                 "morningstar", "zacks", "benzinga", "motley fool", "tipranks", "barchart", "investing")
 
 
 def source_tier(item: dict) -> int:
@@ -64,6 +64,8 @@ def classify_event(item: dict) -> str:
     a = item.get("analysis") or {}
     text = " ".join([item.get("title", ""), extra.get("subject") or "", extra.get("form") or "",
                      a.get("category", ""), a.get("event_label", "")]).lower()
+    if extra.get("earnings_date"):
+        return "earnings"
     if (extra.get("form") or "") == "4":
         return "insider"
     for key, rx in _RULES:

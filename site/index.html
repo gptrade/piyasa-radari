@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260930d">
+<link rel="stylesheet" href="style.css?v=20260930f">
 </head>
 <body>
 <div class="shell">
@@ -38,15 +38,16 @@
       <div id="macroList" class="macro"></div>
     </div>
 
-    <div class="nav legend-box" id="legendBox">
-      <p class="label">Satır nasıl okunur</p>
-      <dl class="legend">
-        <dt><span class="dir up">▲▲▲</span></dt><dd>Yön · ok sayısı = AI güveni</dd>
-        <dt><span class="dots">●●○</span></dt><dd>Önem (düşük · orta · yüksek)</dd>
-        <dt><span class="tier">①</span></dt><dd>Kaynak: ① resmi ② finans medyası ③ diğer</dd>
-        <dt><span class="dup">×4</span></dt><dd>Aynı haber başka kaynaklarda</dd>
-        <dt><span class="px pos">+1.2%</span></dt><dd>Haberden bu yana fiyat</dd>
-      </dl>
+    <div class="nav" id="extBox">
+      <p class="label">Dış kaynaklar</p>
+      <div class="ext">
+        <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>
+        <a href="https://tr.investing.com/equities/turkey" target="_blank" rel="noopener">Investing</a>
+        <a href="https://www.barchart.com/" target="_blank" rel="noopener">Barchart</a>
+        <a href="https://earningshub.com/" target="_blank" rel="noopener">Earnings Hub</a>
+        <a href="https://app.godelterminal.com/" target="_blank" rel="noopener">Godel</a>
+        <a href="https://marketvisuals.net/" target="_blank" rel="noopener">MarketVisuals</a>
+      </div>
     </div>
 
     <div class="nav" id="srcBox">
@@ -72,11 +73,6 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" placeholder="Hisse, olay, kaynak ara…" autocomplete="off" aria-label="Ara">
       </div>
-      <div class="chips" id="sentChips" role="group" aria-label="Yön">
-        <button data-sent="bullish" class="up">▲ Yükseliş</button>
-        <button data-sent="bearish" class="down">▼ Düşüş</button>
-        <button data-sent="neutral">● Nötr</button>
-      </div>
       <div class="chips" id="typeChips" role="group" aria-label="Kaynak türü">
         <button data-type="disclosure">Bildirim</button>
         <button data-type="news">Haber</button>
@@ -93,8 +89,19 @@
     </header>
 
     <div id="banner" class="banner" hidden></div>
-    <div class="list-head" aria-hidden="true">
-      <span>Yön</span><span>Hisse</span><span></span><span>Olay</span><span>Önem</span><span>Tepki</span><span>Kyn.</span><span></span><span>Zaman</span>
+    <div class="list-head" id="colFilters" role="group" aria-label="Sütun filtreleri">
+      <label data-tip="<b>Yön</b><br>AI'ın haberi yorumlama yönü.<br>▲ yükseliş · ▼ düşüş · ● nötr · · değerlendirilmedi<br>Ok sayısı güveni gösterir: ▲ %60 altı, ▲▲ %60–79, ▲▲▲ %80+"><select data-f="dir" aria-label="Yön filtresi">
+        <option value="">Yön</option><option value="bullish">▲ Yükseliş</option><option value="bearish">▼ Düşüş</option><option value="neutral">● Nötr</option><option value="none">· AI yok</option></select></label>
+      <label data-tip="<b>Hisse</b><br>Haberde doğrudan geçen ya da AI'ın etkileneceğini söylediği hisse. <i>+2</i> = başka hisseler de var."><select data-f="tk" aria-label="Hisse filtresi"><option value="">Hisse</option></select></label>
+      <div class="ol"><label data-tip="<b>Olay</b><br>Soldaki harf olay türü: ! borsa tedbiri · ↺ geri alım · İ içeriden işlem · Σ finansal sonuç · A analist · % temettü/sermaye · ⇄ anlaşma · S SPK · M makro · § hukuki · N haber · @ sosyal · R rapor<br>Kalın yazı AI'ın kısa olay etiketi."><select data-f="ev" aria-label="Olay türü filtresi"><option value="">Olay türü</option></select></label><button class="help" type="button" aria-label="Satır nasıl okunur" data-tip="<b>Satır nasıl okunur</b><br><span class='mono'>▲▲ AMD · A · Analist AL · ●●○ · +1.2% · ② · ×4 · 16dk</span><br>yön ve güç · hisse · olay türü · olay · önem · haberden beri fiyat · kaynak kalitesi · tekrar sayısı · süre<br>Soluk satırlar: önemsiz, zayıf kaynaklı ya da 24 saatten eski.<br>Satıra tıkla: ayrıntı, grafik ve teknik analiz.">?</button></div>
+      <label data-tip="<b>Önem</b><br>Haberin fiyatı hareket ettirme potansiyeli: ●○○ düşük · ●●○ orta · ●●● yüksek"><select data-f="imp" aria-label="Önem filtresi">
+        <option value="">Önem</option><option value="3">●●● yüksek</option><option value="2">●●○ orta+</option><option value="1">●○○ düşük</option></select></label>
+      <label data-tip="<b>Tepki</b><br>Haber anındaki fiyattan bu yana değişim. … = haberden sonra henüz işlem olmadı (seans kapalı)."><select data-f="rx" aria-label="Tepki filtresi">
+        <option value="">Tepki</option><option value="up">Yükselen</option><option value="down">Düşen</option><option value="none">İşlem yok</option></select></label>
+      <label data-tip="<b>Kaynak kalitesi</b><br>① resmi/birincil (KAP, SEC, SPK, TCMB, şirket bülteni) · ② yerleşik finans medyası · ③ diğer/sosyal<br><b>×N</b>: aynı haber N kaynakta"><select data-f="tier" aria-label="Kaynak filtresi">
+        <option value="">Kaynak</option><option value="1">① resmi</option><option value="2">①② resmi + medya</option><option value="3">③ diğer</option></select></label>
+      <label data-tip="<b>Zaman</b><br>Yayından bu yana geçen süre"><select data-f="age" aria-label="Zaman filtresi">
+        <option value="">Zaman</option><option value="60">1 saat</option><option value="360">6 saat</option><option value="1440">24 saat</option><option value="4320">3 gün</option></select></label>
     </div>
     <section id="list" class="list" aria-live="polite"></section>
     <p id="empty" class="empty" hidden>Bu filtrelere uyan kayıt yok.</p>
@@ -145,8 +152,8 @@
 </div>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="app.js?v=20260930d"></script>
-<script src="buybacks.js?v=20260930d"
+<script src="app.js?v=20260930f"></script>
+<script src="buybacks.js?v=20260930f"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>
