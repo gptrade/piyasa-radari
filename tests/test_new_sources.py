@@ -102,3 +102,61 @@ def test_tcmb_rss_market_wide_items():
                              market="BIST", since=datetime(2026, 9, 20, tzinfo=timezone.utc),
                              lang="tr", allow_empty=True)
     assert len(items) == 1 and items[0].tickers == []
+
+
+# ------------------------------------------------------------ Türkçe tarihli RSS (TCMB)
+def test_parse_tr_date_formats():
+    from radar.sources.feeds import parse_tr_date
+    d = parse_tr_date("10 Ara 2024 11:23:57")
+    assert (d.year, d.month, d.day, d.hour, d.second) == (2024, 12, 10, 11, 57)
+    assert parse_tr_date("28 Eylül 2026 Pazartesi").month == 9
+    assert parse_tr_date("25 EYLÜL 2026").day == 25
+    assert parse_tr_date("28.09.2026 18:30").hour == 18
+    assert parse_tr_date("tarih yok") is None
+
+
+def test_tcmb_style_feed_turkish_dates_and_relative_links():
+    from radar.sources.feeds import entries_to_items
+    rss = """<?xml version="1.0"?><rss version="2.0"><channel><title>PPK</title>
+    <item><title><![CDATA[Faiz Oranlarına İlişkin Basın Duyurusu (2026-40)]]></title>
+    <link>/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Basin/2026/DUY2026-40</link>
+    <pubDate>24 Eyl 2026 14:00:00</pubDate></item>
+    <item><title>Eski</title><link>/eski</link><pubDate>10 Ara 2024 11:23:57</pubDate></item>
+    </channel></rss>"""
+    feed = feedparser.parse(rss)
+    feed["_base"] = "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/PPK+Kararlari"
+    items = entries_to_items(feed, source="TCMB · PPK Kararları", source_type="macro", market="BIST",
+                             since=datetime(2026, 9, 20, tzinfo=timezone.utc), lang="tr", allow_empty=True)
+    assert len(items) == 1
+    assert items[0].url == "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Basin/2026/DUY2026-40"
+    assert items[0].published == "2026-09-24T11:00:00Z"          # İstanbul 14:00 → UTC 11:00
+
+
+def test_per_stock_limit_keeps_newest():
+    from radar.sources.feeds import entries_to_items
+    body = "".join(f"<item><title>NVDA haber {i}</title><link>https://x/{i}</link>"
+                   f"<pubDate>Tue, 29 Sep 2026 {10 + i:02d}:00:00 GMT</pubDate></item>" for i in range(6))
+    feed = feedparser.parse(f'<?xml version="1.0"?><rss version="2.0"><channel>{body}</channel></rss>')
+    items = entries_to_items(feed, source="Google News", source_type="news", market="US",
+                             since=datetime(2026, 9, 28, tzinfo=timezone.utc), lang="en",
+                             tickers=["NVDA"], limit=3)
+    assert [i.url for i in items] == ["https://x/5", "https://x/4", "https://x/3"]
+
+
+def test_failures_are_reported_in_status(tmp_path, monkeypatch):
+    import json
+    from radar import http, pipeline, prices
+    monkeypatch.setattr(pipeline, "DATA", tmp_path)
+    monkeypatch.setattr(pipeline, "FEED", tmp_path / "feed.json")
+    monkeypatch.setattr(pipeline, "STATE", tmp_path / "state.json")
+    monkeypatch.setattr(prices, "update_all", lambda stocks: {})
+    monkeypatch.setattr(pipeline.tcmb, "update_macro", lambda settings: None)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    def flaky(ctx):
+        http.note_failure("https://www.bloomberght.com/rss", "HTTP 403")
+        return []
+    monkeypatch.setattr(pipeline, "COLLECTORS", [("TR haber RSS", flaky)])
+    pipeline.run()
+    st = json.loads((tmp_path / "feed.json").read_text())["sources"][0]
+    assert st["warnings"] == ["www.bloomberght.com: HTTP 403"]

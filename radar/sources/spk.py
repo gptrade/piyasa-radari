@@ -16,6 +16,7 @@ from zoneinfo import ZoneInfo
 from .. import http
 from ..models import Item, iso, make_id, now_utc
 from . import Context
+from .feeds import parse_tr_date
 
 log = logging.getLogger("radar.spk")
 
@@ -37,13 +38,15 @@ def parse_listing(html: str, base: str) -> list[dict]:
         if url in seen:
             continue
         seen.add(url)
-        near = TAG_RE.sub(" ", html[m.end(): m.end() + 600])
-        d = DATE_RE.search(near)
-        date = None
-        if d:
-            month = MONTHS.get(d.group(2).lower().replace("i̇", "i"))
-            if month:
-                date = datetime(int(d.group(3)), month, int(d.group(1)), 18, 0, tzinfo=IST)
+        # Tarih bağlantı metninde, hemen sonrasında ya da öncesinde olabilir; en yakınını al.
+        after = TAG_RE.sub(" ", html[m.end(): m.end() + 600])
+        before = TAG_RE.sub(" ", html[max(0, m.start() - 400): m.start()])
+        date = parse_tr_date(after)
+        if date is None:
+            prev = [parse_tr_date(x) for x in re.split(r"Bülten No", before)[-1:]]
+            date = prev[0] if prev and prev[0] else None
+        if date is not None and date.hour == 0 and date.minute == 0:
+            date = date.replace(hour=18)
         out.append({"url": url, "no": f"{m.group(2)}/{int(m.group(3))}", "n": int(m.group(3)),
                     "year": int(m.group(2)), "date": date})
     out.sort(key=lambda b: (b["year"], b["n"]), reverse=True)
@@ -87,12 +90,23 @@ def collect(ctx: Context) -> list[Item]:
             continue
         if b["date"] and b["date"] < ctx.since:
             continue
+        if b["date"] is None and not ctx.seen and bulletins.index(b) > 0:
+            continue                          # ilk çalıştırma, tarih yok: sadece en yeni bülten
         pdf = http.get(b["url"], timeout=60)
         if pdf is None:
             continue
         try:
             reader = PdfReader(io.BytesIO(pdf.content))
             text = "\n".join((p.extract_text() or "") for p in reader.pages[:60])
+            if b["date"] is None:            # listede tarih yoksa: PDF'in kendi tarihi
+                try:
+                    b["date"] = reader.metadata.creation_date if reader.metadata else None
+                except Exception:
+                    b["date"] = None
+                if b["date"] is None:
+                    b["date"] = parse_tr_date(text[:1500])
+                if b["date"] is not None and b["date"].tzinfo is None:
+                    b["date"] = b["date"].replace(tzinfo=IST)
         except Exception as e:
             log.warning("SPK %s okunamadı: %s", b["no"], e)
             continue

@@ -236,8 +236,14 @@
     const ser = state.macro?.series || [];
     $("#macroBox").hidden = !ser.length;
     mb.innerHTML = ser.map(s => `<div title="${s.date}"><span>${s.name}</span><b>${fmtNum(s.last)}${s.unit || ""}</b></div>`).join("");
-    $("#sources").innerHTML = (f.sources || []).map(s =>
-      `<div class="${s.ok ? (s.count ? "" : "idle") : "bad"}" title="${s.error || ""}"><span>${s.name}</span><span>${s.ok ? s.count : "hata"}</span></div>`).join("");
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    $("#sources").innerHTML = (f.sources || []).map(s => {
+      const warn = (s.warnings || []).length;
+      const k = !s.ok ? "bad" : warn && !s.count ? "warn" : s.count ? "" : "idle";
+      const tip = s.error || (s.warnings || []).join("\n");
+      return `<div class="${k}" title="${esc(tip)}"><span>${esc(s.name)}</span><span>${s.ok ? s.count : "hata"}${warn ? " ⚠" : ""}</span></div>` +
+        (warn ? `<p class="src-warn">${esc(s.warnings[0])}</p>` : "");
+    }).join("");
     $("#gen").textContent = `Son güncelleme: ${fmtTime(f.generated)} · AI: ${f.ai?.enabled ? f.ai.model : "kapalı"}`;
     const ban = $("#banner");
     if (f.demo) { ban.hidden = false; ban.textContent = "Örnek veri gösteriliyor. İlk GitHub Actions çalışmasından sonra gerçek akış burada olacak."; }

@@ -56,6 +56,8 @@ a { color: inherit; }
 .sources div::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--up); margin: 6px 8px 0 0; flex: none; }
 .sources div.bad::before { background: var(--down); }
 .sources div.idle::before { background: var(--ink3); }
+.sources div.warn::before { background: var(--warn); }
+.src-warn { margin: -2px 8px 4px 22px; font-size: 10.5px; color: var(--warn); overflow-wrap: anywhere; }
 .sources span:first-child { flex: 1; }
 .meta { font-size: 11px; color: var(--ink3); margin: 8px; }
 

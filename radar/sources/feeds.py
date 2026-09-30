@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import calendar
 import logging
+import re
 from datetime import datetime
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urljoin
+from zoneinfo import ZoneInfo
 
 import feedparser
 
@@ -15,29 +17,68 @@ from . import Context
 log = logging.getLogger("radar.rss")
 
 
+IST = ZoneInfo("Europe/Istanbul")
+TR_MONTHS = {"oca": 1, "şub": 2, "sub": 2, "mar": 3, "nis": 4, "may": 5, "haz": 6, "tem": 7,
+             "ağu": 8, "agu": 8, "eyl": 9, "eki": 10, "kas": 11, "ara": 12}
+_TR_DATE = re.compile(r"(\d{1,2})[ .]+([A-Za-zÇĞİÖŞÜçğıöşü]{3,})[ .]+(\d{4})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?")
+_NUM_DATE = re.compile(r"(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?")
+
+
+def parse_tr_date(s: str | None) -> datetime | None:
+    """'10 Ara 2024 11:23:57', '28 Eylül 2026', '28.09.2026 18:00' → İstanbul saatiyle datetime."""
+    if not s:
+        return None
+    m = _TR_DATE.search(s)
+    if m:
+        mon = TR_MONTHS.get(m.group(2)[:3].replace("İ", "i").lower())
+        if mon:
+            h, mi, se = (int(x) if x else 0 for x in m.group(4, 5, 6))
+            return datetime(int(m.group(3)), mon, int(m.group(1)), h, mi, se, tzinfo=IST)
+    m = _NUM_DATE.search(s)
+    if m:
+        h, mi, se = (int(x) if x else 0 for x in m.group(4, 5, 6))
+        return datetime(int(m.group(3)), int(m.group(2)), int(m.group(1)), h, mi, se, tzinfo=IST)
+    return None
+
+
 def _entry_time(e) -> datetime | None:
     t = e.get("published_parsed") or e.get("updated_parsed")
-    if not t:
-        return None
-    return datetime.fromtimestamp(calendar.timegm(t), tz=UTC)
+    if t:
+        return datetime.fromtimestamp(calendar.timegm(t), tz=UTC)
+    # RFC 822 olmayan tarihler (TCMB ve bazı Türk siteleri Türkçe ay adı kullanıyor)
+    for key in ("published", "updated", "dc_date", "date"):
+        d = parse_tr_date(e.get(key))
+        if d:
+            return d.astimezone(UTC)
+    return None
 
 
 def fetch_feed(url: str, headers: dict | None = None):
     r = http.get(url, headers=headers)
     if r is None:
         return None
-    return feedparser.parse(r.content)
+    feed = feedparser.parse(r.content)
+    feed["_base"] = url
+    if not feed.entries:
+        http.note_failure(url, "RSS boş ya da okunamadı")
+    return feed
 
 
 def entries_to_items(feed, *, source: str, source_type: str, market: str, since: datetime,
                      lang: str, tickers: list[str] | None = None, matcher=None,
-                     extra: dict | None = None, allow_empty: bool = False) -> list[Item]:
+                     extra: dict | None = None, allow_empty: bool = False,
+                     limit: int | None = None) -> list[Item]:
     items: list[Item] = []
     if feed is None:
         return items
+    base = feed.get("_base", "")
+    undated = 0
     for e in feed.entries:
         ts = _entry_time(e)
-        if ts is None or ts < since:
+        if ts is None:
+            undated += 1
+            continue
+        if ts < since:
             continue
         title = e.get("title", "")
         summary = e.get("summary", "")
@@ -51,9 +92,15 @@ def entries_to_items(feed, *, source: str, source_type: str, market: str, since:
         src = source
         if source == "Google News" and e.get("source", {}).get("title"):
             src = f"{e['source']['title']} · Google News"
+        link = e.get("link", "")
         items.append(Item(source=src, source_type=source_type, market=market, title=title,
-                          summary=summary, url=e.get("link", ""), published=iso(ts),
-                          tickers=tk, lang=lang, extra=dict(extra or {})))
+                          summary=summary, url=urljoin(base, link) if base and link else link,
+                          published=iso(ts), tickers=tk, lang=lang, extra=dict(extra or {})))
+    if undated and undated == len(feed.entries):
+        http.note_failure(base or source, f"{undated} kaydın tarihi okunamadı")
+    if limit:
+        items.sort(key=lambda i: i.published, reverse=True)
+        items = items[:limit]
     return items
 
 
@@ -96,7 +143,8 @@ def collect_google_news(ctx: Context) -> list[Item]:
             url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:2d&hl=en-US&gl=US&ceid=US:en"
             lang = "en"
         out += entries_to_items(fetch_feed(url), source="Google News", source_type="news",
-                                market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol])
+                                market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol],
+                                limit=int(ctx.cfg("google_news").get("max_per_stock", 8)))
     log.info("Google News: %d haber", len(out))
     return out
 
@@ -109,7 +157,8 @@ def collect_yahoo(ctx: Context) -> list[Item]:
     for st in ctx.market("US"):
         url = f"https://feeds.finance.yahoo.com/rss/2.0/headline?s={st.symbol}&region=US&lang=en-US"
         out += entries_to_items(fetch_feed(url), source="Yahoo Finance", source_type="news",
-                                market="US", since=ctx.since, lang="en", tickers=[st.symbol])
+                                market="US", since=ctx.since, lang="en", tickers=[st.symbol],
+                                limit=int(ctx.cfg("yahoo_finance_rss").get("max_per_stock", 8)))
     log.info("Yahoo: %d haber", len(out))
     return out
 

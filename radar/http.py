@@ -15,6 +15,14 @@ SEC_UA = os.environ.get("SEC_USER_AGENT") or "piyasa-radari research bot (set SE
 
 _session = requests.Session()
 
+# Bu çalıştırmada başarısız olan istekler (panelde "Kaynak durumu" altında gösterilir).
+FAILURES: list[tuple[str, str]] = []
+
+
+def note_failure(url: str, reason: str) -> None:
+    from urllib.parse import urlparse
+    FAILURES.append((urlparse(url).netloc or url[:60], reason))
+
 
 def get(url: str, *, headers: dict | None = None, params: dict | None = None,
         timeout: int = 20, retries: int = 2) -> requests.Response | None:
@@ -38,10 +46,12 @@ def _request(method: str, url: str, retries: int, **kw) -> requests.Response | N
                 time.sleep(2 * (attempt + 1))
                 continue
             log.warning("%s %s -> HTTP %s", method, url[:120], r.status_code)
+            note_failure(url, f"HTTP {r.status_code}")
             return None
         except requests.RequestException as e:
             if attempt < retries:
                 time.sleep(2 * (attempt + 1))
                 continue
             log.warning("%s %s -> %s", method, url[:120], e)
+            note_failure(url, type(e).__name__)
     return None

@@ -7,7 +7,7 @@ import re
 import unicodedata
 from datetime import timedelta
 
-from . import notify, prices
+from . import http, notify, prices
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import Item, iso, now_utc, parse_iso
@@ -83,9 +83,16 @@ def run() -> dict:
     collected: list[Item] = []
     status = []
     for name, fn in COLLECTORS:
+        n0 = len(http.FAILURES)
         try:
             got = fn(ctx)
-            status.append({"name": name, "ok": True, "count": len(got)})
+            entry = {"name": name, "ok": True, "count": len(got)}
+            fails = http.FAILURES[n0:]
+            if fails:
+                from collections import Counter
+                c = Counter(f"{host}: {why}" for host, why in fails)
+                entry["warnings"] = [f"{k} (×{v})" if v > 1 else k for k, v in c.most_common(4)]
+            status.append(entry)
             collected += got
         except Exception as e:
             log.exception("%s toplayıcı hatası", name)
