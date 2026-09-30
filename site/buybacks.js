@@ -276,16 +276,22 @@
   }
 
   // ─────────────────────────────── sekmeler
+  // Sekmeler: sinyaller · geri alımlar · ALCO (ayrı uygulama, iframe)
+  const VIEWS = { signals: "#signalsView", buybacks: "#buybackView", alco: "#alcoView" };
+  const HASH = { buybacks: "#geri-alim", alco: "#alco" };
   function show(tab) {
-    const bb = tab === "buybacks";
-    document.body.classList.toggle("bb", bb);
-    $("#signalsView").hidden = bb;
-    $("#buybackView").hidden = !bb;
+    if (!VIEWS[tab]) tab = "signals";
+    Object.entries(VIEWS).forEach(([k, sel]) => { $(sel).hidden = k !== tab; });
+    document.body.classList.toggle("bb", tab !== "signals");          // sinyal kolonu sadece Sinyaller'de
+    document.body.classList.toggle("embed", tab === "alco");
     $$(".tabs button").forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
-    if (bb) { if (S.loaded) render(); else load(); } else dispatchEvent(new Event("resize"));   // sağ kolon yeniden görünür: balon haritası genişliğini yenile
-    const h = bb ? "#geri-alim" : "";
+    if (tab === "buybacks") { if (S.loaded) render(); else load(); }
+    else if (tab === "alco") { const f = $("#alcoFrame"); if (!f.src) f.src = f.dataset.src; }   // ilk açılışta yükle
+    else dispatchEvent(new Event("resize"));   // sağ kolon yeniden görünür: balon haritası genişliğini yenile
+    const h = HASH[tab] || "";
     if (location.hash !== h) history.replaceState(null, "", h || location.pathname + location.search);
   }
+  $("#alcoReload").onclick = () => { const f = $("#alcoFrame"); f.src = f.dataset.src; };
   $$(".tabs button").forEach(b => b.onclick = () => show(b.dataset.tab));
   $$("#bbPeriod button").forEach(b => b.onclick = () => {
     S.days = +b.dataset.d; $$("#bbPeriod button").forEach(x => x.classList.toggle("on", x === b)); render();
@@ -293,6 +299,7 @@
   $("#bbWatch").onchange = e => { S.watch = e.target.checked; render(); };
   let t; $("#bbQ").oninput = e => { clearTimeout(t); t = setTimeout(() => { S.q = e.target.value.trim(); render(); }, 150); };
   let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (!$("#buybackView").hidden) render(); }, 200); });
-  if (location.hash === "#geri-alim") show("buybacks");
+  const fromHash = Object.keys(HASH).find(k => HASH[k] === location.hash);
+  if (fromHash) show(fromHash);
   else setTimeout(load, 1500);            // arka planda yükle: sekme rozeti için
 })();

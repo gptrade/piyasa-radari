@@ -374,3 +374,19 @@ body.bb .shell { grid-template-areas: "side tabs tabs" "side main main"; }
 .ext-links { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
 .ext-links a { font-size: 11.5px; color: var(--ink2); text-decoration: none; border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; }
 .ext-links a:hover { color: var(--brand); border-color: var(--brand); }
+
+
+/* ───────── gömülü uygulama sekmesi (ALCO) ───────── */
+.embed-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 12px 0 8px; font-size: 13px; color: var(--ink2); }
+.embed-bar a { color: var(--brand); }
+.embed-act { display: flex; gap: 6px; }
+.embed-act button, .embed-act .btn { font-size: 12.5px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--ink); text-decoration: none; }
+.embed-act button:hover, .embed-act .btn:hover { border-color: var(--brand); color: var(--brand); }
+.embed-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+#alcoFrame { display: block; width: 100%; height: calc(100vh - 150px); min-height: 560px; border: 0; background: #fff; }
+.embed-note { font-size: 11.5px; color: var(--ink3); margin: 8px 0 0; }
+.embed-note code { font-family: var(--mono); font-size: 11px; background: var(--soft); padding: 1px 4px; border-radius: 4px; }
+body.embed .main { padding-bottom: 16px; }
+@media (max-width: 760px) { #alcoFrame { height: calc(100vh - 120px); min-height: 480px; } .tabs button { padding: 7px 10px; } }
+.shell > .tabs { overflow-x: auto; scrollbar-width: none; }
+.shell > .tabs button { flex: none; white-space: nowrap; }
