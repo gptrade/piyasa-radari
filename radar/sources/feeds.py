@@ -182,12 +182,14 @@ def collect_reddit(ctx: Context) -> list[Item]:
     if not cfg.get("enabled", True):
         return []
     subs = "+".join(cfg.get("subreddits") or ["stocks"])
-    out: list[Item] = []
-    for st in ctx.market("US"):
-        url = (f"https://www.reddit.com/r/{subs}/search.rss?q={quote_plus('$' + st.symbol)}"
-               f"&restrict_sr=on&sort=new&t=day")
-        out += entries_to_items(fetch_feed(url), source="Reddit", source_type="social", market="US",
-                                since=ctx.since, lang="en", tickers=[st.symbol])
+    stocks = ctx.market("US")
+    # Hisse başına ayrı istek Reddit'in hız sınırına (HTTP 429) takılıyor: tek sorgu, sonra eşleştir.
+    q = " OR ".join(f'"${st.symbol}"' for st in stocks)
+    url = (f"https://www.reddit.com/r/{subs}/search.rss?q={quote_plus(q)}"
+           f"&restrict_sr=on&sort=new&t=day&limit=100")
+    sym_matcher = type(ctx.matcher)([type(st)(st.symbol, st.name, st.market, []) for st in stocks])
+    out: list[Item] = entries_to_items(fetch_feed(url), source="Reddit", source_type="social",
+                                       market="US", since=ctx.since, lang="en", matcher=sym_matcher)
     log.info("Reddit: %d gönderi", len(out))
     return out
 

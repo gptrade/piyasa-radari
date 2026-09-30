@@ -9,7 +9,9 @@ import requests
 
 log = logging.getLogger("radar.http")
 
-DEFAULT_UA = "Mozilla/5.0 (compatible; piyasa-radari/1.0; +https://github.com)"
+# Bazı haber siteleri (ör. PR Newswire) bot kimlikli istekleri 404/403 ile reddediyor.
+DEFAULT_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/128.0 Safari/537.36 piyasa-radari/1.0")
 # SEC, iletişim e-postası içeren bir User-Agent ister: SEC_USER_AGENT secret'ında tanımla.
 SEC_UA = os.environ.get("SEC_USER_AGENT") or "piyasa-radari research bot (set SEC_USER_AGENT)"
 
