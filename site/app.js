@@ -541,9 +541,13 @@
     let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderBubbles, 200); });
   }
 
+  // Diğer modüller (geri alım sekmesi) için salt okunur erişim
+  window.radar = { get state() { return state; }, fmtNum, fmtPct, fmtTime, esc, cls, ready: null };
+
   async function boot() {
     bind();
-    try { await load(); render(); }
+    let done; window.radar.ready = new Promise(r => (done = r));
+    try { await load(); render(); done(); }
     catch (e) { $("#list").innerHTML = `<p class="empty">Veri yüklenemedi: ${esc(e.message)}</p>`; }
     setInterval(async () => { try { await load(); render(); } catch { /* sonraki turda */ } }, 5 * 60 * 1000);
   }
