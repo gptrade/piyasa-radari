@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260930h">
+<link rel="stylesheet" href="style.css?v=20260930i">
 <script>
   // Kayıtlı tema ve sol panel durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
   (function () {
@@ -79,6 +79,16 @@
       <button role="tab" id="tabBuybacks" aria-controls="buybackView" aria-selected="false" data-tab="buybacks">Şirket Geri Alım <em id="bbBadge"></em></button>
     </div>
     <span class="tab-tools">
+        <div class="export" id="export">
+          <button type="button" class="export-btn" id="exportBtn" aria-haspopup="menu" aria-expanded="false" title="Filtrelenmiş görünümü dışa aktar">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m0 0-3.5-3.5M10 12l3.5-3.5M4 14.5v1A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5v-1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="export-menu" id="exportMenu" role="menu" hidden>
+            <p id="exportInfo"></p>
+            <button type="button" role="menuitem" data-fmt="csv">CSV <small>Excel · noktalı virgül</small></button>
+            <button type="button" role="menuitem" data-fmt="json">JSON <small>tam kayıt</small></button>
+          </div>
+        </div>
       <button type="button" class="icon-btn" id="alcoReload" title="Makro Veri panelini yenile">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 3.5v3.2h-3.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span>Yenile</span>
@@ -177,8 +187,8 @@
       </div>
       <svg id="bubbles" class="bubbles" role="img" aria-label="Hisse bazında sinyal haritası"></svg>
       <p class="bm-legend">
-        <span>◀ SAT · İZLE · AL ▶ (yatay konum = net haber yönü)</span>
-        <span>boyut = haber sayısı · renk = en yüksek önem:
+        <span>yatay = net haber yönü (◀ SAT · İZLE · AL ▶) · dikey = haber sayısı</span>
+        <span>renk = en yüksek önem:
           <i class="imp i1"></i>düşük <i class="imp i2"></i>orta <i class="imp i3"></i>yüksek · çizgi = aynı haberde geçenler</span>
       </p>
     </section>
@@ -186,8 +196,8 @@
 </div>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="app.js?v=20260930h"></script>
-<script src="buybacks.js?v=20260930h"
+<script src="app.js?v=20260930i"></script>
+<script src="buybacks.js?v=20260930i"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>

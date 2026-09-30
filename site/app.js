@@ -163,7 +163,7 @@
       <span class="ev ${it.event || "news"}" title="${evN}">${evG}</span>
       <span class="lbl" title="${esc(it.title)}">${label}</span>
       ${dotsHTML(a)}
-      <span class="px ${cls(since)}" title="${noTrade ? "Haberden sonra henüz işlem olmadı" : "Haberden bu yana fiyat"}">${since == null ? (noTrade ? "…" : "") : fmtPct(since)}</span>
+      <span class="px ${since == null ? "" : since >= 0.05 ? "rx-up" : since <= -0.05 ? "rx-down" : "rx-flat"}" title="${noTrade ? "Haberden sonra henüz işlem olmadı" : "Haberden bu yana fiyat"}">${since == null ? (noTrade ? "…" : "") : fmtPct(since)}</span>
       <span class="tier t${it.tier || 3}" title="${tN}">${tG}</span>
       ${dups}
       <span class="age" title="${fmtTime(it.published)}">${ago(it.published)}</span>
@@ -461,8 +461,9 @@
       const b = document.createElement("button");
       b.className = "hm" + (dis ? " dis" : "") + (state.ticker === w.symbol ? " on" : "");
       if (chg != null && Math.abs(chg) >= 0.1) {
-        const pct = Math.round(8 + Math.min(Math.abs(chg) / 4, 1) * 32);   // en fazla %40 karışım: metin okunur kalsın
-        b.style.background = `color-mix(in srgb, var(${chg > 0 ? "--up" : "--down"}) ${pct}%, var(--mid))`;
+        const pct = Math.round(35 + Math.min(Math.abs(chg) / 3, 1) * 65);   // %35–100 doygun renk; ±%3 ve üstü tam renk
+        b.style.background = `color-mix(in srgb, var(${chg > 0 ? "--hm-up" : "--hm-down"}) ${pct}%, var(--mid))`;
+        if (pct >= 55) b.classList.add("hot");                                // koyu renkli kutuda metin beyaz
       }
       b.innerHTML = `<b>${esc(w.symbol)}</b><span>${fmtPct(chg, 2)}</span>${arrow ? `<i>${arrow}</i>` : ""}`;
       b.setAttribute("aria-label", `${w.symbol} bugün ${fmtPct(chg, 2)}, ${n} haber sinyali${dis ? ", haber ile fiyat ters" : ""}`);
@@ -501,41 +502,57 @@
   }
 
   function renderBubbles() {
+    // X = net haber yönü (−1 SAT … +1 AL), Y = son 24 saatteki haber sayısı, renk = en yüksek önem
     const svg = $("#bubbles");
-    const W = Math.max(280, Math.round(svg.getBoundingClientRect().width) || 340), H = 260, pad = 26;
+    const W = Math.max(280, Math.round(svg.getBoundingClientRect().width) || 340), H = 280;
+    const L = 40, R = 10, T = 10, B = 36;                 // eksen etiketleri için kenar boşlukları
+    const pw = W - L - R, ph = H - T - B;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     svg.innerHTML = "";
     const { nodes, edges } = bubbleData();
     const mk = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); parent.append(e); return e; };
-    const cx = v => pad + (v + 1) / 2 * (W - 2 * pad);
-    mk("line", { x1: cx(0), x2: cx(0), y1: 6, y2: H - 18, class: "axis" });
-    [["◀ SAT", 4, "start"], ["İZLE", cx(0), "middle"], ["AL ▶", W - 4, "end"]].forEach(([t, x, a]) => {
-      const e = mk("text", { x, y: H - 4, class: "axis-lbl", "text-anchor": a }); e.textContent = t;
+    const txt = (t, attrs) => { const e = mk("text", attrs); e.textContent = t; return e; };
+    const maxN = Math.max(1, ...nodes.map(n => n.n));
+    const yMax = maxN <= 4 ? 4 : maxN <= 10 ? 10 : Math.ceil(maxN / 10) * 10;
+    const cx = v => L + (v + 1) / 2 * pw;
+    const cy = n => T + ph - Math.sqrt(n / yMax) * ph;          // karekök ölçek: tek hisse (ör. 50+ haber) diğerlerini ezmesin
+    const nice = [1, 2, 5, 10, 20, 50, 100, 200, 500];
+    const yTicks = [0, ...nice.filter(v => v <= yMax * 0.6 && v >= yMax / 25).filter((v, i, a) => i === 0 || v >= a[i - 1] * 2.4), yMax];
+    yTicks.forEach(v => {
+      if (v) mk("line", { x1: L, x2: W - R, y1: cy(v), y2: cy(v), class: "grid" });
+      txt(v, { x: L - 6, y: cy(v) + 3.5, class: "tick", "text-anchor": "end" });
     });
+    mk("line", { x1: cx(0), x2: cx(0), y1: T, y2: T + ph, class: "grid mid" });
+    mk("line", { x1: L, x2: L, y1: T, y2: T + ph, class: "axis" });              // Y ekseni
+    mk("line", { x1: L, x2: W - R, y1: T + ph, y2: T + ph, class: "axis" });      // X ekseni
+    [[-1, "◀ SAT", "start"], [0, "İZLE", "middle"], [1, "AL ▶", "end"]].forEach(([v, t, a]) => {
+      mk("line", { x1: cx(v), x2: cx(v), y1: T + ph, y2: T + ph + 4, class: "axis" });
+      txt(t, { x: cx(v), y: T + ph + 15, class: "tick", "text-anchor": a });
+    });
+    txt("Net haber yönü →", { x: L + pw / 2, y: H - 3, class: "axis-title", "text-anchor": "middle" });
+    txt("Haber sayısı (24 sa, √)", { x: 0, y: 0, class: "axis-title", "text-anchor": "middle", transform: `translate(11 ${T + ph / 2}) rotate(-90)` });
     if (!nodes.length) {
-      const e = mk("text", { x: W / 2, y: H / 2, "text-anchor": "middle", class: "axis-lbl" }); e.textContent = "Son 24 saatte değerlendirilmiş sinyal yok";
+      txt("Son 24 saatte değerlendirilmiş sinyal yok", { x: L + pw / 2, y: T + ph / 2, "text-anchor": "middle", class: "tick" });
       return;
     }
-    const maxN = Math.max(...nodes.map(n => n.n));
-    const midY = (H - 20) / 2;
-    nodes.forEach((n, i) => {
-      n.r = 12 + 18 * Math.sqrt(n.n / maxN);
-      n.x = cx(Math.max(-1, Math.min(1, n.net)));
-      n.y = midY + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 6;
+    nodes.forEach(n => {
+      n.r = 15 + 6 * Math.sqrt(n.n / maxN);
+      n.x = n.tx = cx(Math.max(-1, Math.min(1, n.net)));
+      n.y = n.ty = cy(n.n);
     });
-    for (let k = 0; k < 240; k++) {          // basit çarpışma çözümü; yatay konum (yön) büyük ölçüde korunur
+    for (let k = 0; k < 240; k++) {          // çarpışma çözümü; balonlar hedef (x, y) konumlarına geri çekilir
       for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i], b = nodes[j];
-        const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.01, min = a.r + b.r + 3;
+        const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.01, min = a.r + b.r + 2;
         if (d < min) {
-          const push = (min - d) / 2, ux = dx / d, uy = dy / d || (i % 2 ? 1 : -1);
-          a.x -= ux * push * 0.25; b.x += ux * push * 0.25; a.y -= uy * push; b.y += uy * push;
+          const push = (min - d) / 2, ux = dx / d || (i % 2 ? 1 : -1), uy = dy / d;
+          a.x -= ux * push * 0.6; b.x += ux * push * 0.6; a.y -= uy * push * 0.6; b.y += uy * push * 0.6;
         }
       }
       nodes.forEach(n => {
-        n.y += (midY - n.y) * 0.01;
-        n.y = Math.max(n.r + 4, Math.min(H - 22 - n.r, n.y));
-        n.x = Math.max(n.r + 2, Math.min(W - n.r - 2, n.x));
+        n.x += (n.tx - n.x) * 0.04; n.y += (n.ty - n.y) * 0.06;
+        n.y = Math.max(T + n.r, Math.min(T + ph - n.r, n.y));
+        n.x = Math.max(L + n.r + 1, Math.min(W - R - n.r, n.x));
       });
     }
     const byT = new Map(nodes.map(n => [n.t, n]));
@@ -549,7 +566,7 @@
       mk("circle", { cx: n.x, cy: n.y, r: n.r, class: `b i${n.imp}` }, g);
       const arrow = n.stance === "AL" ? "▲ " : n.stance === "SAT" ? "▼ " : "";
       const big = n.r >= 18;
-      const t1 = mk("text", { x: n.x, y: big ? n.y - 1 : n.y + 3.5, "text-anchor": "middle", class: `bl on-i${n.imp}` }, g);
+      const t1 = mk("text", { x: n.x, y: big ? n.y - 1 : n.y + 3.5, "text-anchor": "middle", class: `bl${big ? "" : " sm"} on-i${n.imp}` }, g);
       t1.textContent = big ? n.t : n.t.slice(0, 5);
       if (big) { const t2 = mk("text", { x: n.x, y: n.y + 10, "text-anchor": "middle", class: `bl2 on-i${n.imp}` }, g); t2.textContent = arrow + n.stance; }
       const heads = n.items.slice().sort((a, b) => impact(b) - impact(a)).slice(0, 5).map(it => {
@@ -636,8 +653,59 @@
     $("#empty").hidden = items.length > 0;
   }
 
+  // ─────────────────────────────── dışa aktarma (filtrelenmiş görünüm)
+  function exportRows() {
+    return filtered().map(it => {
+      const a = it.analysis || {}, r = it.reaction || {};
+      return {
+        id: it.id, yayin_utc: it.published, piyasa: it.market, hisseler: relTickers(it).join(" "),
+        kaynak: it.source, kaynak_turu: it.source_type, kaynak_sinifi: it.tier ?? "", olay_turu: it.event || "",
+        olay: a.event_label || "", baslik: it.title, ne_oldu: a.what || a.headline_tr || "", neden_onemli: a.why || "", risk: a.risk || "",
+        yon: a.sentiment || "", guven: a.confidence ?? "", onem: a.materiality || "", ufuk: a.horizon || "",
+        tepki_pct: r.n_after === 0 ? "" : r.since ?? "", hacim_kat: r.vol_x ?? "", endeks_pct: r.index_since ?? "", endekse_gore_pct: r.excess ?? "",
+        tekrar: it.dups ? it.dups + 1 : 1, url: it.url,
+      };
+    });
+  }
+  function download(name, text, type) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = Object.assign(document.createElement("a"), { href: url, download: name });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function exportView(fmt) {
+    const d = new Date(), z = n => String(n).padStart(2, "0");
+    const stamp = `${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}`;   // yerel saat
+    const name = `piyasa-radari_${state.market.toLowerCase()}_${stamp}`;
+    if (fmt === "json") {
+      const items = filtered();
+      const meta = { olusturma: new Date().toISOString(), veri: state.feed.generated, piyasa: state.market, arama: state.q, hisse: state.ticker,
+        kolon_filtreleri: state.col, kaynak_turleri: [...state.types], gurultu_gizli: state.hideNoise, siralama: state.sort, adet: items.length };
+      download(name + ".json", JSON.stringify({ filtre: meta, kayitlar: items }, null, 2), "application/json");
+      return;
+    }
+    const rows = exportRows();
+    const cols = Object.keys(rows[0] || { id: "" });
+    const cell = v => { const t = String(v ?? ""); return /[";\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+    const csv = [cols.join(";"), ...rows.map(r => cols.map(c => cell(r[c])).join(";"))].join("\r\n");
+    download(name + ".csv", "\ufeff" + csv, "text/csv;charset=utf-8");     // BOM: Excel Türkçe karakterleri doğru açar
+  }
+
   // ─────────────────────────────── etkileşim
   function bind() {
+    const exBtn = $("#exportBtn"), exMenu = $("#exportMenu");
+    const exClose = () => { exMenu.hidden = true; exBtn.setAttribute("aria-expanded", false); };
+    exBtn.onclick = e => {
+      e.stopPropagation();
+      if (!exMenu.hidden) return exClose();
+      const n = filtered().length;
+      $("#exportInfo").textContent = `Filtrelenmiş görünüm: ${n} kayıt`;
+      $$("button", exMenu).forEach(b => b.disabled = !n);
+      exMenu.hidden = false; exBtn.setAttribute("aria-expanded", true);
+    };
+    $$("button", exMenu).forEach(b => b.onclick = () => { exportView(b.dataset.fmt); exClose(); });
+    document.addEventListener("click", e => { if (!e.target.closest("#export")) exClose(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") exClose(); });
     const seg = (sel, key, attr) => $$(sel + " button").forEach(b => b.onclick = () => {
       state[key] = b.dataset[attr];
       if (key === "market") { state.ticker = null; state.ids = null; state.idsLabel = ""; state.focusText = ""; }
