@@ -470,16 +470,16 @@
     const hidden = (d.ideas || []).length - ideas.length;
     el.innerHTML = headHTML(`Son ${d.window_hours} saatin özeti`, d.mood) + `
       <p class="dg-head">${esc(d.headline)}</p>
-      <p class="dg-sum">${esc(d.summary)}</p>
+      <p class="dg-sum" data-tip="${esc(d.summary)}">${esc(d.summary)}</p>
       ${market() !== "ALL" ? `<p class="dg-note">Özet metni tüm piyasaları kapsar${hidden ? `; ${hidden} fikir ${market() === "BIST" ? "ABD" : "BIST"} hissesi olduğu için gizlendi` : ""}.</p>` : ""}
       <details class="dg-more" ${matchMedia("(min-width: 768px)").matches || state.idsLabel ? "open" : ""}><summary class="link-btn">${ideas.length} fikir${d.conflicts?.length ? ` ve ${d.conflicts.length} çelişki` : ""} göster</summary>
       ${ideas.map(([i, k]) => { const s = i.stance === "AL" ? 1 : i.stance === "SAT" ? -1 : 0; return `
-        <button type="button" class="idea" data-k="${k}" aria-pressed="${state.idsLabel === "idea" + k}" data-tip="Bu fikrin dayandığı sinyalleri tabloda göster">
-          <span class="idea-top"><span class="stance ${esc(i.stance)}">${glyph(s)} ${esc(i.stance)}</span><span class="idea-tk">${esc(i.ticker)}</span><span class="idea-conv">%${i.conviction} kanaat</span></span>
-          <span class="idea-title">${esc(i.title)}</span>
-          <p>${esc(i.rationale)}</p>${i.risk ? `<p class="risk">Risk: ${esc(i.risk)}</p>` : ""}
+        <button type="button" class="idea" data-k="${k}" aria-pressed="${state.idsLabel === "idea" + k}"
+          data-tip="${esc(`<b>${esc(i.title)}</b><br>${esc(i.rationale)}${i.risk ? `<hr>Risk: ${esc(i.risk)}` : ""}<hr><i>Tıkla: dayandığı sinyalleri tabloda göster</i>`)}">
+          <span class="idea-top"><span class="stance ${esc(i.stance)}">${glyph(s)} ${esc(i.stance)}</span><span class="idea-tk">${esc(i.ticker)}</span><span class="idea-title">${esc(i.title)}</span><span class="idea-conv">%${i.conviction}</span></span>
+          <span class="sr-only">${esc(i.rationale)}${i.risk ? ` Risk: ${esc(i.risk)}` : ""}</span>
         </button>`; }).join("")}
-      ${d.conflicts?.length ? `<ul class="dg-conf">${d.conflicts.map(c => `<li>${esc(c)}</li>`).join("")}</ul>` : ""}</details>
+      ${d.conflicts?.length ? `<details class="dg-cx"><summary class="link-btn">≠ ${d.conflicts.length} çelişki</summary><ul class="dg-conf">${d.conflicts.map(c => `<li>${esc(c)}</li>`).join("")}</ul></details>` : ""}</details>
       <p class="card-foot">${d.count} sinyalden · ${esc(d.provider || "")} · ${fmt.dt(d.generated)} · İzleme notudur, yatırım tavsiyesi değildir.</p>`;
     $$(".idea", el).forEach(b => b.onclick = () => {
       const k = "idea" + b.dataset.k, i = d.ideas[+b.dataset.k];
@@ -529,7 +529,7 @@
       const fg = bg === mid ? ink : contrast(white, bg) >= 4.5 ? white : contrast(dark, bg) >= contrast(white, bg) ? dark : white;
       b.style.background = `rgb(${bg.join(",")})`; b.style.color = `rgb(${fg.join(",")})`;
       const k = chg == null || Math.abs(chg) < 0.05 ? 0 : chg;
-      b.innerHTML = `<b>${esc(w.symbol)}</b><span class="v">${chg == null ? "N/A" : `${glyph(k)} ${fmt.pct(chg, 2)}`}</span>${nk != null ? `<span class="nw" aria-hidden="true">${glyph(nk)}</span>` : ""}`;
+      b.innerHTML = `<b>${esc(w.symbol)}</b><span class="v">${chg == null ? "N/A" : `${glyph(k)} ${fmt.pct(chg, 2)}`}</span>${nk != null ? `<span class="nw" aria-hidden="true">${glyph(nk)}${n}</span>` : ""}`;
       b.setAttribute("aria-pressed", String(state.ticker === w.symbol));
       b.setAttribute("aria-label", `${w.symbol} bugün ${chg == null ? "fiyat yok" : fmt.pct(chg, 2)}, son 24 saatte ${n} haber${nk != null ? `, net ${nk > 0 ? "olumlu" : nk < 0 ? "olumsuz" : "nötr"}` : ""}${dis ? ", haber ile fiyat ters" : ""}`);
       b.dataset.tip = `<b>${esc(w.symbol)}</b> · ${esc(w.name)}<br>Bugün: ${chg == null ? "fiyat yok" : glyph(k) + " " + fmt.pct(chg, 2)}<br>Son 24 sa: ${n} sinyal${n ? `, net ${nk > 0 ? "▲ olumlu" : nk < 0 ? "▼ olumsuz" : "● nötr"}` : ""}` +
@@ -537,114 +537,105 @@
       b.onclick = () => { state.ticker = state.ticker === w.symbol ? null : w.symbol; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE; render(); };
       box.append(b);
     }
+    layoutStrip();
+  }
+  function layoutStrip() {
+    const box = $("#heatmap"), n = box.children.length;
+    if (!n || matchMedia("(max-width: 767px)").matches) { box.style.gridTemplateColumns = ""; return; }
+    const fit = Math.max(1, Math.floor((box.clientWidth + 4) / 82));          // kutu en az ~78px
+    const rows = Math.ceil(n / Math.min(n, fit));
+    box.style.gridTemplateColumns = `repeat(${Math.ceil(n / rows)}, minmax(0, 1fr))`;
   }
 
-  // ─────────────────────────────── sağ şerit: sinyal haritası (çarpışmasız balonlar)
-  function bubbleData() {
-    const w = watchSet(), m = new Map(), edges = new Map();
-    for (const it of state.feed.items) {
-      const a = it.analysis;
-      if (!a || ageMin(it.published) > 1440 || !inMarket(it)) continue;
-      const tks = relTickers(it).filter(t => w.has(t) || (it.tickers || []).includes(t));
-      tks.forEach(t => {
-        const o = m.get(t) || { t, s: 0, w: 0, n: 0, imp: 0, items: [] };
-        const k = MAT_W[a.materiality];
-        o.s += sign(a.sentiment) * a.confidence / 100 * k; o.w += k; o.n++; o.imp = Math.max(o.imp, k); o.items.push(it);
-        m.set(t, o);
-      });
-      for (let i = 0; i < tks.length; i++) for (let j = i + 1; j < tks.length; j++) { const key = [tks[i], tks[j]].sort().join("|"); edges.set(key, (edges.get(key) || 0) + 1); }
-    }
-    const nodes = [...m.values()].map(o => { o.net = o.w ? o.s / o.w : 0; o.stance = o.net >= 0.2 ? "AL" : o.net <= -0.2 ? "SAT" : "İZLE"; return o; })
-      .sort((a, b) => b.n - a.n).slice(0, 16);
-    return { nodes, edges };
-  }
-  // Okunur tikler: ardışık iki tik arasında en az 24 piksel (karekök ölçekte küçük değerler sıkışmasın)
-  function niceTicks(max, pos) {
-    const out = [0];
-    for (const s of [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, max].filter(v => v <= max))
-      if (Math.abs(pos(out.at(-1)) - pos(s)) >= 24 && (s === max || Math.abs(pos(s) - pos(max)) >= 24)) out.push(s);
-    return [...new Set(out)];
+  // ─────────────────────────────── sağ şerit: Haber × Fiyat
+  // Yatay: son 24 saatin net haber yönü (−1 … +1) · Dikey: bugünkü fiyat değişimi (%) · boyut: haber sayısı.
+  // Sağ alt ve sol üst "ters" bölgeler: haber yönü ile fiyat ters (ısı haritasındaki ≠ ile aynı eşik).
+  function scatterData() {
+    return (state.feed.watchlist || []).filter(w => market() === "ALL" || w.market === market()).map(w => {
+      const p = state.prices[w.symbol], chg = p?.change_pct, { net, n } = newsNet(w.symbol);
+      if (chg == null || !n) return null;
+      const nk = net > 0.15 ? 1 : net < -0.15 ? -1 : 0;
+      const items = state.feed.items.filter(it => it.analysis && ageMin(it.published) <= 1440 && relTickers(it).includes(w.symbol));
+      return { t: w.symbol, name: w.name, chg, net, n, nk, mis: (nk === 1 && chg <= -0.5) || (nk === -1 && chg >= 0.5), items };
+    }).filter(Boolean);
   }
   function renderBubbles() {
     const svg = $("#bubbles");
     const W = Math.max(280, Math.round(svg.getBoundingClientRect().width) || 320), H = 280;
-    const L = 36, R = 10, T = 12, B = 36, pw = W - L - R, ph = H - T - B;
+    const L = 44, R = 12, T = 12, B = 34, pw = W - L - R, ph = H - T - B;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     svg.innerHTML = "";
-    const { nodes, edges } = bubbleData();
     const mk = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); parent.append(e); return e; };
     const txt = (t, attrs, parent) => { const e = mk("text", attrs, parent); e.textContent = t; return e; };
-    const maxN = Math.max(1, ...nodes.map(n => n.n));
-    const yMax = maxN <= 5 ? 5 : maxN <= 10 ? 10 : Math.ceil(maxN / 10) * 10;
-    const cx = v => L + (v + 1) / 2 * pw;
-    const cy = n => T + ph - Math.sqrt(n / yMax) * ph;           // karekök ölçek: tek bir çok haberli hisse diğerlerini ezmesin
-    niceTicks(yMax, cy).forEach(v => {
-      if (v) mk("line", { x1: L, x2: W - R, y1: cy(v), y2: cy(v), class: "grid" });
-      txt(v, { x: L - 6, y: cy(v) + 3.5, class: "tick", "text-anchor": "end" });
+    const nodes = scatterData();
+    const others = (state.feed.watchlist || []).filter(w => market() === "ALL" || w.market === market()).length - nodes.length;
+    const yMax = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50].find(v => v >= Math.max(1, ...nodes.map(n => Math.abs(n.chg))) * 1.1) || 50;
+    const cx = v => L + (v + 1) / 2 * pw, cy = v => T + ph / 2 - v / yMax * ph / 2;
+    // ters bölgeler (taralı zemin)
+    mk("rect", { x: cx(0), y: cy(0), width: pw / 2, height: ph / 2, class: "sc-zone" });
+    mk("rect", { x: L, y: T, width: pw / 2, height: ph / 2, class: "sc-zone" });
+    txt("≠ haber +, fiyat −", { x: W - R - 4, y: T + ph - 6, "text-anchor": "end", class: "zone-lbl" });
+    txt("≠ haber −, fiyat +", { x: L + 4, y: T + 12, class: "zone-lbl" });
+    // ızgara ve eksenler
+    [-yMax, -yMax / 2, 0, yMax / 2, yMax].forEach(v => {
+      mk("line", { x1: L, x2: W - R, y1: cy(v), y2: cy(v), class: v ? "grid" : "axis" });
+      txt(v ? fmt.pct(v, v % 1 ? 1 : 0) : "%0", { x: L - 6, y: cy(v) + 3.5, class: "tick", "text-anchor": "end" });
     });
-    mk("line", { x1: cx(0), x2: cx(0), y1: T, y2: T + ph, class: "grid", "stroke-dasharray": "3 3" });
-    mk("line", { x1: L, x2: L, y1: T, y2: T + ph, class: "axis" });
-    mk("line", { x1: L, x2: W - R, y1: T + ph, y2: T + ph, class: "axis" });
-    [[-1, "▼ SAT", "start"], [0, "● İZLE", "middle"], [1, "AL ▲", "end"]].forEach(([v, t, a]) => txt(t, { x: cx(v), y: T + ph + 14, class: "tick", "text-anchor": a }));
-    txt("Net haber yönü", { x: L + pw / 2, y: H - 4, class: "axis-title", "text-anchor": "middle" });
-    txt("Haber sayısı (√ ölçek)", { x: 0, y: 0, class: "axis-title", "text-anchor": "middle", transform: `translate(10 ${T + ph / 2}) rotate(-90)` });
-    if (!nodes.length) { txt("Son 24 saatte değerlendirilmiş sinyal yok", { x: L + pw / 2, y: T + ph / 2, "text-anchor": "middle", class: "tick" }); return; }
-
-    // kuvvet yerleşimi: x/y hedefe çekim + çarpışma; en sonda saf çarpışma geçişi (üst üste binme kalmasın)
-    nodes.forEach((n, i) => {
-      n.r = 9 + 13 * Math.sqrt(n.n / maxN);
-      n.tx = cx(Math.max(-1, Math.min(1, n.net))); n.ty = cy(n.n);
-      n.x = n.tx + (i % 2 ? 0.5 : -0.5); n.y = n.ty;
-    });
-    const clamp = n => { n.x = Math.max(L + n.r + 1, Math.min(W - R - n.r, n.x)); n.y = Math.max(T + n.r, Math.min(T + ph - n.r - 1, n.y)); };
-    const collide = (k = 1) => {
-      let moved = false;
+    mk("line", { x1: cx(0), x2: cx(0), y1: T, y2: T + ph, class: "axis" });
+    [[-1, "▼ olumsuz", "start"], [0, "● nötr", "middle"], [1, "olumlu ▲", "end"]].forEach(([v, t, a]) => txt(t, { x: cx(v), y: T + ph + 14, class: "tick", "text-anchor": a }));
+    txt("Net haber yönü (24 sa)", { x: L + pw / 2, y: H - 3, class: "axis-title", "text-anchor": "middle" });
+    txt("Bugün fiyat", { x: 0, y: 0, class: "axis-title", "text-anchor": "middle", transform: `translate(10 ${T + ph / 2}) rotate(-90)` });
+    $("#scNote").textContent = "";
+    if (!nodes.length) {
+      txt("Son 24 saatte haberi olan izlenen hisse yok", { x: L + pw / 2, y: T + 24, "text-anchor": "middle", class: "tick" });
+      return;
+    }
+    // konum + hafif çarpışma çözümü (balonlar gerçek konumlarından en fazla birkaç piksel kayar)
+    const maxN = Math.max(...nodes.map(n => n.n));
+    nodes.forEach(n => { n.r = 6 + 9 * Math.sqrt(n.n / maxN); n.x = n.tx = cx(Math.max(-1, Math.min(1, n.net))); n.y = n.ty = cy(n.chg); });
+    for (let it = 0; it < 120; it++) {
       for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i], b = nodes[j];
-        let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-        const min = a.r + b.r + 2;
+        let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy); const min = a.r + b.r + 2;
         if (d >= min) continue;
-        if (d < 0.01) { dx = (j % 2 ? 1 : -1); dy = 0.3; d = Math.hypot(dx, dy); }
-        const push = (min - d) / 2 * k, ux = dx / d, uy = dy / d;
-        a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push; moved = true;
+        if (d < 0.01) { dx = j % 2 ? 1 : -1; dy = 0.5; d = Math.hypot(dx, dy); }
+        const p = (min - d) / 2; a.x -= dx / d * p; a.y -= dy / d * p; b.x += dx / d * p; b.y += dy / d * p;
       }
-      nodes.forEach(clamp);
-      return moved;
-    };
-    for (let it = 0; it < 300; it++) {
-      const alpha = 1 - it / 300;
-      nodes.forEach(n => { n.x += (n.tx - n.x) * 0.06 * alpha; n.y += (n.ty - n.y) * 0.08 * alpha; });
-      collide(0.8);
+      nodes.forEach(n => { n.x += (n.tx - n.x) * 0.1; n.y += (n.ty - n.y) * 0.1;
+        n.x = Math.max(L + n.r, Math.min(W - R - n.r, n.x)); n.y = Math.max(T + n.r, Math.min(T + ph - n.r, n.y)); });
     }
-    for (let it = 0; it < 200 && collide(1); it++);
-
-    const byT = new Map(nodes.map(n => [n.t, n]));
-    for (const [key, c] of edges) {
-      const [a, b] = key.split("|").map(t => byT.get(t));
-      if (a && b) mk("line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: "edge", "stroke-width": Math.min(1 + c * 0.5, 3) });
-    }
+    // etiketler: sağ, sol, üst, alt adaylarından diğer etiketlere ve balonlara çarpmayan ilki seçilir
+    const CW = 6.3, placed = [];
+    const hitsCircle = (x, y, w, h) => nodes.some(o => { const nx = Math.max(x, Math.min(o.x, x + w)), ny = Math.max(y, Math.min(o.y, y + h)); return Math.hypot(o.x - nx, o.y - ny) < o.r; });
+    const hitsLabel = (x, y, w, h) => placed.some(([px, py, pw2, ph2]) => x < px + pw2 && px < x + w && y < py + ph2 && py < y + h);
+    nodes.slice().sort((a, b) => b.r - a.r).forEach(n => {
+      const w = n.t.length * CW, h = 11;
+      const cands = [[n.x + n.r + 3, n.y - 5, "start"], [n.x - n.r - 3 - w, n.y - 5, "end"], [n.x - w / 2, n.y - n.r - 13, "middle"], [n.x - w / 2, n.y + n.r + 2, "middle"],
+        [n.x + n.r + 3, n.y - 16, "start"], [n.x + n.r + 3, n.y + 6, "start"], [n.x - n.r - 3 - w, n.y - 16, "end"], [n.x - n.r - 3 - w, n.y + 6, "end"]];
+      const inside = ([x, y]) => x >= L && x + w <= W - R && y >= T && y + h <= T + ph + 2;
+      const best = cands.find(c => inside(c) && !hitsLabel(c[0], c[1], w, h) && !hitsCircle(c[0], c[1], w, h)) || cands.find(c => inside(c) && !hitsLabel(c[0], c[1], w, h)) || cands[0];
+      n.la = best[2]; n.lx = best[2] === "start" ? best[0] : best[2] === "end" ? best[0] + w : best[0] + w / 2; n.ly = best[1] + 9;
+      placed.push([best[0], best[1], w, h]);
+    });
     for (const n of nodes) {
-      const s = n.stance === "AL" ? 1 : n.stance === "SAT" ? -1 : 0;
-      const g = mk("g", { class: "node" + (state.ticker === n.t ? " on" : ""), tabindex: 0, role: "button", "aria-label": `${n.t}: ${n.stance}, son 24 saatte ${n.n} haber, en yüksek önem ${MAT_TR[["", "low", "medium", "high"][n.imp]]}` });
-      mk("circle", { cx: n.x, cy: n.y, r: n.r, class: `b i${n.imp}` }, g);
-      if (n.r >= 14) txt(n.t.slice(0, 5), { x: n.x, y: n.y + 3.3, "text-anchor": "middle", class: `bl on-i${n.imp}` }, g);
-      const above = n.y - n.r - 5 > T + 8;
-      txt(`${glyph(s)} ${n.t} · ${n.n}`, { x: Math.max(L + 30, Math.min(W - R - 30, n.x)), y: above ? n.y - n.r - 5 : n.y + n.r + 12, "text-anchor": "middle", class: "hover-lbl" }, g);
-      const heads = n.items.slice().sort((a, b) => impact(b) - impact(a)).slice(0, 5).map(it => {
-        const k = sign(it.analysis.sentiment);
-        return `<li>${glyph(k)} ${esc(it.analysis.event_label || "")} ${esc((it.analysis.what || it.analysis.headline_tr || it.title).slice(0, 90))}</li>`;
-      }).join("");
-      g.dataset.tip = `<b>${glyph(s)} ${esc(n.t)} · ${n.stance}</b><br>${n.n} haber · net yön ${fmt.num(n.net, 2)} · en yüksek önem ${MAT_TR[["", "low", "medium", "high"][n.imp]]}<ul>${heads}</ul><i>Tıkla: tabloyu bu hisseye süz</i>`;
+      const g = mk("g", { class: "node" + (state.ticker === n.t ? " on" : "") + (n.mis ? " mis" : ""), tabindex: 0, role: "button",
+        "aria-label": `${n.t}: bugün ${fmt.pct(n.chg, 2)}, son 24 saatte ${n.n} haber, net ${n.nk > 0 ? "olumlu" : n.nk < 0 ? "olumsuz" : "nötr"}${n.mis ? ", haber ile fiyat ters" : ""}` });
+      mk("circle", { cx: n.x, cy: n.y, r: n.r, class: "b" }, g);
+      if (n.mis) txt("≠", { x: n.x, y: n.y + 3.5, "text-anchor": "middle", class: "mis-g" }, g);
+      txt(n.t, { x: n.lx, y: n.ly, "text-anchor": n.la, class: "lbl" }, g);
+      const k = Math.abs(n.chg) < 0.05 ? 0 : n.chg;
+      const heads = n.items.slice().sort((a, b) => impact(b) - impact(a)).slice(0, 4).map(it =>
+        `<li>${glyph(sign(it.analysis.sentiment))} ${esc(it.analysis.event_label || "")} ${esc((it.analysis.what || it.analysis.headline_tr || it.title).slice(0, 80))}</li>`).join("");
+      g.dataset.tip = `<b>${esc(n.t)}</b> · ${esc(n.name)}<br>Bugün: ${glyph(k)} ${fmt.pct(n.chg, 2)}<br>Son 24 sa: ${n.n} haber, net ${glyph(n.nk)} ${n.nk > 0 ? "olumlu" : n.nk < 0 ? "olumsuz" : "nötr"} (${fmt.num(n.net, 2)})` +
+        (n.mis ? `<br><b>≠ Haber yönü ile fiyat ters</b>` : "") + `<ul>${heads}</ul><i>Tıkla: tabloyu bu hisseye süz</i>`;
       const ids = n.items.map(i => i.id);
       const pick = () => { state.ticker = state.ticker === n.t ? null : n.t; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE; render(); };
       g.addEventListener("click", pick);
       g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
-      g.addEventListener("mouseenter", () => highlight(ids));
-      g.addEventListener("mouseleave", () => highlight([]));
-      g.addEventListener("focus", () => highlight(ids));
-      g.addEventListener("blur", () => highlight([]));
-      g.parentNode.append(g);                // odaktaki/üzerindeki balonun etiketi üstte kalsın
+      g.addEventListener("mouseenter", () => highlight(ids)); g.addEventListener("mouseleave", () => highlight([]));
+      g.addEventListener("focus", () => highlight(ids)); g.addEventListener("blur", () => highlight([]));
     }
+    $("#scNote").textContent = others > 0 ? `${others} hissede son 24 saatte haber yok; grafikte gösterilmiyor.` : "";
   }
   function highlight(ids) { const s = new Set(ids); $$("#sigBody tr.row").forEach(r => r.classList.toggle("hl", s.has(r.dataset.id))); }
 
@@ -733,7 +724,7 @@
     $("#sigBody").innerHTML = sh.skeletonRows(7, 8);
     $("#sigState").innerHTML = "";
     $("#digest").innerHTML = `<div class="skeleton sk-line w40"></div><div class="skeleton sk-line lg w80"></div><div class="skeleton sk-line"></div><div class="skeleton sk-line w80"></div><div class="skeleton sk-block" style="margin-top:12px;height:80px"></div>`;
-    $("#heatmap").innerHTML = Array.from({ length: 9 }, () => `<div class="skeleton" style="height:54px"></div>`).join("");
+    $("#heatmap").innerHTML = Array.from({ length: 10 }, () => `<div class="hm skeleton"></div>`).join("");
     $("#bubbles").innerHTML = "";
   }
   function renderError(e) {
@@ -791,7 +782,7 @@
         rows[i + (e.key === "ArrowDown" ? 1 : -1)]?.focus();
       }
     });
-    let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (sh.route === "sinyal" && state.feed) renderBubbles(); }, 150); });
+    let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (sh.route === "sinyal" && state.feed) { layoutStrip(); renderBubbles(); } }, 150); });
     addEventListener("themechange", () => { if (sh.route === "sinyal" && state.feed) { renderHeatmap(); renderBubbles(); } });
     addEventListener("marketchange", () => { state.ticker = null; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE; render(); });
   }

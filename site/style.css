@@ -260,7 +260,7 @@ main:focus { outline: none; }
 .banner .link-btn { margin-left: auto; }
 
 /* ───────────── 4. Sinyal Takip ───────────── */
-.sig-layout { display: grid; grid-template-columns: minmax(0, 1fr) var(--rail-w); grid-template-rows: auto 1fr; grid-template-areas: "tools rail" "table rail"; gap: var(--s-4) var(--s-5); align-items: start; }
+.sig-layout { display: grid; grid-template-columns: minmax(0, 1fr) var(--rail-w); grid-template-rows: auto auto 1fr; grid-template-areas: "strip strip" "tools rail" "table rail"; gap: var(--s-4) var(--s-5); align-items: start; }
 .sig-tools { grid-area: tools; display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
 .sig-table { grid-area: table; align-self: start; }
 .rail { grid-area: rail; display: flex; flex-direction: column; gap: var(--s-4); position: sticky; top: calc(var(--topbar-h) + var(--s-4)); }
@@ -479,9 +479,9 @@ main:focus { outline: none; }
 
 /* ───────────── 9. duyarlı: 1440 · 1280 · 1024 · 768 · 390 ───────────── */
 @media (max-width: 1320px) {
-  .sig-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "digest heat" "digest bubble" "tools tools" "table table"; grid-template-rows: auto 1fr auto auto; }
+  .sig-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "strip strip" "digest bubble" "tools tools" "table table"; grid-template-rows: auto auto auto auto; }
   .rail { display: contents; }
-  #digest { grid-area: digest; } #heatCard { grid-area: heat; } #bubbleCard { grid-area: bubble; }
+  #digest { grid-area: digest; } #bubbleCard { grid-area: bubble; }
 }
 @media (max-width: 1023px) {
   .app, .side-off .app { grid-template-columns: minmax(0, 1fr); }
@@ -497,7 +497,7 @@ main:focus { outline: none; }
 }
 @media (max-width: 767px) {
   :root { --topbar-h: 56px; }
-  .sig-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "digest" "tools" "table" "heat" "bubble"; grid-template-rows: none; }
+  .sig-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "strip" "digest" "tools" "table" "bubble"; grid-template-rows: none; }
   .btn .btn-lbl { display: none; }
   .btn:has(.btn-lbl) { width: 34px; padding: 0; }
   .page-title p { display: none; }
@@ -557,3 +557,39 @@ main:focus { outline: none; }
   .chips-scroll { flex: 1 1 100%; }
   .filter-sep { display: none; }
 }
+
+/* ───────── izleme listesi şeridi (Sinyal Takip üstü, tam genişlik) ───────── */
+.strip-card { grid-area: strip; padding: var(--s-3) var(--s-4); }
+.strip-head { display: flex; align-items: baseline; gap: var(--s-3); margin-bottom: var(--s-2); min-width: 0; }
+.strip-head .card-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; cursor: help; }
+/* tüm hisseler görünür: sığmazsa ikinci satıra iner (mobilde yatay kayar) */
+.heatmap.strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: var(--s-1); }
+.heatmap.strip .hm { min-height: 46px; padding: 6px var(--s-2); }
+.heatmap.strip .hm.skeleton { min-height: 46px; }
+@media (max-width: 767px) {
+  .heatmap.strip { display: flex; overflow-x: auto; scrollbar-width: none; }
+  .heatmap.strip .hm { flex: 0 0 88px; }
+}
+/* AI özeti kısaltılmış: özet 3 satır, gerekçe 2 satır, risk 1 satır (üzerine gelince tamamı) */
+#digest .dg-sum { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+#digest .idea p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+#digest .idea p.risk { -webkit-line-clamp: 1; }
+.hm .nw { font-size: var(--fs-2xs); letter-spacing: -.02em; }
+
+/* ───────── Haber × Fiyat grafiği ───────── */
+.bubbles .sc-zone { pointer-events: none; }
+.bubbles .sc-zone, .sw.sc-zone { fill: var(--warn-soft); background: var(--warn-soft); outline: 1px dashed var(--warn-line); }
+.bubbles .zone-lbl { font: var(--fw-semibold) var(--fs-2xs) var(--font-sans); fill: var(--warn); }
+.bubbles .node .b { fill: var(--series-1); fill-opacity: .85; stroke: var(--surface); stroke-width: 2; }
+.bubbles .node.mis .b { fill: var(--warn-line); fill-opacity: 1; }
+.bubbles .node:hover .b, .bubbles .node.on .b, .bubbles .node:focus-visible .b { stroke: var(--text); }
+.bubbles .mis-g { font: var(--fw-bold) 10px var(--font-mono); fill: #1a1300; pointer-events: none; }
+.bubbles .lbl { font: var(--fw-semibold) 10.5px var(--font-mono); fill: var(--text); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; pointer-events: none; }
+.sc-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--series-1); vertical-align: -1px; margin-right: 4px; }
+.sc-dot.mis { background: var(--warn-line); }
+.dg-cx > summary { list-style: none; cursor: pointer; display: inline-flex; color: var(--warn); }
+.dg-cx > summary::-webkit-details-marker { display: none; }
+#digest .idea { padding: var(--s-2) var(--s-3); margin-bottom: 6px; }
+#digest .idea-top { min-width: 0; }
+#digest .idea-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-sm); }
+@media (max-width: 767px) { .strip-head .card-meta { display: none; } }
