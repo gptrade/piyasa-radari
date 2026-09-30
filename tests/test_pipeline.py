@@ -138,3 +138,15 @@ def test_source_health_tracks_last_ok_and_data(monkeypatch):
     assert "last_ok" not in st[2]
     assert st[3]["disabled"] == "X_BEARER_TOKEN tanımlı değil"
     assert h["KAP"]["last_ok"] == "2026-09-30T12:00:00Z"
+
+
+def test_fair_order_round_robin_within_priority():
+    from radar.models import Item
+    from radar.pipeline import fair_order
+    mk = lambda i, t, st="news": Item(source="s", source_type=st, market="US", title=f"{t}{i}", url=f"u{t}{i}",
+                                      published=f"2026-09-30T1{i}:00:00Z", tickers=[t])
+    q = [mk(1, "KAP", "disclosure"), mk(9, "NVDA"), mk(8, "NVDA"), mk(7, "NVDA"), mk(6, "THYAO"), mk(5, "AMD")]
+    out = [i.title for i in fair_order(q, {"NVDA", "THYAO", "AMD", "KAP"})]
+    assert out[0] == "KAP1"                                   # öncelik sınıfı korunur
+    assert out[1:4] == ["NVDA9", "THYAO6", "AMD5"]            # her hisse birer tane
+    assert out[4:] == ["NVDA8", "NVDA7"]

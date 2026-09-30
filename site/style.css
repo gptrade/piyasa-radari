@@ -643,3 +643,14 @@ main:focus { outline: none; }
 .sp-body .ta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .sp-body .slots { grid-template-columns: 96px 1fr; }
 .sp-body .drawer-in > div { padding: var(--s-4); }
+
+/* ───────── zaman ayraçları ───────── */
+.sig-tbl tr.sep > th { position: static; padding: 6px var(--s-3); background: var(--surface-2); color: var(--text-2); font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold); text-align: left; border-bottom: 1px solid var(--border); }
+.sig-tbl tr.sep > th span { font-weight: var(--fw-regular); color: var(--text-3); margin-left: 6px; }
+@media (max-width: 767px) { .sig-tbl tr.sep { display: block; } .sig-tbl tr.sep > th { display: block; } }
+
+/* ───────── şeritte "+N hisse" ───────── */
+.hm.more { background: var(--surface-2); color: var(--text-2); border: 1px dashed var(--border-strong); }
+.hm.more:hover { color: var(--accent-ink); border-color: var(--accent); }
+.hm.more b { font-size: var(--fs-md); } .hm.more .v { font: var(--fw-medium) var(--fs-2xs) var(--font-sans); white-space: normal; }

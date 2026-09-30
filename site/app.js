@@ -22,7 +22,7 @@
     feed: null, digest: null, macro: null, prices: {}, loading: true, error: null,
     view: "feed", sort: { k: "time", d: -1 }, ticker: null, ids: null, idsLabel: "", focusText: "",
     types: new Set(), q: "", col: {}, hideNoise: store.get("hideNoise", true),
-    open: new Set(), saved: new Set(store.get("saved", [])), limit: PAGE, sel: null, tkSort: { k: "n", d: -1 },
+    open: new Set(), saved: new Set(store.get("saved", [])), limit: PAGE, sel: null, tkSort: { k: "n", d: -1 }, stripAll: false,
     seenBefore: null, reasons: new Map(),
   };
   const market = () => sh.market;
@@ -528,8 +528,22 @@
     const box = $("#heatmap");
     const up = hex(sh.cssVar("--hm-up")), dn = hex(sh.cssVar("--hm-down")), mid = hex(sh.cssVar("--hm-mid"));
     const ink = hex(sh.cssVar("--text")), white = [255, 255, 255], dark = [20, 26, 25];
-    const list = (state.feed.watchlist || []).filter(w => market() === "ALL" || w.market === market());
-    if (!list.length) { box.innerHTML = stateHTML({ kind: "empty", compact: true, title: "Bu piyasada izlenen hisse yok" }); return; }
+    const all = (state.feed.watchlist || []).filter(w => market() === "ALL" || w.market === market());
+    if (!all.length) { box.innerHTML = stateHTML({ kind: "empty", compact: true, title: "Bu piyasada izlenen hisse yok" }); return; }
+    // Liste iki satıra sığmıyorsa: seçili hisse, ters sinyaller, en çok hareket edenler ve haberi olanlar öne; kalanı "+N hisse"
+    const fit = matchMedia("(max-width: 767px)").matches ? 99 : Math.max(4, Math.floor((box.clientWidth + 4) / 82));
+    const cap = fit * 2;
+    let list = all, hiddenN = 0;
+    if (all.length > cap && !state.stripAll) {
+      const score = w => {
+        const chg = state.prices[w.symbol]?.change_pct, { net, n } = newsNet(w.symbol);
+        const nk = !n ? null : net > 0.15 ? 1 : net < -0.15 ? -1 : 0;
+        const dis = chg != null && ((nk === 1 && chg <= -0.5) || (nk === -1 && chg >= 0.5));
+        return (state.ticker === w.symbol ? 1e6 : 0) + (dis ? 1e4 : 0) + Math.abs(chg || 0) * 100 + (n ? 50 + Math.log1p(n) * 10 : 0);
+      };
+      const keep = new Set(all.map(w => [w, score(w)]).sort((a, b) => b[1] - a[1]).slice(0, cap - 1).map(([w]) => w.symbol));
+      list = all.filter(w => keep.has(w.symbol)); hiddenN = all.length - list.length;
+    }
     box.innerHTML = "";
     for (const w of list) {
       const p = state.prices[w.symbol], chg = p?.change_pct;
@@ -555,6 +569,15 @@
         (dis ? `<br><b>≠ Haber yönü ile fiyat ters</b>` : "") + (p?.ta ? `<br>Teknik: ${esc(p.ta.trend)}, RSI ${p.ta.rsi == null ? "—" : fmt.num(p.ta.rsi, 0)}` : "") + "<br><i>Tıkla: tabloyu bu hisseye süz</i>";
       b.onclick = () => { state.ticker = state.ticker === w.symbol ? null : w.symbol; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE; render(); };
       box.append(b);
+    }
+    if (hiddenN || (state.stripAll && all.length > cap)) {
+      const m = document.createElement("button");
+      m.type = "button"; m.className = "hm more";
+      m.innerHTML = hiddenN ? `<b>+${hiddenN}</b><span class="v">hisse daha</span>` : `<b>Daralt</b><span class="v">öne çıkanlar</span>`;
+      m.dataset.tip = hiddenN ? "Şeritte öne çıkanlar gösteriliyor (ters sinyal, en çok hareket eden, haberi olan). Tümünü göster." : "Yalnız öne çıkanları göster";
+      m.setAttribute("aria-expanded", String(!hiddenN));
+      m.onclick = () => { state.stripAll = !state.stripAll; renderHeatmap(); };
+      box.append(m);
     }
     layoutStrip();
   }
@@ -586,7 +609,17 @@
     svg.innerHTML = "";
     const mk = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); parent.append(e); return e; };
     const txt = (t, attrs, parent) => { const e = mk("text", attrs, parent); e.textContent = t; return e; };
-    const nodes = scatterData();
+    let nodes = scatterData();
+    // Çok hisse varsa: en çok haber alan 24 hisse + tüm ters sinyaller gösterilir
+    let capped = 0;
+    if (nodes.length > 24) {
+      const keep = new Set(nodes.slice().sort((a, b) => b.n - a.n).slice(0, 24).map(n => n.t));
+      const kept = nodes.filter(n => keep.has(n.t) || n.mis || n.t === state.ticker);
+      capped = nodes.length - kept.length; nodes = kept;
+    }
+    // 12'den fazla balonda etiket yalnız ters sinyallere, en çok haber alan 6 hisseye ve seçili hisseye yazılır
+    const labelSet = nodes.length <= 12 ? null : new Set([...nodes.filter(n => n.mis).map(n => n.t),
+      ...nodes.slice().sort((a, b) => b.n - a.n).slice(0, 6).map(n => n.t), state.ticker].filter(Boolean));
     const others = (state.feed.watchlist || []).filter(w => market() === "ALL" || w.market === market()).length - nodes.length;
     const yMax = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50].find(v => v >= Math.max(1, ...nodes.map(n => Math.abs(n.chg))) * 1.1) || 50;
     const cx = v => L + (v + 1) / 2 * pw, cy = v => T + ph / 2 - v / yMax * ph / 2;
@@ -628,6 +661,7 @@
     const hitsCircle = (x, y, w, h) => nodes.some(o => { const nx = Math.max(x, Math.min(o.x, x + w)), ny = Math.max(y, Math.min(o.y, y + h)); return Math.hypot(o.x - nx, o.y - ny) < o.r; });
     const hitsLabel = (x, y, w, h) => placed.some(([px, py, pw2, ph2]) => x < px + pw2 && px < x + w && y < py + ph2 && py < y + h);
     nodes.slice().sort((a, b) => b.r - a.r).forEach(n => {
+      if (labelSet && !labelSet.has(n.t)) { n.nolbl = true; return; }
       const w = n.t.length * CW, h = 11;
       const cands = [[n.x + n.r + 3, n.y - 5, "start"], [n.x - n.r - 3 - w, n.y - 5, "end"], [n.x - w / 2, n.y - n.r - 13, "middle"], [n.x - w / 2, n.y + n.r + 2, "middle"],
         [n.x + n.r + 3, n.y - 16, "start"], [n.x + n.r + 3, n.y + 6, "start"], [n.x - n.r - 3 - w, n.y - 16, "end"], [n.x - n.r - 3 - w, n.y + 6, "end"]];
@@ -641,7 +675,7 @@
         "aria-label": `${n.t}: bugün ${fmt.pct(n.chg, 2)}, son 24 saatte ${n.n} haber, net ${n.nk > 0 ? "olumlu" : n.nk < 0 ? "olumsuz" : "nötr"}${n.mis ? ", haber ile fiyat ters" : ""}` });
       mk("circle", { cx: n.x, cy: n.y, r: n.r, class: "b" }, g);
       if (n.mis) txt("≠", { x: n.x, y: n.y + 3.5, "text-anchor": "middle", class: "mis-g" }, g);
-      txt(n.t, { x: n.lx, y: n.ly, "text-anchor": n.la, class: "lbl" }, g);
+      if (!n.nolbl) txt(n.t, { x: n.lx, y: n.ly, "text-anchor": n.la, class: "lbl" }, g);
       const k = Math.abs(n.chg) < 0.05 ? 0 : n.chg;
       const heads = n.items.slice().sort((a, b) => impact(b) - impact(a)).slice(0, 4).map(it =>
         `<li>${glyph(sign(it.analysis.sentiment))} ${esc(it.analysis.event_label || "")} ${esc((it.analysis.what || it.analysis.headline_tr || it.title).slice(0, 80))}</li>`).join("");
@@ -654,7 +688,8 @@
       g.addEventListener("mouseenter", () => highlight(ids)); g.addEventListener("mouseleave", () => highlight([]));
       g.addEventListener("focus", () => highlight(ids)); g.addEventListener("blur", () => highlight([]));
     }
-    $("#scNote").textContent = others > 0 ? `${others} hissede son 24 saatte haber yok; grafikte gösterilmiyor.` : "";
+    $("#scNote").textContent = [others > 0 ? `${others} hissede son 24 saatte haber yok` : "", capped ? `${capped} az haberli hisse gizlendi` : "",
+      labelSet ? "etiketsiz balonlar: üzerine gel" : ""].filter(Boolean).join(" · ");
   }
   function highlight(ids) { const s = new Set(ids); $$("#sigBody tr.row").forEach(r => r.classList.toggle("hl", s.has(r.dataset.id))); }
 
@@ -798,13 +833,32 @@
     $(".sig-table").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  // Zaman sıralamasında gün / saat ayraçları: Son 1 saat · Bugün · Dün · tarih
+  function timeGroup(iso) {
+    if (ageMin(iso) < 60) return "Son 1 saat";
+    const k = fmt.dayKey(iso), today = fmt.dayKey(Date.now()), yest = fmt.dayKey(Date.now() - 86400e3);
+    return k === today ? "Bugün" : k === yest ? "Dün" : fmt.date(iso, { day: "numeric", month: "long", weekday: "long" });
+  }
+  function withSeparators(shown, all) {
+    if (state.sort.k !== "time") return shown.map(rowHTML).join("");
+    const counts = new Map();
+    all.forEach(it => { const g = timeGroup(it.published); counts.set(g, (counts.get(g) || 0) + 1); });
+    let prev = null, html = "";
+    for (const it of shown) {
+      const g = timeGroup(it.published);
+      if (g !== prev) { html += `<tr class="sep"><th colspan="7" scope="colgroup">${esc(g)} <span>${fmt.int(counts.get(g))} kayıt</span></th></tr>`; prev = g; }
+      html += rowHTML(it);
+    }
+    return html;
+  }
+
   function renderTable() {
     const tkMode = state.view === "tickers";
     $(".sig-scroll").hidden = tkMode; $("#tkWrap").hidden = !tkMode;
     if (tkMode) { $("#moreBtn").hidden = true; closePanel(false); renderTickers(); return; }
     const body = $("#sigBody"), st = $("#sigState");
     const items = filtered(), shown = items.slice(0, state.limit);
-    body.innerHTML = shown.map(rowHTML).join("");
+    body.innerHTML = withSeparators(shown, items);
     $$("tr.row", body).forEach(tr => {
       if (state.sel === tr.dataset.id && wide()) { tr.classList.add("sel"); tr.setAttribute("aria-expanded", "true"); return; }
       const it = !wide() && state.open.has(tr.dataset.id) && state.feed.items.find(i => i.id === tr.dataset.id);

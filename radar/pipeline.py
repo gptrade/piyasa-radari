@@ -117,6 +117,30 @@ def source_health(status: list[dict], prev: dict, now: str | None = None) -> dic
     return out
 
 
+def fair_order(queue: list[Item], watch: set[str]) -> list[Item]:
+    """AI kotasını hisseler arasında adil dağıt: öncelik sınıfı (bildirim, rapor, haber…) korunur,
+    her sınıfın içinde hisseler sırayla birer kayıt alır (her hissenin en yenisi önce).
+    Böylece çok haber üreten bir hisse (ör. NVDA) turun kotasını tek başına tüketmez."""
+    out: list[Item] = []
+    i = 0
+    while i < len(queue):
+        pri = PRIORITY.get(queue[i].source_type, 9)
+        j = i
+        buckets: dict[str, list[Item]] = {}
+        while j < len(queue) and PRIORITY.get(queue[j].source_type, 9) == pri:
+            it = queue[j]
+            key = next((t for t in it.tickers if t in watch), it.tickers[0] if it.tickers else "_genel")
+            buckets.setdefault(key, []).append(it)
+            j += 1
+        while buckets:
+            for k in list(buckets):
+                out.append(buckets[k].pop(0))
+                if not buckets[k]:
+                    del buckets[k]
+        i = j
+    return out
+
+
 def run() -> dict:
     settings = load_settings()
     stocks = load_watchlist()
@@ -204,7 +228,7 @@ def run() -> dict:
     # 4) AI değerlendirme — önce rapor & bildirim, sonra en yeni haberler
     analyzer = Analyzer(settings)
     watch = {s.symbol for s in stocks}
-    queue = sorted(new, key=lambda i: (PRIORITY.get(i.source_type, 9), -parse_iso(i.published).timestamp()))
+    queue = fair_order(sorted(new, key=lambda i: (PRIORITY.get(i.source_type, 9), -parse_iso(i.published).timestamp())), watch)
     for it in queue:
         if not analyzer.can_run():
             break
