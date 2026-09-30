@@ -13,6 +13,7 @@ from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import Item, iso, now_utc, parse_iso
+from . import bb_quotes
 from .sources import Context, feeds, kap, reports, social, spk, tcmb
 
 log = logging.getLogger("radar")
@@ -93,6 +94,29 @@ def earnings_items(stocks, px: dict, days_ahead: int) -> list[Item]:
     return out
 
 
+# Anahtarı olmadan çalışmayan kaynaklar: tanımlı değilse "kapalı" gösterilir (hata sayılmaz)
+NEEDS_KEY = {"X": "X_BEARER_TOKEN", "TCMB EVDS": "EVDS_API_KEY"}
+
+
+def source_health(status: list[dict], prev: dict, now: str | None = None) -> dict:
+    """Her kaynak için son başarılı çekim ve son veri gelen zamanı günceller; status girdilerine yazar.
+    Dönen sözlük state.json'da saklanır (tur başına sayılar sıfırlansa da geçmiş kaybolmaz)."""
+    now = now or iso(now_utc())
+    out = {}
+    for e in status:
+        h = dict(prev.get(e["name"]) or {})
+        key = NEEDS_KEY.get(e["name"])
+        if key and not os.environ.get(key):
+            e["disabled"] = f"{key} tanımlı değil"
+        elif e.get("ok") and not (e.get("warnings") and not e.get("count")):
+            h["last_ok"] = now
+        if e.get("ok") and e.get("count"):
+            h["last_data"] = now
+        e.update({k: v for k, v in h.items() if v})
+        out[e["name"]] = h
+    return out
+
+
 def run() -> dict:
     settings = load_settings()
     stocks = load_watchlist()
@@ -160,6 +184,10 @@ def run() -> dict:
         log.exception("EVDS hatası")
         macro = None
         status.append({"name": "TCMB EVDS", "ok": False, "count": 0, "error": str(e)[:200]})
+    try:                                                    # Şirket Geri Alım: güncel / ortalama fiyat için
+        bb_quotes.update(settings)
+    except Exception as e:
+        log.warning("Geri alım fiyatları alınamadı: %s", e)
     watch_desc = ", ".join(f"{s.symbol} ({s.name})" for s in stocks)
 
     # 3b) Yaklaşan bilançolar (Yahoo takvimi): N gün kala akışa bir kayıt
@@ -254,6 +282,7 @@ def run() -> dict:
     elif not (os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID")):
         tg_entry["warnings"] = ["TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID tanımlı değil"]
     status.append(tg_entry)
+    state_extra["src"] = source_health(status, state.get("src") or {})
     feed_doc = json.loads(FEED.read_text(encoding="utf-8"))
     feed_doc["sources"] = status
     FEED.write_text(json.dumps(feed_doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

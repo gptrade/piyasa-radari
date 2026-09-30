@@ -1,30 +1,24 @@
-/* Piyasa Radarı — "Şirket geri alımları" sekmesi.
-   Veri, ayrı repodaki takipçiden gelir (gptrade/kap-geri-alim-takibi → kap-buybacks.json);
-   sekme ilk açıldığında bir kez yüklenir. */
+/* Piyasa Radarı — Şirket Geri Alım sekmesi.
+   Veri, ayrı repodaki takipçiden gelir (gptrade/kap-geri-alim-takibi → kap-buybacks.json).
+   Güncel fiyatlar: data/bb_quotes.json (pipeline saatte bir Yahoo'dan toplu çeker) + izleme listesi fiyatları. */
 (() => {
   "use strict";
+  const sh = window.shell;
+  const { $, $$, esc, fmt, glyph, dirCls } = sh;
   const me = document.currentScript;
   const SRC = me.dataset.src, FALLBACK = me.dataset.fallback;
-  const $ = (s, el = document) => el.querySelector(s);
-  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-  const NS = "http://www.w3.org/2000/svg";
   const DAY = 86400000;
   const R = () => window.radar;
-  const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const nf = (v, d = 0) => v == null ? "—" : new Intl.NumberFormat("tr-TR", { maximumFractionDigits: d, minimumFractionDigits: d }).format(v);
-  const tl = v => {
-    if (v == null) return "—";
-    const a = Math.abs(v);
-    if (a >= 1e9) return nf(v / 1e9, 2) + " mr ₺";
-    if (a >= 1e6) return nf(v / 1e6, 1) + " mn ₺";
-    if (a >= 1e3) return nf(v / 1e3, 0) + " bin ₺";
-    return nf(v, 0) + " ₺";
-  };
-  const lots = v => v == null ? "—" : v >= 1e6 ? nf(v / 1e6, 2) + " mn" : v >= 1e3 ? nf(v / 1e3, 0) + " bin" : nf(v);
-  const pct = (v, d = 1) => v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(d)}%`;
-  const cls = v => v == null ? "" : v > 0 ? "pos" : v < 0 ? "neg" : "";
+  const SERIES = ["--series-1", "--series-2", "--series-3", "--series-4", "--series-5"];
 
-  const S = { rows: null, loaded: false, loading: false, days: 30, q: "", watch: false, sort: "amount", dir: -1, open: new Set(), updated: null };
+  const S = { rows: null, quotes: {}, quotesAt: null, loaded: false, loading: false, error: null,
+    days: 30, q: "", watch: false, suspectOnly: false, sort: "amount", dir: -1, open: new Set(), updated: null };
+
+  // ─────────────────────────────── birimler (başlıkta yazar, hücrede yalnız sayı)
+  const mn = v => v == null ? "—" : fmt.num(v / 1e6, 2);            // mn ₺
+  const bin = v => v == null ? "—" : fmt.num(v / 1e3, 0);           // bin adet
+  const tlShort = v => v == null ? "—" : Math.abs(v) >= 1e9 ? fmt.num(v / 1e9, 2) + " mr ₺" : Math.abs(v) >= 1e6 ? fmt.num(v / 1e6, 1) + " mn ₺" : Math.abs(v) >= 1e3 ? fmt.num(v / 1e3, 0) + " bin ₺" : fmt.num(v, 0) + " ₺";
+  const lotsShort = v => v == null ? "—" : v >= 1e6 ? fmt.num(v / 1e6, 2) + " mn" : v >= 1e3 ? fmt.num(v / 1e3, 0) + " bin" : fmt.int(v);
 
   // ─────────────────────────────── veri
   function parseTR(s) {          // "30.09.2026 14:19:37" (İstanbul) → Date
@@ -46,158 +40,174 @@
       return {
         id: r.disclosure_index, t: (r.tickers || "").split(/[,\s]+/)[0].toUpperCase(), name: r.company_title || "",
         pub, date: txd, price, qty: r.quantity, amount: price && r.quantity ? price * r.quantity : null,
-        own: r.ownership_pct_after, pctTx: r.pct_this_transaction, url: r.source_url,
-        type: r.notice_type || "", kind: kindOf(r), review: !!r.needs_review, fields: r.raw_fields || {},
+        own: r.ownership_pct_after, url: r.source_url, type: r.notice_type || "", kind: kindOf(r), review: !!r.needs_review, fields: r.raw_fields || {},
       };
     }).filter(r => r.t && r.pub);
   }
-
-  // Ayrıştırma hatası koruması: fiyat, aynı şirketin medyan işlem fiyatından 10 kattan fazla
-  // saparsa (ör. fiyat alanına adet yazılmışsa) ya da mantıksız yüksekse işlem şüpheli sayılır,
-  // tutarı toplamlara girmez ve tabloda ⚠ ile gösterilir.
+  // Ayrıştırma hatası koruması: fiyat, şirketin medyan işlem fiyatından 10 kattan fazla saparsa ya da
+  // mantıksız yüksekse işlem şüpheli sayılır; tutarı toplamlara girmez.
   const MAX_PRICE = 50000;
   function flagOutliers(rows) {
     const by = new Map();
     rows.forEach(r => { if (r.kind === "tx" && r.price) (by.get(r.t) || by.set(r.t, []).get(r.t)).push(r.price); });
     const med = new Map([...by].map(([t, ps]) => { const s = ps.slice().sort((a, b) => a - b); return [t, s[Math.floor(s.length / 2)]]; }));
-    let n = 0;
     rows.forEach(r => {
       if (r.kind !== "tx" || !r.price) return;
       const m = med.get(r.t);
-      const off = r.price > MAX_PRICE || (by.get(r.t).length >= 2 && m && (r.price / m > 10 || r.price / m < 0.1));
-      if (off) { r.suspect = true; r.amount = null; n++; }
+      if (r.price > MAX_PRICE || (by.get(r.t).length >= 2 && m && (r.price / m > 10 || r.price / m < 0.1))) { r.suspect = true; r.amount = null; }
     });
-    return n;
   }
-  async function getJSON(url) {
-    const r = await fetch(url, { cache: "no-store" });
+  async function getJSON(url, bust = true) {
+    const r = await fetch(bust ? `${url}${url.includes("?") ? "&" : "?"}t=${Date.now()}` : url, { cache: "no-store" });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
   }
-  async function load() {
-    if (S.loaded || S.loading) return;
-    S.loading = true;
-    let raw = null, src = SRC;
-    for (const u of [SRC, FALLBACK]) {
-      try { raw = await getJSON(u); src = u; break; } catch { /* sıradaki */ }
-    }
+  async function load(force = false) {
+    if (S.loading || (S.loaded && !force)) return;
+    S.loading = true; S.error = null;
+    if (!S.loaded) renderLoading();
+    let raw = null, lastErr = null;
+    for (const u of [SRC, FALLBACK]) { try { raw = await getJSON(u); break; } catch (e) { lastErr = e; } }
+    try { const q = await getJSON("data/bb_quotes.json"); S.quotes = q.quotes || {}; S.quotesAt = q.generated; } catch { /* isteğe bağlı */ }
     S.loading = false;
     if (!Array.isArray(raw)) {
-      $("#bbBody").innerHTML = `<p class="empty">Geri alım verisi alınamadı. Takipçi reposu (kap-geri-alim-takibi) yayında mı?</p>`;
+      S.error = lastErr?.message || "veri okunamadı";
+      if (!S.loaded) renderError();
       return;
     }
     S.rows = normalize(raw);
-    S.suspect = flagOutliers(S.rows);
-    S.src = src;
+    flagOutliers(S.rows);
     S.updated = S.rows.reduce((m, r) => (r.pub > m ? r.pub : m), new Date(0));
     S.loaded = true;
+    sh.setUpdated("geri-alim", S.updated, { label: "Son KAP bildirimi" });
     await Promise.race([R()?.ready, new Promise(r => setTimeout(r, 3000))]);
-    render();
     badge();
+    render();
   }
   function badge() {
-    const since = Date.now() - 1 * DAY;
-    const n = S.rows.filter(r => r.kind === "tx" && r.pub >= since).length;
-    $("#bbBadge").textContent = n ? n : "";
-    $("#bbBadge").title = n ? `Son 24 saatte ${n} geri alım işlemi` : "";
+    const n = S.rows.filter(r => r.kind === "tx" && r.pub >= Date.now() - DAY).length;
+    sh.setBadge("geri-alim", n, `Son 24 saatte ${n} geri alım işlemi bildirildi`);
   }
 
   // ─────────────────────────────── hesap
-  function watchSet() {
-    const st = R()?.state;
-    return new Set((st?.feed?.watchlist || []).filter(w => w.market === "BIST").map(w => w.symbol));
+  function watchSet() { return new Set((R()?.state?.feed?.watchlist || []).filter(w => w.market === "BIST").map(w => w.symbol)); }
+  function quote(t) {
+    const p = R()?.state?.prices?.[t];
+    if (p?.last) return { last: p.last, at: p.updated, src: "izleme listesi" };
+    const q = S.quotes[t];
+    return q ? { last: q.last, at: q.date + "T15:00:00Z", src: "Yahoo kapanış" } : null;
   }
   function inPeriod() {
-    const cut = Date.now() - S.days * DAY;
-    const q = S.q.toLocaleLowerCase("tr");
-    const w = watchSet();
-    return S.rows.filter(r => r.date >= cut
-      && (!S.watch || w.has(r.t))
+    const cut = Date.now() - S.days * DAY, q = S.q.toLocaleLowerCase("tr"), w = watchSet();
+    return S.rows.filter(r => r.date >= cut && (!S.watch || w.has(r.t))
       && (!q || r.t.toLocaleLowerCase("tr").includes(q) || r.name.toLocaleLowerCase("tr").includes(q)));
   }
   function aggregate(rows) {
     const m = new Map();
     for (const r of rows) {
       if (r.kind !== "tx") continue;
-      const o = m.get(r.t) || { t: r.t, name: r.name, n: 0, qty: 0, amount: 0, pq: 0, last: null, own: null, ownAt: null, tx: [], review: 0 };
+      const o = m.get(r.t) || { t: r.t, name: r.name, n: 0, qty: 0, amount: 0, pq: 0, last: null, own: null, ownAt: null, tx: [], review: 0, suspect: 0 };
       o.n++; o.qty += r.qty || 0; o.amount += r.amount || 0;
       if (r.amount) o.pq += r.qty;
-      if (r.suspect) o.suspect = (o.suspect || 0) + 1;
+      if (r.suspect) o.suspect++;
       if (!o.last || r.date > o.last) o.last = r.date;
       if (r.own != null && (!o.ownAt || r.pub > o.ownAt)) { o.own = r.own; o.ownAt = r.pub; }
       o.review += r.review ? 1 : 0;
       o.tx.push(r);
       m.set(r.t, o);
     }
-    const st = R()?.state;
     return [...m.values()].map(o => {
       o.avg = o.pq ? o.amount / o.pq : null;
-      const p = st?.prices?.[o.t];
-      o.px = p?.last ?? null;
-      o.prem = o.px && o.avg ? (o.px / o.avg - 1) * 100 : null;
+      o.q = quote(o.t);
+      o.ratio = o.q && o.avg ? o.q.last / o.avg : null;
       o.tx.sort((a, b) => b.date - a.date);
       return o;
     });
   }
 
-  // ─────────────────────────────── çizim
+  // ─────────────────────────────── çizim: KPI
   function kpis(rows, agg) {
-    const tx = rows.filter(r => r.kind === "tx");
-    const prog = rows.filter(r => r.kind === "program");
-    const total = tx.reduce((s, r) => s + (r.amount || 0), 0);
-    const qty = tx.reduce((s, r) => s + (r.qty || 0), 0);
+    const tx = rows.filter(r => r.kind === "tx"), prog = rows.filter(r => r.kind === "program");
+    const total = tx.reduce((s, r) => s + (r.amount || 0), 0), qty = tx.reduce((s, r) => s + (r.qty || 0), 0);
     const top = agg.slice().sort((a, b) => b.amount - a.amount)[0];
-    return `<div class="kpis">
-      <div><small>Geri alım yapan şirket</small><b>${agg.length}</b></div>
-      <div><small>İşlem bildirimi</small><b>${tx.length}</b></div>
-      <div><small>Toplam adet</small><b>${lots(qty)}</b><span>${nf(qty)} pay</span></div>
-      <div><small>Toplam tutar</small><b>${tl(total)}</b></div>
-      <div><small>En çok alan</small><b>${top ? esc(top.t) : "—"}</b>${top ? `<span>${tl(top.amount)}</span>` : ""}</div>
-      <div><small>Yeni program / YK kararı</small><b>${prog.length}</b></div>
+    const k = (label, value, sub = "", tip = "") => `<div class="kpi" ${tip ? `data-tip="${esc(tip)}"` : ""}><span class="kpi-label">${label}</span><span class="kpi-value">${value}</span>${sub ? `<span class="kpi-sub">${sub}</span>` : ""}</div>`;
+    return `<div class="kpi-grid">
+      ${k("Geri alım yapan şirket", fmt.int(agg.length))}
+      ${k("İşlem bildirimi", fmt.int(tx.length))}
+      ${k("Toplam adet", lotsShort(qty), fmt.int(qty) + " pay")}
+      ${k("Toplam tutar", tlShort(total), "", "Fiyatı şüpheli işlemler toplama katılmaz")}
+      ${k("En çok alan", top ? esc(top.t) : "—", top ? tlShort(top.amount) : "")}
+      ${k("Yeni program / YK kararı", fmt.int(prog.length))}
     </div>`;
   }
 
-  function dailyChart(rows, W) {
-    const byDay = new Map();
+  // ─────────────────────────────── çizim: günlük yığılmış çubuk grafik (ilk 5 şirket + Diğer)
+  function dailyChart(rows, agg, W) {
+    const H = 160, padL = 44, padB = 20, padT = 16;
+    const top5 = agg.filter(o => o.amount > 0).sort((a, b) => b.amount - a.amount).slice(0, 5).map(o => o.t);
+    const colors = SERIES.map(v => sh.cssVar(v)), other = sh.cssVar("--series-other");
     const key = d => d.toISOString().slice(0, 10);
-    const end = new Date(); end.setUTCHours(12, 0, 0, 0);
-    for (let i = S.days - 1; i >= 0; i--) byDay.set(key(new Date(end - i * DAY)), { amount: 0, n: 0, cos: new Set() });
+    const today = fmt.dayKey(Date.now());
+    const end = new Date(today + "T12:00:00Z");
+    const byDay = new Map();
+    for (let i = S.days - 1; i >= 0; i--) {
+      const d = new Date(end - i * DAY), g = d.getUTCDay();
+      if (g !== 0 && g !== 6) byDay.set(key(d), { amount: 0, n: 0, parts: new Map() });
+    }
     for (const r of rows) {
       if (r.kind !== "tx" || !r.amount) continue;
       const o = byDay.get(key(r.date));
-      if (o) { o.amount += r.amount; o.n++; o.cos.add(r.t); }
+      if (!o) continue;
+      const s = top5.includes(r.t) ? r.t : "Diğer";
+      const p = o.parts.get(s) || { amount: 0, n: 0, cos: new Set() };
+      p.amount += r.amount; p.n++; p.cos.add(r.t); o.parts.set(s, p);
+      o.amount += r.amount; o.n++;
     }
-    // hafta sonlarını (işlem yok) çıkar: sadece hafta içi günler
-    const days = [...byDay.entries()].filter(([k]) => { const g = new Date(k + "T12:00:00Z").getUTCDay(); return g !== 0 && g !== 6; });
-    const H = 160, padL = 58, padB = 20, padT = 10;
-    const short = v => v >= 1e9 ? nf(v / 1e9, 1) + " mr" : v >= 1e6 ? nf(v / 1e6, v >= 1e8 ? 0 : 1) + " mn" : v >= 1e3 ? nf(v / 1e3, 0) + " bin" : nf(v);
-    const max = Math.max(1, ...days.map(([, o]) => o.amount));
-    const bw = (W - padL) / days.length;
-    const gap = Math.min(2, bw * 0.2);
-    const y = v => H - padB - (v / max) * (H - padB - padT);
-    let bars = "";
+    const days = [...byDay.entries()];
+    if (!days.some(([, o]) => o.amount)) return `<section class="card bb-chart"><div class="card-head"><h2 class="card-title">Günlük geri alım tutarı</h2></div>${sh.stateHTML({ kind: "empty", compact: true, title: "Bu dönemde tutarı hesaplanabilen işlem yok" })}</section>`;
+    const max = Math.max(...days.map(([, o]) => o.amount));
+    const nice = (v => { const p = 10 ** Math.floor(Math.log10(v)); return [1, 2, 2.5, 5, 10].map(m => m * p).find(x => x >= v); })(max);
+    const bw = (W - padL) / days.length, gap = Math.max(1, Math.min(4, bw * 0.25));
+    const y = v => H - padB - (v / nice) * (H - padB - padT);
+    const order = [...top5, "Diğer"], colorOf = s => s === "Diğer" ? other : colors[top5.indexOf(s)];
+    let cols = "";
     days.forEach(([k, o], i) => {
-      const x = padL + i * bw + gap / 2, w = Math.max(1, bw - gap), top = y(o.amount), h = H - padB - top;
-      const r = Math.min(4, w / 2, h);
-      const d = new Date(k + "T12:00:00Z").toLocaleDateString("tr-TR", { day: "2-digit", month: "short" });
-      const tip = `<b>${d}</b><br>${tl(o.amount)} · ${o.n} işlem · ${o.cos.size} şirket` + (o.cos.size ? `<br>${esc([...o.cos].slice(0, 8).join(", "))}${o.cos.size > 8 ? "…" : ""}` : "");
-      // üstü yuvarlatılmış, tabana oturan çubuk
-      const path = h > 0 ? `M${x},${H - padB} V${top + r} Q${x},${top} ${x + r},${top} H${x + w - r} Q${x + w},${top} ${x + w},${top + r} V${H - padB} Z` : "";
-      bars += `<g class="bb-bar" data-tip="${esc(tip)}"><rect x="${x - gap / 2}" y="${padT}" width="${bw}" height="${H - padB - padT}" class="hit"/>${path ? `<path d="${path}"/>` : ""}</g>`;
+      const x = padL + i * bw + gap / 2, w = Math.max(1, bw - gap);
+      let acc = 0, segs = "";
+      const present = order.filter(s => o.parts.has(s));
+      present.forEach((s, j) => {
+        const p = o.parts.get(s), y0 = y(acc), y1 = y(acc + p.amount), h = y0 - y1;
+        acc += p.amount;
+        if (h <= 0) return;
+        const isTop = j === present.length - 1, r = isTop ? Math.min(4, w / 2, h) : 0;
+        const d = r ? `M${x},${y0} V${y1 + r} Q${x},${y1} ${x + r},${y1} H${x + w - r} Q${x + w},${y1} ${x + w},${y1 + r} V${y0} Z` : `M${x},${y0} V${y1} H${x + w} V${y0} Z`;
+        segs += `<path d="${d}" fill="${colorOf(s)}" class="seg-r"/>`;
+        if (k === today) segs += `<path d="${d}" fill="url(#bbHatch)"/>`;
+      });
+      const dl = fmt.date(k + "T12:00:00Z", { day: "numeric", month: "short", weekday: "short" });
+      const tip = `<b>${dl}${k === today ? " · gün içi" : ""}</b><br>${tlShort(o.amount)} · ${o.n} işlem` +
+        (o.parts.size ? "<hr>" + order.filter(s => o.parts.has(s)).map(s => { const p = o.parts.get(s); return `<i class="sw" style="background:${colorOf(s)}"></i>${esc(s)}${s === "Diğer" ? ` (${p.cos.size} şirket)` : ""}: ${tlShort(p.amount)} · ${p.n} işlem`; }).join("<br>") : "");
+      cols += `<g class="col" data-tip="${esc(tip)}"><rect class="hit" x="${padL + i * bw}" y="${padT}" width="${bw}" height="${H - padB - padT}"/>${segs}` +
+        (k === today ? `<text class="today-lbl" x="${Math.min(W - 2, x + w / 2)}" y="${Math.max(10, y(o.amount) - 4)}" text-anchor="${x + w / 2 > W - 30 ? "end" : "middle"}">gün içi</text>` : "") + `</g>`;
     });
-    const ticks = [0, 0.5, 1].map(f => `<line x1="${padL}" x2="${W}" y1="${y(max * f)}" y2="${y(max * f)}" class="grid"/><text x="${padL - 6}" y="${y(max * f) + 3}" text-anchor="end" class="ax">${f ? short(max * f) : "0"}</text>`).join("");
-    const step = Math.ceil(days.length / Math.max(3, Math.floor(W / 80)));
-    const xl = days.map(([k], i) => i % step ? "" : `<text x="${padL + i * bw + bw / 2}" y="${H - 5}" text-anchor="middle" class="ax">${new Date(k + "T12:00:00Z").toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" })}</text>`).join("");
-    return `<section class="panel bb-chart"><div class="panel-head"><h3>Günlük geri alım tutarı</h3><span class="hint">işlem tarihine göre · ₺</span></div>
-      <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Son ${S.days} günün günlük geri alım tutarları">${ticks}${bars}${xl}</svg></section>`;
+    const ticks = [0, nice / 2, nice].map(v => `<line class="grid" x1="${padL}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text class="ax" x="${padL - 6}" y="${y(v) + 3}" text-anchor="end">${fmt.num(v / 1e6, v / 1e6 < 10 && v ? 1 : 0)}</text>`).join("");
+    const step = Math.ceil(days.length / Math.max(3, Math.floor(W / 70)));
+    const xl = days.map(([k], i) => i % step ? "" : `<text class="ax" x="${padL + i * bw + bw / 2}" y="${H - 5}" text-anchor="middle">${fmt.date(k + "T12:00:00Z", { day: "2-digit", month: "2-digit" })}</text>`).join("");
+    const legend = order.filter(s => s !== "Diğer" || days.some(([, o]) => o.parts.has("Diğer")))
+      .map(s => `<span><i class="sw" style="background:${colorOf(s)}"></i>${esc(s)}</span>`).join("") +
+      (byDay.has(today) ? `<span><i class="sw hatch-sw"></i>bugün (gün içi)</span>` : "");
+    return `<section class="card bb-chart" aria-labelledby="bbChartT">
+      <div class="card-head"><h2 class="card-title" id="bbChartT">Günlük geri alım tutarı <span class="card-meta">· mn ₺ · işlem tarihine göre</span></h2><div class="chart-legend">${legend}</div></div>
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Son ${S.days} günün günlük geri alım tutarları; ilk beş şirket ve diğerleri yığılmış">
+        <defs><pattern id="bbHatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="5" style="fill:var(--surface)" opacity=".65"/></pattern></defs>
+        ${ticks}${cols}${xl}</svg></section>`;
   }
 
-  const COLS = [
-    ["t", "Hisse"], ["name", "Şirket"], ["n", "İşlem"], ["qty", "Toplam adet"], ["amount", "Tutar"],
-    ["avg", "Ort. fiyat"], ["prem", "Güncel / ort."], ["own", "Sermaye payı"], ["last", "Son işlem"],
-  ];
-  function table(agg) {
+  // ─────────────────────────────── çizim: tablo
+  function table(agg, showRatio) {
     const w = watchSet();
+    const COLS = [["t", "Hisse"], ["name", "Şirket"], ["n", "İşlem", 1], ["qty", "Adet (bin)", 1], ["amount", "Tutar (mn ₺)", 1], ["avg", "Ort. fiyat (₺)", 1],
+      ...(showRatio ? [["ratio", "Güncel / Ort.", 1]] : []), ["own", "Sermaye payı (%)", 1], ["last", "Son işlem", 1]];
     const k = S.sort, dir = S.dir;
     agg.sort((a, b) => {
       const va = a[k], vb = b[k];
@@ -206,122 +216,162 @@
       if (vb == null) return -1;
       return (typeof va === "string" ? va.localeCompare(vb, "tr") : va - vb) * dir;
     });
-    const head = COLS.map(([c, l]) => `<th data-c="${c}" class="${c === k ? "on" : ""} ${["t", "name"].includes(c) ? "" : "num"}" aria-sort="${c === k ? (dir > 0 ? "ascending" : "descending") : "none"}">${l}${c === k ? (dir > 0 ? " ▲" : " ▼") : ""}</th>`).join("");
+    const TIPS = { ratio: "Güncel fiyat ÷ ortalama geri alım fiyatı. 1'in üstü: şirket bugünkü fiyattan ucuza almış.", qty: "Dönemdeki toplam geri alınan pay (bin adet)", amount: "Fiyat × adet; şüpheli fiyatlı işlemler hariç" };
+    const head = COLS.map(([c, l, num]) => `<th scope="col" class="${num ? "num" : ""}" aria-sort="${c === k ? (dir > 0 ? "ascending" : "descending") : "none"}">
+      <button type="button" class="th-sort" data-c="${c}" ${TIPS[c] ? `data-tip="${esc(TIPS[c])}"` : ""}>${l}<span class="arr" aria-hidden="true">${c === k ? (dir > 0 ? "▲" : "▼") : "▼"}</span></button></th>`).join("");
     const body = agg.map(o => {
-      const open = S.open.has(o.t);
-      const sub = open ? `<tr class="sub"><td colspan="${COLS.length}">${txList(o)}</td></tr>` : "";
-      return `<tr class="co ${open ? "open" : ""} ${w.has(o.t) ? "mine" : ""}" data-t="${esc(o.t)}" tabindex="0" aria-expanded="${open}">
-        <td class="tk">${esc(o.t)}${w.has(o.t) ? ` <span class="mine-dot" title="İzleme listende">●</span>` : ""}</td>
-        <td class="nm" title="${esc(o.name)}">${esc(o.name)}</td>
-        <td class="num">${o.n}${o.review || o.suspect ? ` <span class="rv" title="${[o.suspect ? o.suspect + " işlemde fiyat şüpheli (toplamlara katılmadı)" : "", o.review ? o.review + " bildirim elle kontrol istiyor" : ""].filter(Boolean).join(" · ")}">⚠</span>` : ""}</td>
-        <td class="num">${lots(o.qty)}</td>
-        <td class="num"><b>${tl(o.amount)}</b></td>
-        <td class="num">${o.avg ? nf(o.avg, 2) : "—"}</td>
-        <td class="num ${cls(o.prem)}" title="${o.px ? `Güncel ${nf(o.px, 2)} ₺` : "Fiyat sadece izleme listesindeki hisseler için"}">${o.prem == null ? "—" : pct(o.prem)}</td>
-        <td class="num">${o.own == null ? "—" : "%" + nf(o.own, 2)}</td>
-        <td class="num">${o.last ? o.last.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" }) : "—"}</td>
-      </tr>${sub}`;
+      const open = S.open.has(o.t) || (S.suspectOnly && o.suspect);
+      const flags = [o.suspect ? `${o.suspect} işlemde fiyat şüpheli (toplamlara katılmadı)` : "", o.review ? `${o.review} bildirim elle kontrol istiyor` : ""].filter(Boolean).join(" · ");
+      const rk = o.ratio == null ? null : Math.abs(o.ratio - 1) < 0.005 ? 0 : o.ratio - 1;
+      const ratioTip = o.ratio == null ? (o.avg ? "Güncel fiyat yok" : "Ortalama fiyat hesaplanamadı") :
+        `Güncel ${fmt.num(o.q.last)} ₺ (${o.q.src}) ÷ ort. ${fmt.num(o.avg)} ₺ = ${fmt.num(o.ratio)}<br>Ortalamaya göre ${fmt.pct((o.ratio - 1) * 100)}`;
+      return `<tr class="row ${open ? "open" : ""} ${w.has(o.t) ? "mine" : ""}" data-t="${esc(o.t)}" tabindex="0" aria-expanded="${!!open}">
+        <td class="tk">${esc(o.t)}${w.has(o.t) ? ` <span class="mine-dot" data-tip="İzleme listende">●</span>` : ""}</td>
+        <td class="nm" data-tip="${esc(o.name)}">${esc(o.name)}</td>
+        <td class="num">${o.n}${flags ? ` <span class="rv" data-tip="${esc(flags)}">⚠</span>` : ""}</td>
+        <td class="num">${bin(o.qty)}</td>
+        <td class="num"><b>${mn(o.amount)}</b></td>
+        <td class="num">${o.avg ? fmt.num(o.avg) : "—"}</td>
+        ${showRatio ? `<td class="num"><span class="ratio ${dirCls(rk)}" data-tip="${esc(ratioTip)}">${o.ratio == null ? "—" : `${glyph(rk)} ${fmt.num(o.ratio)}`}</span></td>` : ""}
+        <td class="num">${o.own == null ? "—" : fmt.num(o.own)}</td>
+        <td class="num">${o.last ? fmt.date(o.last) : "—"}</td>
+      </tr>${open ? `<tr class="drawer"><td colspan="${COLS.length}">${txList(o)}</td></tr>` : ""}`;
     }).join("");
-    return `<section class="panel bb-table"><div class="panel-head"><h3>Şirket bazında (${agg.length})</h3><span class="hint">satıra tıkla: işlemler · başlığa tıkla: sırala</span></div>
-      <div class="tbl-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body || `<tr><td colspan="${COLS.length}" class="empty">Bu dönemde geri alım işlemi yok.</td></tr>`}</tbody></table></div></section>`;
+    return `<section class="card card-flush" aria-labelledby="bbTblT">
+      <div class="card-head"><h2 class="card-title" id="bbTblT">Şirket bazında (${agg.length})</h2><span class="card-meta">satıra tıkla: işlemler · başlığa tıkla: sırala${showRatio ? "" : " · güncel fiyat verisi yok"}</span></div>
+      <div class="tbl-scroll bb-scroll"><table class="tbl bb-tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
+      ${agg.length ? "" : sh.stateHTML({ kind: "empty", title: S.suspectOnly ? "Bu dönemde şüpheli işlem yok" : "Bu dönemde geri alım işlemi yok", msg: S.q || S.watch ? "Arama ya da “Sadece izleme listem” filtresi açık." : "Dönemi uzatmayı dene." })}</div></section>`;
   }
   function txList(o) {
-    return `<table class="tx"><thead><tr><th>İşlem tarihi</th><th class="num">Fiyat</th><th class="num">Adet</th><th class="num">Tutar</th><th class="num">Sermaye payı</th><th>Bildirim</th></tr></thead><tbody>` +
-      o.tx.map(r => `<tr><td>${r.date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" })}</td>
-        <td class="num ${r.suspect ? "rv" : ""}" title="${r.suspect ? "Fiyat şüpheli: şirketin diğer işlemlerinden çok farklı; KAP bildirimini kontrol et" : ""}">${r.price ? nf(r.price, 3) : "—"}${r.suspect ? " ⚠" : ""}</td><td class="num">${nf(r.qty)}</td><td class="num">${r.suspect ? "—" : tl(r.amount)}</td>
-        <td class="num">${r.own == null ? "—" : "%" + nf(r.own, 2)}</td>
-        <td>${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">KAP ${r.id}</a>` : r.id}${r.review ? ` <span class="rv" title="Ayrıştırma elle kontrol istiyor">⚠</span>` : ""}</td></tr>`).join("") +
-      `</tbody></table>`;
+    return `<table class="tx" aria-label="${esc(o.t)} işlemleri"><thead><tr><th>İşlem tarihi</th><th class="num">Fiyat (₺)</th><th class="num">Adet</th><th class="num">Tutar (₺)</th><th class="num">Sermaye payı (%)</th><th>Bildirim</th></tr></thead><tbody>` +
+      o.tx.map(r => `<tr class="${r.suspect ? "sus" : ""}"><td>${fmt.date(r.date, { day: "numeric", month: "short", year: "numeric" })}</td>
+        <td class="num">${r.price ? fmt.num(r.price, 3) : "—"}${r.suspect ? ` <span class="rv" data-tip="Fiyat şüpheli: şirketin diğer işlemlerinden çok farklı; KAP bildirimini kontrol et">⚠</span>` : ""}</td>
+        <td class="num">${fmt.int(r.qty)}</td><td class="num">${r.suspect ? "—" : fmt.num(r.amount, 0)}</td>
+        <td class="num">${r.own == null ? "—" : fmt.num(r.own)}</td>
+        <td>${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">KAP ${r.id} ↗</a>` : r.id}${r.review ? ` <span class="rv" data-tip="Ayrıştırma elle kontrol istiyor">⚠</span>` : ""}</td></tr>`).join("") + `</tbody></table>`;
   }
   function programs(rows) {
     const p = rows.filter(r => r.kind !== "tx").sort((a, b) => b.pub - a.pub).slice(0, 30);
     if (!p.length) return "";
     const w = watchSet();
-    return `<section class="panel bb-prog"><div class="panel-head"><h3>Program başlatma, YK kararı ve diğer bildirimler</h3><span class="hint">${p.length} kayıt</span></div>
-      <ul>${p.map(r => {
+    return `<section class="card" aria-labelledby="bbProgT"><div class="card-head"><h2 class="card-title" id="bbProgT">Program başlatma, YK kararı ve diğer bildirimler</h2><span class="card-meta">${p.length} kayıt</span></div>
+      <ul class="prog">${p.map(r => {
         const f = r.fields || {};
         const size = f["geri alıma konu azami pay miktarı (nominal tl)"] || f["geri alıma konu azami pay miktarı"];
         const dur = f["varsa geri alım programının uygulanacağı süre"];
         return `<li class="${w.has(r.t) ? "mine" : ""}"><span class="tk">${esc(r.t)}</span>
-          <span class="pt ${r.kind}">${r.kind === "program" ? "Program" : r.kind === "end" ? "Tamamlandı" : "Diğer"}</span>
+          <span class="tag ${r.kind === "program" ? "up" : ""}">${r.kind === "program" ? "Program" : r.kind === "end" ? "Tamamlandı" : "Diğer"}</span>
           <a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.type)}</a>
           ${size ? `<span class="meta">azami ${esc(size)} nominal</span>` : ""}${dur ? `<span class="meta">${esc(dur)}</span>` : ""}
-          <time>${r.pub.toLocaleDateString("tr-TR", { day: "2-digit", month: "short" })}</time></li>`;
+          <time datetime="${r.pub.toISOString()}">${fmt.date(r.pub)}</time></li>`;
       }).join("")}</ul></section>`;
   }
 
+  // ─────────────────────────────── ana çizim
   function render() {
-    if (!S.loaded || $("#buybackView").hidden) return;     // gizliyken çizme: genişlik ölçülemez
-    const rows = inPeriod();
-    const agg = aggregate(rows);
-    const W = Math.max(280, Math.round(($("#bbBody").getBoundingClientRect().width || 720) - 30));
-    const fr = R()?.fmtTime ? R().fmtTime(S.updated.toISOString()) : S.updated.toLocaleString("tr-TR");
-    $("#bbBody").innerHTML = `
-      <p class="bb-src">Veri: <a href="https://github.com/gptrade/kap-geri-alim-takibi" target="_blank" rel="noopener">kap-geri-alim-takibi</a> · son bildirim ${fr} · ${S.rows.length} kayıt${S.suspect ? ` · <span class="rv">${S.suspect} işlemde fiyat şüpheli, toplamlara katılmadı</span>` : ""}</p>
-      ${kpis(rows, agg)}
-      ${dailyChart(rows, W)}
-      ${table(agg)}
-      ${programs(rows)}`;
-    $$("#bbBody th[data-c]").forEach(th => th.onclick = () => {
-      const c = th.dataset.c;
-      S.dir = S.sort === c ? -S.dir : (["t", "name"].includes(c) ? 1 : -1);
-      S.sort = c; render();
+    if (!S.loaded || sh.route !== "geri-alim") return;              // gizliyken çizme: genişlik ölçülemez
+    const body = $("#bbBody"), sus = $("#bbSuspect");
+    queueMicrotask(sh.syncActions);                              // dışa aktar düğmesinin durumu filtreye bağlı
+    if (sh.market === "US") {
+      sus.hidden = true; $("#bbSrc").textContent = "";
+      body.innerHTML = sh.stateHTML({ kind: "info", title: "Geri alım verisi yalnız BIST şirketleri için", msg: "Piyasa filtresi şu an <b>ABD</b>. KAP pay geri alım bildirimleri Borsa İstanbul şirketlerini kapsar.", action: "Piyasayı Tümü yap", actionId: "bbAll" });
+      $("#bbAll").onclick = () => sh.setMarket("ALL");
+      return;
+    }
+    const period = inPeriod();
+    const nSus = period.filter(r => r.suspect).length;
+    sus.hidden = !nSus;
+    if (!nSus) S.suspectOnly = false;
+    sus.setAttribute("aria-pressed", String(S.suspectOnly));
+    sus.innerHTML = `⚠ ${nSus} işlemde fiyat şüpheli${S.suspectOnly ? " · filtre açık ✕" : ""}`;
+    sus.dataset.tip = S.suspectOnly ? "Tüm şirketleri göster" : "Fiyatı şirketin diğer işlemlerinden 10 kattan fazla sapan işlemler (ayrıştırma hatası şüphesi). Tıkla: tabloyu bu şirketlere süz.";
+    let agg = aggregate(period);
+    if (S.suspectOnly) agg = agg.filter(o => o.suspect);
+    const showRatio = aggregate(period).some(o => o.ratio != null);
+    const W = Math.max(280, Math.round((body.getBoundingClientRect().width || 720) - 34));
+    const qAt = S.quotesAt ? ` · güncel fiyatlar ${fmt.dt(S.quotesAt)}` : "";
+    $("#bbSrc").innerHTML = `Kaynak: <a href="https://github.com/gptrade/kap-geri-alim-takibi" target="_blank" rel="noopener">kap-geri-alim-takibi</a> · son bildirim ${fmt.dt(S.updated)} · ${fmt.int(S.rows.length)} kayıt${qAt}`;
+    const scroll = $(".bb-scroll")?.scrollTop || 0;
+    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis(period, aggregate(period))}${dailyChart(period, aggregate(period), W)}${table(agg, showRatio)}${programs(period)}</div>`;
+    if ($(".bb-scroll")) $(".bb-scroll").scrollTop = scroll;
+    $$("#bbBody .th-sort").forEach(b => b.onclick = () => {
+      const c = b.dataset.c;
+      S.dir = S.sort === c ? -S.dir : (["t", "name"].includes(c) ? 1 : -1); S.sort = c;
+      render(); $(`#bbBody .th-sort[data-c="${c}"]`)?.focus();
     });
-    $$("#bbBody tr.co").forEach(tr => {
-      const go = () => { const t = tr.dataset.t; S.open.has(t) ? S.open.delete(t) : S.open.add(t); render(); };
-      tr.onclick = go;
-      tr.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
-    });
-    $$("#bbBody .tx a, #bbBody .bb-prog a").forEach(a => a.onclick = e => e.stopPropagation());
+  }
+  function toggleRow(tr) {
+    const t = tr.dataset.t;
+    S.open.has(t) ? S.open.delete(t) : S.open.add(t);
+    render();
+    $(`#bbBody tr.row[data-t="${CSS.escape(t)}"]`)?.focus();
+  }
+  function renderLoading() {
+    $("#bbSrc").innerHTML = `<span class="skeleton sk-line w40" style="display:inline-block;width:320px"></span>`;
+    $("#bbBody").innerHTML = `<div class="view" style="gap:var(--s-4)" aria-busy="true" aria-label="Geri alım verisi yükleniyor">
+      <div class="kpi-grid">${Array.from({ length: 6 }, () => `<div class="kpi"><div class="skeleton sk-line w60"></div><div class="skeleton sk-line lg w40"></div></div>`).join("")}</div>
+      <div class="card"><div class="skeleton sk-line w40"></div><div class="skeleton" style="height:160px;margin-top:12px"></div></div>
+      <div class="card card-flush"><table class="tbl"><tbody>${sh.skeletonRows(8, 6)}</tbody></table></div></div>`;
+  }
+  function renderError() {
+    $("#bbSrc").textContent = "";
+    $("#bbBody").innerHTML = sh.stateHTML({ kind: "error", title: "Geri alım verisi yüklenemedi", msg: `${esc(S.error)}. Takipçi reposu (kap-geri-alim-takibi) yayında mı? Biraz sonra tekrar dene.`, action: "Tekrar dene", actionId: "bbRetry" });
+    $("#bbRetry").onclick = () => load(true);
   }
 
-  // ─────────────────────────────── sekmeler
-  // Sekmeler: sinyaller · geri alımlar · ALCO (ayrı uygulama, iframe)
-  const VIEWS = { alco: "#alcoView", signals: "#signalsView", buybacks: "#buybackView" };
-  const HASH = { signals: "#sinyal", buybacks: "#geri-alim" };            // Makro Veri varsayılan sekme (hash yok)
-  const ALIAS = { "#alco": "alco", "#makro": "alco" };
-  const root = document.documentElement;
-  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-  // ALCO ayrı bir sitede; içine stil verilemez. Uygulama ileride ?embed=1&theme= desteklerse kendi başlığını gizler / koyu açılır.
-  // Desteklemezse başlık kırpma ve renk çevirme (style.css: #alcoFrame) dışarıdan uygulanır.
-  const alcoUrl = () => { const u = new URL($("#alcoFrame").dataset.src); u.searchParams.set("embed", "1"); u.searchParams.set("theme", isDark() ? "dark" : "light"); return u.href; };
-  function show(tab) {
-    if (!VIEWS[tab]) tab = "alco";
-    Object.entries(VIEWS).forEach(([k, sel]) => { $(sel).hidden = k !== tab; });
-    document.body.classList.toggle("bb", tab !== "signals");          // sağ kolon sadece Sinyal Takip'te
-    document.body.classList.toggle("embed", tab === "alco");
-    $$(".tab-list button").forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
-    if (tab === "buybacks") { if (S.loaded) render(); else load(); }
-    else if (tab === "alco") { const f = $("#alcoFrame"); if (!f.getAttribute("src")) f.src = alcoUrl(); }
-    else dispatchEvent(new Event("resize"));   // sağ kolon yeniden görünür: balon haritası genişliğini yenile
-    const h = HASH[tab] || "";
-    if (location.hash !== h) history.replaceState(null, "", h || location.pathname + location.search);
+  // ─────────────────────────────── dışa aktarma
+  function exportCompanies() {
+    const ex = window.radarExport;
+    const rows = aggregate(inPeriod()).filter(o => !S.suspectOnly || o.suspect).sort((a, b) => b.amount - a.amount).map(o => ({
+      hisse: o.t, sirket: o.name, islem_sayisi: o.n, toplam_adet: o.qty, tutar_tl: Math.round(o.amount), ort_fiyat_tl: o.avg ?? "", guncel_fiyat_tl: o.q?.last ?? "",
+      guncel_bolu_ort: o.ratio ?? "", sermaye_payi_pct: o.own ?? "", son_islem: o.last ? o.last.toISOString().slice(0, 10) : "", supheli_islem: o.suspect, kontrol_gereken: o.review }));
+    ex.download(`geri-alim_sirketler_${S.days}g_${ex.stamp()}.csv`, ex.toCSV(rows), "text/csv;charset=utf-8");
   }
-  $("#alcoReload").onclick = () => { $("#alcoFrame").src = alcoUrl(); };
-  $$(".tab-list button").forEach(b => b.onclick = () => show(b.dataset.tab));
+  function exportTx() {
+    const ex = window.radarExport;
+    const rows = inPeriod().filter(r => r.kind === "tx" && (!S.suspectOnly || r.suspect)).sort((a, b) => b.date - a.date).map(r => ({
+      islem_tarihi: r.date.toISOString().slice(0, 10), bildirim_zamani: r.pub.toISOString(), hisse: r.t, sirket: r.name, fiyat_tl: r.price ?? "", adet: r.qty ?? "",
+      tutar_tl: r.amount == null ? "" : Math.round(r.amount), sermaye_payi_pct: r.own ?? "", supheli: r.suspect ? "evet" : "", kap_no: r.id, url: r.url || "" }));
+    ex.download(`geri-alim_islemler_${S.days}g_${ex.stamp()}.csv`, ex.toCSV(rows), "text/csv;charset=utf-8");
+  }
 
-  // ── tema (tüm site + Makro Veri) ──
-  const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* özel pencere */ } };
-  const syncTheme = () => { const d = isDark(); $("#themeToggle").setAttribute("aria-pressed", d); $("#themeToggle").title = d ? "Açık temaya geç" : "Koyu temaya geç"; };
-  $("#themeToggle").onclick = () => {
-    root.dataset.theme = isDark() ? "light" : "dark"; store("radar.theme", root.dataset.theme); syncTheme();
-    const f = $("#alcoFrame"); if (f.getAttribute("src")) f.src = alcoUrl();   // uygulama ?theme= desteklerse kendi koyu temasına geçer
-    dispatchEvent(new Event("themechange")); dispatchEvent(new Event("resize"));
-  };
-  syncTheme();
-
-  // ── sol panel aç/kapa ──
-  const syncSide = () => { const open = !root.classList.contains("side-off"); $("#sideToggle").setAttribute("aria-expanded", open); $("#sideToggle").title = open ? "Sol paneli kapat" : "Sol paneli aç"; };
-  $("#sideToggle").onclick = () => { root.classList.toggle("side-off"); store("radar.side", !root.classList.contains("side-off")); syncSide(); dispatchEvent(new Event("resize")); };
-  syncSide();
-
+  // ─────────────────────────────── bağla
   $$("#bbPeriod button").forEach(b => b.onclick = () => {
-    S.days = +b.dataset.d; $$("#bbPeriod button").forEach(x => x.classList.toggle("on", x === b)); render();
+    S.days = +b.dataset.d; $$("#bbPeriod button").forEach(x => x.setAttribute("aria-checked", String(x === b))); render();
   });
+  sh.radioKeys($("#bbPeriod"));
   $("#bbWatch").onchange = e => { S.watch = e.target.checked; render(); };
   let t; $("#bbQ").oninput = e => { clearTimeout(t); t = setTimeout(() => { S.q = e.target.value.trim(); render(); }, 150); };
-  let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (!$("#buybackView").hidden) render(); }, 200); });
-  const fromHash = ALIAS[location.hash] || Object.keys(HASH).find(k => HASH[k] === location.hash);
-  show(fromHash || "alco");
-  if (fromHash !== "buybacks") setTimeout(load, 1500);            // arka planda yükle: sekme rozeti için
+  $("#bbSuspect").onclick = () => { S.suspectOnly = !S.suspectOnly; render(); $("#bbSuspect").focus(); };
+  $("#bbBody").addEventListener("click", e => {
+    const tr = e.target.closest("tr.row");
+    if (tr && !e.target.closest("a, button")) toggleRow(tr);
+  });
+  $("#bbBody").addEventListener("keydown", e => {
+    const tr = e.target.closest("tr.row");
+    if (!tr || e.target !== tr) return;
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleRow(tr); }
+    else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const rows = $$("#bbBody tr.row"), i = rows.indexOf(tr);
+      rows[i + (e.key === "ArrowDown" ? 1 : -1)]?.focus();
+    }
+  });
+  let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 200); });
+  addEventListener("themechange", render);
+  addEventListener("marketchange", render);
+
+  sh.register("geri-alim", {
+    onShow() { S.loaded ? render() : load(); },
+    async refresh() { await load(true); if (S.error && S.loaded) render(); },
+    exports() {
+      const has = S.loaded && sh.market !== "US" && inPeriod().some(r => r.kind === "tx");
+      return [{ label: "Şirket tablosu (CSV)", hint: `${S.days} gün`, run: exportCompanies, disabled: !has },
+        { label: "İşlemler (CSV)", hint: "tek tek bildirimler", run: exportTx, disabled: !has }];
+    },
+    exportInfo: () => S.loaded ? `Dönem: son ${S.days} gün${S.q ? ` · arama “${S.q}”` : ""}${S.watch ? " · izleme listesi" : ""}${S.suspectOnly ? " · şüpheliler" : ""}` : "",
+    exportNote: "Geri alım verisi henüz yüklenmedi",
+  });
+  // Rozet için arka planda yükle (sekme açık değilse)
+  setTimeout(() => { if (!S.loaded) load(); }, 1500);
 })();

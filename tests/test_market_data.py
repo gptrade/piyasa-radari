@@ -82,3 +82,25 @@ def test_ema_alignment_crosses_and_weekly():
     ta = prices.technicals(bars(v))
     assert prices._cross([1, 2, 3, 5], [4, 4, 4, 4]) == "up" and prices._cross([5, 4, 3], [3.5] * 3) == "down"
     assert ta["atr_pct"] is not None and ta["bb_pct"] is not None
+
+
+def test_bb_quotes_recent_tickers_and_cache(tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+    from radar import bb_quotes
+    rows = [{"tickers": "DAPGM", "quantity": 5, "transaction_date": "2026-09-30"},
+            {"tickers": "ESKI", "quantity": 5, "transaction_date": "2025-01-01"},
+            {"tickers": "PROG", "quantity": None, "transaction_date": "2026-09-30"},
+            {"tickers": "KOZAL, KOZAA", "quantity": 1, "publish_date": "29.09.2026 10:00:00"}]
+    assert bb_quotes.recent_tickers(rows, today=datetime(2026, 9, 30, tzinfo=timezone.utc)) == ["DAPGM", "KOZAL"]
+
+    monkeypatch.setattr(bb_quotes, "FILE", tmp_path / "bb.json")
+    class R:
+        def json(self): return rows
+    monkeypatch.setattr(bb_quotes.http, "get", lambda *a, **k: R())
+    calls = []
+    def fake(syms):
+        calls.append(syms); return {s: {"last": 1.0, "date": "2026-09-30", "change_pct": None} for s in syms}
+    doc = bb_quotes.update({}, fetcher=fake)
+    assert set(doc["quotes"]) >= {"DAPGM"} and len(calls) == 1
+    bb_quotes.update({}, fetcher=fake)                       # saat dolmadan yeniden çekmez
+    assert len(calls) == 1

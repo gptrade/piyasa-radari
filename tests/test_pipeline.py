@@ -15,6 +15,7 @@ def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline, "STATE", tmp_path / "state.json")
     monkeypatch.setattr(prices, "update_all", lambda stocks: {})
     monkeypatch.setattr(pipeline.tcmb, "update_macro", lambda settings: None)
+    monkeypatch.setattr(pipeline.bb_quotes, "update", lambda settings: None)
     monkeypatch.setattr(pipeline.digest, "DIGEST_FILE", tmp_path / "digest.json")
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
@@ -121,3 +122,19 @@ def test_earnings_items_window():
     items = pipeline.earnings_items(st, px, 7)
     assert [i.tickers for i in items] == [["NVDA"]] and items[0].extra["no_ai"] and "EPS beklentisi 1.2" in items[0].title
     assert items[0].id == pipeline.earnings_items(st, px, 7)[0].id      # aynı tarih → aynı kayıt, tekrar eklenmez
+
+
+def test_source_health_tracks_last_ok_and_data(monkeypatch):
+    from radar.pipeline import source_health
+    monkeypatch.delenv("X_BEARER_TOKEN", raising=False)
+    prev = {"KAP": {"last_ok": "2026-09-30T10:00:00Z", "last_data": "2026-09-30T09:00:00Z"}}
+    st = [{"name": "KAP", "ok": True, "count": 0},
+          {"name": "Basın", "ok": True, "count": 0, "warnings": ["x: timeout"]},
+          {"name": "Yahoo", "ok": False, "count": 0, "error": "boom"},
+          {"name": "X", "ok": True, "count": 0}]
+    h = source_health(st, prev, now="2026-09-30T12:00:00Z")
+    assert st[0]["last_ok"] == "2026-09-30T12:00:00Z" and st[0]["last_data"] == "2026-09-30T09:00:00Z"
+    assert "last_ok" not in st[1]                          # uyarılı ve verisiz: başarılı sayılmaz
+    assert "last_ok" not in st[2]
+    assert st[3]["disabled"] == "X_BEARER_TOKEN tanımlı değil"
+    assert h["KAP"]["last_ok"] == "2026-09-30T12:00:00Z"

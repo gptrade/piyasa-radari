@@ -1,0 +1,110 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Piyasa Radarı — tasarım token'ları (tek kaynak)
+   Renk · boşluk (4px ölçeği) · yarıçap · yazı · gölge · hareket
+   Açık tema :root'ta; koyu tema hem işletim sistemi tercihiyle
+   (prefers-color-scheme) hem de [data-theme="dark"] ile gelir.
+   [data-theme="light"] işletim sistemi koyu olsa bile açık temayı zorlar.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: light;
+
+  /* ── yüzeyler ── */
+  --bg:            #f4f5f3;   /* sayfa zemini */
+  --surface:       #ffffff;   /* kart, tablo, kenar çubuğu */
+  --surface-2:     #f1f3f2;   /* ikincil dolgu: çip, segment zemini, KPI içi */
+  --surface-3:     #e7ebe9;   /* basılı / seçili dolgu */
+  --row-hover:     #f5f7fa;
+  --border:        #e1e5e3;   /* nötr kenarlık (tüm kartlar) */
+  --border-strong: #c9d0cd;
+  --scrim:         rgb(10 14 13 / .45);
+
+  /* ── metin (ikincil ve soluk metin ≥ 4.5:1, hem zeminde hem yüzeyde) ── */
+  --text:   #141a19;
+  --text-2: #3f4946;          /* ikincil */
+  --text-3: #57625f;          /* soluk / etiket */
+  --text-on-accent: #ffffff;
+
+  /* ── anlamsal renkler ── (yön asla yalnız renkle verilmez: ▲ ▼ ● eşlik eder) */
+  --accent:      #0f766e;     /* marka turkuazı */
+  --accent-hover:#0b625b;
+  --accent-soft: #e0f2ef;
+  --accent-ink:  #0b5d57;     /* açık zeminde vurgu metni */
+  --up:          #137a3a;
+  --up-soft:     #e3f4e8;
+  --down:        #c3261f;
+  --down-soft:   #fdebea;
+  --neutral:     #5b6778;
+  --neutral-soft:#edf0f4;
+  --warn:        #a15c07;     /* amber — metin için koyulaştırılmış */
+  --warn-soft:   #fdf3e2;
+  --warn-line:   #d9920f;     /* çizgi / kesikli kenar */
+
+  /* ── veri görselleştirme (dataviz referans paleti, doğrulanmış) ── */
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4;
+  --series-other: #a3a9a6;
+  --imp-1: #86b6ef; --imp-2: #3987e5; --imp-3: #184f95;          /* önem: tek ton, açık → koyu */
+  --on-imp-1: #0b1a2e; --on-imp-2: #ffffff; --on-imp-3: #ffffff;
+  --hm-up: #15803d; --hm-down: #c81e1e; --hm-mid: #eeefec;        /* ısı haritası uçları + nötr orta */
+  --e1: #2a78d6; --e2: #eb6834; --e3: #1baf7a; --e4: #eda100;     /* EMA 14/34/55/200 */
+  --grid: #e4e7e5; --axis: #b9c1be;
+
+  /* ── boşluk: 4px ölçeği ── */
+  --s-0: 0; --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 48px;
+
+  /* ── yarıçap ── */
+  --r-xs: 4px; --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-pill: 999px;
+
+  /* ── yazı ── */
+  --font-sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --fs-2xs: 10.5px; --fs-xs: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-base: 14px; --fs-lg: 16px; --fs-xl: 20px; --fs-2xl: 24px;
+  --lh-tight: 1.25; --lh: 1.45;
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700;
+
+  /* ── gölge ── */
+  --shadow-1: 0 1px 2px rgb(16 24 22 / .06);
+  --shadow-2: 0 8px 24px rgb(16 24 22 / .14), 0 1px 3px rgb(16 24 22 / .08);
+  --shadow-3: 0 16px 48px rgb(16 24 22 / .22);
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+
+  /* ── ölçüler / hareket ── */
+  --sidebar-w: 240px; --rail-w: 344px; --topbar-h: 60px;
+  --ease: cubic-bezier(.2, .7, .2, 1); --dur: .16s;
+}
+
+/* ── koyu tema: değerler iki kapsamda aynı (işletim sistemi + seçici) ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0c1110; --surface: #141b1a; --surface-2: #1b2423; --surface-3: #24302e; --row-hover: #1a2423;
+    --border: #26322f; --border-strong: #3a4845; --scrim: rgb(0 0 0 / .6);
+    --text: #e8eeec; --text-2: #bcc7c4; --text-3: #9aa7a3; --text-on-accent: #062b27;
+    --accent: #2dd4bf; --accent-hover: #5eead4; --accent-soft: #123330; --accent-ink: #5eead4;
+    --up: #4ade80; --up-soft: #12301f; --down: #f87171; --down-soft: #3a1717;
+    --neutral: #a3b0c2; --neutral-soft: #1f2833; --warn: #fbbf24; --warn-soft: #33270f; --warn-line: #fbbf24;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-other: #5f6866;
+    --imp-1: #256abf; --imp-2: #5598e7; --imp-3: #9ec5f4;
+    --on-imp-1: #ffffff; --on-imp-2: #0b1a2e; --on-imp-3: #0b1a2e;
+    --hm-up: #15803d; --hm-down: #dc2626; --hm-mid: #2c3331;
+    --e1: #3987e5; --e2: #d95926; --e3: #199e70; --e4: #c98500;
+    --grid: #26302e; --axis: #46524f;
+    --shadow-1: 0 1px 2px rgb(0 0 0 / .4); --shadow-2: 0 8px 24px rgb(0 0 0 / .5); --shadow-3: 0 16px 48px rgb(0 0 0 / .6);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c1110; --surface: #141b1a; --surface-2: #1b2423; --surface-3: #24302e; --row-hover: #1a2423;
+  --border: #26322f; --border-strong: #3a4845; --scrim: rgb(0 0 0 / .6);
+  --text: #e8eeec; --text-2: #bcc7c4; --text-3: #9aa7a3; --text-on-accent: #062b27;
+  --accent: #2dd4bf; --accent-hover: #5eead4; --accent-soft: #123330; --accent-ink: #5eead4;
+  --up: #4ade80; --up-soft: #12301f; --down: #f87171; --down-soft: #3a1717;
+  --neutral: #a3b0c2; --neutral-soft: #1f2833; --warn: #fbbf24; --warn-soft: #33270f; --warn-line: #fbbf24;
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-other: #5f6866;
+  --imp-1: #256abf; --imp-2: #5598e7; --imp-3: #9ec5f4;
+  --on-imp-1: #ffffff; --on-imp-2: #0b1a2e; --on-imp-3: #0b1a2e;
+  --hm-up: #15803d; --hm-down: #dc2626; --hm-mid: #2c3331;
+  --e1: #3987e5; --e2: #d95926; --e3: #199e70; --e4: #c98500;
+  --grid: #26302e; --axis: #46524f;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / .4); --shadow-2: 0 8px 24px rgb(0 0 0 / .5); --shadow-3: 0 16px 48px rgb(0 0 0 / .6);
+}

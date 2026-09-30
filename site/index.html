@@ -4,200 +4,212 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Piyasa Radarı</title>
-<meta name="description" content="BIST ve ABD hisseleri için haber, bildirim, sosyal medya ve rapor sinyalleri; AI değerlendirmesi, dönem özeti, teknik görünüm ve fiyat tepkisi.">
+<meta name="description" content="BIST ve ABD hisseleri için haber, bildirim, sosyal medya ve rapor sinyalleri; AI değerlendirmesi, dönem özeti, teknik görünüm, fiyat tepkisi, şirket geri alımları ve makro veri.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260930i">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css?v=20261001a">
+<link rel="stylesheet" href="style.css?v=20261001a">
 <script>
-  // Kayıtlı tema ve sol panel durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
+  // Kayıtlı tema ve kenar çubuğu durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
   (function () {
     var d = document.documentElement, t = null, s = null;
     try { t = JSON.parse(localStorage.getItem("radar.theme")); s = JSON.parse(localStorage.getItem("radar.side")); } catch (e) {}
     if (t === "dark" || t === "light") d.dataset.theme = t;
-    if (s === null) s = !matchMedia("(max-width: 760px)").matches;
-    if (!s) d.classList.add("side-off");
+    if (s === false) d.classList.add("side-off");
   })();
 </script>
 </head>
-<body class="bb embed">
-<div class="shell">
+<body>
+<a class="skip" href="#main">İçeriğe geç</a>
+<div class="app">
 
-  <!-- ───────────── sol: gezinme ───────────── -->
-  <aside class="side" id="side">
+  <!-- ═════════════ kenar çubuğu: gezinme + genel ayarlar ═════════════ -->
+  <aside class="sidebar" id="sidebar" aria-label="Kenar çubuğu">
     <div class="brand">
       <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" class="brand-bg"/><circle cx="16" cy="16" r="9" fill="none" stroke="#fff" stroke-width="2"/><circle cx="16" cy="16" r="3" fill="#fff"/><path d="M16 16 L24 9" stroke="#fff" stroke-width="2"/></svg>
-      <div><b>Piyasa Radarı</b></div>
+      <b>Piyasa Radarı</b>
     </div>
 
-    <div class="seg" id="marketSeg" role="group" aria-label="Piyasa">
-      <button data-market="ALL" class="on">Tümü</button>
-      <button data-market="BIST">BIST</button>
-      <button data-market="US">ABD</button>
-    </div>
-
-    <nav class="nav" id="views" aria-label="Görünüm">
-      <p class="label">Görünüm</p>
-      <button data-view="feed" class="on"><span>Akış</span><em id="cntFeed">0</em></button>
-      <button data-view="signals"><span>Güçlü sinyaller</span><em id="cntSig">0</em></button>
-      <button data-view="saved"><span>Kaydedilenler</span><em id="cntSaved">0</em></button>
+    <nav class="nav" aria-label="Bölümler">
+      <a class="nav-item" href="#makro" data-route="makro">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 16.5h14M5.5 13.5v-4M9 13.5v-7M12.5 13.5v-5M16 13.5V4.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span>Makro Veri</span>
+      </a>
+      <a class="nav-item" href="#sinyal" data-route="sinyal">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="10" cy="10" r="2" fill="currentColor"/><path d="M10 10l4.5-4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span>Sinyal Takip</span>
+        <span class="badge" id="sigBadge" hidden></span>
+      </a>
+      <a class="nav-item" href="#geri-alim" data-route="geri-alim">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 8A5.5 5.5 0 0 0 5.2 6.2M4.5 12a5.5 5.5 0 0 0 10.3 1.8M5 3.5v3h3M15 16.5v-3h-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Şirket Geri Alım</span>
+        <span class="badge" id="bbBadge" hidden></span>
+      </a>
     </nav>
 
-    <div class="nav" id="macroBox" hidden>
-      <p class="label">Makro (EVDS)</p>
-      <div id="macroList" class="macro"></div>
-    </div>
-
-    <div class="nav" id="extBox">
-      <p class="label">Dış kaynaklar</p>
-      <div class="ext">
-        <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView</a>
-        <a href="https://tr.investing.com/equities/turkey" target="_blank" rel="noopener">Investing</a>
-        <a href="https://www.barchart.com/" target="_blank" rel="noopener">Barchart</a>
-        <a href="https://earningshub.com/" target="_blank" rel="noopener">Earnings Hub</a>
-        <a href="https://app.godelterminal.com/" target="_blank" rel="noopener">Godel</a>
-        <a href="https://marketvisuals.net/" target="_blank" rel="noopener">MarketVisuals</a>
+    <section class="side-sec" id="marketSec" aria-labelledby="mkLbl">
+      <h2 class="side-label" id="mkLbl">Piyasa</h2>
+      <div class="seg seg-full" role="radiogroup" aria-labelledby="mkLbl" id="marketSeg">
+        <button type="button" role="radio" data-market="ALL" aria-checked="true">Tümü</button>
+        <button type="button" role="radio" data-market="BIST" aria-checked="false">BIST</button>
+        <button type="button" role="radio" data-market="US" aria-checked="false">ABD</button>
       </div>
-    </div>
+      <p class="side-note">Sinyal Takip ve Şirket Geri Alım panellerine uygulanır.</p>
+    </section>
 
-    <div class="nav" id="srcBox">
-      <p class="label">Kaynak durumu</p>
-      <div id="sources" class="sources"></div>
-      <p class="meta" id="gen"></p>
-      <p class="src-warn" id="cfgWarn" hidden></p>
+    <details class="side-sec disclosure" id="extBox">
+      <summary>Dış kaynaklar <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+      <ul class="link-list">
+        <li><a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView <small>↗</small></a></li>
+        <li><a href="https://tr.investing.com/equities/turkey" target="_blank" rel="noopener">Investing <small>↗</small></a></li>
+        <li><a href="https://www.barchart.com/" target="_blank" rel="noopener">Barchart <small>↗</small></a></li>
+        <li><a href="https://earningshub.com/" target="_blank" rel="noopener">Earnings Hub <small>↗</small></a></li>
+        <li><a href="https://app.godelterminal.com/" target="_blank" rel="noopener">Godel Terminal <small>↗</small></a></li>
+        <li><a href="https://marketvisuals.net/" target="_blank" rel="noopener">MarketVisuals <small>↗</small></a></li>
+      </ul>
+    </details>
+
+    <div class="side-foot">
+      <div id="healthList" class="health-list" hidden></div>
+      <button type="button" class="health" id="healthBtn" aria-expanded="false" aria-controls="healthList">
+        <span class="dot" aria-hidden="true"></span><span class="sym" aria-hidden="true"></span><span id="healthTxt">Kaynak durumu yükleniyor…</span>
+        <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
   </aside>
+  <div class="scrim" id="scrim" hidden></div>
 
-  <!-- ───────────── bölüm sekmeleri (her ekran boyutunda en üstte) ───────────── -->
-  <nav class="tabs" aria-label="Bölüm">
-    <button type="button" class="icon-btn" id="sideToggle" aria-controls="side" aria-expanded="true" title="Sol paneli aç/kapat">
-      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 3.5v13" stroke="currentColor" stroke-width="1.5"/></svg>
-    </button>
-    <div class="tab-list" role="tablist">
-      <button role="tab" id="tabAlco" aria-controls="alcoView" aria-selected="true" class="on" data-tab="alco">Makro Veri</button>
-      <button role="tab" id="tabSignals" aria-controls="signalsView" aria-selected="false" data-tab="signals">Sinyal Takip</button>
-      <button role="tab" id="tabBuybacks" aria-controls="buybackView" aria-selected="false" data-tab="buybacks">Şirket Geri Alım <em id="bbBadge"></em></button>
-    </div>
-    <span class="tab-tools">
-        <div class="export" id="export">
-          <button type="button" class="export-btn" id="exportBtn" aria-haspopup="menu" aria-expanded="false" title="Filtrelenmiş görünümü dışa aktar">
-            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m0 0-3.5-3.5M10 12l3.5-3.5M4 14.5v1A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5v-1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <!-- ═════════════ sayfa ═════════════ -->
+  <div class="page">
+    <header class="topbar">
+      <button type="button" class="btn btn-icon" id="menuBtn" aria-controls="sidebar" aria-expanded="true" aria-label="Kenar çubuğunu kapat">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M3.5 10h13M3.5 14.5h13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+      <div class="page-title">
+        <h1 id="pageTitle">Sinyal Takip</h1>
+        <p id="pageSub"></p>
+      </div>
+      <div class="actions" role="toolbar" aria-label="Sayfa eylemleri">
+        <span class="updated" id="updated"><span class="u-lbl">Son güncelleme: </span><time id="updatedTime">—</time></span>
+        <button type="button" class="btn" id="refreshBtn">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 3.5v3.2h-3.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="btn-lbl">Yenile</span>
+        </button>
+        <div class="menu-wrap">
+          <button type="button" class="btn" id="exportBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m0 0-3.5-3.5M10 12l3.5-3.5M4 14.5v1A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5v-1" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="btn-lbl">Dışa aktar</span>
           </button>
-          <div class="export-menu" id="exportMenu" role="menu" hidden>
-            <p id="exportInfo"></p>
-            <button type="button" role="menuitem" data-fmt="csv">CSV <small>Excel · noktalı virgül</small></button>
-            <button type="button" role="menuitem" data-fmt="json">JSON <small>tam kayıt</small></button>
-          </div>
+          <div class="menu" id="exportMenu" role="menu" aria-labelledby="exportBtn" hidden></div>
         </div>
-      <button type="button" class="icon-btn" id="alcoReload" title="Makro Veri panelini yenile">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 3.5v3.2h-3.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span>Yenile</span>
-      </button>
-      <button type="button" class="icon-btn" id="themeToggle" title="Koyu / açık tema">
-        <svg class="moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 12.5A6.5 6.5 0 0 1 7.5 4.5a6.5 6.5 0 1 0 8 8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-        <svg class="sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M4.3 15.7l1.4-1.4M14.3 5.7l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-      </button>
-    </span>
-  </nav>
-
-  <!-- ───────────── orta: sinyal listesi ───────────── -->
-  <main class="main">
-
-    <div id="signalsView" role="tabpanel" aria-labelledby="tabSignals" hidden>
-    <header class="bar">
-      <div class="search">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" placeholder="Hisse, olay, kaynak ara…" autocomplete="off" aria-label="Ara">
+        <button type="button" class="btn btn-icon" id="themeBtn" aria-pressed="false" aria-label="Koyu temaya geç">
+          <svg class="moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 12.5A6.5 6.5 0 0 1 7.5 4.5a6.5 6.5 0 1 0 8 8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          <svg class="sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M4.3 15.7l1.4-1.4M14.3 5.7l1.4-1.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
       </div>
-      <div class="chips" id="typeChips" role="group" aria-label="Kaynak türü">
-        <button data-type="disclosure">Bildirim</button>
-        <button data-type="news">Haber</button>
-        <button data-type="social">Sosyal</button>
-        <button data-type="regulator">SPK</button>
-        <button data-type="macro">Makro</button>
-        <button data-type="report">Rapor</button>
-      </div>
-      <div class="seg small" id="sortSeg" role="group" aria-label="Sıralama">
-        <button data-sort="time" class="on">Zaman</button>
-        <button data-sort="impact">Önem</button>
-      </div>
-      <label class="toggle"><input type="checkbox" id="hideNoise"> Gürültüyü gizle</label>
     </header>
 
-    <div id="banner" class="banner" hidden></div>
-    <div class="list-head" id="colFilters" role="group" aria-label="Sütun filtreleri">
-      <label data-tip="<b>Yön</b><br>AI'ın haberi yorumlama yönü.<br>▲ yükseliş · ▼ düşüş · ● nötr · · değerlendirilmedi<br>Ok sayısı güveni gösterir: ▲ %60 altı, ▲▲ %60–79, ▲▲▲ %80+"><select data-f="dir" aria-label="Yön filtresi">
-        <option value="">Yön</option><option value="bullish">▲ Yükseliş</option><option value="bearish">▼ Düşüş</option><option value="neutral">● Nötr</option><option value="none">· AI yok</option></select></label>
-      <label data-tip="<b>Hisse</b><br>Haberde doğrudan geçen ya da AI'ın etkileneceğini söylediği hisse. <i>+2</i> = başka hisseler de var."><select data-f="tk" aria-label="Hisse filtresi"><option value="">Hisse</option></select></label>
-      <div class="ol"><label data-tip="<b>Olay</b><br>Soldaki harf olay türü: ! borsa tedbiri · ↺ geri alım · İ içeriden işlem · Σ finansal sonuç · A analist · % temettü/sermaye · ⇄ anlaşma · S SPK · M makro · § hukuki · N haber · @ sosyal · R rapor<br>Kalın yazı AI'ın kısa olay etiketi."><select data-f="ev" aria-label="Olay türü filtresi"><option value="">Olay türü</option></select></label><button class="help" type="button" aria-label="Satır nasıl okunur" data-tip="<b>Satır nasıl okunur</b><br><span class='mono'>▲▲ AMD · A · Analist AL · ●●○ · +1.2% · ② · ×4 · 16dk</span><br>yön ve güç · hisse · olay türü · olay · önem · haberden beri fiyat · kaynak kalitesi · tekrar sayısı · süre<br>Soluk satırlar: önemsiz, zayıf kaynaklı ya da 24 saatten eski.<br>Satıra tıkla: ayrıntı, grafik ve teknik analiz.">?</button></div>
-      <label data-tip="<b>Önem</b><br>Haberin fiyatı hareket ettirme potansiyeli: ●○○ düşük · ●●○ orta · ●●● yüksek"><select data-f="imp" aria-label="Önem filtresi">
-        <option value="">Önem</option><option value="3">●●● yüksek</option><option value="2">●●○ orta+</option><option value="1">●○○ düşük</option></select></label>
-      <label data-tip="<b>Tepki</b><br>Haber anındaki fiyattan bu yana değişim. … = haberden sonra henüz işlem olmadı (seans kapalı)."><select data-f="rx" aria-label="Tepki filtresi">
-        <option value="">Tepki</option><option value="up">Yükselen</option><option value="down">Düşen</option><option value="none">İşlem yok</option></select></label>
-      <label data-tip="<b>Kaynak kalitesi</b><br>① resmi/birincil (KAP, SEC, SPK, TCMB, şirket bülteni) · ② yerleşik finans medyası · ③ diğer/sosyal<br><b>×N</b>: aynı haber N kaynakta"><select data-f="tier" aria-label="Kaynak filtresi">
-        <option value="">Kaynak</option><option value="1">① resmi</option><option value="2">①② resmi + medya</option><option value="3">③ diğer</option></select></label>
-      <label data-tip="<b>Zaman</b><br>Yayından bu yana geçen süre"><select data-f="age" aria-label="Zaman filtresi">
-        <option value="">Zaman</option><option value="60">1 saat</option><option value="360">6 saat</option><option value="1440">24 saat</option><option value="4320">3 gün</option></select></label>
-    </div>
-    <section id="list" class="list" aria-live="polite"></section>
-    <p id="empty" class="empty" hidden>Bu filtrelere uyan kayıt yok.</p>
-    </div>
+    <main id="main" tabindex="-1">
 
-    <!-- ───────────── geri alımlar sekmesi (veri: kap-geri-alim-takibi reposu) ───────────── -->
-    <div id="buybackView" role="tabpanel" aria-labelledby="tabBuybacks" hidden>
-      <header class="bar">
-        <div class="search">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input id="bbQ" type="search" placeholder="Hisse ya da şirket ara…" autocomplete="off" aria-label="Geri alımlarda ara">
+      <!-- ─────────── Makro Veri (ayrı uygulama: alco-dashboard.vercel.app) ─────────── -->
+      <section class="view view-makro" id="view-makro" aria-labelledby="pageTitle" hidden>
+        <div class="card embed-card">
+          <div class="embed-skel" id="alcoSkel" aria-label="Makro Veri yükleniyor">
+            <div class="skeleton sk-line lg w40"></div>
+            <div class="row3"><div class="skeleton sk-block"></div><div class="skeleton sk-block"></div><div class="skeleton sk-block"></div><div class="skeleton sk-block"></div></div>
+            <div class="skeleton sk-block" style="height:260px"></div>
+          </div>
+          <iframe id="alcoFrame" title="Makro Veri (ALCO paneli)" data-src="https://alco-dashboard.vercel.app/"
+            referrerpolicy="no-referrer-when-downgrade" allow="clipboard-write; fullscreen"></iframe>
         </div>
-        <div class="seg small" id="bbPeriod" role="group" aria-label="Dönem">
-          <button data-d="7">7G</button><button data-d="30" class="on">30G</button><button data-d="90">90G</button><button data-d="365">1Y</button>
+      </section>
+
+      <!-- ─────────── Sinyal Takip ─────────── -->
+      <section class="view" id="view-sinyal" aria-labelledby="pageTitle" hidden>
+        <div class="sig-layout">
+          <div class="sig-tools">
+            <div class="toolbar">
+              <div class="seg seg-views" role="radiogroup" aria-label="Görünüm" id="viewSeg">
+                <button type="button" role="radio" data-view="feed" aria-checked="true">Akış <span class="n" id="cntFeed"></span></button>
+                <button type="button" role="radio" data-view="signals" aria-checked="false">Güçlü sinyaller <span class="n" id="cntSig"></span></button>
+                <button type="button" role="radio" data-view="saved" aria-checked="false">Kaydedilenler <span class="n" id="cntSaved"></span></button>
+              </div>
+              <div class="search">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <input id="q" type="search" placeholder="Hisse, olay, kaynak ara…" autocomplete="off" aria-label="Sinyallerde ara">
+              </div>
+              <label class="switch"><input type="checkbox" id="hideNoise"> Soluk satırları gizle</label>
+
+            </div>
+            <div class="chips" role="group" aria-label="Kaynak türü filtresi" id="typeChips">
+              <span class="chip-label">Kaynak türü</span>
+            </div>
+            <div class="card legend" id="legend" hidden></div>
+            <div class="banner" id="banner" hidden></div>
+          </div>
+
+          <div class="card card-flush sig-table">
+            <div class="tbl-scroll sig-scroll">
+              <table class="tbl sig-tbl" aria-label="Sinyaller" aria-describedby="sigCount">
+                <colgroup><col class="c-dir"><col class="c-tk"><col class="c-ol"><col class="c-imp"><col class="c-rx"><col class="c-src"><col class="c-age"></colgroup>
+                <thead id="sigHead"></thead>
+                <tbody id="sigBody"></tbody>
+              </table>
+            </div>
+            <div id="sigState"></div>
+            <div class="tbl-foot"><span id="sigCount" aria-live="polite"></span><button type="button" class="link-btn" id="moreBtn" hidden>Daha fazla göster</button></div>
+          </div>
+
+          <aside class="rail" aria-label="Özet ve haritalar">
+            <section class="card" id="digest" aria-label="Dönem özeti"></section>
+            <section class="card" id="heatCard" aria-labelledby="hmTitle">
+              <div class="card-head"><h2 class="card-title" id="hmTitle">İzleme listesi</h2><span class="card-meta">bugünkü fiyat · son 24 sa haber yönü</span></div>
+              <div id="heatmap" class="heatmap"></div>
+              <p class="hm-legend">
+                <span><i class="sw" style="background:var(--hm-down)"></i>düşüş</span><span><i class="sw" style="background:var(--hm-mid);outline:1px solid var(--border)"></i>yatay</span>
+                <span><i class="sw" style="background:var(--hm-up)"></i>yükseliş</span><span>sağ üst ▲▼● = haber yönü</span><span><b class="mono">≠</b> haber ile fiyat ters</span>
+              </p>
+            </section>
+            <section class="card" id="bubbleCard" aria-labelledby="bmTitle">
+              <div class="card-head"><h2 class="card-title" id="bmTitle">Sinyal haritası</h2><span class="card-meta">son 24 saat</span></div>
+              <svg id="bubbles" class="bubbles" role="img" aria-label="Hisse bazında sinyal haritası: yatay eksen net haber yönü, dikey eksen haber sayısı"></svg>
+              <p class="bm-legend">
+                <span>renk = en yüksek önem:</span><span><i class="imp-dot i1"></i>düşük</span><span><i class="imp-dot i2"></i>orta</span><span><i class="imp-dot i3"></i>yüksek</span>
+                <span>çizgi = aynı haberde geçen hisseler</span>
+              </p>
+            </section>
+          </aside>
         </div>
-        <label class="toggle"><input type="checkbox" id="bbWatch"> Sadece izleme listem</label>
-      </header>
-      <div id="bbBody"><p class="empty">Geri alım verisi yükleniyor…</p></div>
-    </div>
+      </section>
 
-    <!-- ───────────── Makro Veri (ayrı uygulama: alco-dashboard.vercel.app) ───────────── -->
-    <div id="alcoView" role="tabpanel" aria-labelledby="tabAlco" hidden>
-      <div class="embed-wrap">
-        <iframe id="alcoFrame" title="Makro Veri (ALCO paneli)" data-src="https://alco-dashboard.vercel.app/"
-          referrerpolicy="no-referrer-when-downgrade" allow="clipboard-write; fullscreen"></iframe>
-      </div>
-    </div>
-  </main>
-
-  <!-- ───────────── sağ: özet, ısı haritası, sinyal haritası ───────────── -->
-  <aside class="rail">
-    <section class="panel" id="digest" aria-label="Dönem özeti"></section>
-
-    <section class="panel" aria-labelledby="hmTitle">
-      <div class="panel-head">
-        <h3 id="hmTitle">İzleme listesi</h3>
-        <span class="hint">renk: bugünkü fiyat · ok: son 24 sa haber yönü</span>
-      </div>
-      <div id="heatmap" class="heatmap"></div>
-      <p class="hm-legend"><span class="hm-sw neg"></span>düşüş <span class="hm-sw mid"></span>yatay <span class="hm-sw pos"></span>yükseliş <span class="hm-dis">≠</span> haber ile fiyat ters</p>
-    </section>
-
-    <section class="panel" aria-labelledby="bmTitle">
-      <div class="panel-head">
-        <h3 id="bmTitle">Sinyal haritası</h3>
-        <span class="hint">son 24 saat</span>
-      </div>
-      <svg id="bubbles" class="bubbles" role="img" aria-label="Hisse bazında sinyal haritası"></svg>
-      <p class="bm-legend">
-        <span>yatay = net haber yönü (◀ SAT · İZLE · AL ▶) · dikey = haber sayısı</span>
-        <span>renk = en yüksek önem:
-          <i class="imp i1"></i>düşük <i class="imp i2"></i>orta <i class="imp i3"></i>yüksek · çizgi = aynı haberde geçenler</span>
-      </p>
-    </section>
-  </aside>
+      <!-- ─────────── Şirket Geri Alım (veri: kap-geri-alim-takibi reposu) ─────────── -->
+      <section class="view" id="view-geri-alim" aria-labelledby="pageTitle" hidden>
+        <div class="toolbar">
+          <div class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input id="bbQ" type="search" placeholder="Hisse ya da şirket ara…" autocomplete="off" aria-label="Geri alımlarda ara">
+          </div>
+          <div class="seg" role="radiogroup" aria-label="Dönem" id="bbPeriod">
+            <button type="button" role="radio" data-d="7" aria-checked="false">7G</button>
+            <button type="button" role="radio" data-d="30" aria-checked="true">30G</button>
+            <button type="button" role="radio" data-d="90" aria-checked="false">90G</button>
+            <button type="button" role="radio" data-d="365" aria-checked="false">1Y</button>
+          </div>
+          <label class="switch"><input type="checkbox" id="bbWatch"> Sadece izleme listem</label>
+          <button type="button" class="suspect-btn" id="bbSuspect" aria-pressed="false" hidden></button>
+        </div>
+        <p class="src-line" id="bbSrc"></p>
+        <div id="bbBody"></div>
+      </section>
+    </main>
+  </div>
 </div>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="app.js?v=20260930i"></script>
-<script src="buybacks.js?v=20260930i"
+<script src="shell.js?v=20261001a"></script>
+<script src="app.js?v=20261001a"></script>
+<script src="buybacks.js?v=20261001a"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>
