@@ -245,8 +245,16 @@
         (warn ? `<p class="src-warn">${esc(s.warnings[0])}</p>` : "");
     }).join("");
     $("#gen").textContent = `Son güncelleme: ${fmtTime(f.generated)} · AI: ${f.ai?.enabled ? f.ai.model : "kapalı"}`;
+    const missing = Object.entries(f.secrets || {}).filter(([k, v]) => !v && k !== "X_BEARER_TOKEN").map(([k]) => k);
+    const aiErr = (f.ai?.errors || [])[0];
+    const cfgMsg = [missing.length ? `Tanımlı olmayan secret: ${missing.join(", ")}` : "", aiErr ? `Claude hatası: ${aiErr}` : ""].filter(Boolean);
+    let cfgEl = $("#cfgWarn");
+    if (!cfgEl) { cfgEl = document.createElement("p"); cfgEl.id = "cfgWarn"; cfgEl.className = "src-warn"; $("#gen").after(cfgEl); }
+    cfgEl.textContent = cfgMsg.join(" · ");
+    cfgEl.hidden = !cfgMsg.length;
     const ban = $("#banner");
     if (f.demo) { ban.hidden = false; ban.textContent = "Örnek veri gösteriliyor. İlk GitHub Actions çalışmasından sonra gerçek akış burada olacak."; }
+    else if (f.secrets && !f.secrets.ANTHROPIC_API_KEY) { ban.hidden = false; ban.textContent = "AI değerlendirmesi kapalı: ANTHROPIC_API_KEY secret'ı bu çalıştırmada bulunamadı (Settings → Secrets and variables → Actions)."; }
     else if (state.ticker) { ban.hidden = false; ban.innerHTML = `<b>${state.ticker}</b> filtresi açık — kaldırmak için hisseye tekrar dokun.`; }
     else ban.hidden = true;
   }

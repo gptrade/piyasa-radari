@@ -71,6 +71,7 @@ class Analyzer:
         self.language = {"tr": "Türkçe", "en": "English"}.get(cfg.get("language", "tr"), "Türkçe")
         self.budget = int(cfg.get("max_items_per_run", 40))
         self.used = 0
+        self.errors: list[str] = []
         self._client = None
         if not self.enabled:
             log.info("ANTHROPIC_API_KEY yok ya da analiz kapalı: AI değerlendirmesi atlanacak")
@@ -108,6 +109,10 @@ class Analyzer:
             )
         except Exception as e:
             log.warning("Claude hatası (%s): %s", item.id, e)
+            if len(self.errors) < 3:
+                self.errors.append(f"{type(e).__name__}: {str(e)[:160]}")
+            if type(e).__name__ in ("AuthenticationError", "PermissionDeniedError"):
+                self.budget = self.used            # anahtar geçersiz: bu tur daha deneme
             return None
         for block in msg.content:
             if getattr(block, "type", "") == "tool_use":

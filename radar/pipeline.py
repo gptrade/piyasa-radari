@@ -160,7 +160,12 @@ def run() -> dict:
         "generated": iso(now_utc()),
         "sources": status,
         "watchlist": [{"symbol": s.symbol, "name": s.name, "market": s.market} for s in stocks],
-        "ai": {"model": analyzer.model, "enabled": analyzer.enabled, "used": analyzer.used},
+        "ai": {"model": analyzer.model, "enabled": analyzer.enabled, "used": analyzer.used,
+               "errors": analyzer.errors},
+        # Sadece tanımlı olup olmadıkları (değerler asla yazılmaz)
+        "secrets": {k: bool(os.environ.get(k)) for k in (
+            "ANTHROPIC_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "SEC_USER_AGENT",
+            "EVDS_API_KEY", "X_BEARER_TOKEN")},
         "items": items,
     }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
