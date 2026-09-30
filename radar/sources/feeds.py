@@ -31,7 +31,7 @@ def fetch_feed(url: str, headers: dict | None = None):
 
 def entries_to_items(feed, *, source: str, source_type: str, market: str, since: datetime,
                      lang: str, tickers: list[str] | None = None, matcher=None,
-                     extra: dict | None = None) -> list[Item]:
+                     extra: dict | None = None, allow_empty: bool = False) -> list[Item]:
     items: list[Item] = []
     if feed is None:
         return items
@@ -46,7 +46,7 @@ def entries_to_items(feed, *, source: str, source_type: str, market: str, since:
             for t in matcher.match(f"{title} {summary}", market=market):
                 if t not in tk:
                     tk.append(t)
-        if not tk:
+        if not tk and not allow_empty:
             continue
         src = source
         if source == "Google News" and e.get("source", {}).get("title"):
@@ -140,4 +140,53 @@ def collect_reddit(ctx: Context) -> list[Item]:
         out += entries_to_items(fetch_feed(url), source="Reddit", source_type="social", market="US",
                                 since=ctx.since, lang="en", tickers=[st.symbol])
     log.info("Reddit: %d gönderi", len(out))
+    return out
+
+
+# ---------------------------------------------------------------- Basın bülteni servisleri
+PRESS_WIRES = {
+    "PR Newswire": "https://www.prnewswire.com/rss/news-releases-list.rss",
+    "GlobeNewswire": ("https://www.globenewswire.com/RssFeed/orgclass/1/feedTitle/"
+                      "GlobeNewswire%20-%20News%20about%20Public%20Companies"),
+}
+_EXCH = r"(?:NASDAQ|Nasdaq|NYSE|NYSE American|NYSE Arca|Cboe|OTCQX|OTC)(?:\s*(?:GS|GM|CM))?"
+
+
+def wire_tickers(title: str, summary: str, stocks) -> list[str]:
+    """Bülten eşleştirme: önce '(NASDAQ: NVDA)' gibi borsa etiketi, sonra başlıkta şirket adı.
+
+    Genel akışlarda binlerce şirket olduğundan metin gövdesinde serbest ad eşleştirmesi yapılmaz
+    (ör. 'Apple Hospitality' yanlışlıkla AAPL'e düşmesin diye sadece başlık + etiket).
+    """
+    import re
+    text = f"{title} {summary}"
+    any_tag = re.findall(rf"{_EXCH}\s*:\s*([A-Z][A-Z.]{{0,5}})\b", text)
+    out = []
+    for st in stocks:
+        if st.symbol in any_tag:
+            out.append(st.symbol)
+            continue
+        if any_tag:          # bülten başka bir şirkete ait; ad benzerliğine güvenme
+            continue
+        name = re.compile(rf"^(?:{'|'.join(re.escape(a) for a in [st.name, *st.aliases])})(?![\w-])", re.I)
+        if name.search(title.strip()):
+            out.append(st.symbol)
+    return out
+
+
+def collect_press_wires(ctx: Context) -> list[Item]:
+    cfg = ctx.cfg("press_wires")
+    if not cfg.get("enabled", True):
+        return []
+    stocks = ctx.market("US")
+    out: list[Item] = []
+    for name, url in PRESS_WIRES.items():
+        feed = fetch_feed(url)
+        for it in entries_to_items(feed, source=name, source_type="news", market="US",
+                                   since=ctx.since, lang="en", allow_empty=True):
+            it.tickers = wire_tickers(it.title, it.summary, stocks)
+            if it.tickers:
+                it.extra["press_release"] = True
+                out.append(it)
+    log.info("Basın bültenleri: %d", len(out))
     return out

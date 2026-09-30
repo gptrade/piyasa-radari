@@ -80,12 +80,64 @@ def write_demo() -> None:
                        "affected_tickers": [tk], "model": "demo"}
         it.reaction = reaction(it.published, px)
         items.append(it.to_dict())
+    # Yeni kaynak türleri: Borsa İstanbul tedbiri, SPK bülteni, TCMB PPK, basın bülteni
+    def extra_item(minutes, analysis=None, **kw):
+        it = Item(url="", published=iso(now_utc() - timedelta(minutes=minutes)), **kw)
+        it.extra["demo"] = True
+        if analysis:
+            it.analysis = {"key_points": ["Örnek değerlendirme — gerçek veri değil"],
+                           "risks": ["Bu kayıt panel önizlemesi içindir"], "model": "demo", **analysis}
+        return it
+    glr = json.loads((PRICE_DIR / "GLRMK.json").read_text())
+    extra = [
+        extra_item(12, source="Borsa İstanbul · KAP", source_type="disclosure", market="BIST",
+                   title="GLRMK: Brüt takas", summary="Brüt Takas", tickers=["GLRMK"], lang="tr",
+                   extra={"bist_measure": "Brüt takas"},
+                   analysis={"sentiment": "bearish", "confidence": 78, "materiality": "high",
+                             "horizon": "days", "category": "BIST tedbiri", "affected_tickers": ["GLRMK"],
+                             "headline_tr": "GLRMK için brüt takas tedbiri",
+                             "summary": "Tedbir süresince günlük al-sat yapılamaz; likidite ve kısa vadeli talep düşer."}),
+        extra_item(90, source="TCMB · PPK Kararları", source_type="macro", market="BIST",
+                   title="Faiz Oranlarına İlişkin Basın Duyurusu", tickers=[], lang="tr",
+                   summary="Para Politikası Kurulu politika faizini sabit tuttu.",
+                   extra={"tcmb": "PPK Kararları", "high_impact": True},
+                   analysis={"sentiment": "neutral", "confidence": 60, "materiality": "high",
+                             "horizon": "weeks", "category": "para politikası",
+                             "affected_tickers": ["VAKBN", "KLNMA"], "headline_tr": "PPK faizi sabit tuttu",
+                             "summary": "Beklentiye paralel karar; bankaların fonlama maliyeti görünümü değişmedi."}),
+        extra_item(300, source="SPK Bülteni", source_type="regulator", market="BIST",
+                   title="SPK Bülteni 2026/66 — VAKBN", tickers=["VAKBN"], lang="tr",
+                   summary="İzleme listesindeki şirketler geçiyor: VAKBN",
+                   extra={"bulletin": "2026/66"},
+                   analysis={"sentiment": "bullish", "confidence": 66, "materiality": "medium",
+                             "horizon": "weeks", "category": "borçlanma aracı ihracı",
+                             "affected_tickers": ["VAKBN"], "headline_tr": "VakıfBank ihraç tavanı onaylandı",
+                             "summary": "Borçlanma aracı ihraç belgesi onayı fonlama esnekliğini artırıyor."}),
+        extra_item(420, source="GlobeNewswire", source_type="news", market="US",
+                   title="NVIDIA announces new data center partnership (NASDAQ: NVDA)", tickers=["NVDA"],
+                   lang="en", summary="Press release describing a multi-year agreement.",
+                   extra={"press_release": True},
+                   analysis={"sentiment": "bullish", "confidence": 62, "materiality": "medium",
+                             "horizon": "days", "category": "basın bülteni", "affected_tickers": ["NVDA"],
+                             "headline_tr": "NVIDIA yeni veri merkezi ortaklığı duyurdu",
+                             "summary": "Şirket açıklaması; tutar verilmediği için etki sınırlı olabilir."}),
+    ]
+    extra[0].reaction = reaction(extra[0].published, glr)
+    items = sorted(items + [e.to_dict() for e in extra], key=lambda d: d["published"], reverse=True)
+
+    (DATA / "macro.json").write_text(json.dumps({"updated": iso(now_utc()), "demo": True, "series": [
+        {"code": "TP.DK.USD.A.YTL", "name": "USD/TRY", "unit": "", "date": "29-09-2026", "last": 41.3, "prev": 41.18, "change": 0.12},
+        {"code": "TP.DK.EUR.A.YTL", "name": "EUR/TRY", "unit": "", "date": "29-09-2026", "last": 48.21, "prev": 48.35, "change": -0.14},
+        {"code": "TP.APIFON4", "name": "TCMB ağırlıklı fonlama maliyeti", "unit": "%", "date": "29-09-2026", "last": 40.5, "prev": 40.5, "change": 0.0},
+    ]}, ensure_ascii=False))
+
     DATA.mkdir(parents=True, exist_ok=True)
     (DATA / "feed.json").write_text(json.dumps({
         "generated": iso(now_utc()), "demo": True,
         "sources": [{"name": n, "ok": True, "count": 0} for n in
-                    ("KAP", "SEC EDGAR", "Google News", "Yahoo Finance", "TR haber RSS",
-                     "Reddit", "StockTwits", "X", "Rapor kutusu")],
+                    ("KAP + Borsa İstanbul", "SPK Bülteni", "TCMB", "SEC EDGAR", "Google News",
+                     "Yahoo Finance", "Basın bültenleri", "TR haber RSS", "Reddit", "StockTwits",
+                     "X", "Rapor kutusu", "TCMB EVDS")],
         "watchlist": [{"symbol": s.symbol, "name": s.name, "market": s.market} for s in stocks.values()],
         "ai": {"model": "demo", "enabled": False, "used": 0},
         "items": items,

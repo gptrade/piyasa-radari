@@ -1,7 +1,7 @@
 """Kaynak toplayıcıları. Her biri `collect(ctx) -> list[Item]` sunar."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 from ..config import Stock, TickerMatcher
@@ -13,6 +13,7 @@ class Context:
     stocks: list[Stock]
     matcher: TickerMatcher
     since: datetime
+    seen: set = field(default_factory=set)   # daha önce işlenmiş kayıt id'leri
 
     def cfg(self, name: str) -> dict:
         return (self.settings.get("sources") or {}).get(name) or {}

@@ -28,6 +28,22 @@ sources:
     enabled: true
   yahoo_finance_rss:
     enabled: true
+  press_wires:
+    enabled: true              # PR Newswire + GlobeNewswire; "(NASDAQ: XXX)" etiketi ya da başlıkta şirket adı
+  spk:
+    enabled: true              # SPK bültenleri (PDF); izleme listesindeki şirketleri arar
+    max_per_run: 3
+  tcmb:
+    enabled: true
+    feeds: ["PPK Kararları", "Basın Duyuruları", "Başkanın Konuşmaları"]
+  evds:
+    enabled: true              # EVDS_API_KEY secret'ı yoksa atlanır
+    lookback_days: 400
+    # Seri kodlarını EVDS'de (evds3.tcmb.gov.tr) arayıp ekleyebilirsin.
+    series:
+      - {code: TP.DK.USD.A.YTL, name: USD/TRY, unit: ""}
+      - {code: TP.DK.EUR.A.YTL, name: EUR/TRY, unit: ""}
+      - {code: TP.APIFON4, name: TCMB ağırlıklı fonlama maliyeti, unit: "%"}
   turkish_news_rss:
     enabled: true
     feeds:

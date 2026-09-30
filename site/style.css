@@ -67,7 +67,7 @@ a { color: inherit; }
   border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; }
 .search svg { width: 16px; height: 16px; fill: none; stroke: var(--ink3); stroke-width: 2; }
 .search input { flex: 1; border: 0; background: none; padding: 9px 0; font: inherit; color: var(--ink); outline: none; }
-.chips { display: flex; gap: 4px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .chips button { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink2); font-size: 12.5px; }
 .chips button.on { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 .chips button.up.on { background: var(--up); border-color: var(--up); color: #fff; }
@@ -141,6 +141,20 @@ a { color: inherit; }
 .px-time { margin: 8px 0 0; font-size: 11.5px; color: var(--ink3); }
 .px-none { color: var(--ink3); font-size: 12.5px; margin-top: 12px; }
 
+/* ---------- ek: tedbir etiketi, piyasa geneli, makro ---------- */
+.tk.g { background: var(--neu-soft); color: var(--neu); font-family: inherit; cursor: default; }
+.tk.aff { background: none; border: 1px dashed var(--line); }
+.measure { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; color: var(--down); background: var(--down-soft); white-space: nowrap; }
+.measure.off { color: var(--up); background: var(--up-soft); }
+.macro div { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.macro div:last-child { border-bottom: 0; }
+.macro span { color: var(--ink2); }
+.macro b { font: 600 12.5px var(--mono); }
+.macro em { font: 500 11px var(--mono); font-style: normal; min-width: 5ch; text-align: right; }
+.c-px .macro { margin-top: 10px; }
+.side-macro { padding: 0 8px; }
+.side-macro div { grid-template-columns: 1fr auto; }
+
 .empty { text-align: center; color: var(--ink3); padding: 48px 0; }
 
 /* ---------- responsive ---------- */
@@ -153,7 +167,7 @@ a { color: inherit; }
 @media (max-width: 760px) {
   .shell { grid-template-columns: 1fr; }
   .side { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 14px 16px; }
-  #watchBox, #srcBox { display: none; }
+  #watchBox, #srcBox, #macroBox { display: none; }
   #views { display: flex; gap: 4px; margin: 0; }
   #views .label { display: none; }
   #views button { justify-content: center; gap: 6px; }

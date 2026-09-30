@@ -7,7 +7,7 @@
   const SENT = { bullish: "↗ Yükseliş", bearish: "↘ Düşüş", neutral: "→ Nötr" };
   const MAT = { low: "düşük önem", medium: "orta önem", high: "yüksek önem" };
   const HOR = { intraday: "Gün içi", days: "Birkaç gün", weeks: "Haftalar", long_term: "Uzun vade" };
-  const TYPE = { disclosure: "Bildirim", news: "Haber", social: "Sosyal", report: "Rapor" };
+  const TYPE = { disclosure: "Bildirim", news: "Haber", social: "Sosyal", report: "Rapor", macro: "Makro", regulator: "SPK" };
 
   const store = {
     get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
@@ -15,7 +15,7 @@
   };
 
   const state = {
-    feed: null, prices: {}, market: "ALL", view: "feed", ticker: null,
+    feed: null, prices: {}, macro: null, market: "ALL", view: "feed", ticker: null,
     types: new Set(), sents: new Set(), conf: 0, q: "",
     saved: new Set(store.get("saved", [])),
   };
@@ -42,6 +42,10 @@
     state.feed = await r.json();
     const all = new Set([...(state.feed.watchlist || []).map(w => w.symbol),
       ...state.feed.items.map(i => i.tickers[0]).filter(Boolean)]);
+    try {
+      const m = await fetch(`data/macro.json?t=${Date.now()}`);
+      state.macro = m.ok ? await m.json() : null;
+    } catch { state.macro = null; }
     await Promise.all([...all].map(async s => {
       try {
         const p = await fetch(`data/prices/${s}.json?t=${Date.now()}`);
@@ -55,7 +59,7 @@
     const q = state.q.toLocaleLowerCase("tr");
     return state.feed.items.filter(it => {
       if (state.market !== "ALL" && it.market !== state.market) return false;
-      if (state.ticker && !it.tickers.includes(state.ticker)) return false;
+      if (state.ticker && !(it.tickers.includes(state.ticker) || it.analysis?.affected_tickers?.includes(state.ticker))) return false;
       if (state.view === "saved" && !state.saved.has(it.id)) return false;
       const a = it.analysis;
       if (state.view === "signals" && !(a && a.sentiment !== "neutral" && a.confidence >= 70 && a.materiality !== "low")) return false;
@@ -117,9 +121,16 @@
     const el = tpl.content.firstElementChild.cloneNode(true);
     const watch = watchSet();
     // haber
-    $(".tickers", el).append(...it.tickers.slice(0, 4).map(t => {
+    const shownTk = it.tickers.length ? it.tickers : (it.analysis?.affected_tickers || []).filter(t => watch.has(t));
+    if (!it.tickers.length) {
+      const g = document.createElement("span");
+      g.className = "tk g"; g.textContent = it.market === "BIST" ? "Piyasa geneli" : "Market";
+      $(".tickers", el).append(g);
+    }
+    $(".tickers", el).append(...shownTk.slice(0, 4).map(t => {
       const s = document.createElement("span");
-      s.className = "tk" + (watch.has(t) ? " w" : ""); s.textContent = t;
+      s.className = "tk" + (watch.has(t) ? " w" : "") + (it.tickers.includes(t) ? "" : " aff"); s.textContent = t;
+      if (!it.tickers.includes(t)) s.title = "Claude'a göre etkilenebilecek hisse";
       s.onclick = () => { state.ticker = state.ticker === t ? null : t; render(); };
       return s;
     }));
@@ -131,6 +142,12 @@
     $(".desc", el).textContent = it.summary || "";
     $(".src", el).textContent = it.source + (it.extra?.form ? ` · ${it.extra.form}` : "");
     $(".type", el).textContent = (TYPE[it.source_type] || it.source_type) + (it.extra?.demo ? " · ÖRNEK" : "");
+    if (it.extra?.bist_measure) {
+      const m = document.createElement("span");
+      m.className = "measure" + (it.extra.bist_measure.includes("kaldır") || it.extra.bist_measure.includes("açıl") ? " off" : "");
+      m.textContent = it.extra.bist_measure;
+      $(".c-top", el).insertBefore(m, $(".ago", el));
+    }
     const sv = $(".save", el);
     sv.classList.toggle("on", state.saved.has(it.id));
     sv.onclick = () => {
@@ -156,13 +173,15 @@
       sent.textContent = "Değerlendirilmedi"; sent.classList.add("none");
       $(".ai-sum", el).textContent = it.tickers.some(t => watch.has(t))
         ? "Bu tur AI bütçesi dolduğu ya da anahtar tanımlı olmadığı için yorum yapılmadı."
-        : "İzleme listesi dışında; yalnızca listelendi.";
+        : it.tickers.length ? "İzleme listesi dışında; yalnızca listelendi."
+        : "Piyasa geneli kayıt; izleme listesiyle doğrudan eşleşmedi.";
     }
 
     // fiyat
-    const sym = it.tickers[0];
-    const p = state.prices[sym];
     const px = $(".c-px", el);
+    const sym = it.tickers[0] || shownTk.find(t => state.prices[t]);
+    if (!sym || it.source_type === "macro") { macroPanel(px, it); return el; }
+    const p = state.prices[sym];
     $(".px-sym", el).innerHTML = `${sym} <small>/ ${p?.currency || (it.market === "BIST" ? "TRY" : "USD")}</small>`;
     const newsTs = Math.floor(new Date(it.published) / 1000);
     const paint = range => {
@@ -182,6 +201,14 @@
     }
     $(".px-time", el).textContent = `Haber: ${fmtTime(it.published)} · ${p?.demo ? "örnek fiyat" : "Yahoo Finance, gecikmeli"}`;
     return el;
+  }
+
+  function macroPanel(px, it) {
+    const ser = state.macro?.series || [];
+    px.innerHTML = `<div class="px-head"><span class="px-sym">Makro göstergeler</span></div>` + (ser.length
+      ? `<div class="macro">${ser.map(s => `<div><span>${s.name}</span><b>${fmtNum(s.last)}${s.unit || ""}</b><em class="${cls(s.change)}">${s.change == null ? "" : (s.change > 0 ? "+" : "") + s.change.toFixed(2)}</em></div>`).join("")}</div>
+         <p class="px-time">EVDS · ${ser[0].date}${state.macro.demo ? " · örnek" : ""} · Haber: ${fmtTime(it.published)}</p>`
+      : `<p class="px-none">EVDS verisi yok (EVDS_API_KEY tanımlı değil).</p><p class="px-time">Haber: ${fmtTime(it.published)}</p>`);
   }
 
   // ------------------------------------------------------------ çizim
@@ -205,6 +232,10 @@
       b.onclick = () => { state.ticker = state.ticker === w.symbol ? null : w.symbol; render(); };
       box.append(b);
     }
+    const mb = $("#macroList");
+    const ser = state.macro?.series || [];
+    $("#macroBox").hidden = !ser.length;
+    mb.innerHTML = ser.map(s => `<div title="${s.date}"><span>${s.name}</span><b>${fmtNum(s.last)}${s.unit || ""}</b></div>`).join("");
     $("#sources").innerHTML = (f.sources || []).map(s =>
       `<div class="${s.ok ? (s.count ? "" : "idle") : "bad"}" title="${s.error || ""}"><span>${s.name}</span><span>${s.ok ? s.count : "hata"}</span></div>`).join("");
     $("#gen").textContent = `Son güncelleme: ${fmtTime(f.generated)} · AI: ${f.ai?.enabled ? f.ai.model : "kapalı"}`;

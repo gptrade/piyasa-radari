@@ -11,7 +11,7 @@ from . import notify, prices
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import Item, iso, now_utc, parse_iso
-from .sources import Context, feeds, kap, reports, social
+from .sources import Context, feeds, kap, reports, social, spk, tcmb
 
 log = logging.getLogger("radar")
 
@@ -19,10 +19,13 @@ FEED = DATA / "feed.json"
 STATE = DATA / "state.json"
 
 COLLECTORS = [
-    ("KAP", kap.collect),
+    ("KAP + Borsa İstanbul", kap.collect),
+    ("SPK Bülteni", spk.collect),
+    ("TCMB", tcmb.collect),
     ("SEC EDGAR", feeds.collect_sec),
     ("Google News", feeds.collect_google_news),
     ("Yahoo Finance", feeds.collect_yahoo),
+    ("Basın bültenleri", feeds.collect_press_wires),
     ("TR haber RSS", feeds.collect_turkish_rss),
     ("Reddit", feeds.collect_reddit),
     ("StockTwits", social.collect_stocktwits),
@@ -30,7 +33,7 @@ COLLECTORS = [
     ("Rapor kutusu", reports.collect),
 ]
 
-PRIORITY = {"report": 0, "disclosure": 1, "news": 2, "social": 3}
+PRIORITY = {"report": 0, "disclosure": 1, "regulator": 1, "macro": 1, "news": 2, "social": 3}
 
 
 def _load(path, default):
@@ -74,7 +77,7 @@ def run() -> dict:
     since = now_utc() - lookback
     if state.get("last_run"):
         since = max(since, parse_iso(state["last_run"]) - timedelta(hours=2))
-    ctx = Context(settings=settings, stocks=stocks, matcher=matcher, since=since)
+    ctx = Context(settings=settings, stocks=stocks, matcher=matcher, since=since, seen=set(seen_ids))
 
     # 1) Topla
     collected: list[Item] = []
@@ -99,8 +102,16 @@ def run() -> dict:
         new.append(it)
     log.info("Yeni kayıt: %d / toplanan %d", len(new), len(collected))
 
-    # 3) Fiyatlar
+    # 3) Fiyatlar ve makro seriler
     px = prices.update_all(stocks)
+    try:
+        macro = tcmb.update_macro(settings)
+        status.append({"name": "TCMB EVDS", "ok": True, "count": len((macro or {}).get("series", []))})
+    except Exception as e:
+        log.exception("EVDS hatası")
+        macro = None
+        status.append({"name": "TCMB EVDS", "ok": False, "count": 0, "error": str(e)[:200]})
+    watch_desc = ", ".join(f"{s.symbol} ({s.name})" for s in stocks)
 
     # 4) AI değerlendirme — önce rapor & bildirim, sonra en yeni haberler
     analyzer = Analyzer(settings)
@@ -109,9 +120,14 @@ def run() -> dict:
     for it in queue:
         if not analyzer.can_run():
             break
-        if not set(it.tickers) & watch:
+        market_wide = it.source_type == "macro" and it.extra.get("tcmb") != "Başkanın Konuşmaları"
+        if not (set(it.tickers) & watch) and not market_wide:
             continue
-        it.analysis = analyzer.assess(it, price_context(it, px))
+        ctx_text = price_context(it, px)
+        if it.source_type == "macro" or not it.tickers:
+            ctx_text = (f"Piyasa geneli haber. İzleme listesi: {watch_desc}. "
+                        f"Makro: {tcmb.macro_context(macro) or 'yok'}")
+        it.analysis = analyzer.assess(it, ctx_text)
 
     # 5) Birleştir, fiyat tepkisini güncelle, kaydet
     items = [i.to_dict() for i in new] + feed

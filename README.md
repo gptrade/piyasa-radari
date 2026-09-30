@@ -5,7 +5,8 @@ değerlendirilir (yön, güven, önem, ufuk, gerekçe, riskler), haber anından 
 ölçülür ve güçlü sinyaller Telegram'a düşer. Sunucu yok: GitHub Actions toplar, GitHub Pages yayınlar.
 
 ```
- KAP ─┐  SEC EDGAR ─┐  Google News ─┐  Yahoo RSS ─┐  AA / Bloomberg HT / Dünya ─┐
+ KAP + Borsa İstanbul tedbirleri ─┐  SPK bülteni ─┐  TCMB (PPK, duyuru, EVDS) ─┐
+ SEC EDGAR ─┐  PR Newswire / GlobeNewswire ─┐  Google News ─┐  Yahoo RSS ─┐  AA / Bloomberg HT / Dünya ─┐
  Reddit ─┐  StockTwits ─┐  X API ─┐  inbox/ (PDF raporlar) ─┐
                                    ▼
          radar/ (15 dakikada bir, GitHub Actions)
@@ -21,6 +22,12 @@ değerlendirilir (yön, güven, önem, ufuk, gerekçe, riskler), haber anından 
 
 ## Kurulum (bir kez, tamamen tarayıcıdan)
 
+0. **Dosyaları repoya yükle:** Zip'i aç. GitHub'daki boş `piyasa-radari` reposunda
+   *uploading an existing file* bağlantısına tıkla ve açtığın klasörün **içindekileri** sürükle-bırak
+   (`.github` klasörü dahil; Mac'te gizli klasörleri görmek için Finder'da Cmd+Shift+. ).
+   Alternatif olarak terminalden:
+   `cd piyasa-radari && git remote add origin https://github.com/gptrade/piyasa-radari.git && git push -u origin main`
+
 1. **Pages'i aç:** Settings → Pages → *Build and deployment* → Source: **GitHub Actions**.
 2. **Secrets ekle:** Settings → Secrets and variables → Actions → *New repository secret*
 
@@ -31,6 +38,7 @@ değerlendirilir (yön, güven, önem, ufuk, gerekçe, riskler), haber anından 
    | `TELEGRAM_BOT_TOKEN` | bildirim için | Diğer tracker'daki bot kullanılabilir |
    | `TELEGRAM_CHAT_ID` | bildirim için | Aynı sohbet ya da yeni bir kanal |
    | `X_BEARER_TOKEN` | isteğe bağlı | X API (ücretli katman). Yoksa X atlanır |
+   | `EVDS_API_KEY` | makro paneli için | evds3.tcmb.gov.tr → üye ol → Profil → API Anahtarı (ücretsiz) |
 
 3. **İlk çalıştırma:** Actions → *radar* → **Run workflow**. Birkaç dakika sonra panel
    `https://<kullanıcı>.github.io/piyasa-radari/` adresinde. Sonrasında 15 dakikada bir kendiliğinden çalışır.
@@ -57,6 +65,11 @@ dakika kotasından düşer (15 dk'da bir ≈ 2.900 çalıştırma/ay).
 | Kaynak | Yöntem | Not |
 |---|---|---|
 | KAP | kap.org.tr bildirim sorgu uç noktası | Resmi, belgelenmiş bir API değil; KAP değiştirirse `radar/sources/kap.py` güncellenmeli |
+| Borsa İstanbul tedbirleri | KAP'taki "Borsa İstanbul A.Ş. Duyurusu" kayıtları | Brüt takas, tek fiyat, kredili işlem/açığa satış yasağı, emir paketi, işlem sırası durdurma; kaldırılması da ayrı etiketlenir |
+| SPK bülteni | spk.gov.tr yıllık bülten sayfası → PDF | İzleme listesindeki şirketlerin geçtiği bölümler Claude'a gider |
+| TCMB | Resmi RSS: PPK kararları, basın duyuruları, başkan konuşmaları | Piyasa geneli; Claude etkilenecek hisseleri işaretler (konuşmalar sadece listelenir) |
+| TCMB EVDS | evds3 API | Kur, fonlama maliyeti vb.; seri kodları `settings.yml`'de |
+| PR Newswire, GlobeNewswire | Genel RSS | "(NASDAQ: XXX)" etiketi ya da başlıkta şirket adıyla eşleşir |
 | SEC EDGAR | Şirket bazlı Atom akışı | 8-K, 10-Q/K, Form 4, 13D/G, 6-K, S-1 |
 | Google News | Hisse bazlı RSS araması | TR ve EN ayrı sorgu |
 | Yahoo Finance | Hisse bazlı RSS | ABD |

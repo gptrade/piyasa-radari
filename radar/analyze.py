@@ -23,6 +23,13 @@ Kurallar:
   yeni iş ilişkisi/ihale, temettü, finansal sonuçlar, yönetim değişikliği, SPK cezası daha önemlidir.
 - SEC'te 8-K madde numaraları, Form 4 (içeriden alım/satım), 13D/13G (önemli pay) ayrımını gözet.
 - Aracı kurum raporlarında hedef fiyat, tavsiye değişikliği ve tahmin revizyonunu öne çıkar.
+- Borsa İstanbul tedbirleri (brüt takas, tek fiyat, kredili işlem/açığa satış yasağı, emir paketi)
+  likiditeyi düşürür ve kısa vadede genelde olumsuzdur; tedbirin kaldırılması olumludur. Önem: yüksek.
+- SPK bülteninde sadece ilgili şirketin kararına odaklan: bedelsiz/bedelli onayı, halka arz,
+  pay satış izni, işlem yasağı, idari para cezası. Bülten metni kesitler hâlinde verilir.
+- TCMB PPK kararı ve duyurularında beklentiye göre sürprizi değerlendir; hangi izleme listesi
+  hisselerinin (özellikle bankalar) nasıl etkileneceğini affected_tickers'a yaz.
+- Basın bültenleri şirketin kendi ağzından yazılır; pazarlama dilini ayıkla, rakamlara bak.
 - Yatırım tavsiyesi verme; olasılıksal değerlendirme yap.
 - Yanıt dili: {language}. Metin İngilizce olsa bile özeti {language} yaz."""
 
@@ -83,7 +90,7 @@ class Analyzer:
         limit = 40000 if item.source_type == "report" else 4000
         meta = {k: v for k, v in item.extra.items() if k not in ("full_text",)}
         return (f"Kaynak: {item.source} ({item.source_type})\nPiyasa: {item.market}\n"
-                f"İlgili hisseler: {', '.join(item.tickers)}\nYayın zamanı (UTC): {item.published}\n"
+                f"İlgili hisseler: {', '.join(item.tickers) or 'yok (piyasa geneli)'}\nYayın zamanı (UTC): {item.published}\n"
                 f"Ek bilgi: {json.dumps(meta, ensure_ascii=False)}\n"
                 f"Fiyat bağlamı: {context or 'yok'}\n\n"
                 f"BAŞLIK: {item.title}\n\nMETİN:\n{body[:limit]}")

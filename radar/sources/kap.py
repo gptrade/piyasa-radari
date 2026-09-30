@@ -31,6 +31,41 @@ def _codes(row: dict) -> list[str]:
     return [c.strip().upper() for c in str(raw).replace(";", ",").split(",") if c.strip()]
 
 
+# Borsa İstanbul'un KAP'ta yayımladığı pay bazlı tedbir/duyuru türleri (anahtar kelime → etiket).
+# Sıra önemli: daha özel ifade önce.
+BIST_MEASURES = [
+    ("kaldırıl", "Tedbir kaldırıldı"),
+    ("sona er", "Tedbir kaldırıldı"),
+    ("brüt takas", "Brüt takas"),
+    ("tek fiyat", "Tek fiyat yöntemi"),
+    ("emir paketi", "Emir paketi tedbiri"),
+    ("kredili işlem", "Kredili işlem yasağı"),
+    ("açığa satış", "Açığa satış yasağı"),
+    ("internet", "İnternet/mobil emir yasağı"),
+    ("işlem yasağı", "İşlem yasağı"),
+    ("devre kesici", "Devre kesici"),
+    ("işlem sırası durdur", "İşlem sırası durduruldu"),
+    ("işlem sırası kapat", "İşlem sırası durduruldu"),
+    ("işleme açıl", "İşleme açıldı"),
+    ("pazar", "Pazar değişikliği"),
+    ("endeks", "Endeks değişikliği"),
+    ("fiyat adımı", "Fiyat adımı/marj"),
+]
+
+
+def is_bist_row(row: dict) -> bool:
+    return "BORSA İSTANBUL" in (row.get("kapTitle") or "").upper() or \
+        "BORSA İSTANBUL" in (row.get("subject") or "").upper()
+
+
+def bist_measure(text: str) -> str:
+    t = text.replace("İ", "i").replace("I", "ı").lower()
+    for key, label in BIST_MEASURES:
+        if key in t:
+            return label
+    return "Borsa İstanbul duyurusu"
+
+
 def parse_rows(rows: list[dict], watch: set[str], scope: str) -> list[Item]:
     items: list[Item] = []
     for row in rows:
@@ -45,16 +80,23 @@ def parse_rows(rows: list[dict], watch: set[str], scope: str) -> list[Item]:
         idx = row.get("disclosureIndex")
         subject = row.get("subject") or "Bildirim"
         summary = row.get("summary") or row.get("kapTitle") or ""
-        title = f"{', '.join(codes) or row.get('kapTitle', '')}: {subject}"
+        extra = {"subject": subject, "filer": row.get("kapTitle"),
+                 "class": row.get("disclosureClass"), "index": idx, "watch": bool(tickers)}
+        source = "KAP"
+        if is_bist_row(row):
+            measure = bist_measure(f"{summary} {subject}")
+            extra["bist_measure"] = measure
+            source = "Borsa İstanbul · KAP"
+            title = f"{', '.join(codes) or 'Pay Piyasası'}: {measure}"
+        else:
+            title = f"{', '.join(codes) or row.get('kapTitle', '')}: {subject}"
         if row.get("modifyStatus"):
             title += " (düzeltme)"
         items.append(Item(
-            source="KAP", source_type="disclosure", market="BIST",
+            source=source, source_type="disclosure", market="BIST",
             title=title, summary=summary,
             url=DETAIL_URL.format(idx=idx) if idx else "https://www.kap.org.tr",
-            published=iso(published), tickers=tickers or codes[:3], lang="tr",
-            extra={"subject": subject, "filer": row.get("kapTitle"),
-                   "class": row.get("disclosureClass"), "index": idx, "watch": bool(tickers)},
+            published=iso(published), tickers=tickers or codes[:3], lang="tr", extra=extra,
         ))
     return items
 

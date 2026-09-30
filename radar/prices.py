@@ -59,6 +59,9 @@ def update_all(stocks: list[Stock]) -> dict[str, dict]:
         path = PRICE_DIR / f"{st.symbol}.json"
         if p is None and path.exists():          # bu tur başarısızsa eski veriyi koru
             p = json.loads(path.read_text())
+            if p.get("demo"):                    # ...ama örnek fiyatı değil
+                path.unlink()
+                p = None
         if p is None:
             continue
         path.write_text(json.dumps(p, separators=(",", ":")))

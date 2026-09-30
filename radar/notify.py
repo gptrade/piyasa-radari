@@ -30,7 +30,8 @@ def format_message(item: Item, site_url: str | None) -> str:
     e = html.escape
     lines = [
         f"<b>{ICON.get(a.get('sentiment'), '')}</b> · %{a.get('confidence')} güven · {e(a.get('materiality', ''))} önem",
-        f"<b>{e(' '.join('#' + t for t in item.tickers))}</b> — {e(a.get('headline_tr') or item.title)}",
+        f"<b>{e(' '.join('#' + t for t in (item.tickers or a.get('affected_tickers') or ['PiyasaGeneli'])))}</b>"
+        f" — {e(a.get('headline_tr') or item.title)}",
         "",
         e(a.get("summary", "")),
     ]
