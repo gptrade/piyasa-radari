@@ -503,18 +503,19 @@ main:focus { outline: none; }
   .page-title p { display: none; }
   .actions { gap: var(--s-1); }
   .updated { font-size: var(--fs-xs); }
-  /* tablolar yatay kaydırılır, ilk sütunlar sabit */
-  .sig-scroll { overflow-x: auto; }
-  .sig-tbl { table-layout: auto; min-width: 720px; --sticky-top: 0; }
-  .sig-tbl th { position: static; }
-  .sig-tbl .c-dir { position: sticky; left: 0; z-index: 1; background: var(--surface); width: 40px; min-width: 40px; max-width: 40px; padding-left: var(--s-2); padding-right: 0; }
-  .sig-tbl .c-tk { position: sticky; left: 40px; z-index: 1; background: var(--surface); box-shadow: 1px 0 0 var(--border); width: 84px; min-width: 84px; max-width: 84px; padding-left: var(--s-2); padding-right: var(--s-2); }
-  .sig-tbl th.c-dir, .sig-tbl th.c-tk { z-index: 3; }
-  .sig-tbl tr.row:hover > td.c-dir, .sig-tbl tr.row:hover > td.c-tk, .sig-tbl tr.row.open > td.c-dir, .sig-tbl tr.row.open > td.c-tk { background: var(--row-hover); }
-  .sig-tbl th.c-tk .th-filter { display: none; }
-  .sig-tbl td.c-ol { min-width: 260px; }
-  .sig-tbl tr.drawer > td { position: sticky; left: 0; }
-  .drawer-in { width: calc(100vw - 2 * var(--s-4) - 2px); }
+  /* sinyal tablosu mobilde kart düzeni: her satır bir kart (yatay kaydırma yok) */
+  .sig-tbl, .sig-tbl tbody { display: block; }
+  .sig-tbl thead, .sig-tbl colgroup { display: none; }
+  .sig-tbl tr.row { display: grid; grid-template-columns: 22px minmax(0, auto) 1fr auto; grid-template-areas: "dir tk . rx" "ol ol ol ol" "imp src src age";
+    gap: 4px var(--s-2); align-items: center; padding: var(--s-3) var(--s-3); border-bottom: 1px solid var(--border); }
+  .sig-tbl tr.row > td { display: block; border: 0; padding: 0; height: auto; background: none !important; }
+  .sig-tbl tr.row:hover, .sig-tbl tr.row.open { background: var(--row-hover); }
+  .sig-tbl td.c-dir { grid-area: dir; } .sig-tbl td.c-tk { grid-area: tk; } .sig-tbl td.c-rx { grid-area: rx; }
+  .sig-tbl td.c-ol { grid-area: ol; } .sig-tbl td.c-imp { grid-area: imp; } .sig-tbl td.c-src { grid-area: src; } .sig-tbl td.c-age { grid-area: age; }
+  .sig-tbl td.c-dir .dir { text-align: left; }
+  .sig-tbl tr.dim > td:not(.c-ol) { opacity: .6; }
+  .sig-tbl tr.drawer { display: block; } .sig-tbl tr.drawer > td { display: block; height: auto; padding: 0; }
+  .m-sort { display: inline-flex !important; }
   .drawer-in > div { padding: var(--s-3); }
   .bb-tbl { min-width: 1080px; }
   .bb-tbl th:first-child, .bb-tbl td.tk { position: sticky; left: 0; z-index: 1; background: var(--surface); box-shadow: 1px 0 0 var(--border); }
@@ -607,3 +608,38 @@ main:focus { outline: none; }
 @keyframes pill-in { from { opacity: 0; transform: translateY(-26px); } }
 .sig-table.card-flush { overflow: visible; }
 .sig-table .tbl-foot { border-radius: 0 0 var(--r-lg) var(--r-lg); }
+
+/* ───────── mobil sıralama seçici (masaüstünde başlıklardan sıralanır) ───────── */
+.m-sort { display: none; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--text-2); }
+.m-sort select { height: 30px; border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); padding: 0 var(--s-2); font-size: var(--fs-sm); }
+
+/* ───────── benzer haberler (tekrarlar ana kaydın altında) ───────── */
+.sim { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; margin-right: 6px; border-radius: var(--r-pill); background: var(--surface-2);
+  color: var(--text-2); font: var(--fw-semibold) var(--fs-2xs) var(--font-sans); vertical-align: 1px; white-space: nowrap; }
+.d-sources .sim-time { color: var(--text-3); font-family: var(--font-mono); font-size: var(--fs-xs); white-space: nowrap; }
+
+/* ───────── hisse bazında görünüm ───────── */
+.tk-tbl { table-layout: fixed; }
+.tk-tbl col.k-tk { width: 96px; } .tk-tbl col.k-dir { width: 120px; } .tk-tbl col.k-n { width: 80px; } .tk-tbl col.k-px { width: 118px; } .tk-tbl col.k-age { width: 96px; }
+.tk-tbl td { height: 48px; }
+.tk-tbl .k-top-t { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.35; font-size: var(--fs-md); }
+.tk-tbl .k-top-t b { font-weight: var(--fw-bold); }
+.tk-tbl .netlbl { font-size: var(--fs-sm); color: var(--text-2); margin-left: 4px; }
+.tk-tbl .tk-name { display: block; font: var(--fs-2xs) var(--font-sans); color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 767px) { .tk-scroll { overflow-x: auto; } .tk-tbl { min-width: 640px; } }
+
+/* ───────── geniş ekranda yan panel detayı ───────── */
+.side-panel { position: fixed; top: var(--topbar-h); right: 0; bottom: 0; z-index: 35; width: calc(var(--rail-w) + var(--s-6) + 4px); background: var(--surface);
+  border-left: 1px solid var(--border); box-shadow: var(--shadow-3); display: flex; flex-direction: column; animation: sp-in .18s var(--ease); }
+@keyframes sp-in { from { transform: translateX(24px); opacity: 0; } }
+.sp-head { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--border); }
+.sp-head .card-title { flex: 1; }
+.sp-head .kbd { font: var(--fs-2xs) var(--font-mono); color: var(--text-3); border: 1px solid var(--border); border-radius: var(--r-xs); padding: 1px 5px; }
+.sp-body { overflow-y: auto; flex: 1; }
+.sp-body .drawer-in { grid-template-columns: 1fr; border-top: 0; }
+.sp-body .drawer-in > div + div { border-left: 0; border-top: 1px solid var(--border); }
+.sig-tbl tr.row.sel > td { background: var(--accent-soft) !important; }
+.sig-tbl tr.row.sel > td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.sp-body .ta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sp-body .slots { grid-template-columns: 96px 1fr; }
+.sp-body .drawer-in > div { padding: var(--s-4); }
