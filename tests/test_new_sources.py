@@ -161,3 +161,15 @@ def test_failures_are_reported_in_status(tmp_path, monkeypatch):
     pipeline.run()
     st = json.loads((tmp_path / "feed.json").read_text())["sources"][0]
     assert st["warnings"] == ["www.bloomberght.com: HTTP 403"]
+
+
+def test_investing_naive_iso_dates():
+    from radar.sources.feeds import entries_to_items
+    from radar.config import Stock, TickerMatcher
+    rss = """<?xml version="1.0"?><rss version="2.0"><channel><title>BIST</title>
+    <item><title>Türk Hava Yolları yeni uçak siparişi verdi</title><pubDate>2026-09-30 15:13:09</pubDate>
+    <link>https://tr.investing.com/news/x-1</link></item></channel></rss>"""
+    m = TickerMatcher([Stock("THYAO", "Türk Hava Yolları", "BIST", ["Türk Hava Yolları", "THY"])])
+    items = entries_to_items(feedparser.parse(rss), source="Investing · BİST", source_type="news", market="BIST",
+                             since=datetime(2026, 9, 29, tzinfo=timezone.utc), lang="tr", matcher=m)
+    assert len(items) == 1 and items[0].published == "2026-09-30T15:13:09Z" and items[0].tickers == ["THYAO"]

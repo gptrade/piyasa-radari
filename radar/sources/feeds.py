@@ -24,6 +24,9 @@ _TR_DATE = re.compile(r"(\d{1,2})[ .]+([A-Za-zÇĞİÖŞÜçğıöşü]{3,})[ .]
 _NUM_DATE = re.compile(r"(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?")
 
 
+_ISO_NAIVE = re.compile(r"^\s*(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?\s*$")
+
+
 def parse_tr_date(s: str | None) -> datetime | None:
     """'10 Ara 2024 11:23:57', '28 Eylül 2026', '28.09.2026 18:00' → İstanbul saatiyle datetime."""
     if not s:
@@ -45,9 +48,15 @@ def _entry_time(e) -> datetime | None:
     t = e.get("published_parsed") or e.get("updated_parsed")
     if t:
         return datetime.fromtimestamp(calendar.timegm(t), tz=UTC)
-    # RFC 822 olmayan tarihler (TCMB ve bazı Türk siteleri Türkçe ay adı kullanıyor)
+    # RFC 822 olmayan tarihler: "2026-08-18 15:13:09" (Investing.com, saat dilimsiz → UTC),
+    # Türkçe ay adları (TCMB ve bazı Türk siteleri)
     for key in ("published", "updated", "dc_date", "date"):
-        d = parse_tr_date(e.get(key))
+        v = e.get(key)
+        m = _ISO_NAIVE.match(v or "")
+        if m:
+            y, mo, d, h, mi, se = (int(x) if x else 0 for x in m.groups())
+            return datetime(y, mo, d, h, mi, se, tzinfo=UTC)
+        d = parse_tr_date(v)
         if d:
             return d.astimezone(UTC)
     return None
