@@ -8,16 +8,26 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20260930g">
+<link rel="stylesheet" href="style.css?v=20260930h">
+<script>
+  // Kayıtlı tema ve sol panel durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
+  (function () {
+    var d = document.documentElement, t = null, s = null;
+    try { t = JSON.parse(localStorage.getItem("radar.theme")); s = JSON.parse(localStorage.getItem("radar.side")); } catch (e) {}
+    if (t === "dark" || t === "light") d.dataset.theme = t;
+    if (s === null) s = !matchMedia("(max-width: 760px)").matches;
+    if (!s) d.classList.add("side-off");
+  })();
+</script>
 </head>
-<body>
+<body class="bb embed">
 <div class="shell">
 
   <!-- ───────────── sol: gezinme ───────────── -->
-  <aside class="side">
+  <aside class="side" id="side">
     <div class="brand">
       <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" class="brand-bg"/><circle cx="16" cy="16" r="9" fill="none" stroke="#fff" stroke-width="2"/><circle cx="16" cy="16" r="3" fill="#fff"/><path d="M16 16 L24 9" stroke="#fff" stroke-width="2"/></svg>
-      <div><b>Piyasa Radarı</b><small>BIST · ABD sinyal paneli</small></div>
+      <div><b>Piyasa Radarı</b></div>
     </div>
 
     <div class="seg" id="marketSeg" role="group" aria-label="Piyasa">
@@ -59,16 +69,31 @@
   </aside>
 
   <!-- ───────────── bölüm sekmeleri (her ekran boyutunda en üstte) ───────────── -->
-  <nav class="tabs" role="tablist" aria-label="Bölüm">
-    <button role="tab" id="tabSignals" aria-controls="signalsView" aria-selected="true" class="on" data-tab="signals">Sinyaller</button>
-    <button role="tab" id="tabBuybacks" aria-controls="buybackView" aria-selected="false" data-tab="buybacks">Şirket geri alımları <em id="bbBadge"></em></button>
-    <button role="tab" id="tabAlco" aria-controls="alcoView" aria-selected="false" data-tab="alco">ALCO</button>
+  <nav class="tabs" aria-label="Bölüm">
+    <button type="button" class="icon-btn" id="sideToggle" aria-controls="side" aria-expanded="true" title="Sol paneli aç/kapat">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 3.5v13" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+    <div class="tab-list" role="tablist">
+      <button role="tab" id="tabAlco" aria-controls="alcoView" aria-selected="true" class="on" data-tab="alco">Makro Veri</button>
+      <button role="tab" id="tabSignals" aria-controls="signalsView" aria-selected="false" data-tab="signals">Sinyal Takip</button>
+      <button role="tab" id="tabBuybacks" aria-controls="buybackView" aria-selected="false" data-tab="buybacks">Şirket Geri Alım <em id="bbBadge"></em></button>
+    </div>
+    <span class="tab-tools">
+      <button type="button" class="icon-btn" id="alcoReload" title="Makro Veri panelini yenile">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 3.5v3.2h-3.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Yenile</span>
+      </button>
+      <button type="button" class="icon-btn" id="themeToggle" title="Koyu / açık tema">
+        <svg class="moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 12.5A6.5 6.5 0 0 1 7.5 4.5a6.5 6.5 0 1 0 8 8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <svg class="sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M4.3 15.7l1.4-1.4M14.3 5.7l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </span>
   </nav>
 
   <!-- ───────────── orta: sinyal listesi ───────────── -->
   <main class="main">
 
-    <div id="signalsView" role="tabpanel" aria-labelledby="tabSignals">
+    <div id="signalsView" role="tabpanel" aria-labelledby="tabSignals" hidden>
     <header class="bar">
       <div class="search">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -123,21 +148,12 @@
       <div id="bbBody"><p class="empty">Geri alım verisi yükleniyor…</p></div>
     </div>
 
-    <!-- ───────────── ALCO paneli (ayrı uygulama: alco-dashboard.vercel.app) ───────────── -->
+    <!-- ───────────── Makro Veri (ayrı uygulama: alco-dashboard.vercel.app) ───────────── -->
     <div id="alcoView" role="tabpanel" aria-labelledby="tabAlco" hidden>
-      <div class="embed-bar">
-        <span><b>ALCO paneli</b> · <a href="https://alco-dashboard.vercel.app/" target="_blank" rel="noopener">alco-dashboard.vercel.app</a></span>
-        <span class="embed-act">
-          <button type="button" id="alcoReload">Yenile</button>
-          <a class="btn" href="https://alco-dashboard.vercel.app/" target="_blank" rel="noopener">Yeni sekmede aç ↗</a>
-        </span>
-      </div>
       <div class="embed-wrap">
-        <iframe id="alcoFrame" title="ALCO paneli" data-src="https://alco-dashboard.vercel.app/" loading="lazy"
+        <iframe id="alcoFrame" title="Makro Veri (ALCO paneli)" data-src="https://alco-dashboard.vercel.app/"
           referrerpolicy="no-referrer-when-downgrade" allow="clipboard-write; fullscreen"></iframe>
       </div>
-      <p class="embed-note">Panel burada boş görünüyorsa uygulama başka sitelerin içinde açılmaya izin vermiyordur (X-Frame-Options / CSP).
-        O durumda <b>Yeni sekmede aç</b> düğmesini kullan ya da ALCO projesinde <code>frame-ancestors https://gptrade.github.io</code> başlığına izin ver.</p>
     </div>
   </main>
 
@@ -170,8 +186,8 @@
 </div>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="app.js?v=20260930g"></script>
-<script src="buybacks.js?v=20260930g"
+<script src="app.js?v=20260930h"></script>
+<script src="buybacks.js?v=20260930h"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>

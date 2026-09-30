@@ -305,7 +305,9 @@
 
   function tvWidget(box, sym, market) {
     // TradingView'in resmi "Teknik Analiz" bileşeni (gömme izinli). Tıklanınca yüklenir.
-    const dark = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light";
+    const t = document.documentElement.dataset.theme;
+    const dark = t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    box.dataset.tv = JSON.stringify([sym, market]);
     box.innerHTML = `<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div>`;
     const sc = document.createElement("script");
     sc.src = "https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js";
@@ -661,6 +663,9 @@
   }
 
   // Diğer modüller (geri alım sekmesi) için salt okunur erişim
+  // tema değişince açık TradingView bileşenlerini yeni renkle yeniden kur
+  addEventListener("themechange", () => document.querySelectorAll("[data-tv]").forEach(b => tvWidget(b, ...JSON.parse(b.dataset.tv))));
+
   window.radar = { get state() { return state; }, fmtNum, fmtPct, fmtTime, esc, cls, ready: null };
 
   async function boot() {

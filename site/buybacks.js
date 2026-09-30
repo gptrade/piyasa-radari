@@ -277,29 +277,51 @@
 
   // ─────────────────────────────── sekmeler
   // Sekmeler: sinyaller · geri alımlar · ALCO (ayrı uygulama, iframe)
-  const VIEWS = { signals: "#signalsView", buybacks: "#buybackView", alco: "#alcoView" };
-  const HASH = { buybacks: "#geri-alim", alco: "#alco" };
+  const VIEWS = { alco: "#alcoView", signals: "#signalsView", buybacks: "#buybackView" };
+  const HASH = { signals: "#sinyal", buybacks: "#geri-alim" };            // Makro Veri varsayılan sekme (hash yok)
+  const ALIAS = { "#alco": "alco", "#makro": "alco" };
+  const root = document.documentElement;
+  const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  // ALCO ayrı bir sitede; içine stil verilemez. Uygulama ileride ?embed=1&theme= desteklerse kendi başlığını gizler / koyu açılır.
+  // Desteklemezse başlık kırpma ve renk çevirme (style.css: #alcoFrame) dışarıdan uygulanır.
+  const alcoUrl = () => { const u = new URL($("#alcoFrame").dataset.src); u.searchParams.set("embed", "1"); u.searchParams.set("theme", isDark() ? "dark" : "light"); return u.href; };
   function show(tab) {
-    if (!VIEWS[tab]) tab = "signals";
+    if (!VIEWS[tab]) tab = "alco";
     Object.entries(VIEWS).forEach(([k, sel]) => { $(sel).hidden = k !== tab; });
-    document.body.classList.toggle("bb", tab !== "signals");          // sinyal kolonu sadece Sinyaller'de
+    document.body.classList.toggle("bb", tab !== "signals");          // sağ kolon sadece Sinyal Takip'te
     document.body.classList.toggle("embed", tab === "alco");
-    $$(".tabs button").forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
+    $$(".tab-list button").forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
     if (tab === "buybacks") { if (S.loaded) render(); else load(); }
-    else if (tab === "alco") { const f = $("#alcoFrame"); if (!f.src) f.src = f.dataset.src; }   // ilk açılışta yükle
+    else if (tab === "alco") { const f = $("#alcoFrame"); if (!f.getAttribute("src")) f.src = alcoUrl(); }
     else dispatchEvent(new Event("resize"));   // sağ kolon yeniden görünür: balon haritası genişliğini yenile
     const h = HASH[tab] || "";
     if (location.hash !== h) history.replaceState(null, "", h || location.pathname + location.search);
   }
-  $("#alcoReload").onclick = () => { const f = $("#alcoFrame"); f.src = f.dataset.src; };
-  $$(".tabs button").forEach(b => b.onclick = () => show(b.dataset.tab));
+  $("#alcoReload").onclick = () => { $("#alcoFrame").src = alcoUrl(); };
+  $$(".tab-list button").forEach(b => b.onclick = () => show(b.dataset.tab));
+
+  // ── tema (tüm site + Makro Veri) ──
+  const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* özel pencere */ } };
+  const syncTheme = () => { const d = isDark(); $("#themeToggle").setAttribute("aria-pressed", d); $("#themeToggle").title = d ? "Açık temaya geç" : "Koyu temaya geç"; };
+  $("#themeToggle").onclick = () => {
+    root.dataset.theme = isDark() ? "light" : "dark"; store("radar.theme", root.dataset.theme); syncTheme();
+    const f = $("#alcoFrame"); if (f.getAttribute("src")) f.src = alcoUrl();   // uygulama ?theme= desteklerse kendi koyu temasına geçer
+    dispatchEvent(new Event("themechange")); dispatchEvent(new Event("resize"));
+  };
+  syncTheme();
+
+  // ── sol panel aç/kapa ──
+  const syncSide = () => { const open = !root.classList.contains("side-off"); $("#sideToggle").setAttribute("aria-expanded", open); $("#sideToggle").title = open ? "Sol paneli kapat" : "Sol paneli aç"; };
+  $("#sideToggle").onclick = () => { root.classList.toggle("side-off"); store("radar.side", !root.classList.contains("side-off")); syncSide(); dispatchEvent(new Event("resize")); };
+  syncSide();
+
   $$("#bbPeriod button").forEach(b => b.onclick = () => {
     S.days = +b.dataset.d; $$("#bbPeriod button").forEach(x => x.classList.toggle("on", x === b)); render();
   });
   $("#bbWatch").onchange = e => { S.watch = e.target.checked; render(); };
   let t; $("#bbQ").oninput = e => { clearTimeout(t); t = setTimeout(() => { S.q = e.target.value.trim(); render(); }, 150); };
   let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if (!$("#buybackView").hidden) render(); }, 200); });
-  const fromHash = Object.keys(HASH).find(k => HASH[k] === location.hash);
-  if (fromHash) show(fromHash);
-  else setTimeout(load, 1500);            // arka planda yükle: sekme rozeti için
+  const fromHash = ALIAS[location.hash] || Object.keys(HASH).find(k => HASH[k] === location.hash);
+  show(fromHash || "alco");
+  if (fromHash !== "buybacks") setTimeout(load, 1500);            // arka planda yükle: sekme rozeti için
 })();

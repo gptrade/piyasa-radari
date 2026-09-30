@@ -283,10 +283,10 @@ body.bb .shell { grid-template-areas: "side tabs tabs" "side main main"; }
 
 /* ───────── sekmeler ───────── */
 .shell > .tabs { display: flex; gap: 6px; padding: 12px 18px 10px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 6; }
-.tabs button { padding: 7px 14px; font-weight: 600; color: var(--ink2); border-radius: 8px; font-size: 13.5px; border: 1px solid var(--line); background: var(--bg); }
-.tabs button.on { color: #fff; background: var(--brand); border-color: var(--brand); }
-.tabs button.on em { color: var(--brand); background: #fff; }
-.tabs button:not(.on):hover { color: var(--ink); border-color: var(--ink3); }
+.tab-list button { padding: 7px 14px; font-weight: 600; color: var(--ink2); border-radius: 8px; font-size: 13.5px; border: 1px solid var(--line); background: var(--bg); }
+.tab-list button.on { color: #fff; background: var(--brand); border-color: var(--brand); }
+.tab-list button.on em { color: var(--brand); background: #fff; }
+.tab-list button:not(.on):hover { color: var(--ink); border-color: var(--ink3); }
 .tabs em { font-style: normal; font: 600 10.5px var(--mono); color: var(--brand); background: var(--brand-soft); border-radius: 999px; padding: 1px 6px; margin-left: 4px; }
 .tabs em:empty { display: none; }
 
@@ -340,7 +340,7 @@ body.bb .shell { grid-template-areas: "side tabs tabs" "side main main"; }
 @media (max-width: 760px) {
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kpis b { font-size: 17px; }
-  .tabs button { padding: 8px 10px; font-size: 13px; }
+  .tab-list button { padding: 8px 10px; font-size: 13px; }
   .bb-table th:nth-child(2), .bb-table td.nm { display: none; }
   .bb-table tr.sub > td { padding-left: 8px; }
 }
@@ -376,17 +376,50 @@ body.bb .shell { grid-template-areas: "side tabs tabs" "side main main"; }
 .ext-links a:hover { color: var(--brand); border-color: var(--brand); }
 
 
-/* ───────── gömülü uygulama sekmesi (ALCO) ───────── */
-.embed-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin: 12px 0 8px; font-size: 13px; color: var(--ink2); }
-.embed-bar a { color: var(--brand); }
-.embed-act { display: flex; gap: 6px; }
-.embed-act button, .embed-act .btn { font-size: 12.5px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--ink); text-decoration: none; }
-.embed-act button:hover, .embed-act .btn:hover { border-color: var(--brand); color: var(--brand); }
-.embed-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
-#alcoFrame { display: block; width: 100%; height: calc(100vh - 150px); min-height: 560px; border: 0; background: #fff; }
-.embed-note { font-size: 11.5px; color: var(--ink3); margin: 8px 0 0; }
-.embed-note code { font-family: var(--mono); font-size: 11px; background: var(--soft); padding: 1px 4px; border-radius: 4px; }
-body.embed .main { padding-bottom: 16px; }
-@media (max-width: 760px) { #alcoFrame { height: calc(100vh - 120px); min-height: 480px; } .tabs button { padding: 7px 10px; } }
-.shell > .tabs { overflow-x: auto; scrollbar-width: none; }
+/* ───────── Makro Veri sekmesi (ALCO, ayrı site: iframe) ─────────
+   --alco-crop: ALCO'nun kendi başlığı ("ALCO · Ekonomik Göstergeler") kadar üstten kırpılır.
+   Başka siteye stil verilemediği için tek yol bu; başlık yüksekliği değişirse sadece bu değer güncellenir. */
+:root { --alco-crop: 84px; --tabs-h: 57px; }
+.embed-wrap { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden;
+  height: calc(100vh - var(--tabs-h) - 22px); min-height: 520px; }
+#alcoFrame { display: block; width: 100%; border: 0; background: #fff;
+  height: calc(100% + var(--alco-crop)); margin-top: calc(-1 * var(--alco-crop)); }
+/* Koyu tema: ALCO kendi koyu temasını sunmadığı için renkler çevrilir (hue-rotate renk tonlarını korur) */
+:root[data-theme="dark"] #alcoFrame { filter: invert(.9) hue-rotate(180deg); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) #alcoFrame { filter: invert(.9) hue-rotate(180deg); } }
+body.embed .main { padding: 10px 12px 12px; }
 .shell > .tabs button { flex: none; white-space: nowrap; }
+
+/* ───────── sekme çubuğu: panel düğmesi · sekmeler · araçlar ───────── */
+.shell > .tabs { align-items: center; overflow-x: auto; scrollbar-width: none; }
+.tab-list { display: flex; gap: 6px; }
+.tab-tools { margin-left: auto; display: flex; gap: 6px; padding-left: 8px; }
+.tabs .icon-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; min-width: 34px; justify-content: center; padding: 0 8px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink2); font-size: 12.5px; font-weight: 500; }
+.tabs .icon-btn:hover { color: var(--brand); border-color: var(--brand); }
+.icon-btn svg { width: 18px; height: 18px; flex: none; }
+#alcoReload { display: none; } body.embed #alcoReload { display: inline-flex; }
+#themeToggle .sun { display: none; }
+:root[data-theme="dark"] #themeToggle .sun { display: block; } :root[data-theme="dark"] #themeToggle .moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) #themeToggle .sun { display: block; } :root:not([data-theme]) #themeToggle .moon { display: none; }
+}
+:root:not(.side-off) #sideToggle { color: var(--brand); border-color: var(--brand-soft); background: var(--brand-soft); }
+
+/* ───────── sol panel kapalı ───────── */
+.side-off .side { display: none; }
+.side-off .shell { grid-template-columns: 0 minmax(0, 1fr) 372px; }
+@media (max-width: 1320px) { .side-off .shell { grid-template-columns: 0 minmax(0, 1fr); } }
+@media (max-width: 760px) {
+  .side-off .shell { grid-template-columns: 1fr; }
+  #alcoReload span { display: none; }
+  /* dar ekran: üst satırda panel/yenile/tema, altında üç eşit sekme */
+  .shell > .tabs { flex-wrap: wrap; overflow: visible; row-gap: 8px; padding: 8px 12px; }
+  .tab-list { order: 3; width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tab-list { gap: 4px; }
+  .tab-list button { padding: 7px 2px; font-size: 12px; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tab-list em { display: none; }
+  :root { --tabs-h: 98px; }
+  .embed-wrap { height: calc(100vh - var(--tabs-h) - 16px); min-height: 440px; }
+  body.embed .main { padding: 8px; }
+}
