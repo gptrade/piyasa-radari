@@ -260,9 +260,9 @@ main:focus { outline: none; }
 .banner .link-btn { margin-left: auto; }
 
 /* ───────────── 4. Sinyal Takip ───────────── */
-.sig-layout { display: grid; grid-template-columns: minmax(0, 1fr) var(--rail-w); grid-template-areas: "tools rail" "table rail"; gap: var(--s-4) var(--s-5); align-items: start; }
+.sig-layout { display: grid; grid-template-columns: minmax(0, 1fr) var(--rail-w); grid-template-rows: auto 1fr; grid-template-areas: "tools rail" "table rail"; gap: var(--s-4) var(--s-5); align-items: start; }
 .sig-tools { grid-area: tools; display: flex; flex-direction: column; gap: var(--s-3); min-width: 0; }
-.sig-table { grid-area: table; }
+.sig-table { grid-area: table; align-self: start; }
 .rail { grid-area: rail; display: flex; flex-direction: column; gap: var(--s-4); position: sticky; top: calc(var(--topbar-h) + var(--s-4)); }
 
 .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s-2) var(--s-5); font-size: var(--fs-sm); color: var(--text-2); }
@@ -479,7 +479,7 @@ main:focus { outline: none; }
 
 /* ───────────── 9. duyarlı: 1440 · 1280 · 1024 · 768 · 390 ───────────── */
 @media (max-width: 1320px) {
-  .sig-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "digest heat" "digest bubble" "tools tools" "table table"; }
+  .sig-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "digest heat" "digest bubble" "tools tools" "table table"; grid-template-rows: auto 1fr auto auto; }
   .rail { display: contents; }
   #digest { grid-area: digest; } #heatCard { grid-area: heat; } #bubbleCard { grid-area: bubble; }
 }
@@ -497,7 +497,7 @@ main:focus { outline: none; }
 }
 @media (max-width: 767px) {
   :root { --topbar-h: 56px; }
-  .sig-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "digest" "tools" "table" "heat" "bubble"; }
+  .sig-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "digest" "tools" "table" "heat" "bubble"; grid-template-rows: none; }
   .btn .btn-lbl { display: none; }
   .btn:has(.btn-lbl) { width: 34px; padding: 0; }
   .page-title p { display: none; }
