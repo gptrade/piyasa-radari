@@ -593,3 +593,17 @@ main:focus { outline: none; }
 #digest .idea-top { min-width: 0; }
 #digest .idea-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-sm); }
 @media (max-width: 767px) { .strip-head .card-meta { display: none; } }
+
+/* ───────── soluk satır simgesi ───────── */
+.dim-ic { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px; color: var(--text-3); cursor: help; }
+.dim-ic svg { width: 12px; height: 12px; }
+.dim-ic.lg svg { width: 14px; height: 14px; }
+
+/* ───────── "N yeni kayıt" hapı (tablo yerinden oynamaz) ───────── */
+.pill-anchor { position: sticky; top: calc(var(--topbar-h) + 10px); height: 0; z-index: 6; display: flex; justify-content: center; }
+.new-pill { transform: translateY(-16px); height: 32px; padding: 0 var(--s-4); border-radius: var(--r-pill); background: var(--accent); color: var(--text-on-accent);
+  font-size: var(--fs-sm); font-weight: var(--fw-semibold); box-shadow: var(--shadow-2); animation: pill-in .25s var(--ease); }
+.new-pill:hover { background: var(--accent-hover); }
+@keyframes pill-in { from { opacity: 0; transform: translateY(-26px); } }
+.sig-table.card-flush { overflow: visible; }
+.sig-table .tbl-foot { border-radius: 0 0 var(--r-lg) var(--r-lg); }

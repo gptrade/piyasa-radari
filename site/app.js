@@ -21,7 +21,7 @@
   const state = {
     feed: null, digest: null, macro: null, prices: {}, loading: true, error: null,
     view: "feed", sort: { k: "time", d: -1 }, ticker: null, ids: null, idsLabel: "", focusText: "",
-    types: new Set(), q: "", col: {}, hideNoise: store.get("hideNoise", false),
+    types: new Set(), q: "", col: {}, hideNoise: store.get("hideNoise", true),
     open: new Set(), saved: new Set(store.get("saved", [])), limit: PAGE,
     seenBefore: null, reasons: new Map(),
   };
@@ -74,6 +74,7 @@
     }
     return m;
   }
+  const DIM_IC = r => `<span class="dim-ic" data-tip="<b>Soluk: ${esc(r)}</b><br>${esc(DIM_TIP[r])}"><svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.2 1.6"/></svg><span class="sr-only">soluk: ${esc(r)}</span></span>`;
   const DIM_TIP = {
     "tekrar": "Aynı hisse için aynı olay 12 saat içinde daha güçlü bir kayıtla zaten var",
     "AI yok": "AI değerlendirmesi yapılmadı (izleme listesi dışı ya da tur sınırı)",
@@ -87,13 +88,18 @@
   async function getJSON(path) {
     try { const r = await fetch(`${path}?t=${Date.now()}`); return r.ok ? await r.json() : null; } catch { return null; }
   }
-  async function load() {
+  async function fetchAll() {
     const feed = await getJSON("data/feed.json");
     if (!feed) throw new Error("data/feed.json okunamadı");
     const [digest, macro] = await Promise.all([getJSON("data/digest.json"), getJSON("data/macro.json")]);
     const syms = new Set([...(feed.watchlist || []).map(w => w.symbol), ...feed.items.map(i => i.tickers?.[0]).filter(Boolean)]);
     const prices = {};
     await Promise.all([...syms].map(async s => { const p = await getJSON(`data/prices/${s}.json`); if (p) prices[s] = p; }));
+    return { feed, digest, macro, prices };
+  }
+  async function load() { apply(await fetchAll()); }
+  function apply({ feed, digest, macro, prices }) {
+    state.pending = null; $("#newPill").hidden = true;
     Object.assign(state, { feed, digest, macro, prices, error: null, loading: false });
     state.reasons = computeReasons(feed.items);
     sh.setUpdated("sinyal", feed.generated, { label: "Son tarama", staleMin: 45 });
@@ -247,7 +253,7 @@
     return `<tr class="row${reason ? " dim" : ""}${state.open.has(it.id) ? " open" : ""}" data-id="${it.id}" tabindex="0" aria-expanded="${state.open.has(it.id)}">
       <td class="c-dir">${dirHTML(a)}</td>
       <td class="c-tk">${tk}</td>
-      <td class="c-ol"><div class="ol-t" data-tip="${esc(full)}">${isNew ? `<span class="new-dot" aria-label="yeni"></span>` : ""}${reason ? `<span class="tag" data-tip="${esc(DIM_TIP[reason])}">${reason}</span>` : ""}${text} <span class="ol-src">· ${esc(it.source.split(" · ")[0])}</span></div></td>
+      <td class="c-ol"><div class="ol-t" data-tip="${esc(full)}">${isNew ? `<span class="new-dot" aria-label="yeni"></span>` : ""}${reason ? DIM_IC(reason) : ""}${text} <span class="ol-src">· ${esc(it.source.split(" · ")[0])}</span></div></td>
       <td class="c-imp">${imp}</td>
       <td class="c-rx num">${rxHTML(it)}</td>
       <td class="c-src"><span class="src-cell" data-tip="${esc(srcTip)}"><span class="${t1 ? "t1" : ""}">${TYPE[it.source_type] || "Haber"}</span>${it.dups ? ` <span class="x">×${it.dups + 1}</span>` : ""}</span></td>
@@ -675,7 +681,8 @@
         [`<span class="meter" data-l="1"><i></i><i></i><i></i></span>`, "Düşük önem"], [`<span class="meter" data-l="2"><i></i><i></i><i></i></span>`, "Orta önem"], [`<span class="meter" data-l="3"><i></i><i></i><i></i></span>`, "Yüksek önem"]]),
       L("Tepki (haberden bu yana fiyat)", [[`<span class="rx up">▲ +%1,2</span>`, "Yükseldi"], [`<span class="rx down">▼ −%0,8</span>`, "Düştü"], [`<span class="rx-wait">…</span>`, "Haberden sonra işlem yok (seans kapalı)"],
         [`<span class="mis">≠</span>`, "Haber yönü ile fiyat ters (±%0,5 üstü)"], [`<span class="tag na">N/A</span>`, "Fiyat verisi yok"]]),
-      L("Soluk satır etiketleri", Object.entries(DIM_TIP).map(([k, v]) => [`<span class="tag">${k}</span>`, v])),
+      L("Soluk satırlar", [[DIM_IC("tekrar").replace("dim-ic", "dim-ic lg"), "Soluk satır simgesi. Üzerine gelince nedeni yazar:"], ...Object.entries(DIM_TIP).map(([k, v]) => [`<span class="tag">${k}</span>`, v]),
+        [`<span class="chip" aria-pressed="true" style="height:22px;padding:0 8px">Solukları gizle</span>`, "Varsayılan olarak açık; kapatınca soluk satırlar da listelenir"]]),
       L("Kaynak ve diğer", [[`<span class="src-cell"><span class="t1">Bildirim</span></span>`, "Resmi kaynak (KAP, SEC, SPK, TCMB, şirket bülteni)"], [`<span class="src-cell">Haber <span class="x">×3</span></span>`, "Aynı haber 3 kaynakta"],
         [`<span class="new-dot"></span>`, "Son ziyaretinden sonra gelen güçlü sinyal"]]),
     ].join("");
@@ -753,6 +760,14 @@
     document.addEventListener("click", e => { if (!lg.hidden && !e.target.closest(".pop-wrap")) setLegend(false); });
     document.addEventListener("keydown", e => { if (e.key === "Escape" && !lg.hidden) { setLegend(false); lb.focus(); } });
     let t; $("#q").oninput = e => { clearTimeout(t); t = setTimeout(() => { state.q = e.target.value.trim(); state.limit = PAGE; render(); }, 150); };
+    $("#newPill").onclick = () => {
+      if (!state.pending) return;
+      const prevTop = state.feed.generated;
+      apply(state.pending); state.seenBefore = state.seenBefore || prevTop; state.limit = PAGE; render();
+      $(".sig-table").scrollIntoView({ behavior: "smooth", block: "start" });
+      $("#sigBody tr.row")?.focus({ preventScroll: true });
+    };
+    addEventListener("marketchange", () => { if (state.pending) showPill(); });
     $("#moreBtn").onclick = () => {
       const n = $$("#sigBody tr.row").length;
       state.limit += PAGE; renderTable();
@@ -836,7 +851,7 @@
       { label: "JSON", hint: "tam kayıt + filtreler", run: exportJSON, disabled: !n }]; },
     exportInfo: () => state.feed ? `Filtrelenmiş görünüm: ${fmt.int(filtered().length)} kayıt` : "",
   });
-  window.radar = { get state() { return state; }, ready: null };
+  window.radar = { get state() { return state; }, ready: null, poll: () => poll() };
 
   async function boot() {
     let done; window.radar.ready = window.radar.ready || new Promise(r => (done = r));
@@ -846,5 +861,29 @@
   }
   bind();
   boot();
-  setInterval(async () => { try { await load(); if (sh.route === "sinyal") { const open = document.activeElement; render(); open?.isConnected && open.focus?.(); } } catch { /* sonraki turda */ } }, 5 * 60 * 1000);
+  // Otomatik yenileme (5 dk): Sinyal Takip açıksa tablo yerinden oynamaz; yeni kayıt varsa "N yeni kayıt" hapı çıkar
+  function newCount(next) {
+    const known = new Set(state.feed.items.map(i => i.id));
+    return next.feed.items.filter(i => !known.has(i.id) && inMarket(i)).length;
+  }
+  function showPill() {
+    const n = state.pending ? newCount(state.pending) : 0, b = $("#newPill");
+    b.hidden = !n;
+    b.textContent = `↑ ${n} yeni kayıt · göster`;
+    b.setAttribute("aria-label", `${n} yeni kayıt geldi; tabloyu güncellemek için tıkla`);
+  }
+  async function poll() {
+    try {
+      const next = await fetchAll();
+      if (next.feed.generated === state.feed?.generated) return;
+      if (sh.route === "sinyal" && state.feed && newCount(next) > 0) {
+        state.pending = next; showPill();
+        sh.setUpdated("sinyal", state.feed.generated, { label: "Son tarama (yeni tarama bekliyor)", staleMin: 45 });
+        return;
+      }
+      apply(next);
+      if (sh.route === "sinyal") render();                    // yeni kayıt yok: yalnız fiyat/özet tazelenir
+    } catch { /* sonraki turda */ }
+  }
+  setInterval(poll, 5 * 60 * 1000);
 })();
