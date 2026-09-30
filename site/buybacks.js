@@ -249,7 +249,7 @@
   }
 
   function render() {
-    if (!S.loaded) return;
+    if (!S.loaded || $("#buybackView").hidden) return;     // gizliyken çizme: genişlik ölçülemez
     const rows = inPeriod();
     const agg = aggregate(rows);
     const W = Math.max(280, Math.round(($("#bbBody").getBoundingClientRect().width || 720) - 30));
@@ -276,10 +276,11 @@
   // ─────────────────────────────── sekmeler
   function show(tab) {
     const bb = tab === "buybacks";
+    document.body.classList.toggle("bb", bb);
     $("#signalsView").hidden = bb;
     $("#buybackView").hidden = !bb;
     $$(".tabs button").forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
-    if (bb) load();
+    if (bb) { if (S.loaded) render(); else load(); } else dispatchEvent(new Event("resize"));   // sağ kolon yeniden görünür: balon haritası genişliğini yenile
     const h = bb ? "#geri-alim" : "";
     if (location.hash !== h) history.replaceState(null, "", h || location.pathname + location.search);
   }

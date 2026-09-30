@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20260930d">
 </head>
 <body>
 <div class="shell">
@@ -57,12 +57,14 @@
     </div>
   </aside>
 
+  <!-- ───────────── bölüm sekmeleri (her ekran boyutunda en üstte) ───────────── -->
+  <nav class="tabs" role="tablist" aria-label="Bölüm">
+    <button role="tab" id="tabSignals" aria-controls="signalsView" aria-selected="true" class="on" data-tab="signals">Sinyaller</button>
+    <button role="tab" id="tabBuybacks" aria-controls="buybackView" aria-selected="false" data-tab="buybacks">Şirket geri alımları <em id="bbBadge"></em></button>
+  </nav>
+
   <!-- ───────────── orta: sinyal listesi ───────────── -->
   <main class="main">
-    <nav class="tabs" role="tablist" aria-label="Bölüm">
-      <button role="tab" id="tabSignals" aria-controls="signalsView" aria-selected="true" class="on" data-tab="signals">Sinyaller</button>
-      <button role="tab" id="tabBuybacks" aria-controls="buybackView" aria-selected="false" data-tab="buybacks">Şirket geri alımları <em id="bbBadge"></em></button>
-    </nav>
 
     <div id="signalsView" role="tabpanel" aria-labelledby="tabSignals">
     <header class="bar">
@@ -143,8 +145,8 @@
 </div>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="app.js"></script>
-<script src="buybacks.js"
+<script src="app.js?v=20260930d"></script>
+<script src="buybacks.js?v=20260930d"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>
