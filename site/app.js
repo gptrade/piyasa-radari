@@ -160,6 +160,7 @@
     const sent = $(".sent", el);
     if (an) {
       sent.textContent = SENT[an.sentiment] || an.sentiment; sent.classList.add(an.sentiment);
+      $(".ai-label", el).textContent = `${an.provider || (String(an.model || "").startsWith("gemini") ? "Gemini" : "Claude")} değerlendirmesi`;
       $(".confv", el).textContent = `%${an.confidence} güven`;
       $(".mat", el).textContent = MAT[an.materiality] || ""; $(".mat", el).classList.add(an.materiality);
       $(".ai-sum", el).textContent = an.summary || "";
@@ -172,7 +173,7 @@
     } else {
       sent.textContent = "Değerlendirilmedi"; sent.classList.add("none");
       $(".ai-sum", el).textContent = it.tickers.some(t => watch.has(t))
-        ? "Bu tur AI bütçesi dolduğu ya da anahtar tanımlı olmadığı için yorum yapılmadı."
+        ? "Bu turda AI yorumu yapılmadı (tur başına sınır dolmuş ya da AI sağlayıcısına ulaşılamamış olabilir)."
         : it.tickers.length ? "İzleme listesi dışında; yalnızca listelendi."
         : "Piyasa geneli kayıt; izleme listesiyle doğrudan eşleşmedi.";
     }
@@ -244,8 +245,12 @@
       return `<div class="${k}" title="${esc(tip)}"><span>${esc(s.name)}</span><span>${s.ok ? s.count : "hata"}${warn ? " ⚠" : ""}</span></div>` +
         (warn ? `<p class="src-warn">${esc(s.warnings[0])}</p>` : "");
     }).join("");
-    $("#gen").textContent = `Son güncelleme: ${fmtTime(f.generated)} · AI: ${f.ai?.enabled ? f.ai.model : "kapalı"}`;
-    const missing = Object.entries(f.secrets || {}).filter(([k, v]) => !v && k !== "X_BEARER_TOKEN").map(([k]) => k);
+    const by = Object.entries(f.ai?.by_provider || {}).map(([k, v]) => `${k} ${v}`).join(", ");
+    $("#gen").textContent = `Son güncelleme: ${fmtTime(f.generated)} · AI: ${f.ai?.enabled ? (f.ai.providers || []).join(" → ") + (by ? ` (${by})` : "") : "kapalı"}`;
+    const sec = f.secrets || {};
+    const hasAI = sec.ANTHROPIC_API_KEY || sec.GEMINI_API_KEY;
+    const missing = Object.entries(sec).filter(([k, v]) => !v && k !== "X_BEARER_TOKEN"
+      && !((k === "ANTHROPIC_API_KEY" || k === "GEMINI_API_KEY") && hasAI)).map(([k]) => k);
     const aiErr = (f.ai?.errors || [])[0];
     const cfgMsg = [missing.length ? `Tanımlı olmayan secret: ${missing.join(", ")}` : "", aiErr ? `Claude hatası: ${aiErr}` : ""].filter(Boolean);
     let cfgEl = $("#cfgWarn");
@@ -254,7 +259,7 @@
     cfgEl.hidden = !cfgMsg.length;
     const ban = $("#banner");
     if (f.demo) { ban.hidden = false; ban.textContent = "Örnek veri gösteriliyor. İlk GitHub Actions çalışmasından sonra gerçek akış burada olacak."; }
-    else if (f.secrets && !f.secrets.ANTHROPIC_API_KEY) { ban.hidden = false; ban.textContent = "AI değerlendirmesi kapalı: ANTHROPIC_API_KEY secret'ı bu çalıştırmada bulunamadı (Settings → Secrets and variables → Actions)."; }
+    else if (f.secrets && !f.secrets.ANTHROPIC_API_KEY && !f.secrets.GEMINI_API_KEY) { ban.hidden = false; ban.textContent = "AI değerlendirmesi kapalı: ne ANTHROPIC_API_KEY ne de Gemini anahtarı bulunamadı (Settings → Secrets and variables → Actions)."; }
     else if (state.ticker) { ban.hidden = false; ban.innerHTML = `<b>${state.ticker}</b> filtresi açık — kaldırmak için hisseye tekrar dokun.`; }
     else ban.hidden = true;
   }

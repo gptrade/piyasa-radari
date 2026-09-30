@@ -49,6 +49,8 @@ jobs:
       - name: Radarı çalıştır
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Gemini yedek sağlayıcı: GEMINI_API_KEY ya da PIYASA_RADARI adlı secret
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.PIYASA_RADARI }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}

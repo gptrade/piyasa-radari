@@ -64,7 +64,7 @@ def send(items: list[Item], cfg: dict) -> int:
     return sent
 
 
-def send_hello(summary: dict, ai_model: str | None) -> bool:
+def send_hello(summary: dict, ai: dict | None) -> bool:
     """Telegram bağlantısını doğrulamak için ilk seferde bir kez gönderilen mesaj."""
     token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
     if not token or not chat:
@@ -73,7 +73,7 @@ def send_hello(summary: dict, ai_model: str | None) -> bool:
     text = ("✅ <b>Piyasa Radarı bağlandı</b>\n\n"
             f"Bu turda {summary.get('collected', 0)} kayıt tarandı, {summary.get('new', 0)} yeni kayıt, "
             f"{summary.get('analyzed', 0)} AI değerlendirmesi.\n"
-            f"AI: {html.escape(ai_model) if ai_model else 'kapalı (ANTHROPIC_API_KEY yok)'}\n\n"
+            f"AI: {html.escape(' → '.join(ai['providers'])) + ' (' + html.escape(ai['model']) + ')' if ai and ai.get('providers') else 'kapalı (AI anahtarı yok)'}\n\n"
             "Bundan sonra yalnızca güçlü sinyaller gelecek (ayarlar: config/settings.yml → notify)."
             + (f'\n<a href="{html.escape(site)}">Paneli aç</a>' if site else ""))
     r = http.post(f"https://api.telegram.org/bot{token}/sendMessage", json={

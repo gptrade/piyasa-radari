@@ -4,6 +4,10 @@ analysis:
   enabled: true
   # Hızlı ve ucuz sınıflandırma için Haiku; daha derin yorum istersen claude-sonnet-5 yaz.
   model: claude-haiku-4-5-20251001
+  # Sağlayıcı sırası: ilki kullanılamazsa (anahtar yok, kredi bitti, kota, erişim hatası) sıradakine geçilir.
+  providers: [claude, gemini]
+  gemini_model: gemini-3.8-flash
+  gemini_fallback_models: [gemini-flash-latest, gemini-3.7-flash]
   max_items_per_run: 40        # her çalıştırmada en fazla kaç yeni habere AI yorumu yapılsın (maliyet freni)
   language: tr                 # yorumlar hangi dilde yazılsın
 

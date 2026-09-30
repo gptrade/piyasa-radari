@@ -34,6 +34,7 @@ değerlendirilir (yön, güven, önem, ufuk, gerekçe, riskler), haber anından 
    | Secret | Gerekli mi | Açıklama |
    |---|---|---|
    | `ANTHROPIC_API_KEY` | AI yorumu için evet | console.anthropic.com → API Keys |
+   | `GEMINI_API_KEY` (ya da `PIYASA_RADARI`) | yedek AI | aistudio.google.com → Get API key. Claude'un anahtarı yoksa, kredisi bittiyse ya da erişilemiyorsa değerlendirme Gemini ile yapılır |
    | `SEC_USER_AGENT` | ABD için önerilir | SEC kuralı: `Ad Soyad eposta@adres` biçiminde |
    | `TELEGRAM_BOT_TOKEN` | bildirim için | Diğer tracker'daki bot kullanılabilir |
    | `TELEGRAM_CHAT_ID` | bildirim için | Aynı sohbet ya da yeni bir kanal |

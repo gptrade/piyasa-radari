@@ -160,11 +160,10 @@ def run() -> dict:
         "generated": iso(now_utc()),
         "sources": status,
         "watchlist": [{"symbol": s.symbol, "name": s.name, "market": s.market} for s in stocks],
-        "ai": {"model": analyzer.model, "enabled": analyzer.enabled, "used": analyzer.used,
-               "errors": analyzer.errors},
+        "ai": analyzer.status(),
         # Sadece tanımlı olup olmadıkları (değerler asla yazılmaz)
         "secrets": {k: bool(os.environ.get(k)) for k in (
-            "ANTHROPIC_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "SEC_USER_AGENT",
+            "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "SEC_USER_AGENT",
             "EVDS_API_KEY", "X_BEARER_TOKEN")},
         "items": items,
     }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -182,7 +181,7 @@ def run() -> dict:
     tg_n0 = len(http.FAILURES)
     sent = notify.send([i for i in new if i.analysis], settings.get("notify") or {})
     summary = {"collected": len(collected), "new": len(new), "analyzed": analyzer.used, "notified": sent}
-    if not state.get("telegram_hello") and notify.send_hello(summary, analyzer.model if analyzer.enabled else None):
+    if not state.get("telegram_hello") and notify.send_hello(summary, analyzer.status()):
         state_extra["telegram_hello"] = iso(now_utc())
     tg_fail = http.FAILURES[tg_n0:]
     tg_entry = {"name": "Telegram", "ok": not tg_fail, "count": sent}
