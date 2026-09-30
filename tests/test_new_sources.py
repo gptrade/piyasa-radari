@@ -173,3 +173,9 @@ def test_investing_naive_iso_dates():
     items = entries_to_items(feedparser.parse(rss), source="Investing · BİST", source_type="news", market="BIST",
                              since=datetime(2026, 9, 29, tzinfo=timezone.utc), lang="tr", matcher=m)
     assert len(items) == 1 and items[0].published == "2026-09-30T15:13:09Z" and items[0].tickers == ["THYAO"]
+
+
+def test_investing_analysis_feed_dates():
+    from radar.sources.feeds import _entry_time
+    assert _entry_time({"published": "Jul 06, 2026 06:58 GMT"}).isoformat() == "2026-07-06T06:58:00+00:00"
+    assert _entry_time({"published": "2026-08-22 03:06:03"}).isoformat() == "2026-08-22T03:06:03+00:00"

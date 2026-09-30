@@ -24,6 +24,8 @@ _TR_DATE = re.compile(r"(\d{1,2})[ .]+([A-Za-zÇĞİÖŞÜçğıöşü]{3,})[ .]
 _NUM_DATE = re.compile(r"(\d{1,2})\.(\d{1,2})\.(\d{4})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?")
 
 
+_EN_MON = {m: i for i, m in enumerate("jan feb mar apr may jun jul aug sep oct nov dec".split(), 1)}
+_EN_DATE = re.compile(r"^\s*([A-Za-z]{3})[a-z]*\.? (\d{1,2}), (\d{4}) (\d{1,2}):(\d{2})")
 _ISO_NAIVE = re.compile(r"^\s*(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?\s*$")
 
 
@@ -56,6 +58,10 @@ def _entry_time(e) -> datetime | None:
         if m:
             y, mo, d, h, mi, se = (int(x) if x else 0 for x in m.groups())
             return datetime(y, mo, d, h, mi, se, tzinfo=UTC)
+        m = _EN_DATE.match(v or "")                  # "Jul 06, 2026 06:58 GMT" (Investing analiz akışları)
+        if m and m.group(1)[:3].lower() in _EN_MON:
+            return datetime(int(m.group(3)), _EN_MON[m.group(1)[:3].lower()], int(m.group(2)),
+                            int(m.group(4)), int(m.group(5)), tzinfo=UTC)
         d = parse_tr_date(v)
         if d:
             return d.astimezone(UTC)
