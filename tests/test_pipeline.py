@@ -94,3 +94,17 @@ def test_old_data_version_is_reset(sandbox, monkeypatch):
     pipeline.run()
     assert json.loads((sandbox / "feed.json").read_text())["items"] == []
     assert json.loads((sandbox / "state.json").read_text())["version"] == pipeline.DATA_VERSION
+
+
+def test_telegram_hello_sent_once(sandbox, monkeypatch):
+    from radar import http as rhttp
+    calls = []
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "t")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "1")
+    monkeypatch.setattr(rhttp, "post", lambda url, **kw: calls.append(kw["json"]["text"]) or object())
+    monkeypatch.setattr(pipeline, "COLLECTORS", [("fake", lambda ctx: [])])
+    pipeline.run()
+    pipeline.run()
+    assert len(calls) == 1 and "bağlandı" in calls[0]
+    feed = json.loads((sandbox / "feed.json").read_text())
+    assert feed["sources"][-1]["name"] == "Telegram" and feed["sources"][-1]["ok"] is True

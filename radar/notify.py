@@ -62,3 +62,23 @@ def send(items: list[Item], cfg: dict) -> int:
         sent += r is not None
     log.info("Telegram: %d bildirim", sent)
     return sent
+
+
+def send_hello(summary: dict, ai_model: str | None) -> bool:
+    """Telegram bağlantısını doğrulamak için ilk seferde bir kez gönderilen mesaj."""
+    token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    if not token or not chat:
+        return False
+    site = os.environ.get("SITE_URL")
+    text = ("✅ <b>Piyasa Radarı bağlandı</b>\n\n"
+            f"Bu turda {summary.get('collected', 0)} kayıt tarandı, {summary.get('new', 0)} yeni kayıt, "
+            f"{summary.get('analyzed', 0)} AI değerlendirmesi.\n"
+            f"AI: {html.escape(ai_model) if ai_model else 'kapalı (ANTHROPIC_API_KEY yok)'}\n\n"
+            "Bundan sonra yalnızca güçlü sinyaller gelecek (ayarlar: config/settings.yml → notify)."
+            + (f'\n<a href="{html.escape(site)}">Paneli aç</a>' if site else ""))
+    r = http.post(f"https://api.telegram.org/bot{token}/sendMessage", json={
+        "chat_id": chat, "text": text, "parse_mode": "HTML", "disable_web_page_preview": True,
+    }, retries=1)
+    if r is None:
+        log.warning("Telegram test mesajı gönderilemedi (token ya da chat id hatalı olabilir)")
+    return r is not None

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import unicodedata
 from datetime import timedelta
@@ -165,13 +166,32 @@ def run() -> dict:
 
     STATE.write_text(json.dumps({
         "version": DATA_VERSION,
+        "telegram_hello": state.get("telegram_hello"),
         "last_run": iso(now_utc()),
         "seen": list(seen_ids)[-8000:],
         "seen_keys": list(seen_keys)[-8000:],
     }, ensure_ascii=False), encoding="utf-8")
 
     # 6) Bildir
+    state_extra: dict = {}
+    tg_n0 = len(http.FAILURES)
     sent = notify.send([i for i in new if i.analysis], settings.get("notify") or {})
     summary = {"collected": len(collected), "new": len(new), "analyzed": analyzer.used, "notified": sent}
+    if not state.get("telegram_hello") and notify.send_hello(summary, analyzer.model if analyzer.enabled else None):
+        state_extra["telegram_hello"] = iso(now_utc())
+    tg_fail = http.FAILURES[tg_n0:]
+    tg_entry = {"name": "Telegram", "ok": not tg_fail, "count": sent}
+    if tg_fail:
+        tg_entry["error"] = "; ".join(f"{h}: {w}" for h, w in tg_fail)[:200]
+    elif not (os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID")):
+        tg_entry["warnings"] = ["TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID tanımlı değil"]
+    status.append(tg_entry)
+    feed_doc = json.loads(FEED.read_text(encoding="utf-8"))
+    feed_doc["sources"] = status
+    FEED.write_text(json.dumps(feed_doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    if state_extra:
+        st = json.loads(STATE.read_text(encoding="utf-8"))
+        st.update(state_extra)
+        STATE.write_text(json.dumps(st, ensure_ascii=False), encoding="utf-8")
     log.info("Özet: %s", summary)
     return summary
