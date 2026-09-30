@@ -54,7 +54,8 @@
     return [...own, ...aff];
   };
   const isSignal = a => a && a.sentiment !== "neutral" && a.confidence >= 70 && a.materiality !== "low";
-  const isNoise = it => !it.analysis || it.analysis.materiality === "low" || it.tier === 3 || ageMin(it.published) > 1440;
+  const isNoise = it => !it.analysis || it.analysis.materiality === "low"
+    || (it.tier === 3 && it.analysis.materiality !== "high") || ageMin(it.published) > 1440;
   const impact = it => {
     const a = it.analysis;
     if (!a) return 0;
