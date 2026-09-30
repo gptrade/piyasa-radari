@@ -48,7 +48,7 @@
   // ─────────────────────────────── durum
   const ROUTES = {
     makro: { title: "Makro Veri", sub: "Haftalık makroekonomik göstergeler · ALCO paneli", view: "#view-makro", market: false },
-    sinyal: { title: "Sinyal Takip", sub: "BIST ve ABD haber, bildirim ve sosyal medya sinyalleri · AI değerlendirmeli", view: "#view-sinyal", market: true },
+    sinyal: { title: "Sinyal Takip", sub: "", view: "#view-sinyal", market: true },
     "geri-alim": { title: "Şirket Geri Alım", sub: "KAP pay geri alım bildirimleri · Borsa İstanbul", view: "#view-geri-alim", market: true },
   };
   const ALIAS = { alco: "makro", sinyaller: "sinyal", "geri-alimlar": "geri-alim" };
@@ -114,6 +114,7 @@
     $$(".nav-item").forEach(a => a.dataset.route === route ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
     $("#pageTitle").textContent = ROUTES[route].title;
     $("#pageSub").textContent = ROUTES[route].sub;
+    $("#pageSub").hidden = !ROUTES[route].sub;
     document.title = `${ROUTES[route].title} · Piyasa Radarı`;
     $("#marketSec").hidden = !ROUTES[route].market;
     const h = "#" + route;

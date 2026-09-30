@@ -16,7 +16,7 @@
   };
   const TYPE = { disclosure: "Bildirim", news: "Haber", social: "Sosyal", regulator: "SPK", macro: "Makro", report: "Rapor" };
   const TIER = { 1: "Resmi / birincil kaynak", 2: "Yerleşik finans medyası", 3: "Diğer / sosyal" };
-  const PAGE = 100;
+  const PAGE = 10;                         // tablo 10'ar kayıtla açılır; sağ şerit / ısı haritası aşağıda kalmasın
 
   const state = {
     feed: null, digest: null, macro: null, prices: {}, loading: true, error: null,
@@ -660,20 +660,17 @@
     const box = $("#typeChips");
     const items = state.feed.items.filter(inMarket);
     const n = t => items.filter(i => i.source_type === t).length;
-    const act = activeFilters();
-    box.innerHTML = `<span class="chip-label" id="chipLbl">Kaynak türü</span>` + Object.entries(TYPE).map(([k, l]) =>
-      `<button type="button" class="chip" data-type="${k}" aria-pressed="${state.types.has(k)}">${CK}${l} <span class="n">${fmt.int(n(k))}</span></button>`).join("") +
-      `<button type="button" class="link-btn" id="clearAll" ${act ? "" : "disabled"}>Filtreleri temizle${act ? ` (${act})` : ""}</button>` + LEGEND_BTN();
+    box.innerHTML = Object.entries(TYPE).filter(([k]) => n(k) || state.types.has(k)).map(([k, l]) =>
+      `<button type="button" class="chip" data-type="${k}" aria-pressed="${state.types.has(k)}">${CK}${l} <span class="n">${fmt.int(n(k))}</span></button>`).join("");
     $$(".chip", box).forEach(b => b.onclick = () => {
       const t = b.dataset.type; state.types.has(t) ? state.types.delete(t) : state.types.add(t);
       state.limit = PAGE; render(); $(`#typeChips .chip[data-type="${t}"]`)?.focus();
     });
-    $("#clearAll").onclick = clearAll;
-    $("#legendBtn").onclick = () => { const open = $("#legend").hidden; $("#legend").hidden = !open; $("#legendBtn").setAttribute("aria-expanded", String(open)); };
+    const act = activeFilters(), c = $("#clearAll");
+    c.disabled = !act; c.textContent = act ? `Temizle (${act})` : "Temizle";
+    c.dataset.tip = act ? "Tüm filtreleri, aramayı ve hisse odağını temizle" : "";
+    $("#hideNoise").setAttribute("aria-pressed", String(state.hideNoise));
   }
-  const LEGEND_BTN = () => `<button type="button" class="btn btn-icon push" id="legendBtn" aria-expanded="${!$("#legend").hidden}" aria-controls="legend" aria-label="Simge açıklamaları" data-tip="Simge açıklamaları">
-    <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 8a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9v.7M10 13.8v.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-</button>`;
   function clearAll() {
     state.types.clear(); state.col = {}; state.q = ""; $("#q").value = "";
     state.ticker = null; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE;
@@ -717,11 +714,12 @@
     $("#sigCount").textContent = items.length ? `${fmt.int(shown.length)} / ${fmt.int(items.length)} kayıt gösteriliyor${items.length < total ? ` · toplam ${fmt.int(total)}` : ""}` : "";
     $("#moreBtn").hidden = shown.length >= items.length;
     $("#moreBtn").textContent = `${Math.min(PAGE, items.length - shown.length)} kayıt daha göster`;
+    $("#moreBtn").dataset.tip = `Kalan ${fmt.int(items.length - shown.length)} kayıt`;
     if (items.length) { st.innerHTML = ""; return; }
     const reason = state.view === "saved" && !state.saved.size ? ["Henüz kaydedilen sinyal yok", "Bir satırı açıp “Kaydedilenlere kaydet” düğmesine bas; kayıtlar bu tarayıcıda saklanır."]
       : state.view === "signals" && !activeFilters() ? ["Bu piyasada güçlü sinyal yok", "Güçlü sinyal: yön belirgin, güven ≥ %70 ve önem orta ya da yüksek."]
       : activeFilters() ? ["Bu filtrelere uyan kayıt yok", `${activeFilters()} filtre açık${state.hideNoise ? " ve soluk satırlar gizli" : ""}. Filtreleri gevşet ya da temizle.`]
-      : state.hideNoise ? ["Gösterilecek kayıt yok", "Tüm kayıtlar soluk (düşük önem, eski vb.). “Soluk satırları gizle” seçeneğini kapat."]
+      : state.hideNoise ? ["Gösterilecek kayıt yok", "Tüm kayıtlar soluk (düşük önem, eski vb.). “Solukları gizle” seçeneğini kapat."]
       : ["Bu piyasada kayıt yok", "Seçili piyasa için son taramalarda kayıt toplanmadı."];
     st.innerHTML = stateHTML({ kind: "empty", title: reason[0], msg: esc(reason[1]), action: activeFilters() ? "Filtreleri temizle" : null, actionId: "emptyClear" });
     $("#emptyClear")?.addEventListener("click", clearAll);
@@ -755,10 +753,20 @@
       render();
     });
     sh.radioKeys($("#viewSeg"));
-    const hn = $("#hideNoise"); hn.checked = state.hideNoise;
-    hn.onchange = () => { state.hideNoise = hn.checked; store.set("hideNoise", hn.checked); state.limit = PAGE; render(); };
+    $("#hideNoise").onclick = () => { state.hideNoise = !state.hideNoise; store.set("hideNoise", state.hideNoise); state.limit = PAGE; render(); };
+    $("#clearAll").onclick = clearAll;
+    // Simge açıklamaları: tablonun üzerinde açılan pencere (içerik kaymaz)
+    const lb = $("#legendBtn"), lg = $("#legend");
+    const setLegend = open => { lg.hidden = !open; lb.setAttribute("aria-expanded", String(open)); };
+    lb.onclick = e => { e.stopPropagation(); setLegend(lg.hidden); };
+    document.addEventListener("click", e => { if (!lg.hidden && !e.target.closest(".pop-wrap")) setLegend(false); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !lg.hidden) { setLegend(false); lb.focus(); } });
     let t; $("#q").oninput = e => { clearTimeout(t); t = setTimeout(() => { state.q = e.target.value.trim(); state.limit = PAGE; render(); }, 150); };
-    $("#moreBtn").onclick = () => { state.limit += PAGE; renderTable(); };
+    $("#moreBtn").onclick = () => {
+      const n = $$("#sigBody tr.row").length;
+      state.limit += PAGE; renderTable();
+      $$("#sigBody tr.row")[n]?.focus({ preventScroll: true });        // klavye kullanıcısı yeni gelen ilk satırda kalsın
+    };
 
     // Satırlar: tıkla / Enter / Boşluk ile aç-kapa; ↑ ↓ ile satırlar arasında gezin
     const toggle = tr => {

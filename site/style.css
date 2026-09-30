@@ -266,7 +266,7 @@ main:focus { outline: none; }
 .rail { grid-area: rail; display: flex; flex-direction: column; gap: var(--s-4); position: sticky; top: calc(var(--topbar-h) + var(--s-4)); }
 
 .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s-2) var(--s-5); font-size: var(--fs-sm); color: var(--text-2); }
-.legend dl { margin: 0; display: grid; grid-template-columns: 64px 1fr; gap: 6px var(--s-2); align-items: center; }
+.legend dl { margin: 0; display: grid; grid-template-columns: 92px 1fr; gap: 6px var(--s-2); align-items: center; }
 .legend dt { display: flex; justify-content: flex-start; }
 .legend dd { margin: 0; }
 .legend h3 { font-size: var(--fs-xs); color: var(--text-3); font-weight: var(--fw-semibold); margin-bottom: 6px; }
@@ -541,3 +541,19 @@ main:focus { outline: none; }
 .bb-tbl th.num .th-sort { text-align: right; }
 .bb-tbl th .arr { display: inline-block; }
 .nav-item > span:not(.badge) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* ───────── Sinyal Takip: filtre satırı ve açıklama penceresi ───────── */
+.filter-row { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+.chips-scroll { flex: 0 1 auto; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; min-width: 0; padding: 2px; margin: -2px; }
+.chips-scroll::-webkit-scrollbar { display: none; }
+.filter-sep { width: 1px; height: 20px; background: var(--border-strong); flex: none; }
+.filter-row > .chip, .filter-row > .link-btn { flex: none; }
+.filter-row .pop-wrap { margin-left: auto; flex: none; }
+.pop-wrap { position: relative; }
+.popover { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: min(760px, calc(100vw - 32px)); box-shadow: var(--shadow-2); max-height: 70vh; overflow-y: auto; }
+.sig-tools .toolbar .search { min-width: 180px; }
+@media (max-width: 767px) {
+  .filter-row { flex-wrap: wrap; row-gap: var(--s-2); }
+  .chips-scroll { flex: 1 1 100%; }
+  .filter-sep { display: none; }
+}

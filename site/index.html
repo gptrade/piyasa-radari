@@ -8,8 +8,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="tokens.css?v=20261001b">
-<link rel="stylesheet" href="style.css?v=20261001b">
+<link rel="stylesheet" href="tokens.css?v=20261001c">
+<link rel="stylesheet" href="style.css?v=20261001c">
 <script>
   // Kayıtlı tema ve kenar çubuğu durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
   (function () {
@@ -139,13 +139,20 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 <input id="q" type="search" placeholder="Hisse, olay, kaynak ara…" autocomplete="off" aria-label="Sinyallerde ara">
               </div>
-              <label class="switch"><input type="checkbox" id="hideNoise"> Soluk satırları gizle</label>
-
             </div>
-            <div class="chips" role="group" aria-label="Kaynak türü filtresi" id="typeChips">
-              <span class="chip-label">Kaynak türü</span>
+            <div class="filter-row">
+              <div class="chips chips-scroll" role="group" aria-label="Kaynak türü filtresi" id="typeChips"></div>
+              <span class="filter-sep" aria-hidden="true"></span>
+              <button type="button" class="chip" id="hideNoise" aria-pressed="false" data-tip="AI'ın düşük güven, önemsiz, tekrar, eski ya da zayıf kaynak dediği satırları gizle">
+                <svg class="ck" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Solukları gizle</button>
+              <button type="button" class="link-btn" id="clearAll" disabled>Temizle</button>
+              <div class="pop-wrap">
+                <button type="button" class="btn btn-icon" id="legendBtn" aria-expanded="false" aria-controls="legend" aria-label="Simge açıklamaları" data-tip="Simge açıklamaları">
+                  <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 8a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9v.7M10 13.8v.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </button>
+                <div class="card legend popover" id="legend" role="dialog" aria-label="Simge açıklamaları" hidden></div>
+              </div>
             </div>
-            <div class="card legend" id="legend" hidden></div>
             <div class="banner" id="banner" hidden></div>
           </div>
 
@@ -207,9 +214,9 @@
 </div>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="shell.js?v=20261001b"></script>
-<script src="app.js?v=20261001b"></script>
-<script src="buybacks.js?v=20261001b"
+<script src="shell.js?v=20261001c"></script>
+<script src="app.js?v=20261001c"></script>
+<script src="buybacks.js?v=20261001c"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>
