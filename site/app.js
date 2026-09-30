@@ -553,7 +553,7 @@
     box.style.gridTemplateColumns = `repeat(${Math.ceil(n / rows)}, minmax(0, 1fr))`;
   }
 
-  // ─────────────────────────────── sağ şerit: Haber × Fiyat
+  // ─────────────────────────────── sağ şerit: Sinyal Haritası (haber yönü × fiyat)
   // Yatay: son 24 saatin net haber yönü (−1 … +1) · Dikey: bugünkü fiyat değişimi (%) · boyut: haber sayısı.
   // Sağ alt ve sol üst "ters" bölgeler: haber yönü ile fiyat ters (ısı haritasındaki ≠ ile aynı eşik).
   function scatterData() {
