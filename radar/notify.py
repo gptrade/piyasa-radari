@@ -26,19 +26,25 @@ def should_notify(item: Item, cfg: dict) -> bool:
 
 
 def format_message(item: Item, site_url: str | None) -> str:
+    """İlk satır panel satırıyla aynı: yön/güç · hisse · olay · önem. Altında ne / neden / risk."""
     a = item.analysis or {}
     e = html.escape
-    lines = [
-        f"<b>{ICON.get(a.get('sentiment'), '')}</b> · %{a.get('confidence')} güven · {e(a.get('materiality', ''))} önem",
-        f"<b>{e(' '.join('#' + t for t in (item.tickers or a.get('affected_tickers') or ['PiyasaGeneli'])))}</b>"
-        f" — {e(a.get('headline_tr') or item.title)}",
-        "",
-        e(a.get("summary", "")),
-    ]
-    if a.get("key_points"):
-        lines += [""] + [f"• {e(p)}" for p in a["key_points"][:3]]
-    if a.get("risks"):
-        lines += ["", f"⚠️ {e(a['risks'][0])}"]
+    n = 3 if a.get("confidence", 0) >= 80 else 2 if a.get("confidence", 0) >= 60 else 1
+    arrows = {"bullish": "🟢 " + "▲" * n, "bearish": "🔴 " + "▼" * n}.get(a.get("sentiment"), "⚪ ●")
+    dots = {"low": "●○○", "medium": "●●○", "high": "●●●"}.get(a.get("materiality"), "")
+    tks = " ".join("#" + t for t in (item.tickers or a.get("affected_tickers") or ["PiyasaGeneli"]))
+    label = a.get("event_label") or a.get("category") or ""
+    lines = [f"<b>{arrows} {e(tks)}</b>" + (f" · <b>{e(label)}</b>" if label else "")
+             + f" · {dots} · %{a.get('confidence')}", ""]
+    what = a.get("what") or a.get("headline_tr") or item.title
+    lines.append(f"<b>Ne oldu:</b> {e(what)}")
+    if a.get("why"):
+        lines.append(f"<b>Neden önemli:</b> {e(a['why'])}")
+    risk = a.get("risk") or (a.get("risks") or [None])[0]
+    if risk:
+        lines.append(f"⚠️ <b>Risk:</b> {e(risk)}")
+    if not a.get("why") and a.get("summary"):
+        lines += ["", e(a["summary"])]
     lines += ["", f"<i>{e(item.source)}</i>"]
     if item.url:
         lines.append(f'<a href="{e(item.url)}">Kaynak</a>' +

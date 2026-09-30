@@ -8,7 +8,8 @@ import re
 import unicodedata
 from datetime import timedelta
 
-from . import http, notify, prices
+from . import digest, http, notify, prices
+from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import Item, iso, now_utc, parse_iso
@@ -61,7 +62,9 @@ def price_context(item: Item, px: dict[str, dict]) -> str:
     for t in item.tickers:
         p = px.get(t)
         if p:
-            parts.append(f"{t}: son {p['last']} {p['currency']}, günlük %{p.get('change_pct')}")
+            ta = prices.ta_context(p)
+            parts.append(f"{t}: son {p['last']} {p['currency']}, günlük %{p.get('change_pct')}"
+                         + (f"; teknik: {ta}" if ta else ""))
     return "; ".join(parts)
 
 
@@ -108,9 +111,15 @@ def run() -> dict:
 
     # 2) Tekilleştir
     new: list[Item] = []
+    dup_hits: dict[str, list[str]] = {}          # tekrar eden haber → hangi kaynaklarda
     for it in sorted(collected, key=lambda i: (PRIORITY.get(i.source_type, 9), i.published)):
         k = title_key(it)
-        if it.id in seen_ids or (it.source_type in ("news", "social") and k in seen_keys):
+        it.extra["k"] = k
+        if it.id in seen_ids:
+            continue
+        if it.source_type in ("news", "social") and k in seen_keys:
+            dup_hits.setdefault(k, []).append(it.source.split(" · ")[0])
+            seen_ids[it.id] = None
             continue
         seen_ids[it.id] = None
         seen_keys[k] = None
@@ -149,10 +158,17 @@ def run() -> dict:
     horizon = now_utc() - timedelta(days=3)
     for d in items:
         d.get("extra", {}).pop("full_text", None)
+        k = d.get("extra", {}).get("k")
+        if k in dup_hits:
+            d["dups"] = d.get("dups", 0) + len(dup_hits[k])
+            srcs = d.get("dup_sources", []) + [x for x in dup_hits[k] if x not in d.get("dup_sources", [])]
+            d["dup_sources"] = srcs[:6]
+        enrich(d)
         if parse_iso(d["published"]) >= horizon and d.get("tickers"):
             p = px.get(d["tickers"][0])
             if p:
-                d["reaction"] = prices.reaction(d["published"], p)
+                idx = px.get(prices.INDEXES[d.get("market", "BIST")].symbol) if d.get("market") in prices.INDEXES else None
+                d["reaction"] = prices.reaction(d["published"], p, idx)
     items.sort(key=lambda d: d["published"], reverse=True)
     items = items[: int((settings.get("feed") or {}).get("keep_items", 600))]
 
@@ -175,6 +191,16 @@ def run() -> dict:
         "seen": list(seen_ids)[-8000:],
         "seen_keys": list(seen_keys)[-8000:],
     }, ensure_ascii=False), encoding="utf-8")
+
+    # 5b) Dönemsel özet (son 2 saat; az sinyal varsa pencere genişler)
+    try:
+        dg = digest.update(analyzer, items, px)
+        if dg is not None:
+            feed_doc = json.loads(FEED.read_text(encoding="utf-8"))
+            feed_doc["ai"] = analyzer.status()
+            FEED.write_text(json.dumps(feed_doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    except Exception:
+        log.exception("Özet hatası")
 
     # 6) Bildir
     state_extra: dict = {}

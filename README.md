@@ -51,8 +51,10 @@ değerlendirilir (yön, güven, önem, ufuk, gerekçe, riskler), haber anından 
 - **Ayarlar:** `config/settings.yml` — model, çalıştırma başına AI limiti, bildirim eşikleri, kaynaklar.
   Daha derin yorum için `model: claude-sonnet-5` yapılabilir (daha pahalı).
 - **Rapor analizi:** aracı kurum / değerleme raporlarını `inbox/` klasörüne yükle. Ayrıntı: `inbox/README.md`.
-- **Panel:** piyasa (BIST/ABD), tür, yön ve güven filtresi; hisseye dokununca sadece o hisse;
-  kartlarda 1G/1H/1A grafik, haber anı işareti ve 15 dk / 1 sa / 1 gün tepkisi. Kaydedilenler tarayıcıda tutulur.
+- **Panel:**
+  - **Sağ kolon (ilk bakış):** son 2 saatin AI özeti ve en fazla 2 ana fikir (AL / SAT / İZLE; fikre tıklayınca dayandığı sinyaller listelenir), izleme listesi ısı haritası (renk = bugünkü fiyat, ok = son 24 sa haber yönü, `≠` = ikisi ters), sinyal haritası (yatay konum = net yön, boyut = haber sayısı, renk = önem, çizgi = aynı haberde geçen hisseler; üzerine gelince haberler, tıklayınca filtre).
+  - **Sinyal listesi:** her kayıt tek satır — `▲▲ AMD · A · Analist AL · ●●○ · +1.2% · ② · ×4 · 16dk` (yön ve güç, hisse, olay türü, olay, önem, haberden beri fiyat, kaynak kalitesi ① resmi ② finans medyası ③ diğer, tekrar sayısı, süre). Tıklayınca açılır: ne oldu / neden önemli / risk, haber anı çizgili grafik, tepki çipi (`+1.2% · 3× hacim · endeks +0.9%`), teknik görünüm (trend, RSI, 52 hafta konumu, hacim, MACD/ortalama sinyalleri).
+  - Önemsiz, üçüncü sınıf kaynaklı ve 24 saatten eski kayıtlar soluk; "Gürültüyü gizle" ile tamamen saklanır. "Önem" sıralaması önem × güven × kaynak × tazeliğe göre dizer.
 
 ## Maliyet
 

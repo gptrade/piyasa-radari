@@ -4,107 +4,123 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Piyasa Radarı</title>
-<meta name="description" content="BIST ve ABD hisseleri için haber, bildirim, sosyal medya ve rapor akışı; Claude değerlendirmesi ve fiyat tepkisi.">
+<meta name="description" content="BIST ve ABD hisseleri için haber, bildirim, sosyal medya ve rapor sinyalleri; AI değerlendirmesi, dönem özeti, teknik görünüm ve fiyat tepkisi.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="shell">
-  <aside class="side" id="side">
+
+  <!-- ───────────── sol: gezinme ───────────── -->
+  <aside class="side">
     <div class="brand">
       <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" class="brand-bg"/><circle cx="16" cy="16" r="9" fill="none" stroke="#fff" stroke-width="2"/><circle cx="16" cy="16" r="3" fill="#fff"/><path d="M16 16 L24 9" stroke="#fff" stroke-width="2"/></svg>
-      <div><b>Piyasa Radarı</b><small>BIST · ABD haber istihbaratı</small></div>
+      <div><b>Piyasa Radarı</b><small>BIST · ABD sinyal paneli</small></div>
     </div>
 
-    <div class="seg" role="tablist" id="marketSeg">
+    <div class="seg" id="marketSeg" role="group" aria-label="Piyasa">
       <button data-market="ALL" class="on">Tümü</button>
       <button data-market="BIST">BIST</button>
       <button data-market="US">ABD</button>
     </div>
 
-    <nav class="nav" id="views">
+    <nav class="nav" id="views" aria-label="Görünüm">
       <p class="label">Görünüm</p>
       <button data-view="feed" class="on"><span>Akış</span><em id="cntFeed">0</em></button>
       <button data-view="signals"><span>Güçlü sinyaller</span><em id="cntSig">0</em></button>
       <button data-view="saved"><span>Kaydedilenler</span><em id="cntSaved">0</em></button>
     </nav>
 
-    <div class="nav" id="watchBox">
-      <p class="label">İzleme listesi</p>
-      <div id="watch"></div>
-    </div>
-
     <div class="nav" id="macroBox" hidden>
       <p class="label">Makro (EVDS)</p>
-      <div id="macroList" class="macro side-macro"></div>
+      <div id="macroList" class="macro"></div>
+    </div>
+
+    <div class="nav legend-box" id="legendBox">
+      <p class="label">Satır nasıl okunur</p>
+      <dl class="legend">
+        <dt><span class="dir up">▲▲▲</span></dt><dd>Yön · ok sayısı = AI güveni</dd>
+        <dt><span class="dots">●●○</span></dt><dd>Önem (düşük · orta · yüksek)</dd>
+        <dt><span class="tier">①</span></dt><dd>Kaynak: ① resmi ② finans medyası ③ diğer</dd>
+        <dt><span class="dup">×4</span></dt><dd>Aynı haber başka kaynaklarda</dd>
+        <dt><span class="px pos">+1.2%</span></dt><dd>Haberden bu yana fiyat</dd>
+      </dl>
     </div>
 
     <div class="nav" id="srcBox">
       <p class="label">Kaynak durumu</p>
       <div id="sources" class="sources"></div>
       <p class="meta" id="gen"></p>
+      <p class="src-warn" id="cfgWarn" hidden></p>
     </div>
   </aside>
 
+  <!-- ───────────── orta: sinyal listesi ───────────── -->
   <main class="main">
     <header class="bar">
       <div class="search">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" placeholder="Hisse, başlık, kaynak ara…" autocomplete="off">
+        <input id="q" type="search" placeholder="Hisse, olay, kaynak ara…" autocomplete="off" aria-label="Ara">
       </div>
-      <div class="chips" id="typeChips">
+      <div class="chips" id="sentChips" role="group" aria-label="Yön">
+        <button data-sent="bullish" class="up">▲ Yükseliş</button>
+        <button data-sent="bearish" class="down">▼ Düşüş</button>
+        <button data-sent="neutral">● Nötr</button>
+      </div>
+      <div class="chips" id="typeChips" role="group" aria-label="Kaynak türü">
         <button data-type="disclosure">Bildirim</button>
         <button data-type="news">Haber</button>
         <button data-type="social">Sosyal</button>
-        <button data-type="report">Rapor</button>
         <button data-type="regulator">SPK</button>
         <button data-type="macro">Makro</button>
+        <button data-type="report">Rapor</button>
       </div>
-      <div class="chips" id="sentChips">
-        <button data-sent="bullish" class="up">Yükseliş</button>
-        <button data-sent="bearish" class="down">Düşüş</button>
-        <button data-sent="neutral">Nötr</button>
+      <div class="seg small" id="sortSeg" role="group" aria-label="Sıralama">
+        <button data-sort="time" class="on">Zaman</button>
+        <button data-sort="impact">Önem</button>
       </div>
-      <label class="conf">Güven ≥ <output id="confOut">0</output>
-        <input id="conf" type="range" min="0" max="90" step="10" value="0">
-      </label>
+      <label class="toggle"><input type="checkbox" id="hideNoise"> Gürültüyü gizle</label>
     </header>
 
     <div id="banner" class="banner" hidden></div>
+    <div class="list-head" aria-hidden="true">
+      <span>Yön</span><span>Hisse</span><span></span><span>Olay</span><span>Önem</span><span>Tepki</span><span>Kyn.</span><span></span><span>Zaman</span>
+    </div>
     <section id="list" class="list" aria-live="polite"></section>
     <p id="empty" class="empty" hidden>Bu filtrelere uyan kayıt yok.</p>
   </main>
+
+  <!-- ───────────── sağ: özet, ısı haritası, sinyal haritası ───────────── -->
+  <aside class="rail">
+    <section class="panel" id="digest" aria-label="Dönem özeti"></section>
+
+    <section class="panel" aria-labelledby="hmTitle">
+      <div class="panel-head">
+        <h3 id="hmTitle">İzleme listesi</h3>
+        <span class="hint">renk: bugünkü fiyat · ok: son 24 sa haber yönü</span>
+      </div>
+      <div id="heatmap" class="heatmap"></div>
+      <p class="hm-legend"><span class="hm-sw neg"></span>düşüş <span class="hm-sw mid"></span>yatay <span class="hm-sw pos"></span>yükseliş <span class="hm-dis">≠</span> haber ile fiyat ters</p>
+    </section>
+
+    <section class="panel" aria-labelledby="bmTitle">
+      <div class="panel-head">
+        <h3 id="bmTitle">Sinyal haritası</h3>
+        <span class="hint">son 24 saat</span>
+      </div>
+      <svg id="bubbles" class="bubbles" role="img" aria-label="Hisse bazında sinyal haritası"></svg>
+      <p class="bm-legend">
+        <span>◀ SAT · İZLE · AL ▶ (yatay konum = net haber yönü)</span>
+        <span>boyut = haber sayısı · renk = en yüksek önem:
+          <i class="imp i1"></i>düşük <i class="imp i2"></i>orta <i class="imp i3"></i>yüksek · çizgi = aynı haberde geçenler</span>
+      </p>
+    </section>
+  </aside>
 </div>
 
-<template id="cardTpl">
-  <article class="card">
-    <div class="c-news">
-      <div class="c-top"><span class="tickers"></span><span class="ago"></span><button class="save" title="Kaydet" aria-label="Kaydet"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button></div>
-      <h2><a class="title" target="_blank" rel="noopener"></a></h2>
-      <p class="desc"></p>
-      <div class="c-foot"><span class="src"></span><span class="type"></span></div>
-    </div>
-    <div class="c-ai">
-      <div class="ai-head"><span class="ai-label">Claude değerlendirmesi</span><span class="mat"></span></div>
-      <div class="ai-row"><span class="sent"></span><span class="confv"></span></div>
-      <p class="ai-sum"></p>
-      <ul class="ai-points"></ul>
-      <p class="ai-risk"></p>
-      <div class="meter"><i></i></div>
-      <div class="ai-foot"><span class="hor"></span><span class="cat"></span></div>
-    </div>
-    <div class="c-px">
-      <div class="px-head"><span class="px-sym"></span><div class="px-rng"><button data-r="1G" class="on">1G</button><button data-r="1H">1H</button><button data-r="1A">1A</button></div></div>
-      <div class="px-row"><b class="px-last"></b><span class="px-chg"></span></div>
-      <svg class="spark" viewBox="0 0 240 70" preserveAspectRatio="none"></svg>
-      <div class="react"></div>
-      <p class="px-time"></p>
-    </div>
-  </article>
-</template>
-
+<div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="app.js"></script>
 </body>
 </html>

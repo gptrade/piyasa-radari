@@ -55,6 +55,12 @@ TOOL = {
                          "description": "Kısa kategori: ör. geri alım, finansal sonuç, ihale, rehberlik, "
                                         "içeriden işlem, analist notu, makro, söylenti"},
             "headline_tr": {"type": "string", "description": "Tek cümlelik net başlık"},
+            "event_label": {"type": "string",
+                            "description": "Olayın en fazla 3 kelimelik etiketi, ör. 'Analist AL', "
+                                           "'Hedef fiyat ↑', 'Geri alım', 'Brüt takas', 'Bilanço güçlü', 'Faiz sabit'"},
+            "what": {"type": "string", "description": "Ne oldu? En fazla 8 kelime"},
+            "why": {"type": "string", "description": "Neden önemli? En fazla 8 kelime"},
+            "risk": {"type": "string", "description": "Ana risk / tersine döndürebilecek şey. En fazla 8 kelime"},
             "summary": {"type": "string", "description": "2-3 cümlelik değerlendirme"},
             "key_points": {"type": "array", "items": {"type": "string"}, "maxItems": 4},
             "risks": {"type": "array", "items": {"type": "string"}, "maxItems": 3,
@@ -64,7 +70,8 @@ TOOL = {
                         "description": "Metinde geçen önemli rakamlar: ör. {'hedef fiyat': '45 TL'}"},
         },
         "required": ["sentiment", "confidence", "materiality", "horizon", "category",
-                     "headline_tr", "summary", "key_points", "risks", "affected_tickers"],
+                     "headline_tr", "event_label", "what", "why", "risk", "summary", "key_points",
+                     "risks", "affected_tickers"],
     },
 }
 
@@ -72,6 +79,12 @@ TOOL = {
 SENTIMENTS = {"bullish", "bearish", "neutral"}
 LEVELS = {"low", "medium", "high"}
 HORIZONS = {"intraday", "days", "weeks", "long_term"}
+
+
+def _words(v, n: int, chars: int) -> str:
+    """Kısa alanları sınırla: en fazla n kelime / chars karakter."""
+    w = str(v or "").strip().rstrip(".").split()
+    return " ".join(w[:n])[:chars]
 
 
 def normalize(raw: dict) -> dict | None:
@@ -97,6 +110,10 @@ def normalize(raw: dict) -> dict | None:
         "category": str(raw.get("category") or "")[:60],
         "headline_tr": str(raw.get("headline_tr") or "")[:200],
         "summary": str(raw.get("summary") or "")[:800],
+        "event_label": _words(raw.get("event_label"), 4, 40),
+        "what": _words(raw.get("what"), 10, 90),
+        "why": _words(raw.get("why"), 10, 90),
+        "risk": _words(raw.get("risk"), 10, 90),
         "key_points": lst(raw.get("key_points"), 4),
         "risks": lst(raw.get("risks"), 3),
         "affected_tickers": [t.upper() for t in lst(raw.get("affected_tickers"), 8)],
@@ -126,10 +143,13 @@ class ClaudeProvider:
         return self._client
 
     def assess(self, system: str, prompt: str) -> dict | None:
+        return self.ask(system, prompt, TOOL)
+
+    def ask(self, system: str, prompt: str, tool: dict, fmt: str = "", max_tokens: int = 900) -> dict | None:
         try:
             msg = self.client.messages.create(
-                model=self.model, max_tokens=900, system=system,
-                tools=[TOOL], tool_choice={"type": "tool", "name": TOOL["name"]},
+                model=self.model, max_tokens=max_tokens, system=system,
+                tools=[tool], tool_choice={"type": "tool", "name": tool["name"]},
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as e:
@@ -154,7 +174,9 @@ GEMINI_FORMAT = """
 Yanıtını SADECE aşağıdaki alanlara sahip tek bir JSON nesnesi olarak ver (başka metin yok):
 {"sentiment": "bullish|bearish|neutral", "confidence": 0-100 tam sayı,
  "materiality": "low|medium|high", "horizon": "intraday|days|weeks|long_term",
- "category": "kısa kategori", "headline_tr": "tek cümle başlık", "summary": "2-3 cümle",
+ "category": "kısa kategori", "headline_tr": "tek cümle başlık",
+ "event_label": "en fazla 3 kelime, ör. Analist AL", "what": "ne oldu (≤8 kelime)",
+ "why": "neden önemli (≤8 kelime)", "risk": "ana risk (≤8 kelime)", "summary": "2-3 cümle",
  "key_points": ["en fazla 4 madde"], "risks": ["en fazla 3 madde"],
  "affected_tickers": ["HİSSE KODLARI"], "figures": {"etiket": "değer"}}"""
 
@@ -190,12 +212,15 @@ class GeminiProvider:
         self.key = key
 
     def assess(self, system: str, prompt: str) -> dict | None:
+        return self.ask(system, prompt, TOOL, GEMINI_FORMAT)
+
+    def ask(self, system: str, prompt: str, tool: dict, fmt: str = "", max_tokens: int = 1200) -> dict | None:
         import requests
         body = {
-            "systemInstruction": {"parts": [{"text": system + "\n" + GEMINI_FORMAT}]},
+            "systemInstruction": {"parts": [{"text": system + "\n" + fmt}]},
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2,
-                                 "maxOutputTokens": 1200},
+                                 "maxOutputTokens": max_tokens},
         }
         last = ""
         for model in list(self.models):
@@ -315,4 +340,23 @@ class Analyzer:
             out["provider"] = p.name
             self.counts[p.name] = self.counts.get(p.name, 0) + 1
             return out
+        return None
+
+    def ask_json(self, system: str, prompt: str, tool: dict, fmt: str, max_tokens: int = 1500) -> dict | None:
+        """Genel amaçlı yapılandırılmış istek (ör. dönemsel özet); aynı sağlayıcı sırası ve yedekleme."""
+        for p in self.providers:
+            if p.name in self.down:
+                continue
+            try:
+                out = p.ask(system, prompt, tool, fmt, max_tokens)
+            except ProviderDown as e:
+                self.down[p.name] = str(e)[:200]
+                self._err(f"{p.name} devre dışı: {e}")
+                continue
+            except Exception as e:
+                self._err(f"{p.name}: {type(e).__name__}: {str(e)[:140]}")
+                continue
+            if isinstance(out, dict):
+                out["_provider"], out["_model"] = p.name, p.model
+                return out
         return None
