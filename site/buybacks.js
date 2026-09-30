@@ -57,6 +57,40 @@
       if (r.price > MAX_PRICE || (by.get(r.t).length >= 2 && m && (r.price / m > 10 || r.price / m < 0.1))) { r.suspect = true; r.amount = null; }
     });
   }
+  // Program bildirimi alanları: azami pay (nominal ₺ ≈ adet), ayrılan azami fon (₺), süre
+  const trNum = v => { if (v == null) return null; const n = parseFloat(String(v).replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".")); return isFinite(n) && n > 0 ? n : null; };
+  function programMap(rows) {
+    const m = new Map();
+    rows.filter(r => r.kind !== "tx").sort((a, b) => a.pub - b.pub).forEach(r => {
+      const f = r.fields || {};
+      const maxQty = trNum(f["geri alıma konu azami pay miktarı (nominal tl)"] ?? f["geri alıma konu pay miktarı (nominal tl)"]);
+      const maxFund = trNum(f["geri alım için ayrılan fonun toplam tutarı (tl)"] ?? f["ödenecek azami tutar (tl)"]);
+      const dur = (f["varsa geri alım programının uygulanacağı süre"] || "").trim();
+      const ended = r.kind === "end" || /evet/i.test(f["geri alım programı sonlandı mı?"] || "");
+      const prev = m.get(r.t) || {};
+      if (ended) { m.set(r.t, { ...prev, ended: r.pub, endUrl: r.url }); return; }
+      if (maxQty || maxFund || dur || r.kind === "program")
+        m.set(r.t, { pub: r.pub, url: r.url, type: r.type, maxQty: maxQty ?? prev.maxQty ?? null, maxFund: maxFund ?? prev.maxFund ?? null, dur: dur || prev.dur || "", ended: null });
+    });
+    return m;
+  }
+  // Süre metnini kısalt: "Yönetim kurulu karar tarihinden itibaren bir yıl" → "1 yıl", "3 YIL" → "3 yıl", "18 (on sekiz) ay" → "18 ay"
+  const WORDN = { bir: 1, iki: 2, üç: 3, dört: 4, beş: 5, altı: 6, yedi: 7, sekiz: 8, dokuz: 9, on: 10, "on iki": 12, "on sekiz": 18, "yirmi dört": 24, "otuz altı": 36 };
+  function durShort(d) {
+    if (!d) return "";
+    const t = d.toLocaleLowerCase("tr").replace(/\s+/g, " ").trim();
+    const end = /(\d{2})[./](\d{2})[./](\d{4}).*sona er/.exec(t);
+    if (end) return `${end[1]}.${end[2]}.${end[3]} bitiş`;
+    if (/genel kurul(?:\S*)? tarihine kadar/.test(t)) return "ilk GK'ya kadar";
+    const yrs = /(\d{4})\s*[-–]\s*(\d{4})/.exec(t);
+    if (yrs) return `${yrs[1]}–${yrs[2]}`;
+    const u = t.replace(/\([^)]*\)/g, " ");
+    const m = /(?<![\p{L}\d])(?:(\d+)\s*|(on iki|on sekiz|yirmi dört|otuz altı|bir|iki|üç|dört|beş|altı|yedi|sekiz|dokuz|on)\s+)(yıl|sene|ay|gün)/u.exec(u);
+    if (!m) return t.length > 18 ? t.slice(0, 17) + "…" : t;
+    return `${m[1] || WORDN[m[2]]} ${m[3] === "sene" ? "yıl" : m[3]}`;
+  }
+
+
   async function getJSON(url, bust = true) {
     const r = await fetch(bust ? `${url}${url.includes("?") ? "&" : "?"}t=${Date.now()}` : url, { cache: "no-store" });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -77,6 +111,7 @@
     }
     S.rows = normalize(raw);
     flagOutliers(S.rows);
+    S.prog = programMap(S.rows);
     S.updated = S.rows.reduce((m, r) => (r.pub > m ? r.pub : m), new Date(0));
     S.loaded = true;
     sh.setUpdated("geri-alim", S.updated, { label: "Son KAP bildirimi" });
@@ -116,7 +151,16 @@
       o.tx.push(r);
       m.set(r.t, o);
     }
+    // dönemde program açıklayıp henüz işlem bildirmeyenler de tabloda görünsün
+    for (const r of rows) if (r.kind === "program" && !m.has(r.t)) m.set(r.t, { t: r.t, name: r.name, n: 0, qty: 0, amount: 0, pq: 0, last: null, own: null, ownAt: null, tx: [], review: 0, suspect: 0 });
+    const cut = Date.now() - S.days * DAY;
     return [...m.values()].map(o => {
+      const pg = S.prog?.get(o.t);
+      o.pg = pg && !pg.ended ? pg : pg || null;
+      o.maxQty = pg && !pg.ended ? pg.maxQty : null;
+      o.maxFund = pg && !pg.ended ? pg.maxFund : null;
+      o.dur = pg && !pg.ended ? durShort(pg.dur) : "";
+      o.newProg = !!(pg && pg.pub >= cut && !pg.ended);
       o.avg = o.pq ? o.amount / o.pq : null;
       o.q = quote(o.t);
       o.ratio = o.q && o.avg ? o.q.last / o.avg : null;
@@ -206,7 +250,7 @@
   // ─────────────────────────────── çizim: tablo
   function table(agg, showRatio) {
     const w = watchSet();
-    const COLS = [["t", "Hisse"], ["name", "Şirket"], ["n", "İşlem", 1], ["qty", "Adet (bin)", 1], ["amount", "Tutar (mn ₺)", 1], ["avg", "Ort. fiyat (₺)", 1],
+    const COLS = [["t", "Hisse"], ["name", "Şirket"], ["maxQty", "Azami pay (bin)", 1], ["maxFund", "Azami fon (mn ₺)", 1], ["dur", "Süre"], ["n", "İşlem", 1], ["qty", "Adet (bin)", 1], ["amount", "Tutar (mn ₺)", 1], ["avg", "Ort. fiyat (₺)", 1],
       ...(showRatio ? [["ratio", "Güncel / Ort.", 1]] : []), ["own", "Sermaye payı (%)", 1], ["last", "Son işlem", 1]];
     const k = S.sort, dir = S.dir;
     agg.sort((a, b) => {
@@ -216,7 +260,8 @@
       if (vb == null) return -1;
       return (typeof va === "string" ? va.localeCompare(vb, "tr") : va - vb) * dir;
     });
-    const TIPS = { ratio: "Güncel fiyat ÷ ortalama geri alım fiyatı. 1'in üstü: şirket bugünkü fiyattan ucuza almış.", qty: "Dönemdeki toplam geri alınan pay (bin adet)", amount: "Fiyat × adet; şüpheli fiyatlı işlemler hariç" };
+    const TIPS = { maxQty: "Son program bildirimindeki geri alınabilecek azami pay (nominal ₺ ≈ adet, bin)",
+      maxFund: "Geri alım için ayrılan azami fon (ödenecek azami tutar)", dur: "Programın uygulanacağı süre", ratio: "Güncel fiyat ÷ ortalama geri alım fiyatı. 1'in üstü: şirket bugünkü fiyattan ucuza almış.", qty: "Dönemdeki toplam geri alınan pay (bin adet)", amount: "Fiyat × adet; şüpheli fiyatlı işlemler hariç" };
     const head = COLS.map(([c, l, num]) => `<th scope="col" class="${num ? "num" : ""}" aria-sort="${c === k ? (dir > 0 ? "ascending" : "descending") : "none"}">
       <button type="button" class="th-sort" data-c="${c}" ${TIPS[c] ? `data-tip="${esc(TIPS[c])}"` : ""}>${l}<span class="arr" aria-hidden="true">${c === k ? (dir > 0 ? "▲" : "▼") : "▼"}</span></button></th>`).join("");
     const body = agg.map(o => {
@@ -227,10 +272,13 @@
         `Güncel ${fmt.num(o.q.last)} ₺ (${o.q.src}) ÷ ort. ${fmt.num(o.avg)} ₺ = ${fmt.num(o.ratio)}<br>Ortalamaya göre ${fmt.pct((o.ratio - 1) * 100)}`;
       return `<tr class="row ${open ? "open" : ""} ${w.has(o.t) ? "mine" : ""}" data-t="${esc(o.t)}" tabindex="0" aria-expanded="${!!open}">
         <td class="tk">${esc(o.t)}${w.has(o.t) ? ` <span class="mine-dot" data-tip="İzleme listende">●</span>` : ""}</td>
-        <td class="nm" data-tip="${esc(o.name)}">${esc(o.name)}</td>
-        <td class="num">${o.n}${flags ? ` <span class="rv" data-tip="${esc(flags)}">⚠</span>` : ""}</td>
-        <td class="num">${bin(o.qty)}</td>
-        <td class="num"><b>${mn(o.amount)}</b></td>
+        <td class="nm" data-tip="${esc(o.name)}">${o.newProg ? `<span class="tag up" data-tip="Bu dönemde yeni program / YK kararı açıklandı (${o.pg ? fmt.date(o.pg.pub) : ""})">yeni</span> ` : ""}${esc(o.name)}</td>
+        <td class="num">${o.maxQty == null ? "—" : `<span data-tip="${esc(`Azami ${fmt.int(o.maxQty)} pay (nominal ₺)<br>Program bildirimi: ${fmt.date(o.pg.pub, { day: "numeric", month: "short", year: "numeric" })}`)}">${bin(o.maxQty)}</span>`}</td>
+        <td class="num">${o.maxFund == null ? "—" : mn(o.maxFund)}</td>
+        <td class="dur" ${o.pg?.dur && o.pg.dur !== o.dur ? `data-tip="${esc(o.pg.dur)}"` : ""}>${o.dur ? esc(o.dur) : "—"}</td>
+        <td class="num">${o.n || "—"}${flags ? ` <span class="rv" data-tip="${esc(flags)}">⚠</span>` : ""}</td>
+        <td class="num">${o.n ? bin(o.qty) : "—"}</td>
+        <td class="num"><b>${o.n ? mn(o.amount) : "—"}</b></td>
         <td class="num">${o.avg ? fmt.num(o.avg) : "—"}</td>
         ${showRatio ? `<td class="num"><span class="ratio ${dirCls(rk)}" data-tip="${esc(ratioTip)}">${o.ratio == null ? "—" : `${glyph(rk)} ${fmt.num(o.ratio)}`}</span></td>` : ""}
         <td class="num">${o.own == null ? "—" : fmt.num(o.own)}</td>
@@ -242,31 +290,23 @@
       <div class="tbl-scroll bb-scroll"><table class="tbl bb-tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
       ${agg.length ? "" : sh.stateHTML({ kind: "empty", title: S.suspectOnly ? "Bu dönemde şüpheli işlem yok" : "Bu dönemde geri alım işlemi yok", msg: S.q || S.watch ? "Arama ya da “Sadece izleme listem” filtresi açık." : "Dönemi uzatmayı dene." })}</div></section>`;
   }
+  function progLine(o) {
+    const pg = o.pg;
+    if (!pg) return "";
+    const bits = [pg.maxQty ? `azami ${fmt.int(pg.maxQty)} pay` : "", pg.maxFund ? `azami fon ${tlShort(pg.maxFund)}` : "", pg.dur ? `süre ${esc(durShort(pg.dur))}` : "",
+].filter(Boolean).join(" · ");
+    return `<p class="prog-line">${pg.ended ? `<span class="tag">program sonlandı ${fmt.date(pg.ended)}</span>` : `<span class="tag up">program</span>`}
+      <a href="${esc(pg.url)}" target="_blank" rel="noopener">${esc(pg.type || "Program bildirimi")} ↗</a> <span class="meta">${fmt.date(pg.pub, { day: "numeric", month: "short", year: "numeric" })}${bits ? " · " + bits : ""}</span></p>`;
+  }
   function txList(o) {
-    return `<table class="tx" aria-label="${esc(o.t)} işlemleri"><thead><tr><th>İşlem tarihi</th><th class="num">Fiyat (₺)</th><th class="num">Adet</th><th class="num">Tutar (₺)</th><th class="num">Sermaye payı (%)</th><th>Bildirim</th></tr></thead><tbody>` +
+    if (!o.tx.length) return progLine(o) + `<p class="meta">Bu dönemde işlem bildirimi yok.</p>`;
+    return progLine(o) + `<table class="tx" aria-label="${esc(o.t)} işlemleri"><thead><tr><th>İşlem tarihi</th><th class="num">Fiyat (₺)</th><th class="num">Adet</th><th class="num">Tutar (₺)</th><th class="num">Sermaye payı (%)</th><th>Bildirim</th></tr></thead><tbody>` +
       o.tx.map(r => `<tr class="${r.suspect ? "sus" : ""}"><td>${fmt.date(r.date, { day: "numeric", month: "short", year: "numeric" })}</td>
         <td class="num">${r.price ? fmt.num(r.price, 3) : "—"}${r.suspect ? ` <span class="rv" data-tip="Fiyat şüpheli: şirketin diğer işlemlerinden çok farklı; KAP bildirimini kontrol et">⚠</span>` : ""}</td>
         <td class="num">${fmt.int(r.qty)}</td><td class="num">${r.suspect ? "—" : fmt.num(r.amount, 0)}</td>
         <td class="num">${r.own == null ? "—" : fmt.num(r.own)}</td>
         <td>${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">KAP ${r.id} ↗</a>` : r.id}${r.review ? ` <span class="rv" data-tip="Ayrıştırma elle kontrol istiyor">⚠</span>` : ""}</td></tr>`).join("") + `</tbody></table>`;
   }
-  function programs(rows) {
-    const p = rows.filter(r => r.kind !== "tx").sort((a, b) => b.pub - a.pub).slice(0, 30);
-    if (!p.length) return "";
-    const w = watchSet();
-    return `<section class="card" aria-labelledby="bbProgT"><div class="card-head"><h2 class="card-title" id="bbProgT">Program başlatma, YK kararı ve diğer bildirimler</h2><span class="card-meta">${p.length} kayıt</span></div>
-      <ul class="prog">${p.map(r => {
-        const f = r.fields || {};
-        const size = f["geri alıma konu azami pay miktarı (nominal tl)"] || f["geri alıma konu azami pay miktarı"];
-        const dur = f["varsa geri alım programının uygulanacağı süre"];
-        return `<li class="${w.has(r.t) ? "mine" : ""}"><span class="tk">${esc(r.t)}</span>
-          <span class="tag ${r.kind === "program" ? "up" : ""}">${r.kind === "program" ? "Program" : r.kind === "end" ? "Tamamlandı" : "Diğer"}</span>
-          <a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.type)}</a>
-          ${size ? `<span class="meta">azami ${esc(size)} nominal</span>` : ""}${dur ? `<span class="meta">${esc(dur)}</span>` : ""}
-          <time datetime="${r.pub.toISOString()}">${fmt.date(r.pub)}</time></li>`;
-      }).join("")}</ul></section>`;
-  }
-
   // ─────────────────────────────── ana çizim
   function render() {
     if (!S.loaded || sh.route !== "geri-alim") return;              // gizliyken çizme: genişlik ölçülemez
@@ -292,7 +332,7 @@
     const qAt = S.quotesAt ? ` · güncel fiyatlar ${fmt.dt(S.quotesAt)}` : "";
     $("#bbSrc").innerHTML = `Kaynak: <a href="https://github.com/gptrade/kap-geri-alim-takibi" target="_blank" rel="noopener">kap-geri-alim-takibi</a> · son bildirim ${fmt.dt(S.updated)} · ${fmt.int(S.rows.length)} kayıt${qAt}`;
     const scroll = $(".bb-scroll")?.scrollTop || 0;
-    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis(period, aggregate(period))}${dailyChart(period, aggregate(period), W)}${table(agg, showRatio)}${programs(period)}</div>`;
+    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis(period, aggregate(period))}${dailyChart(period, aggregate(period), W)}${table(agg, showRatio)}</div>`;
     if ($(".bb-scroll")) $(".bb-scroll").scrollTop = scroll;
     $$("#bbBody .th-sort").forEach(b => b.onclick = () => {
       const c = b.dataset.c;
@@ -323,7 +363,7 @@
   function exportCompanies() {
     const ex = window.radarExport;
     const rows = aggregate(inPeriod()).filter(o => !S.suspectOnly || o.suspect).sort((a, b) => b.amount - a.amount).map(o => ({
-      hisse: o.t, sirket: o.name, islem_sayisi: o.n, toplam_adet: o.qty, tutar_tl: Math.round(o.amount), ort_fiyat_tl: o.avg ?? "", guncel_fiyat_tl: o.q?.last ?? "",
+      hisse: o.t, sirket: o.name, yeni_program: o.newProg ? "evet" : "", azami_pay: o.maxQty ?? "", azami_fon_tl: o.maxFund ?? "", sure: o.dur, program_tarihi: o.pg?.pub ? o.pg.pub.toISOString().slice(0, 10) : "", islem_sayisi: o.n, toplam_adet: o.qty, tutar_tl: Math.round(o.amount), ort_fiyat_tl: o.avg ?? "", guncel_fiyat_tl: o.q?.last ?? "",
       guncel_bolu_ort: o.ratio ?? "", sermaye_payi_pct: o.own ?? "", son_islem: o.last ? o.last.toISOString().slice(0, 10) : "", supheli_islem: o.suspect, kontrol_gereken: o.review }));
     ex.download(`geri-alim_sirketler_${S.days}g_${ex.stamp()}.csv`, ex.toCSV(rows), "text/csv;charset=utf-8");
   }

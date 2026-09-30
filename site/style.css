@@ -181,6 +181,7 @@ th[aria-sort="ascending"] .arr, th[aria-sort="descending"] .arr { opacity: 1; co
 .search svg { width: 15px; height: 15px; color: var(--text-3); }
 .search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font-size: var(--fs-md); }
 .search input::placeholder { color: var(--text-3); }
+.search input:focus-visible { box-shadow: none; }            /* halka yalnız kutunun dışında (tek halka) */
 .switch { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--fs-sm); color: var(--text-2); cursor: pointer; white-space: nowrap; }
 .switch input { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
 
@@ -440,8 +441,12 @@ main:focus { outline: none; }
 .hatch-sw { background: repeating-linear-gradient(135deg, var(--text-3) 0 2px, transparent 2px 5px); border: 1px solid var(--text-3); }
 .bb-tbl { --sticky-top: 0; }
 .bb-scroll { max-height: min(72vh, 760px); overflow: auto; }
-.bb-tbl td.tk { font: var(--fw-semibold) var(--fs-md) var(--font-mono); white-space: nowrap; }
-.bb-tbl td.nm { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
+.bb-tbl td.tk { display: table-cell; font: var(--fw-semibold) var(--fs-md) var(--font-mono); white-space: nowrap; }
+.bb-tbl td.dur { white-space: nowrap; color: var(--text-2); font-size: var(--fs-sm); }
+.bb-tbl .use { font-size: var(--fs-2xs); color: var(--text-3); }
+.prog-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s-1) var(--s-2); margin-bottom: var(--s-2); font-size: var(--fs-sm); }
+.prog-line .meta, .bb-tbl .drawer .meta { color: var(--text-3); font-size: var(--fs-sm); }
+.bb-tbl td.nm { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
 .bb-tbl tr.mine td.tk { color: var(--accent-ink); }
 .mine-dot { color: var(--accent); font-size: 8px; vertical-align: 2px; }
 .rv { color: var(--warn); }
@@ -511,7 +516,7 @@ main:focus { outline: none; }
   .sig-tbl tr.drawer > td { position: sticky; left: 0; }
   .drawer-in { width: calc(100vw - 2 * var(--s-4) - 2px); }
   .drawer-in > div { padding: var(--s-3); }
-  .bb-tbl { min-width: 760px; }
+  .bb-tbl { min-width: 1080px; }
   .bb-tbl th:first-child, .bb-tbl td.tk { position: sticky; left: 0; z-index: 1; background: var(--surface); box-shadow: 1px 0 0 var(--border); }
   .bb-tbl th:first-child { z-index: 3; }
   .bb-tbl tr.row:hover td.tk, .bb-tbl tr.row.open td.tk { background: var(--row-hover); }
@@ -528,3 +533,11 @@ main:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+.bb-tbl th, .bb-tbl td { padding-left: 10px; padding-right: 10px; }
+/* geri alım tablosu: başlıklar iki satıra inebilir (12 sütun 1440px'e sığsın) */
+.bb-tbl th { white-space: normal; line-height: 1.25; vertical-align: bottom; }
+.bb-tbl th .th-sort { white-space: normal; text-align: inherit; display: inline; }
+.bb-tbl th.num .th-sort { text-align: right; }
+.bb-tbl th .arr { display: inline-block; }
+.nav-item > span:not(.badge) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
