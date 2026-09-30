@@ -203,13 +203,41 @@ def _gemini_msg(r) -> str:
         return r.text[:140]
 
 
+def _quota_info(r) -> tuple[bool, float | None]:
+    """429 gövdesinden: (günlük kota mı?, önerilen bekleme saniyesi)."""
+    try:
+        details = r.json()["error"].get("details") or []
+    except Exception:
+        return False, None
+    daily, delay = False, None
+    for d in details:
+        for v in d.get("violations") or []:
+            if "PerDay" in str(v.get("quotaId", "")):
+                daily = True
+        if d.get("retryDelay"):
+            try:
+                delay = float(str(d["retryDelay"]).rstrip("s"))
+            except ValueError:
+                pass
+    return daily, delay
+
+
 class GeminiProvider:
     name = "Gemini"
 
-    def __init__(self, models: list[str], key: str):
+    def __init__(self, models: list[str], key: str, min_interval: float = 0.0, max_wait: float = 65.0):
         self.models = [m for m in models if m]
         self.model = self.models[0]
         self.key = key
+        self.min_interval = min_interval      # ücretsiz katmanın dakika başı sınırına takılmamak için
+        self.max_wait = max_wait
+        self._last = 0.0
+
+    def _pace(self) -> None:
+        wait = self._last + self.min_interval - time.monotonic()
+        if wait > 0:
+            time.sleep(wait)
+        self._last = time.monotonic()
 
     def assess(self, system: str, prompt: str) -> dict | None:
         return self.ask(system, prompt, TOOL, GEMINI_FORMAT)
@@ -225,6 +253,7 @@ class GeminiProvider:
         last = ""
         for model in list(self.models):
             for attempt in range(3):
+                self._pace()
                 try:
                     r = requests.post(GEMINI_URL.format(model=model), json=body, timeout=45,
                                       headers={"x-goog-api-key": self.key,
@@ -246,11 +275,20 @@ class GeminiProvider:
                 if r.status_code == 404:              # model adı yok/emekli: listeden çıkar, sıradakini dene
                     self.models.remove(model)
                     break
-                if r.status_code in (429, 500, 502, 503, 504):
+                if r.status_code == 429:
+                    daily, delay = _quota_info(r)
+                    if daily:                         # bu modelin günlük kotası bitti: bu tur çıkar, sıradakini dene
+                        self.models.remove(model)
+                        break
+                    if attempt < 2:                   # dakikalık kota: Google'ın önerdiği kadar bekle
+                        time.sleep(min(self.max_wait, (delay or 10) + 1))
+                        continue
+                    break
+                if r.status_code in (500, 502, 503, 504):
                     if attempt < 2:
                         time.sleep(3 * (attempt + 1))
                         continue
-                    break                             # bu model yoğun/kotada: sıradaki modeli dene
+                    break                             # bu model yoğun: sıradaki modeli dene
                 if r.status_code == 400 and "API key" not in r.text:
                     raise RuntimeError(last)          # bu kayda özgü hata; sağlayıcı ayakta
                 raise ProviderDown(last)              # 401/403: anahtar geçersiz
@@ -277,7 +315,8 @@ class Analyzer:
             if name == "gemini" and on and os.environ.get("GEMINI_API_KEY"):
                 models = [cfg.get("gemini_model", "gemini-3.8-flash"),
                           *(cfg.get("gemini_fallback_models") or ["gemini-3.7-flash", "gemini-flash-latest"])]
-                self.providers.append(GeminiProvider(models, os.environ["GEMINI_API_KEY"]))
+                self.providers.append(GeminiProvider(models, os.environ["GEMINI_API_KEY"],
+                                                     float(cfg.get("gemini_min_interval_s", 4.5))))
         self.down: dict[str, str] = {}
         if not self.providers:
             log.info("AI anahtarı yok ya da analiz kapalı: değerlendirme atlanacak")

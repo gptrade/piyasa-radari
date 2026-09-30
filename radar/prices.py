@@ -69,7 +69,8 @@ def _rsi(xs: list[float], n: int = 14) -> float | None:
     return 100 - 100 / (1 + ag / al)
 
 
-def technicals(daily: list[list[float]]) -> dict | None:
+def technicals(daily: list[list[float]], live: bool = False) -> dict | None:
+    """live=True: son günlük bar süren seansa ait (hacmi eksik); hacim oranı son tamamlanmış günden."""
     closes = [b[1] for b in daily]
     if len(closes) < 30:
         return None
@@ -91,6 +92,8 @@ def technicals(daily: list[list[float]]) -> dict | None:
     window = closes[-252:]
     hi, lo = max(window), min(window)
     vols = [b[2] for b in daily if len(b) > 2 and b[2]]
+    if live and len(vols) > 1:
+        vols = vols[:-1]
     vol_ratio = round(vols[-1] / (sum(vols[-21:-1]) / 20), 2) if len(vols) >= 21 and sum(vols[-21:-1]) else None
 
     if sma20 and sma50 and last > sma20 > sma50:
@@ -164,7 +167,7 @@ def fetch(stock: Stock, yahoo: str | None = None) -> dict | None:
         "currency": currency or ("TRY" if stock.market == "BIST" else "USD"),
         "last": last, "prev_close": prev,
         "change_pct": round((last / prev - 1) * 100, 2) if prev else None,
-        "ta": technicals(daily),
+        "ta": technicals(daily, live=bool(intraday) and now_utc().timestamp() - intraday[-1][0] < 20 * 60),
         # Panel için: gün içi 5 gün, günlük son ~6 ay yeter (dosya boyutu)
         "intraday": intraday, "daily": daily[-130:], "updated": iso(now_utc()),
     }

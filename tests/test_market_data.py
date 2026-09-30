@@ -37,6 +37,7 @@ def test_volume_ratio_and_short_history():
     ta = prices.technicals(bars(closes, vols))
     assert ta["vol_ratio"] == 3.5 and any("Hacim" in s for s in ta["signals"])
     assert prices.technicals(bars(closes[:10])) is None
+    assert prices.technicals(bars(closes, vols), live=True)["vol_ratio"] == 1.0   # yarım gün hacmi kullanılmaz
 
 
 def test_reaction_volume_and_index():

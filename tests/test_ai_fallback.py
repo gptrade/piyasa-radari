@@ -143,3 +143,37 @@ def test_gemini_all_models_overloaded_is_down(monkeypatch):
     monkeypatch.setattr(requests, "post", lambda url, **kw: FakeResp(503, {"error": {"message": "busy"}}))
     with pytest.raises(ProviderDown, match="busy"):
         GeminiProvider(["a", "b"], "k").assess("s", "p")
+
+
+def test_gemini_rate_limit_waits_then_daily_quota_switches(monkeypatch):
+    import requests
+    slept = []
+    monkeypatch.setattr(analyze.time, "sleep", lambda s: slept.append(s))
+    seq = iter([
+        FakeResp(429, {"error": {"message": "quota", "details": [
+            {"violations": [{"quotaId": "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"}]},
+            {"retryDelay": "12s"}]}}),
+        gemini_ok(GOOD),
+    ])
+    monkeypatch.setattr(requests, "post", lambda url, **kw: next(seq))
+    g = GeminiProvider(["m1", "m2"], "k")
+    assert g.assess("s", "p")["sentiment"] == "bullish" and 13 in slept and g.models == ["m1", "m2"]
+
+    daily = FakeResp(429, {"error": {"message": "quota", "details": [
+        {"violations": [{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}]}})
+    urls = []
+    monkeypatch.setattr(requests, "post", lambda url, **kw: urls.append(url) or (daily if "/m1:" in url else gemini_ok(GOOD)))
+    g = GeminiProvider(["m1", "m2"], "k")
+    assert g.assess("s", "p")["sentiment"] == "bullish" and g.models == ["m2"] and len(urls) == 2
+
+
+def test_gemini_pacing(monkeypatch):
+    import requests
+    slept = []
+    t = [100.0]
+    monkeypatch.setattr(analyze.time, "sleep", lambda s: slept.append(round(s, 1)))
+    monkeypatch.setattr(analyze.time, "monotonic", lambda: t[0])
+    monkeypatch.setattr(requests, "post", lambda url, **kw: gemini_ok(GOOD))
+    g = GeminiProvider(["m1"], "k", min_interval=4.5)
+    g.assess("s", "p"); t[0] += 1.0; g.assess("s", "p")
+    assert slept == [3.5]
