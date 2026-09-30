@@ -84,3 +84,13 @@ def test_market_wide_macro_is_analyzed_but_speech_is_not(sandbox, monkeypatch):
     pipeline.run()
     assert [t for t, _ in seen] == ["PPK kararı"]
     assert "İzleme listesi" in seen[0][1] and "VAKBN" in seen[0][1]
+
+
+def test_old_data_version_is_reset(sandbox, monkeypatch):
+    (sandbox / "state.json").write_text(json.dumps({"seen": ["x"], "last_run": "2026-09-30T00:00:00Z"}))
+    (sandbox / "feed.json").write_text(json.dumps({"items": [{"id": "old", "published": "2026-09-30T00:00:00Z",
+                                                              "tickers": [], "extra": {}}]}))
+    monkeypatch.setattr(pipeline, "COLLECTORS", [("fake", lambda ctx: [])])
+    pipeline.run()
+    assert json.loads((sandbox / "feed.json").read_text())["items"] == []
+    assert json.loads((sandbox / "state.json").read_text())["version"] == pipeline.DATA_VERSION

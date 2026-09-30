@@ -15,6 +15,9 @@ from .sources import Context, feeds, kap, reports, social, spk, tcmb
 
 log = logging.getLogger("radar")
 
+# Toplama kuralları geriye dönük değiştiğinde artır: eski akış ve "görüldü" listesi sıfırlanır.
+DATA_VERSION = 2
+
 FEED = DATA / "feed.json"
 STATE = DATA / "state.json"
 
@@ -68,6 +71,10 @@ def run() -> dict:
     DATA.mkdir(parents=True, exist_ok=True)
 
     state = _load(STATE, {})
+    if state.get("version") != DATA_VERSION:
+        log.info("Veri sürümü %s → %s: akış sıfırlanıyor", state.get("version"), DATA_VERSION)
+        state = {}
+        FEED.unlink(missing_ok=True)
     old = _load(FEED, {})
     feed = [] if old.get("demo") else old.get("items", [])   # örnek veriyi gerçek akışa karıştırma
     seen_ids = dict.fromkeys(state.get("seen", []))  # sıralı küme
@@ -157,6 +164,7 @@ def run() -> dict:
     }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
     STATE.write_text(json.dumps({
+        "version": DATA_VERSION,
         "last_run": iso(now_utc()),
         "seen": list(seen_ids)[-8000:],
         "seen_keys": list(seen_keys)[-8000:],
