@@ -53,13 +53,13 @@ def _entry_time(e) -> datetime | None:
     return None
 
 
-def fetch_feed(url: str, headers: dict | None = None):
+def fetch_feed(url: str, headers: dict | None = None, warn_empty: bool = True):
     r = http.get(url, headers=headers)
     if r is None:
         return None
     feed = feedparser.parse(r.content)
     feed["_base"] = url
-    if not feed.entries:
+    if not feed.entries and warn_empty:       # arama akışlarında boş sonuç normaldir
         http.note_failure(url, "RSS boş ya da okunamadı")
     return feed
 
@@ -142,7 +142,7 @@ def collect_google_news(ctx: Context) -> list[Item]:
             q = f'"{st.name}" OR "{st.symbol}" stock'
             url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:2d&hl=en-US&gl=US&ceid=US:en"
             lang = "en"
-        out += entries_to_items(fetch_feed(url), source="Google News", source_type="news",
+        out += entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
                                 market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol],
                                 limit=int(ctx.cfg("google_news").get("max_per_stock", 8)))
     log.info("Google News: %d haber", len(out))
@@ -188,7 +188,7 @@ def collect_reddit(ctx: Context) -> list[Item]:
     url = (f"https://www.reddit.com/r/{subs}/search.rss?q={quote_plus(q)}"
            f"&restrict_sr=on&sort=new&t=day&limit=100")
     sym_matcher = type(ctx.matcher)([type(st)(st.symbol, st.name, st.market, []) for st in stocks])
-    out: list[Item] = entries_to_items(fetch_feed(url), source="Reddit", source_type="social",
+    out: list[Item] = entries_to_items(fetch_feed(url, warn_empty=False), source="Reddit", source_type="social",
                                        market="US", since=ctx.since, lang="en", matcher=sym_matcher)
     log.info("Reddit: %d gönderi", len(out))
     return out
