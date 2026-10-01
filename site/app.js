@@ -301,7 +301,8 @@
   function docSummary(it) {
     const d = it.extra?.doc, a = it.analysis;
     if (!d || !a) return "";
-    const figs = Object.entries(a.figures || {});
+    const figs = Object.entries(a.figures || {}).filter(([, v]) => v && !/^(yok|—|-|n\/a|belirtilmemiş)$/i.test(String(v).trim()))
+      .map(([k, v]) => [k.replace(/_/g, " ").replace(/^./, c => c.toLocaleUpperCase("tr")), v]);
     return `<div class="doc-sum"><p class="d-sub">Belge özeti · ${docLabel(d)}</p>
       ${a.key_points?.length ? `<ul class="doc-points">${a.key_points.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
       ${figs.length ? `<table class="doc-figs"><tbody>${figs.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table>` : ""}
