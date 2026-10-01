@@ -7,7 +7,7 @@
   const DAY = 86400000;
   const KIND = {
     cb: { l: "Merkez bankası", s: "MB" }, macro: { l: "Makro veri", s: "Veri" }, report: { l: "Rapor", s: "Rapor" },
-    earnings: { l: "Bilanço", s: "Bilanço" }, dividend: { l: "Temettü", s: "Temettü" }, expiry: { l: "Vade sonu", s: "Vade" },
+    earnings: { l: "Bilanço", s: "Bilanço" }, agm: { l: "Genel kurul", s: "GK" }, dividend: { l: "Temettü", s: "Temettü" }, expiry: { l: "Vade sonu", s: "Vade" },
   };
   const RANGE = { 14: "2 hafta", 30: "1 ay", 60: "2 ay" };
   const S = { cal: null, loaded: false, error: null, kinds: new Set(store.get("radar.calKinds", [])),
@@ -40,7 +40,7 @@
     return `<span class="cal-day-name">${esc(lbl)}</span><span class="cal-rel${n <= 1 ? " soon" : ""}">${rel(n)}</span>`;
   }
   const timeOf = e => e.timed ? new Date(e.when).toLocaleTimeString("tr-TR", { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" })
-    : ["earnings", "dividend"].includes(e.kind) ? "—" : "gün boyu";
+    : ["earnings", "dividend", "agm"].includes(e.kind) ? "—" : "gün boyu";
   const imp = n => `<span class="meter" data-l="${n}" role="img" aria-label="Önem ${n === 3 ? "yüksek" : n === 2 ? "orta" : "düşük"}"><i></i><i></i><i></i></span>`;
   const mk = m => m === "ALL" ? "" : `<span class="tag mk">${m === "US" ? "ABD" : m}</span>`;
 
@@ -86,7 +86,7 @@
           </li>`).join("")}</ul></li>`).join("")}</ol></div>`;
     }
     const until = S.cal.macro_until;
-    html += `<p class="k-note">Saatler İstanbul saatiyle. Makro tarihler resmi takvimlerden (TCMB, TÜİK, Fed, BLS)${until ? `; tanımlı son tarih ${fmt.date(until, { day: "numeric", month: "long", year: "numeric" })}` : ""} · bilanço ve temettü tarihleri Yahoo Finance'ten (şirketler değiştirebilir) · VİOP vade sonu çift ayların son iş günü, ABD opsiyon vadesi ayın 3. cuması olarak hesaplanır.</p>`;
+    html += `<p class="k-note">Saatler İstanbul saatiyle. Makro tarihler resmi takvimlerden (TCMB, TÜİK, Fed, BLS)${until ? `; tanımlı son tarih ${fmt.date(until, { day: "numeric", month: "long", year: "numeric" })}` : ""} · bilanço ve temettü tarihleri Yahoo Finance'ten (şirketler değiştirebilir), genel kurullar Borsa İstanbul listesinden · VİOP vade sonu çift ayların son iş günü, ABD opsiyon vadesi ayın 3. cuması olarak hesaplanır.</p>`;
     box.innerHTML = html;
   }
   function badge() {

@@ -104,6 +104,12 @@ sources:
     min_move_pct: 2.0          # ve en az bu kadar (%)
     lookback_days: 60
     news_hours: 24             # bu kadar saat içinde önemli haber/bildirim varsa "habersiz" sayılmaz
+  bist_bulletin:
+    enabled: true              # Borsa İstanbul günlük bülteni (resmi, ücretsiz gün sonu dosyası): açığa satış payı
+    agm: true                  # Borsa İstanbul genel kurul listesi → Takvim
+    short_mult: 2.0            # açığa satış payı 20 seans ortalamasının bu katını…
+    short_min_pct: 5.0         # …ve işlem hacminin bu yüzdesini aşarsa akışa "Açığa satış artışı" düşer
+    min_days: 10               # karşılaştırma için en az bu kadar seans birikmiş olmalı
   analyst:
     enabled: true              # Yahoo: not değişiklikleri (upgrade/downgrade) akışa, hedef fiyat & tavsiye dağılımı hisse paneline
     max_age_days: 3            # bundan eski not değişiklikleri akışa düşmez

@@ -100,16 +100,16 @@
   async function fetchAll() {
     const feed = await getJSON("data/feed.json");
     if (!feed) throw new Error("data/feed.json okunamadı");
-    const [digest, macro, card] = await Promise.all([getJSON("data/digest.json"), getJSON("data/macro.json"), getJSON("data/scorecard.json")]);
+    const [digest, macro, card, flows] = await Promise.all([getJSON("data/digest.json"), getJSON("data/macro.json"), getJSON("data/scorecard.json"), getJSON("data/bist_flows.json")]);
     const syms = new Set([...(feed.watchlist || []).map(w => w.symbol), ...feed.items.map(i => i.tickers?.[0]).filter(Boolean)]);
     const prices = {};
     await Promise.all([...syms].map(async s => { const p = await getJSON(`data/prices/${s}.json`); if (p) prices[s] = p; }));
-    return { feed, digest, macro, prices, card };
+    return { feed, digest, macro, prices, card, flows };
   }
   async function load() { apply(await fetchAll()); }
-  function apply({ feed, digest, macro, prices, card }) {
+  function apply({ feed, digest, macro, prices, card, flows }) {
     state.pending = null; $("#newPill").hidden = true;
-    Object.assign(state, { feed, digest, macro, prices, card: card || null, error: null, loading: false });
+    Object.assign(state, { feed, digest, macro, prices, card: card || null, flows: flows || null, error: null, loading: false });
     state.reasons = computeReasons(feed.items);
     sh.setUpdated("sinyal", feed.generated, { label: "Son tarama", staleMin: 45 });
     sh.setHealth(feed);
@@ -882,6 +882,8 @@
     wrap.append(px, head);
     const an = analystSection(sym, p);
     if (an) wrap.append(an);
+    const ss = shortSection(sym);
+    if (ss) wrap.append(ss);
     const bb = p?.market === "BIST" && window.radarBB?.forTicker(sym);
     if (bb && (bb.tx.length || bb.pg)) {
       const sec = document.createElement("div");
@@ -976,15 +978,40 @@
       o.nk = o.net == null ? null : o.net > 0.15 ? 1 : o.net < -0.15 ? -1 : 0;
       o.chg = p?.change_pct ?? null;
       o.mis = o.chg != null && ((o.nk === 1 && o.chg <= -0.5) || (o.nk === -1 && o.chg >= 0.5));
+      const sf = state.flows?.summary?.[o.t]; o.sf = sf || null; o.sh = sf ? sf.short_pct : null;
       o.ta = ta || null; o.score = ta?.score ?? null; o.rsi = ta?.rsi ?? null; o.pos52 = ta?.pos52 ?? null;
       o.name = o.name || (state.feed.watchlist || []).find(w => w.symbol === o.t)?.name || "";
       return o;
     });
   }
-  const TK_COLS = [["t", "Hisse", "k-tk"], ["chg", "Bugün", "k-px num"], ["score", "Teknik", "k-ta"], ["rsi", "RSI", "k-rsi num"], ["pos52", "52h konum", "k-52 num"],
+  const TK_COLS = [["t", "Hisse", "k-tk"], ["chg", "Bugün", "k-px num"], ["score", "Teknik", "k-ta"], ["rsi", "RSI", "k-rsi num"], ["pos52", "52h konum", "k-52 num"], ["sh", "Açığa sat.", "k-sh num"],
     ["net", "Haber yönü", "k-dir"], ["n", "Haber", "k-n num"], ["top", "En önemli olay", "k-top", true]];
   const TK_TIPS = { score: "Günlük/haftalık trend, EMA 14/34/55/200 dizilimi, MACD ve RSI'dan kaba skor", rsi: "RSI 14 · 70 üstü aşırı alım, 30 altı aşırı satım",
-    pos52: "Fiyatın 52 haftalık aralıktaki yeri (%0 = en düşük, %100 = en yüksek)", net: "Son haberlerin AI yön ortalaması (önem ve güvenle ağırlıklı)", n: "Akıştaki kayıt sayısı (soluklar dahil; kaynak türü ve arama filtrelerine göre)" };
+    pos52: "Fiyatın 52 haftalık aralıktaki yeri (%0 = en düşük, %100 = en yüksek)", sh: "Son seansta açığa satışın toplam işlem hacmindeki payı (Borsa İstanbul günlük bülteni; yalnız BIST). Turuncu: 20 seans ortalamasının 2 katı ve %5 üstü", net: "Son haberlerin AI yön ortalaması (önem ve güvenle ağırlıklı)", n: "Akıştaki kayıt sayısı (soluklar dahil; kaynak türü ve arama filtrelerine göre)" };
+  function shortCell(o) {
+    const f = o.sf;
+    if (!f) return watchMarket(o.t) === "US" ? `<span class="muted" data-tip="Açığa satış verisi yalnız BIST için (Borsa İstanbul bülteni)">—</span>` : `<span class="muted">—</span>`;
+    const hot = f.avg20 != null && f.n >= 10 && f.short_pct >= 5 && f.short_pct >= 2 * Math.max(f.avg20, 0.5);
+    const tip = `Son seans (${fmt.date(f.date + "T12:00:00Z")}): açığa satış işlemlerin %${fmt.num(f.short_pct, 1)}'i${f.avg20 != null ? `<br>${f.n} seans ortalaması %${fmt.num(f.avg20, 1)}` : ""}${f.short_ok ? "" : "<br>Bu hisse açığa satış listesinde değil"}${f.gross ? "<br><b>Brüt takas tedbiri var</b>" : ""}`;
+    return `<span class="${hot ? "tag warn" : ""}" data-tip="${esc(tip)}">%${fmt.num(f.short_pct, 1)}</span>`;
+  }
+  // Hisse paneli: açığa satış payı, son 30 seans (Borsa İstanbul bülteni)
+  function shortSection(sym) {
+    const f = state.flows?.summary?.[sym];
+    if (!f || !f.series?.length) return null;
+    const sec = document.createElement("div");
+    sec.className = "tp-sec";
+    const ser = f.series, mx = Math.max(5, ...ser.map(x => x[1])) * 1.1, W = 300, H = 64, bw = W / ser.length;
+    const y = v => H - (v / mx) * H;
+    const bars = ser.map(([d, v], i) => `<rect x="${(i * bw + 1).toFixed(1)}" y="${y(v).toFixed(1)}" width="${Math.max(1, bw - 2).toFixed(1)}" height="${(H - y(v)).toFixed(1)}" rx="1.5" class="${i === ser.length - 1 ? "sb-last" : "sb"}"><title>${fmt.date(d + "T12:00:00Z")}: %${fmt.num(v, 1)}</title></rect>`).join("");
+    const avgLine = f.avg20 != null ? `<line x1="0" x2="${W}" y1="${y(f.avg20).toFixed(1)}" y2="${y(f.avg20).toFixed(1)}" class="sb-avg"/>` : "";
+    const x = f.avg20 ? f.short_pct / Math.max(f.avg20, 0.1) : null;
+    sec.innerHTML = `<p class="d-sub">Açığa satış <span class="t3">· Borsa İstanbul bülteni</span></p>
+      <p class="tp-sub">Son seans (${fmt.date(f.date + "T12:00:00Z")}): işlemlerin <b>%${fmt.num(f.short_pct, 1)}</b>'i açığa satış${f.avg20 != null ? ` · ${f.n} seans ortalaması %${fmt.num(f.avg20, 1)}${x ? ` (<span class="${x >= 2 ? "warn-t" : ""}">${fmt.num(x, 1)} kat</span>)` : ""}` : ""}${f.short_ok ? "" : " · açığa satış listesinde değil"}${f.gross ? ` · <b class="warn-t">brüt takas tedbiri</b>` : ""}</p>
+      <svg class="short-bars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Son ${ser.length} seansta açığa satış payı; son seans %${fmt.num(f.short_pct, 1)}">${bars}${avgLine}</svg>
+      <p class="tp-more">Son ${ser.length} seans · kesikli çizgi: ortalama</p>`;
+    return sec;
+  }
   function renderTickers() {
     const rows = tickerRows(), k = state.tkSort.k, d = state.tkSort.d;
     rows.sort((a, b) => {
@@ -1013,6 +1040,7 @@
         <td>${o.ta ? `<span class="tag ${dirCls(vk)}" data-tip="${esc(taTip)}">${glyph(vk)} ${VIEW_LBL[o.ta.view] || "NÖTR"}</span>` : NA("Teknik veri yok (izleme listesi dışı)")}</td>
         <td class="num">${rsiTag}</td>
         <td class="num">${o.pos52 == null ? "—" : `<span class="p52" data-tip="52 hafta: ${fmt.num(o.ta.lo52)} – ${fmt.num(o.ta.hi52)}"><i style="width:${Math.max(4, Math.min(100, o.pos52))}%"></i></span>${fmt.num(o.pos52, 0)}`}</td>
+        <td class="num">${shortCell(o)}</td>
         <td>${o.nk == null ? (o.n ? NA("Bu hissenin haberlerinde AI değerlendirmesi yok") : `<span class="muted">—</span>`) : `<span class="dir ${dirCls(o.nk)}" style="display:inline">${glyph(o.nk)}</span><span class="netlbl">${o.nk > 0 ? "olumlu" : o.nk < 0 ? "olumsuz" : "nötr"}</span>`}</td>
         <td class="num">${o.n ? `<span data-tip="Son haber: ${esc(fmt.full(o.last))}">${fmt.int(o.n)}</span>` : "0"}</td>
         <td><span class="k-top-t" ${o.top ? `data-tip="${esc(o.top.title)}"` : ""}>${top}</span></td></tr>`;

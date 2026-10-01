@@ -2,6 +2,7 @@
 
 - Makro ve merkez bankası: config/calendar.yml (TCMB PPK ve raporları, TÜİK TÜFE/GSYH, FOMC, ABD TÜFE)
 - Vade sonları (hesaplanır): VİOP endeks vadeli (çift ayların son iş günü), ABD aylık opsiyon vadesi (3. cuma)
+- Genel kurullar: Borsa İstanbul genel kurul listesi (izleme listesi BIST hisseleri)
 - Şirket: izleme listesindeki hisselerin bilanço ve temettü (hak kullanım / ödeme) tarihleri (Yahoo, fiyat dosyası)
 Saatler İstanbul saatine çevrilir (ISO, saat dilimli).
 """
@@ -115,12 +116,25 @@ def company_events(stocks: list, px: dict) -> list[dict]:
     return out
 
 
-def build(stocks: list, px: dict, days_ahead: int = 60, days_back: int = 3, conf: dict | None = None) -> dict:
+def extra_events(raw: list[dict]) -> list[dict]:
+    """Dış kaynaklı olaylar (ör. Borsa İstanbul genel kurul listesi) → takvim olayı."""
+    out = []
+    for e in raw or []:
+        d = date.fromisoformat(e["date"])
+        when, timed = _when(d, e.get("time"), "Europe/Istanbul")
+        out.append(_ev(kind=e["kind"], date=e["date"], when=when, timed=timed, market=e.get("market", "BIST"),
+                       ticker=e.get("ticker"), title=e["title"], detail=e.get("detail", ""),
+                       importance=e.get("importance", 1), url=e.get("url", "")))
+    return out
+
+
+def build(stocks: list, px: dict, days_ahead: int = 60, days_back: int = 3, conf: dict | None = None,
+          extra: list[dict] | None = None) -> dict:
     if conf is None:
         conf = yaml.safe_load(CONF.read_text(encoding="utf-8")) if CONF.exists() else {}
     today = now_utc().astimezone(IST).date()
     lo, hi = today - timedelta(days=days_back), today + timedelta(days=days_ahead)
-    evs = [e for e in macro_events(conf) + expiry_events(lo, hi) + company_events(stocks, px)
+    evs = [e for e in macro_events(conf) + expiry_events(lo, hi) + company_events(stocks, px) + extra_events(extra)
            if lo.isoformat() <= e["date"] <= hi.isoformat()]
     seen, uniq = set(), []
     for e in sorted(evs, key=lambda e: (e["when"], -e["importance"], e["title"])):
@@ -132,8 +146,8 @@ def build(stocks: list, px: dict, days_ahead: int = 60, days_back: int = 3, conf
             "macro_until": last, "events": uniq}
 
 
-def update(stocks: list, px: dict) -> dict:
-    cal = build(stocks, px)
+def update(stocks: list, px: dict, extra: list[dict] | None = None) -> dict:
+    cal = build(stocks, px, extra=extra)
     CAL_FILE.write_text(json.dumps(cal, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("Takvim: %d olay", len(cal["events"]))
     return cal

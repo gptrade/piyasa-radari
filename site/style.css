@@ -620,7 +620,7 @@ main:focus { outline: none; }
 
 /* ───────── hisse bazında görünüm ───────── */
 .tk-tbl { table-layout: fixed; }
-.tk-tbl col.k-tk { width: 104px; } .tk-tbl col.k-px { width: 108px; } .tk-tbl col.k-ta { width: 112px; } .tk-tbl col.k-rsi { width: 56px; } .tk-tbl col.k-52 { width: 88px; } .tk-tbl col.k-dir { width: 96px; } .tk-tbl col.k-n { width: 60px; }
+.tk-tbl col.k-tk { width: 104px; } .tk-tbl col.k-px { width: 108px; } .tk-tbl col.k-ta { width: 112px; } .tk-tbl col.k-rsi { width: 56px; } .tk-tbl col.k-52 { width: 88px; } .tk-tbl col.k-sh { width: 80px; } .tk-tbl col.k-dir { width: 96px; } .tk-tbl col.k-n { width: 60px; }
 .tk-tbl td { height: 48px; }
 .tk-tbl .k-top-t { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.35; font-size: var(--fs-md); }
 .tk-tbl .k-top-t b { font-weight: var(--fw-bold); }
@@ -814,3 +814,10 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .pf-err { margin-right: auto; color: var(--down); font-size: var(--fs-sm); }
 @media (max-width: 767px) { .pf-wide { grid-column: 1 / -1; } .pf-tbl { min-width: 860px; } }
 .pf-tbl tbody th, .pf-tbl tbody td { vertical-align: middle; }
+.k-agm { --cal-c: var(--accent); }
+.short-bars { width: 100%; height: 64px; display: block; margin-top: var(--s-1); }
+.short-bars .sb { fill: color-mix(in srgb, var(--series-2) 45%, var(--surface)); }
+.short-bars .sb-last { fill: var(--series-2); }
+.short-bars .sb-avg { stroke: var(--text-2); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.warn-t { color: var(--warn); }
+.tk-panel .d-sub .t3 { color: var(--text-3); font-weight: 400; }
