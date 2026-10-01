@@ -5,9 +5,8 @@
    [macro] 2026-09-29T07:00 TÜİK | Ekonomik güven endeksi 101,3 oldu | 
 ## BDDK: 1 kayıt; uyarı: []
    [macro] 2026-09-30T09:00 BDDK · Basın duyurusu | Destek Yatırım Bankası A.Ş., Hedef Yatırım Bankası A.Ş., Tera Yatırım Bankası A.Ş. ile Destek Finans Faktoring | 
-## Resmi Gazete: 2 kayıt; uyarı: []
-   [macro] 2026-09-30T21:05 Resmi Gazete · Cumhurbaşkani Kararlari | Bazı Mallara Uygulanan Özel Tüketim Vergisi Tutarlarının Yeniden Belirlenmesi Hakkında Karar (Karar Sayısı: 11 | 
-   [macro] 2026-09-30T21:05 Resmi Gazete · Cumhurbaşkani Kararlari | Giresun İli, Tirebolu, Şebinkarahisar ve Alucra İlçelerinde Kurulacak RMS-A Doğal Gaz Dağıtım Tesislerinin Yap | 
+## Resmi Gazete: 1 kayıt; uyarı: []
+   [macro] 2026-09-30T21:05 Resmi Gazete · Cumhurbaşkanı kararları | Bazı Mallara Uygulanan Özel Tüketim Vergisi Tutarlarının Yeniden Belirlenmesi Hakkında Karar (Karar Sayısı: 11 | 
 ## Borsa İstanbul: 4 kayıt; uyarı: []
    [macro] 2026-09-29T15:00 Borsa İstanbul · Duyuru | BIST Participation Indices Periodic Review | 
    [macro] 2026-09-29T15:00 Borsa İstanbul · Duyuru | Announcement Regarding the Update of BIST Market Cap Weighted Stock Indices Methodology | 
@@ -18,15 +17,13 @@
    [regulator] 2026-10-01T09:00 SPK · Basın duyurusu | A1 Capital Portföy Yönetimi A.Ş., Bulls Portföy Yönetimi A.Ş. ve Pardus Portföy Yönetimi A.Ş.’nin Kurucusu Old | A1CAP
    [macro] 2026-10-01T09:00 SPK · Basın duyurusu | İsteğe Bağlı İade Hesaplarına İlişkin Duyuru | 
    [macro] 2026-09-28T09:00 SPK · Basın duyurusu | Tasfiye Süresine İlişkin Basın Duyurusu | 
-## Hazine: 12 kayıt; uyarı: []
-   [macro] 2026-10-01T13:47 instagram.com · Hazine | Küresel piyasalarda tahvil satışları hız kazanırken, ABD Hazine tahvil faizleri de yirmi yılı aşkın bir zamand | 
-   [macro] 2026-10-01T10:55 Fortune Turkey · Hazine | Dünyada Hazine Tahvil Faizleri Baş Döndürüyor - Fortune Turkey | 
-   [macro] 2026-10-01T07:14 eskisehirhaber.com · Hazine | 1 Ekim Döviz Fiyatları Son Ayların En Yüksek Seviyesinde! - eskisehirhaber.com | 
-   [macro] 2026-10-01T06:23 Doviz.com · Hazine | Dolarda tahvil rallisi: Dolar endeksi 1,5 yılın zirvesine çıktı - Doviz.com | 
+## Hazine: 6 kayıt; uyarı: []
    [macro] 2026-10-01T13:21 hibya.com · Hazine | Hazine’nin ekim-aralık dönemi iç borçlanma planı açıklandı - hibya.com | 
-   [macro] 2026-10-01T13:07 TradingView · Hazine | TradingView'de Matriks tarafından haberler, 2026-10-01 - TradingView | 
    [macro] 2026-10-01T07:10 Bağımsız Gazete · Hazine | Hazine yine borçlandı: 2 Milyar 79 Milyon Liralık yeni iç borç - Bağımsız Gazete | 
-   [macro] 2026-09-30T14:55 Traders Union · Hazine | Hazine üç aylık iç borçlanmayı 630,7 milyar lira olarak planlıyor - Traders Union | 
+   [macro] 2026-09-30T14:45 dunya.com · Hazine | Hazine’nin 3 aylık borçlanma planı açıklandı: 630,7 milyar liralık iç borçlanma öngörülüyor - dunya.com | 
+   [macro] 2026-10-01T07:10 Bağımsız Gazete · Hazine | Hazine yine borçlandı: 2 Milyar 79 Milyon Liralık yeni iç borç - Bağımsız Gazete | 
+   [macro] 2026-09-30T14:40 Haberler · Hazine | Hazine ve Maliye Bakanlığı ekimde 414,8 milyar lira iç borçlanma yapacak - Haberler | 
+   [macro] 2026-09-30T14:12 CNBC-e · Hazine | Hazine'nin 3 aylık borçlanma planı açıklandı - CNBC-e | 
 ## TCMB: 3 kayıt; uyarı: []
    [macro] 2026-10-01T11:30 TCMB · Veriler | Menkul Kıymet İstatistikleri | 
    [macro] 2026-10-01T11:30 TCMB · Veriler | Haftalık Para ve Banka İstatistikleri | 
