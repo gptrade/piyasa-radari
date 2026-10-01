@@ -76,6 +76,17 @@ TOOL = {
 }
 
 
+DOC_NOTE = """BELGE ÖZETİ: Bu kayıt bir {kind}; metin belgenin kendisidir (uzunsa kesitler hâlinde).
+Değerlendirmeyi belgeye dayandır ve özellikle şunları doldur:
+- summary: 3-4 cümle; dönemin ana sonucu ve beklenti/önceki döneme göre durumu.
+- key_points: en önemli 4 bulgu, mümkünse rakamla ve önceki döneme göre değişimle.
+- figures: gelir/hasılat, FAVÖK veya faaliyet kârı, net kâr, marjlar, büyüme, (banka ise) net faiz marjı, özkaynak
+  kârlılığı, (varsa) yönetimin rehberliği. Sadece metinde geçen rakamlar; birimi ve dönemi yaz (ör. '3Ç26: 12,4 mlr TL, +%35 y/y').
+- risks: belgede açıkça geçen ya da rakamlardan çıkan riskler.
+
+"""
+
+
 SENTIMENTS = {"bullish", "bearish", "neutral"}
 LEVELS = {"low", "medium", "high"}
 HORIZONS = {"intraday", "days", "weeks", "long_term"}
@@ -142,8 +153,8 @@ class ClaudeProvider:
             self._client = anthropic.Anthropic(max_retries=2)
         return self._client
 
-    def assess(self, system: str, prompt: str) -> dict | None:
-        return self.ask(system, prompt, TOOL)
+    def assess(self, system: str, prompt: str, max_tokens: int = 900) -> dict | None:
+        return self.ask(system, prompt, TOOL, max_tokens=max_tokens)
 
     def ask(self, system: str, prompt: str, tool: dict, fmt: str = "", max_tokens: int = 900) -> dict | None:
         try:
@@ -239,8 +250,8 @@ class GeminiProvider:
             time.sleep(wait)
         self._last = time.monotonic()
 
-    def assess(self, system: str, prompt: str) -> dict | None:
-        return self.ask(system, prompt, TOOL, GEMINI_FORMAT)
+    def assess(self, system: str, prompt: str, max_tokens: int = 1200) -> dict | None:
+        return self.ask(system, prompt, TOOL, GEMINI_FORMAT, max_tokens=max_tokens)
 
     def ask(self, system: str, prompt: str, tool: dict, fmt: str = "", max_tokens: int = 1200) -> dict | None:
         import requests
@@ -345,9 +356,11 @@ class Analyzer:
 
     def prompt(self, item: Item, context: str) -> str:
         body = item.extra.get("full_text") or item.summary or "(özet yok)"
-        limit = 40000 if item.source_type == "report" else 4000
+        doc = item.extra.get("doc")
+        limit = 40000 if item.source_type == "report" or doc else 4000
         meta = {k: v for k, v in item.extra.items() if k not in ("full_text",)}
-        return (f"Kaynak: {item.source} ({item.source_type})\nPiyasa: {item.market}\n"
+        note = DOC_NOTE.format(kind=doc["kind"]) if doc else ""
+        return (note + f"Kaynak: {item.source} ({item.source_type})\nPiyasa: {item.market}\n"
                 f"İlgili hisseler: {', '.join(item.tickers) or 'yok (piyasa geneli)'}\nYayın zamanı (UTC): {item.published}\n"
                 f"Ek bilgi: {json.dumps(meta, ensure_ascii=False)}\n"
                 f"Fiyat bağlamı: {context or 'yok'}\n\n"
@@ -362,7 +375,8 @@ class Analyzer:
             if p.name in self.down:
                 continue
             try:
-                out = normalize(p.assess(system, prompt))
+                out = normalize(p.assess(system, prompt, max_tokens=1600) if item.extra.get("doc")
+                                else p.assess(system, prompt))
             except ProviderDown as e:
                 self.down[p.name] = str(e)[:200]
                 self._err(f"{p.name} devre dışı: {e}")

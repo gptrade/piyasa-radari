@@ -268,7 +268,7 @@
     return `<tr class="row${reason ? " dim" : ""}${state.open.has(it.id) ? " open" : ""}" data-id="${it.id}" tabindex="0" aria-expanded="${state.open.has(it.id)}">
       <td class="c-dir">${dirHTML(a)}</td>
       <td class="c-tk">${tk}</td>
-      <td class="c-ol"><div class="ol-t" data-tip="${esc(full)}">${isNew ? `<span class="new-dot" aria-label="yeni"></span>` : ""}${reason ? DIM_IC(reason) : ""}${simBadge(it)}${text} <span class="ol-src">· ${esc(it.source.split(" · ")[0])}</span></div></td>
+      <td class="c-ol"><div class="ol-t" data-tip="${esc(full)}">${isNew ? `<span class="new-dot" aria-label="yeni"></span>` : ""}${reason ? DIM_IC(reason) : ""}${simBadge(it)}${docBadge(it)}${text} <span class="ol-src">· ${esc(it.source.split(" · ")[0])}</span></div></td>
       <td class="c-imp">${imp}</td>
       <td class="c-rx num">${rxHTML(it)}</td>
       <td class="c-src"><span class="src-cell" data-tip="${esc(srcTip)}"><span class="${t1 ? "t1" : ""}">${TYPE[it.source_type] || "Haber"}</span>${it.dups ? ` <span class="x">×${it.dups + 1}</span>` : ""}</span></td>
@@ -286,6 +286,44 @@
     tr.addEventListener("click", e => e.stopPropagation());
     return tr;
   }
+
+
+  // Belge özeti: AI'ın okuduğu sunum / finansal rapor / 8-K eki (belge metni yayımlanmaz, yalnız özet)
+  function docLabel(d) {
+    const pdf = (d.files || []).filter(f => f.type === "PDF" && f.pages);
+    const pages = pdf.reduce((n, f) => n + f.pages, 0);
+    return `${esc(d.kind)}${pdf.length ? ` · ${pdf.length} PDF, ${pages} sayfa` : ""}${(d.files || []).some(f => f.type === "EX-99") ? ` · ${d.files.filter(f => f.type === "EX-99").length} ek` : ""}`;
+  }
+  function docBadge(it) {
+    const d = it.extra?.doc;
+    return d ? `<span class="doc-badge" data-tip="AI belgenin kendisini okudu: ${docLabel(d)}">Belge</span> ` : "";
+  }
+  function docSummary(it) {
+    const d = it.extra?.doc, a = it.analysis;
+    if (!d || !a) return "";
+    const figs = Object.entries(a.figures || {}).filter(([, v]) => v && !/^(yok|—|-|n\/a|belirtilmemiş)$/i.test(String(v).trim()))
+      .map(([k, v]) => [k.replace(/_/g, " ").replace(/^./, c => c.toLocaleUpperCase("tr")), v]);
+    return `<div class="doc-sum"><p class="d-sub">Belge özeti · ${docLabel(d)}</p>
+      ${a.key_points?.length ? `<ul class="doc-points">${a.key_points.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      ${figs.length ? `<table class="doc-figs"><tbody>${figs.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table>` : ""}
+      ${a.risks?.length ? `<p class="doc-risks"><b>Riskler:</b> ${a.risks.map(esc).join(" · ")}</p>` : ""}
+      <p class="doc-note">AI özeti; rakamları kaynak belgeden doğrula.</p></div>`;
+  }
+
+  // Dış servislerin kendi duygu skorları (AI'ın yerine geçmez; karnede ayrı notlanır)
+  const EXT = {
+    mx: { name: "Marketaux", lim: 0.2, tip: "Marketaux'nun kendi duygu skoru (−1…+1). Sözlük tabanlıdır, finans dilini yanlış okuyabilir (ör. 'hedef fiyat düşürüldü' → olumlu); karnede AI'dan ayrı notlanır." },
+    av: { name: "Alpha Vantage", lim: 0.15, tip: "Alpha Vantage'ın hisse bazındaki duygu skoru (−1…+1; ±0,15 altı nötr, ±0,35 üstü güçlü). Karnede AI'dan ayrı notlanır." },
+  };
+  function secondOpinions(it) {
+    return Object.entries(EXT).map(([k, e]) => {
+      const sc = it.extra?.[k];
+      if (!sc || !Object.keys(sc).length) return "";
+      return `<p class="mx-line" data-tip="${e.tip}">İkinci görüş · ${e.name}: ${Object.entries(sc).map(([t, v]) =>
+        `${esc(t)} <span class="${dirCls(v > e.lim ? 1 : v < -e.lim ? -1 : 0)}">${v > 0 ? "+" : v < 0 ? "−" : ""}${fmt.num(Math.abs(v), 2)}</span>`).join(" · ")}</p>`;
+    }).join("");
+  }
+
   function detailContent(it) {
     const a = it.analysis, tks = relTickers(it), reason = state.reasons.get(it.id);
     const first = s => (s || "").split(/(?<=[.!?])\s/)[0];
@@ -300,7 +338,8 @@
       </p>
       ${a ? `<dl class="slots"><dt>Ne oldu</dt><dd>${esc(a.what || a.headline_tr || it.title)}</dd><dt>Neden önemli</dt><dd>${esc(a.why || first(a.summary) || "—")}</dd>
         <dt>Risk</dt><dd class="risk">${esc(a.risk || a.risks?.[0] || "—")}</dd></dl>${a.summary ? `<p class="d-sum">${esc(a.summary)}</p>` : ""}` : ""}
-      ${it.extra?.mx && Object.keys(it.extra.mx).length ? `<p class="mx-line" data-tip="Marketaux'nun kendi duygu skoru (−1…+1). Sözlük tabanlıdır, finans dilini yanlış okuyabilir (ör. 'hedef fiyat düşürüldü' → olumlu); karnede AI'dan ayrı notlanır.">İkinci görüş · Marketaux: ${Object.entries(it.extra.mx).map(([t, v]) => `${esc(t)} <span class="${dirCls(v > 0.2 ? 1 : v < -0.2 ? -1 : 0)}">${v > 0 ? "+" : v < 0 ? "−" : ""}${fmt.num(Math.abs(v), 2)}</span>`).join(" · ")}</p>` : ""}
+      ${docSummary(it)}
+      ${secondOpinions(it)}
       ${it.summary && it.summary !== it.title ? `<p class="d-sub">Orijinal metin</p><p class="d-sum">${esc(it.summary)}</p>` : ""}
       <p class="d-sub">Kaynaklar</p>
       <ul class="d-sources">
@@ -881,6 +920,8 @@
       wrap.append(call);
     }
     wrap.append(px, head);
+    const vs = valuationSection(sym, p);
+    if (vs) wrap.append(vs);
     const an = analystSection(sym, p);
     if (an) wrap.append(an);
     const ss = shortSection(sym);
@@ -897,6 +938,49 @@
       wrap.append(sec);
     }
     return wrap;
+  }
+  // Değerleme çarpanları (Yahoo, günde bir). İzleme listesinde aynı piyasa + alt sektörde başka hisse varsa emsal medyanı.
+  const VAL = [
+    ["pe", "F/K", "x", "Fiyat / son 12 ay hisse başı kâr"], ["fpe", "İleri F/K", "x", "Fiyat / gelecek 12 ay beklenen hisse başı kâr"],
+    ["pb", "PD/DD", "x", "Piyasa değeri / defter değeri"], ["ev_ebitda", "FD/FAVÖK", "x", "Firma değeri / FAVÖK (bankalarda anlamsız)"],
+    ["ps", "F/S", "x", "Piyasa değeri / son 12 ay satış"], ["peg", "PEG", "x", "F/K ÷ beklenen kâr büyümesi"],
+    ["dy", "Temettü verimi", "%", "Yıllık temettü / fiyat"], ["roe", "Özsermaye kârlılığı", "r", "Son 12 ay net kâr / özsermaye"],
+    ["margin", "Net kâr marjı", "r", "Son 12 ay net kâr / satış"], ["rev_g", "Gelir büyümesi", "g", "Son çeyrek, geçen yılın aynı çeyreğine göre"],
+    ["eps_g", "Kâr büyümesi", "g", "Son çeyrek, geçen yılın aynı çeyreğine göre"], ["de", "Borç / özsermaye", "x100", "Toplam borç / özsermaye"],
+    ["beta", "Beta", "n", "Endekse duyarlılık (5 yıllık aylık)"],
+  ];
+  const median = xs => { const a = xs.filter(x => x != null && isFinite(x)).sort((x, y) => x - y); if (!a.length) return null; const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+  function valFmt(v, kind) {
+    if (v == null) return "—";
+    if (kind === "x") return fmt.num(v, v >= 100 ? 0 : 1) + "x";
+    if (kind === "x100") return fmt.num(v / 100, 2) + "x";
+    if (kind === "%") return "%" + fmt.num(v, 2);
+    if (kind === "r" || kind === "g") return fmt.pct(v * 100, 1, kind === "g");
+    return fmt.num(v, 2);
+  }
+  function bigMoney(v, cur) {
+    if (v == null) return "—";
+    const u = Math.abs(v) >= 1e12 ? [1e12, " trn"] : Math.abs(v) >= 1e9 ? [1e9, " mlr"] : [1e6, " mn"];
+    return fmt.num(v / u[0], 1) + u[1] + (cur === "TRY" ? " ₺" : cur === "USD" ? " $" : cur ? " " + cur : "");
+  }
+  function valuationSection(sym, p) {
+    const v = p?.valuation;
+    if (!v) return null;
+    const peers = Object.entries(state.prices).filter(([s, q]) => s !== sym && q?.market === p.market && q?.valuation?.industry
+      && q.valuation.industry === v.industry && !q.valuation.fx_mismatch).map(([s, q]) => [s, q.valuation]);
+    const rows = VAL.filter(([k]) => v[k] != null).map(([k, l, kind, tip]) => {
+      const med = peers.length && ["pe", "fpe", "pb", "ev_ebitda", "ps", "roe", "margin"].includes(k) ? median(peers.map(([, q]) => q[k])) : null;
+      return `<tr><th scope="row"><span data-tip="${esc(tip)}">${l}</span></th><td class="num">${valFmt(v[k], kind)}</td>${peers.length ? `<td class="num t3">${med == null ? "" : valFmt(med, kind)}</td>` : ""}</tr>`;
+    }).join("");
+    const sec = document.createElement("div");
+    sec.className = "tp-sec";
+    sec.innerHTML = `<p class="d-sub">Değerleme</p>
+      <p class="tp-sub">${v.mcap ? `Piyasa değeri <b>${bigMoney(v.mcap, p.currency)}</b>` : ""}${v.sector ? `${v.mcap ? " · " : ""}${esc(v.sector)}${v.industry ? ` / ${esc(v.industry)}` : ""}` : ""}</p>
+      ${v.fx_mismatch ? `<p class="tp-warn">Bilanço ${esc(v.fin_ccy)} cinsinden, fiyat ${esc(p.currency)}: Yahoo'nun fiyat tabanlı çarpanları (F/K, PD/DD, FD/FAVÖK) tutarsız olduğu için gösterilmiyor.</p>` : ""}
+      ${v.loss ? `<p class="tp-sub">Son 12 ayda net zarar: F/K hesaplanmaz.</p>` : ""}
+      ${rows ? `<table class="tx val-tx"><thead><tr><th>Ölçüt</th><th class="num">${esc(sym)}</th>${peers.length ? `<th class="num" data-tip="İzleme listesinde aynı alt sektördeki (Yahoo sınıflaması) hisselerin medyanı: ${esc(peers.map(([s]) => s).join(", "))}">Liste emsali</th>` : ""}</tr></thead><tbody>${rows}</tbody></table>` : `<p class="tp-empty">Yahoo'da bu hisse için değerleme verisi yok.</p>`}
+      <p class="tp-more">Kaynak: <a href="https://finance.yahoo.com/quote/${encodeURIComponent(p.yahoo || sym)}/key-statistics/" target="_blank" rel="noopener">Yahoo Finance</a>${v.updated ? ` · ${fmt.ago(v.updated)} güncellendi` : ""}${p.market === "BIST" ? " · BIST'te enflasyon muhasebesi (TMS 29) nedeniyle çarpanlar sapabilir" : ""}</p>`;
+    return sec;
   }
   // Analist görüşü: tavsiye dağılımı, hedef fiyat, son not değişiklikleri (Yahoo Finance)
   const REC = [["strongBuy", "Güçlü al", "sb"], ["buy", "Al", "b"], ["hold", "Tut", "h"], ["sell", "Sat", "s"], ["strongSell", "Güçlü sat", "ss"]];
@@ -1078,7 +1162,7 @@
   // ─────────────────────────────── Karne: sinyallerin geriye dönük isabeti (data/scorecard.json)
   const K_DIM = { kind: "Kaynak türü", ev: "Olay türü", conf: "AI güveni", mat: "Önem", dir: "Yön", t: "Hisse", src: "Kaynak", pv: "Değerlendiren" };
   const K_WIN = { 30: "30 gün", 90: "90 gün", all: "Tümü" };
-  const kGroup = (dim, g) => dim === "ev" ? (EVENT[g] || g) : dim === "mat" ? (MAT_TR[g] || g) : dim === "pv" ? (g === "AI" ? "AI (Claude / Gemini)" : g === "Marketaux" ? "Marketaux skoru (dış, sözlük tabanlı)" : "Kural (teknik, analist notu)") : g;
+  const kGroup = (dim, g) => dim === "ev" ? (EVENT[g] || g) : dim === "mat" ? (MAT_TR[g] || g) : dim === "pv" ? (g === "AI" ? "AI (Claude / Gemini)" : g === "Marketaux" ? "Marketaux skoru (dış, sözlük tabanlı)" : g === "Alpha Vantage" ? "Alpha Vantage skoru (dış)" : "Kural (teknik, analist notu)") : g;
   const kPct = (v, d = 1) => v == null ? "—" : `<span class="${dirCls(v > 0 ? 1 : v < 0 ? -1 : 0)}">${fmt.pct(v, d)}</span>`;
   function hitBar(st) {
     if (!st?.n) return `<span class="t3">—</span>`;

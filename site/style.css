@@ -823,3 +823,23 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .tk-panel .d-sub .t3 { color: var(--text-3); font-weight: 400; }
 .mx-line { font-size: var(--fs-xs); color: var(--text-3); margin-top: var(--s-2); }
 .mx-line span { font-family: var(--font-mono); }
+
+/* Belge özeti (sunum / finansal rapor / 8-K eki) */
+.doc-badge { display: inline-block; font-size: var(--fs-xs); line-height: 1.4; padding: 0 6px; margin-right: 4px; border-radius: 999px;
+  border: 1px solid var(--accent); color: var(--accent); vertical-align: 1px; }
+.doc-sum { margin-top: var(--s-3); padding: var(--s-3); border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2, transparent); }
+.doc-sum .d-sub { margin-top: 0; }
+.doc-points { margin: var(--s-2) 0; padding-left: 1.2em; }
+.doc-points li { margin: 2px 0; }
+.doc-figs { width: 100%; border-collapse: collapse; font-size: var(--fs-sm, 0.9em); margin: var(--s-2) 0; }
+.doc-figs th { background: transparent; position: static; font-size: inherit; text-transform: none; letter-spacing: 0; text-align: left; font-weight: 500; color: var(--text-2); padding: 3px 8px 3px 0; width: 40%; vertical-align: top; }
+.doc-figs td { font-family: var(--font-mono); padding: 3px 0; }
+.doc-figs tr + tr th, .doc-figs tr + tr td { border-top: 1px solid var(--border); }
+.doc-risks { font-size: var(--fs-xs); color: var(--text-2); }
+.doc-note { font-size: var(--fs-xs); color: var(--text-3); margin-top: var(--s-2); }
+
+/* Değerleme tablosu (hisse paneli) */
+.val-tx thead th:first-child { text-align: left; }
+.val-tx th[scope="row"] { position: static; font-size: var(--fs-sm); text-transform: none; letter-spacing: 0; padding: 5px var(--s-2); border-bottom: 1px solid var(--border); font-weight: 400; text-align: left; color: var(--text-2); }
+.val-tx td.num, .val-tx th.num { font-family: var(--font-mono); text-align: right; }
+.tp-warn { font-size: var(--fs-xs); color: var(--warn, #b45309); background: var(--warn-soft, transparent); padding: 6px 8px; border-radius: 6px; margin-bottom: var(--s-2); }

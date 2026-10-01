@@ -411,7 +411,50 @@ def analyst_data(tk, max_changes: int = 12) -> dict | None:
     return out if len(out) > 1 else None
 
 
-def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False) -> dict | None:
+VAL_FIELDS = {   # panel adı → Yahoo alanı
+    "pe": "trailingPE", "fpe": "forwardPE", "pb": "priceToBook", "ps": "priceToSalesTrailing12Months",
+    "ev_ebitda": "enterpriseToEbitda", "peg": "trailingPegRatio", "dy": "dividendYield", "mcap": "marketCap",
+    "ev": "enterpriseValue", "roe": "returnOnEquity", "margin": "profitMargins", "de": "debtToEquity",
+    "rev_g": "revenueGrowth", "eps_g": "earningsGrowth", "beta": "beta", "eps": "trailingEps", "feps": "forwardEps",
+}
+PRICE_BASED = ("pe", "fpe", "pb", "ps", "ev_ebitda", "peg", "ev")
+
+
+def valuation_data(tk, currency: str | None = None) -> dict | None:
+    """Yahoo değerleme çarpanları ve kârlılık. Finansal tablo para birimi fiyatınkinden farklıysa (ör. THYAO:
+    TL fiyat, USD bilanço) Yahoo'nun fiyat tabanlı çarpanları tutarsız olur: `fx_mismatch` işaretlenir ve
+    o çarpanlar yazılmaz (oranlar — özsermaye kârlılığı, marj, büyüme — para biriminden bağımsızdır)."""
+    try:
+        info = tk.info or {}
+    except Exception:
+        return None
+    out: dict = {"updated": iso(now_utc())}
+    for k, src in VAL_FIELDS.items():
+        v = info.get(src)
+        if k == "peg" and v is None:
+            v = info.get("pegRatio")
+        v = _num(v)
+        if v is not None:
+            out[k] = v
+    fin, ccy = info.get("financialCurrency"), info.get("currency") or currency
+    mismatch = bool(fin and ccy and fin != ccy)
+    # Zarar: F/K anlamsız. Kur uyumsuzluğunda ya da marj pozitifken eksi EPS tutarsız veridir, zarar sayılmaz.
+    if out.get("eps") is not None and out["eps"] < 0 and not mismatch and (out.get("margin") is None or out["margin"] < 0):
+        out.pop("pe", None)
+        out["loss"] = True
+    for k in ("sector", "industry"):
+        if info.get(k):
+            out[k] = str(info[k])
+    if fin:
+        out["fin_ccy"] = fin
+    if mismatch:
+        out["fx_mismatch"] = True
+        for k in PRICE_BASED + ("eps", "feps", "dy"):
+            out.pop(k, None)
+    return out if len(out) > 2 else None
+
+
+def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False, valuation: bool = False) -> dict | None:
     import yfinance as yf
     try:
         tk = yf.Ticker(yahoo or stock.yahoo)
@@ -428,6 +471,7 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False) -> dict
         next_earnings = _next_earnings(tk, cal) if cal is not None else None
         next_dividend = _next_dividend(cal)
         an = analyst_data(tk) if analyst else None
+        val = valuation_data(tk, currency) if valuation else None
     except Exception as e:
         log.warning("%s fiyat alınamadı: %s", yahoo or stock.yahoo, e)
         return None
@@ -451,6 +495,7 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False) -> dict
         "next_earnings": next_earnings,
         **({"next_dividend": next_dividend} if next_dividend else {}),
         **({"analyst": an} if an else {}),
+        **({"valuation": val} if val else {}),
     }
 
 
@@ -467,25 +512,35 @@ def _store(st: Stock, p: dict | None) -> dict | None:
     return p
 
 
-def _old_analyst(st: Stock) -> dict | None:
+def _old(st: Stock, key: str) -> dict | None:
     path = PRICE_DIR / f"{st.symbol}.json"
     try:
-        return json.loads(path.read_text()).get("analyst") if path.exists() else None
+        return json.loads(path.read_text()).get(key) if path.exists() else None
     except Exception:
         return None
 
 
-def update_all(stocks: list[Stock], analyst_hours: float | None = 6) -> dict[str, dict]:
-    """analyst_hours: analist verisi bu kadar saatte bir yenilenir (None → hiç alınmaz)."""
+def _old_analyst(st: Stock) -> dict | None:
+    return _old(st, "analyst")
+
+
+def _due(old: dict | None, hours: float | None) -> bool:
+    return hours is not None and (not old or now_utc() - parse_iso(old["updated"]) > timedelta(hours=hours))
+
+
+def update_all(stocks: list[Stock], analyst_hours: float | None = 6, valuation_hours: float | None = 24) -> dict[str, dict]:
+    """analyst_hours / valuation_hours: analist verisi ve değerleme çarpanları bu kadar saatte bir yenilenir
+    (None → hiç alınmaz)."""
     PRICE_DIR.mkdir(parents=True, exist_ok=True)
     out: dict[str, dict] = {}
     for st in stocks:
-        old = _old_analyst(st) if analyst_hours is not None else None
-        due = analyst_hours is not None and (
-            not old or now_utc() - parse_iso(old["updated"]) > timedelta(hours=analyst_hours))
-        p = fetch(st, analyst=due)
+        old = _old(st, "analyst") if analyst_hours is not None else None
+        oldv = _old(st, "valuation") if valuation_hours is not None else None
+        p = fetch(st, analyst=_due(old, analyst_hours), valuation=_due(oldv, valuation_hours))
         if p is not None and analyst_hours is not None and "analyst" not in p and old:
             p["analyst"] = old                       # bu tur yenilenmediyse eskisini taşı
+        if p is not None and valuation_hours is not None and "valuation" not in p and oldv:
+            p["valuation"] = oldv
         p = _store(st, p)
         if p:
             out[st.symbol] = p

@@ -91,7 +91,7 @@ def test_update_all_refreshes_analyst_only_when_due(tmp_path, monkeypatch):
     monkeypatch.setattr(prices, "INDEXES", {})
     calls = []
 
-    def fake_fetch(st, yahoo=None, analyst=False):
+    def fake_fetch(st, yahoo=None, analyst=False, valuation=False):
         calls.append(analyst)
         p = {"symbol": st.symbol, "last": 1}
         if analyst:
