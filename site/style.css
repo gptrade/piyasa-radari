@@ -715,3 +715,12 @@ main:focus { outline: none; }
 .k-recent .k-meta { display: block; font-size: var(--fs-xs); color: var(--text-3); margin-top: 2px; }
 .k-note { font-size: var(--fs-xs); color: var(--text-3); line-height: 1.5; margin: 0; }
 @media (max-width: 767px) { .hb { width: 72px; } .k-recent .k-t { min-width: 220px; } }
+
+/* ─── Habersiz hareket ─── */
+.an-flag { margin-right: 2px; }
+.hm.anom { box-shadow: inset 0 0 0 2px var(--warn); }
+.an-call { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; padding: var(--s-3);
+  border: 1px solid var(--warn-line); border-left: 3px solid var(--warn); border-radius: var(--r-md); background: color-mix(in srgb, var(--warn) 8%, var(--surface));
+  font-size: var(--fs-sm); color: var(--text); }
+.an-call:hover { background: color-mix(in srgb, var(--warn) 14%, var(--surface)); }
+.an-call .t3 { color: var(--text-2); font-size: var(--fs-xs); }

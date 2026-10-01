@@ -18,6 +18,8 @@ def should_notify(item: Item, cfg: dict) -> bool:
     a = item.analysis
     if not a:
         return False
+    if item.extra.get("anomaly"):                         # habersiz hareket: kendi ayarı
+        return bool(cfg.get("anomaly", True))
     if item.source_type == "technical":                   # teknik olaylar: AI eşikleri yerine kendi ayarı
         return bool(cfg.get("technical", True)) and LEVEL.get(a.get("materiality", "low"), 0) >= 1
     if cfg.get("only_directional", True) and a.get("sentiment") == "neutral":
