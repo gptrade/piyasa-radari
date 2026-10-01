@@ -724,3 +724,42 @@ main:focus { outline: none; }
   font-size: var(--fs-sm); color: var(--text); }
 .an-call:hover { background: color-mix(in srgb, var(--warn) 14%, var(--surface)); }
 .an-call .t3 { color: var(--text-2); font-size: var(--fs-xs); }
+
+/* ─── Takvim ─── */
+#view-takvim { display: flex; flex-direction: column; gap: var(--s-4); }
+#view-takvim[hidden] { display: none; }
+.cal-tools { flex-wrap: wrap; gap: var(--s-2) var(--s-3); }
+.cal-tools .seg { margin-left: auto; }
+#calBody { display: flex; flex-direction: column; gap: var(--s-4); }
+.cal-next { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s-3); }
+.cal-card { position: relative; display: flex; flex-direction: column; gap: 4px; padding: var(--s-4); border-left: 3px solid var(--cal-c, var(--accent)); }
+.cal-kind { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-3); font-weight: var(--fw-medium); }
+.cal-title { font-size: var(--fs-md); padding-right: 64px; }
+.cal-when { font: var(--fs-sm) var(--font-mono); color: var(--text-2); }
+.cal-count { position: absolute; top: var(--s-4); right: var(--s-4); font: var(--fw-semibold) var(--fs-sm) var(--font-mono); color: var(--text-2); }
+.cal-count.soon, .cal-rel.soon { color: var(--warn); }
+.cal-list { list-style: none; margin: 0; padding: 0; }
+.cal-list ul { list-style: none; margin: 0; padding: 0; }
+.cal-day + .cal-day { border-top: 1px solid var(--border); }
+.cal-day-h { display: flex; align-items: baseline; gap: var(--s-2); margin: 0; padding: var(--s-3) var(--s-4) var(--s-1); font-size: var(--fs-sm); }
+.cal-day-name { font-weight: var(--fw-semibold); }
+.cal-rel { font: var(--fs-xs) var(--font-mono); color: var(--text-3); }
+.cal-ev { display: grid; grid-template-columns: 64px 88px minmax(0, 1fr) 28px 72px; align-items: center; gap: var(--s-3); padding: var(--s-2) var(--s-4); }
+.cal-ev:hover { background: var(--row-hover); }
+.cal-t { font: var(--fs-sm) var(--font-mono); color: var(--text-2); white-space: nowrap; }
+.cal-k { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-2); white-space: nowrap; }
+.cal-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cal-c, var(--accent)); flex: none; }
+.cal-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cal-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); }
+.cal-detail { font-size: var(--fs-xs); color: var(--text-3); }
+.cal-src { font-size: var(--fs-xs); text-align: right; }
+.cal-src a { color: var(--text-3); }
+.cal-src a:hover { color: var(--accent); }
+.tag.mk { color: var(--text-2); background: var(--surface-2); border: 1px solid var(--border); }
+.k-cb { --cal-c: var(--series-1); } .k-macro { --cal-c: var(--series-2); } .k-report { --cal-c: var(--series-5); }
+.k-earnings { --cal-c: var(--series-3); } .k-dividend { --cal-c: var(--series-4); } .k-expiry { --cal-c: var(--neutral); }
+@media (max-width: 767px) {
+  .cal-tools .seg { margin-left: 0; }
+  .cal-ev { grid-template-columns: 52px minmax(0, 1fr) auto; grid-template-areas: "t main imp" "k main src"; row-gap: 2px; }
+  .cal-t { grid-area: t; } .cal-k { grid-area: k; font-size: var(--fs-2xs); } .cal-main { grid-area: main; } .cal-imp { grid-area: imp; } .cal-src { grid-area: src; }
+}

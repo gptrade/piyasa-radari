@@ -1302,7 +1302,7 @@
       { label: "JSON", hint: "tam kayıt + filtreler", run: exportJSON, disabled: !n }]; },
     exportInfo: () => state.feed ? `Filtrelenmiş görünüm: ${fmt.int(filtered().length)} kayıt` : "",
   });
-  window.radar = { get state() { return state; }, ready: null, poll: () => poll() };
+  window.radar = { get state() { return state; }, ready: null, poll: () => poll(), openTicker: (sym, from) => openTicker(sym, from) };
 
   async function boot() {
     let done; window.radar.ready = window.radar.ready || new Promise(r => (done = r));

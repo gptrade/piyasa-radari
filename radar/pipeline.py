@@ -13,7 +13,7 @@ from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
-from . import anomaly, bb_quotes, scorecard
+from . import anomaly, bb_quotes, calendar_events, scorecard
 from .sources import Context, feeds, kap, reports, social, spk, tcmb
 
 log = logging.getLogger("radar")
@@ -355,6 +355,10 @@ def run() -> dict:
         log.exception("EVDS hatası")
         macro = None
         status.append({"name": "TCMB EVDS", "ok": False, "count": 0, "error": str(e)[:200]})
+    try:                                                    # Takvim: makro, vade sonu, bilanço ve temettü tarihleri
+        calendar_events.update(stocks, px)
+    except Exception as e:
+        log.warning("Takvim oluşturulamadı: %s", e)
     try:                                                    # Şirket Geri Alım: güncel / ortalama fiyat için
         bb_quotes.update(settings)
     except Exception as e:

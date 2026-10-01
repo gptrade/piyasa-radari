@@ -332,12 +332,26 @@ def ta_context(p: dict | None) -> str:
 
 
 # ------------------------------------------------------------------ indirme
-def _next_earnings(tk) -> dict | None:
-    """Yahoo takviminden bir sonraki bilanço tarihi ve beklentiler (yoksa None)."""
-    try:
-        cal = tk.calendar
-    except Exception:
+def _next_dividend(cal) -> dict | None:
+    """Yahoo takviminden yaklaşan hak kullanım (ex-dividend) ve ödeme tarihi (geçmişse None)."""
+    if not isinstance(cal, dict):
         return None
+    today = now_utc().date()
+    ex, pay = cal.get("Ex-Dividend Date"), cal.get("Dividend Date")
+    ex = ex if hasattr(ex, "isoformat") and ex >= today else None
+    pay = pay if hasattr(pay, "isoformat") and pay >= today else None
+    if not ex and not pay:
+        return None
+    return {"ex": ex.isoformat() if ex else None, "pay": pay.isoformat() if pay else None}
+
+
+def _next_earnings(tk, cal=None) -> dict | None:
+    """Yahoo takviminden bir sonraki bilanço tarihi ve beklentiler (yoksa None)."""
+    if cal is None:
+        try:
+            cal = tk.calendar
+        except Exception:
+            return None
     if not isinstance(cal, dict):
         return None
     dates = cal.get("Earnings Date") or []
@@ -407,7 +421,12 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False) -> dict
             currency = tk.fast_info.get("currency")
         except Exception:
             currency = None
-        next_earnings = _next_earnings(tk)
+        try:
+            cal = tk.calendar
+        except Exception:
+            cal = None
+        next_earnings = _next_earnings(tk, cal) if cal is not None else None
+        next_dividend = _next_dividend(cal)
         an = analyst_data(tk) if analyst else None
     except Exception as e:
         log.warning("%s fiyat alınamadı: %s", yahoo or stock.yahoo, e)
@@ -430,6 +449,7 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False) -> dict
         # Panel için: gün içi 5 gün, günlük son ~6 ay yeter (dosya boyutu)
         "intraday": intraday, "daily": daily[-keep:], "ema": ema_overlay, "updated": iso(now_utc()),
         "next_earnings": next_earnings,
+        **({"next_dividend": next_dividend} if next_dividend else {}),
         **({"analyst": an} if an else {}),
     }
 
