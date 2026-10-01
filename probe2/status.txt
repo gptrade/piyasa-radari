@@ -1,0 +1,15 @@
+/datum/acigasat.zip 200 6791 application/zip
+/data/gk/gk2026.zip 200 102327 application/zip
+/data/thb/2026/09/thb202609301.zip 200 308760 application/zip
+/data/thb/2026/09/thb202609302.zip 404 8558 text/html
+/data/thm/2026/09/thm202609301.zip 200 110770 application/zip
+/data/thm/2026/09/thm202609302.zip 200 109041 application/zip
+/data/thb/2026/09/thb202609291.zip 200 310152 application/zip
+/data/thb/2026/09/thb202609292.zip 404 8558 text/html
+/data/thm/2026/09/thm202609291.zip 200 108864 application/zip
+/data/thm/2026/09/thm202609292.zip 200 111011 application/zip
+/data/ratio/ratio2026.zip 404 8558 text/html
+ratio2026.zip unzip fail
+thb_29_2.zip unzip fail
+thb_30_2.zip unzip fail
+python exit 1

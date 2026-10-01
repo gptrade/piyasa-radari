@@ -1,0 +1,10 @@
+./x_thm_30_2/thm202609302.csv 2788814
+./status.txt 690
+./x_thm_29_2/thm202609292.csv 2800899
+./x_acigasat/acigasat.xlsx 7253
+./x_thb_30_1/thb202609301.csv 2595508
+./x_gk2026/gk2026.xlsx 106229
+./x_thb_29_1/thb202609291.csv 2608617
+./x_thm_30_1/thm202609301.csv 2791087
+./x_thm_29_1/thm202609291.csv 2797825
+./files.txt 0
