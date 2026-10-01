@@ -1,6 +1,8 @@
 # İzleme listesi. Bir hisse eklemek için aynı formatta bir satır ekle ve commit et.
 # aliases: haber metninde bu hisseyi tanımak için aranacak isimler (büyük/küçük harf duyarsız).
 # tv: TradingView sembolü (ABD için borsa önekiyle, ör. NASDAQ:NVDA). BIST için otomatik BIST:KOD.
+# kap: (isteğe bağlı, BIST) KAP şirket sayfası adresinin son kısmı; hisse panelinde "KAP" bağlantısı çıkar.
+#      Ör. https://www.kap.org.tr/tr/sirket-bilgileri/genel/1107-turk-hava-yollari-a-o → 1107-turk-hava-yollari-a-o
 
 bist:
   - symbol: VAKBN
@@ -26,6 +28,7 @@ bist:
     aliases: ["A1 Capital"]
   - symbol: THYAO
     name: Türk Hava Yolları
+    kap: 1107-turk-hava-yollari-a-o
     aliases: ["Türk Hava Yolları", "THY"]
   - symbol: GRTHO
     name: Grainturk Holding AS

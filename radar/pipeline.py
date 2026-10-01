@@ -520,7 +520,8 @@ def run() -> dict:
     FEED.write_text(json.dumps({
         "generated": iso(now_utc()),
         "sources": status,
-        "watchlist": [{"symbol": s.symbol, "name": s.name, "market": s.market, "tv": s.tv} for s in stocks],
+        "watchlist": [{"symbol": s.symbol, "name": s.name, "market": s.market, "tv": s.tv,
+                       **({"kap": s.kap} if s.kap else {})} for s in stocks],
         "ai": analyzer.status(),
         # Sadece tanımlı olup olmadıkları (değerler asla yazılmaz)
         "secrets": {k: bool(os.environ.get(k)) for k in (

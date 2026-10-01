@@ -433,12 +433,23 @@
     return (vals.at(-1) / vals[0] - 1) * 100;
   }
   const tvSymbol = (sym, m) => (state.feed.watchlist || []).find(w => w.symbol === sym)?.tv || (m === "BIST" ? `BIST:${sym}` : sym);
+  // Hisseye özel dış bağlantılar (yalnız o hissenin sayfası; genel ana sayfa bağlantısı yok)
   function extLinks(sym, m, p) {
-    const links = [["TradingView", `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tvSymbol(sym, m))}`],
-      ["Investing", `https://tr.investing.com/search/?q=${encodeURIComponent(sym)}`], ["Yahoo", `https://finance.yahoo.com/quote/${encodeURIComponent(p?.yahoo || sym)}/`]];
-    if (m === "US") links.push(["Barchart", `https://www.barchart.com/stocks/quotes/${encodeURIComponent(sym)}`], ["Earnings Hub", "https://earningshub.com/"]);
-    links.push(["Godel", "https://app.godelterminal.com/"]);
-    if (m === "BIST") links.push(["MarketVisuals", "https://marketvisuals.net/"]);
+    const w = (state.feed.watchlist || []).find(x => x.symbol === sym) || {};
+    const q = encodeURIComponent(sym);
+    const links = m === "BIST" ? [
+      ...(w.kap ? [["KAP", `https://www.kap.org.tr/tr/sirket-bilgileri/genel/${encodeURIComponent(w.kap)}`]] : []),
+      ["Fintables", `https://fintables.com/sirketler/${q}`],
+      ["İş Yatırım", `https://www.isyatirim.com.tr/tr-tr/analiz/hisse/Sayfalar/sirket-karti.aspx?hisse=${q}`],
+      ["TradingView", `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tvSymbol(sym, m))}`],
+      ["Yahoo", `https://finance.yahoo.com/quote/${encodeURIComponent(p?.yahoo || sym + ".IS")}/`],
+    ] : [
+      ["SEC başvuruları", `https://www.sec.gov/edgar/browse/?CIK=${q}`],
+      ["Barchart", `https://www.barchart.com/stocks/quotes/${q}`],
+      ["Finviz", `https://finviz.com/quote.ashx?t=${q}`],
+      ["TradingView", `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tvSymbol(sym, m))}`],
+      ["Yahoo", `https://finance.yahoo.com/quote/${encodeURIComponent(p?.yahoo || sym)}/`],
+    ];
     return `<div class="ext-links">${links.map(([n, u]) => `<a href="${u}" target="_blank" rel="noopener">${n} ↗</a>`).join("")}</div>`;
   }
   function tvWidget(box, sym, m) {
