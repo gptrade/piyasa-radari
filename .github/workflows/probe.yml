@@ -1,0 +1,30 @@
+name: probe-bist
+on:
+  push:
+    branches: [arastirma-bist-veri]
+    paths: [".github/workflows/probe.yml"]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: indir
+        run: |
+          mkdir -p probe && cd probe
+          UA="Mozilla/5.0 (X11; Linux x86_64) piyasa-radari-arastirma"
+          for u in "https://www.borsaistanbul.com/en/data/equity-market-data" "https://www.borsaistanbul.com/tr/sayfa/2433/pay-piyasasi-verileri" "https://www.borsaistanbul.com/veriler/verileri/pay-piyasasi-verileri"; do
+            f=$(echo "$u" | sed 's#[^a-z0-9]#_#g' | cut -c1-80).html
+            curl -sSL -m 40 -A "$UA" -o "$f" -w "$u %{http_code} %{size_download}\n" "$u" >> status.txt || echo "$u FAIL" >> status.txt
+          done
+          curl -sSL -m 60 -A "$UA" -o DataFilePaths.zip -w "zip %{http_code} %{size_download}\n" https://www.borsaistanbul.com/files/DataFilePaths.zip >> status.txt || true
+          (unzip -o DataFilePaths.zip -d dfp >/dev/null 2>&1 && ls -laR dfp > dfp_list.txt) || true
+          grep -hoE 'href="[^"]+"' *.html | sort -u > links.txt || true
+          grep -iE 'short|aciga|açığa|foreign|yabanci|yabancı|genel|assembly|margin|kredili|member|uye|üye|xls|csv|zip' links.txt > links_ilgili.txt || true
+          rm -f *.zip
+          ls -la
+      - name: kaydet
+        run: |
+          git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
+          git add probe && git commit -qm "probe sonuçları" && git push -q
