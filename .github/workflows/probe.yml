@@ -1,4 +1,4 @@
-name: probe-bist  # tekrar
+name: probe-bist
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -10,40 +10,55 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
-        with: { ref: onizleme-tr-kaynaklar, path: app }
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: kuru çalıştırma
+      - name: marketaux
+        env:
+          MX: ${{ secrets.MARKETAUX_API_TOKEN || secrets.MARKETAUX_API_KEY || secrets.MARKETAUX_TOKEN || secrets.MARKETAUX }}
+          HAS_A: ${{ secrets.MARKETAUX_API_TOKEN != '' }}
+          HAS_B: ${{ secrets.MARKETAUX_API_KEY != '' }}
+          HAS_C: ${{ secrets.MARKETAUX_TOKEN != '' }}
+          HAS_D: ${{ secrets.MARKETAUX != '' }}
         run: |
           set +e
-          cd app && pip install -q -r requirements.txt
-          mkdir -p ../probe5
-          python - <<'PY' > ../probe5/sonuc.txt 2>&1
-          from datetime import timedelta
-          from radar.config import load_settings, load_watchlist, TickerMatcher
-          from radar.models import now_utc
-          from radar.sources import Context, tr_official as t, tcmb, feeds
-          from radar import http
-          st = load_watchlist()
-          ctx = Context(settings=load_settings(), stocks=st, matcher=TickerMatcher(st), since=now_utc() - timedelta(days=3))
-          for name, fn in [("TÜİK", t.collect_tuik), ("BDDK", t.collect_bddk), ("Resmi Gazete", t.collect_resmi_gazete),
-                           ("Borsa İstanbul", t.collect_bist_announcements), ("SPK duyuru", t.collect_spk_press),
-                           ("Hazine", t.collect_hazine), ("TCMB", tcmb.collect)]:
-              n0 = len(http.FAILURES)
-              try:
-                  items = fn(ctx)
-              except Exception as e:
-                  print(f"## {name}: HATA {e!r}"); continue
-              print(f"## {name}: {len(items)} kayıt; uyarı: {http.FAILURES[n0:]}")
-              for i in items[:8]:
-                  print(f"   [{i.source_type}] {i.published[:16]} {i.source} | {i.title[:110]} | {','.join(i.tickers)}")
-          ek = [f for f in ctx.cfg("turkish_news_rss")["feeds"] if "Ekonomim" in f["name"]]
-          for f in ek:
-              fd = feeds.fetch_feed(f["url"])
-              print(f"## {f['name']}: {len(fd.entries) if fd else 'yok'} giriş")
+          mkdir -p probe6
+          pip install -q requests
+          python - <<'PY' > probe6/sonuc.txt 2>&1
+          import os, json, requests
+          print("secret adları: TOKEN", os.environ["HAS_A"], "API_KEY", os.environ["HAS_B"], "MX_TOKEN", os.environ["HAS_C"], "MARKETAUX", os.environ["HAS_D"])
+          t = os.environ.get("MX")
+          if not t:
+              print("ANAHTAR YOK"); raise SystemExit
+          B = "https://api.marketaux.com/v1"
+          def get(path, **p):
+              r = requests.get(B + path, params={**p, "api_token": t}, timeout=30)
+              try: j = r.json()
+              except Exception: j = {"raw": r.text[:300]}
+              return r.status_code, j
+          # 1) BIST varlık araması
+          for q in ["Turk Hava Yollari", "THYAO", "Vakifbank", "Turk Telekom", "Akbank"]:
+              s, j = get("/entity/search", search=q, countries="tr")
+              print("ENTITY", q, s, [(d.get("symbol"), d.get("name"), d.get("exchange")) for d in j.get("data", [])][:5], j.get("error"))
+          # 2) Türkiye haberleri
+          s, j = get("/news/all", countries="tr", filter_entities="true", limit=3)
+          print("NEWS tr", s, j.get("meta"), j.get("error"))
+          for a in j.get("data", []):
+              print("  ", a["published_at"], a["source"], a["language"], "|", a["title"][:90])
+              for e in a.get("entities", [])[:4]:
+                  print("      ", e.get("symbol"), e.get("name"), e.get("country"), e.get("sentiment_score"), e.get("match_score"))
+          # 3) BIST sembolleriyle (farklı yazımlar)
+          for syms in ["THYAO.IS", "THYAO", "TTKOM.IS,VAKBN.IS,AKBNK.IS"]:
+              s, j = get("/news/all", symbols=syms, filter_entities="true", limit=3)
+              print("NEWS", syms, s, (j.get("meta") or {}).get("found"), [a["title"][:60] for a in j.get("data", [])], j.get("error"))
+          # 4) ABD
+          s, j = get("/news/all", symbols="NVDA,AAPL,MSFT,TSLA,AMD", filter_entities="true", language="en", limit=3)
+          print("NEWS US", s, j.get("meta"), j.get("error"))
+          for a in j.get("data", []):
+              print("  ", a["published_at"], a["source"], "|", a["title"][:90])
+              for e in a.get("entities", [])[:4]:
+                  print("      ", e.get("symbol"), e.get("sentiment_score"), e.get("match_score"), [h.get("sentiment") for h in e.get("highlights", [])][:3])
           PY
       - name: kaydet
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe5; git commit -qm "probe5 sonuçları" || true; git push -q
+          git add -A probe6; git commit -qm "probe6 sonuçları" || true; git push -q
