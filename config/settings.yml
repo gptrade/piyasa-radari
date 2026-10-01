@@ -69,7 +69,7 @@ sources:
     lookback_hours: 24
   central_banks:
     enabled: true              # Fed (karar + konuşmalar), ECB basın akışı; IMF ve yaptırımlar Google News konu aramasıyla
-    max_fulltext: 3            # yüksek önemli karar metinleri sayfadan alınıp AI'a verilir
+    max_fulltext: 4            # karar metinleri ve konuşmalar sayfadan alınıp AI'a verilir (önce yüksek önemli olanlar)
     per_query: 5
   gdelt:
     enabled: true              # dünya basını haber hacmi/ton alarmı (ücretsiz, anahtarsız; 5 sn'de 1 istek sınırı)
@@ -78,6 +78,7 @@ sources:
     min_count: 12              # son 2 saatte en az bu kadar haber yoksa alarm yok
     volume_ratio: 3            # haber payı olağanın en az bu katı
     tone_shift: 2              # ortalama ton 3 günlük ortalamadan en az bu kadar sapmış
+    tone_check_ratio: 1.5      # ton yalnız hacim bu kata çıkınca çekilir (GDELT istek sınırı)
     # themes: varsayılan temalar radar/sources/global_macro.py içinde (DEFAULT_THEMES); burada değiştirilebilir
   valuation:
     enabled: true              # hisse panelinde değerleme çarpanları (Yahoo): F/K, PD/DD, FD/FAVÖK, F/S, kârlılık

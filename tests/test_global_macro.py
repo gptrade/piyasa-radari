@@ -56,3 +56,12 @@ def test_item_text():
     assert it.source_type == "macro" and it.market == "BIST" and it.url == "https://r/1"
     assert "kat" in it.title and "sertleşti" in it.title and "Lira slides (reuters.com)" in it.summary
     assert it.extra["gdelt"]["why"] == "hacim+ton"
+
+
+def test_turkey_filter_and_article_text():
+    assert gm.TURKEY.search("IMF Türkiye'nin büyüme tahminini yükseltti")
+    assert gm.TURKEY.search("US sanctions Turkish firms over Russia trade")
+    assert not gm.TURKEY.search("Lübnan’a yeni IMF programı için reformlar şart")
+    page = '<nav>Menu Home About</nav><div id="article"><p>For release at 2:00 p.m.</p><p>Inflation remains elevated.</p></div>'
+    t = gm.article_text(page)
+    assert t.startswith("For release at") and "Menu" not in t and "Inflation remains elevated." in t

@@ -54,18 +54,27 @@ def keep_ecb(title: str) -> bool:
 
 
 def _page_text(url: str, limit: int = 6000) -> str:
-    from ..documents import html_text
     r = http.get(url, timeout=30, retries=1)
     if r is None or "html" not in (r.headers.get("content-type") or "html"):
         return ""
-    text = html_text(r.text)
-    # Fed/ECB sayfalarında asıl metin başlığın tekrarından sonra başlar; menüyü kaba biçimde at
-    for marker in ("For release at", "For immediate release", "PRESS RELEASE", "Share this", "Press release"):
+    return article_text(r.text)[:limit]
+
+
+def article_text(page: str) -> str:
+    """Sayfanın asıl metni: Fed `id="article"`, ECB `<main>`/`class="section"`; bulunamazsa tüm sayfa."""
+    from ..documents import html_text
+    for marker in ('id="article"', "<main", 'class="section"', "<article"):
+        i = page.find(marker)
+        if i > 0:
+            page = page[i:]
+            break
+    text = html_text(page)
+    for marker in ("For release at", "For immediate release", "Share this page"):
         i = text.find(marker)
-        if 0 < i < 4000:
+        if 0 <= i < 1500:
             text = text[i:]
             break
-    return text[:limit]
+    return text
 
 
 def collect_central_banks(ctx: Context) -> list[Item]:
@@ -88,16 +97,18 @@ def collect_central_banks(ctx: Context) -> list[Item]:
             it.extra["high_impact"] = bool(ECB_HIGH.search(it.title))
             out.append(it)
     # Karar metinleri: AI'a başlık yerine metnin kendisi verilsin (yalnız yüksek önemli olanlar)
-    for it in [i for i in out if i.extra.get("high_impact")][:int(cfg.get("max_fulltext", 3))]:
+    ranked = sorted((i for i in out if i.extra.get("cb")), key=lambda i: not i.extra.get("high_impact"))
+    for it in ranked[:int(cfg.get("max_fulltext", 4))]:
         text = _page_text(it.url)
         if len(text) > 300:
             it.extra["full_text"] = text
     # IMF ve yaptırımlar: Google News konu araması
     for q, name, hl in cfg.get("news_queries") or DEFAULT_QUERIES:
         url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:2d&{hl}"
-        for it in entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="macro",
+        for it in [i for i in entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="macro",
                                    market="BIST", since=ctx.since, lang="tr" if "hl=tr" in hl else "en",
-                                   allow_empty=True, extra={"topic": name}, limit=int(cfg.get("per_query", 5))):
+                                   allow_empty=True, extra={"topic": name}, limit=20)
+                   if TURKEY.search(i.title)][:int(cfg.get("per_query", 5))]:
             pub = it.title.rsplit(" - ", 1)
             it.source = f"{pub[1].strip() if len(pub) == 2 else 'Google News'} · {name}"
             out.append(it)
@@ -106,9 +117,11 @@ def collect_central_banks(ctx: Context) -> list[Item]:
 
 
 HL_TR = "hl=tr&gl=TR&ceid=TR:tr"
+# Google aramaları gevşek eşleşir (Lübnan, Ukrayna, İran haberleri gelir): başlıkta Türkiye geçmeli
+TURKEY = re.compile(r"T[uü]rk|Türkiye|TCMB|\blira\b", re.I)
 HL_EN = "hl=en-US&gl=US&ceid=US:en"
 DEFAULT_QUERIES = [
-    ('IMF Türkiye (değerlendirme OR "Article IV" OR program OR tahmin)', "IMF", HL_TR),
+    ('IMF Türkiye', "IMF", HL_TR),
     ('IMF (Turkey OR Türkiye) ("Article IV" OR "staff concluding" OR outlook)', "IMF", HL_EN),
     ('(OFAC OR "Treasury sanctions") (Turkey OR Türkiye OR Turkish)', "Yaptırımlar", HL_EN),
 ]
@@ -116,17 +129,15 @@ DEFAULT_QUERIES = [
 
 # ------------------------------------------------------------------ GDELT
 GDELT = "https://api.gdeltproject.org/api/v2/doc/doc"
-GDELT_GAP = 5.5           # GDELT: 5 saniyede en fazla bir istek
+GDELT_GAP = 6.0           # GDELT: 5 saniyede en fazla bir istek
 _last_call = [0.0]
 
 DEFAULT_THEMES = [
-    {"key": "tr_econ", "name": "Türkiye ekonomisi (yabancı basın)", "market": "BIST",
-     "query": '("Turkish lira" OR "Turkish central bank" OR "Turkish economy" OR "Turkish inflation" '
-              'OR "Borsa Istanbul" OR "Turkish bonds")'},
-    {"key": "tr_risk", "name": "Türkiye: yaptırım, not, gümrük", "market": "BIST",
-     "query": '(Turkey OR Türkiye OR Turkish) (sanctions OR tariffs OR "credit rating" OR downgrade)'},
+    {"key": "tr_global", "name": "Türkiye (dünya basını)", "market": "BIST",
+     "query": '(Turkey OR Türkiye OR Turkish) (lira OR economy OR inflation OR "central bank" OR sanctions '
+              'OR tariffs OR rating OR bonds OR markets)'},
     {"key": "tr_press", "name": "Türk basını: piyasa gündemi", "market": "BIST",
-     "query": "sourcelang:turkish (borsa OR dolar OR faiz OR enflasyon)"},
+     "query": 'sourcelang:turkish (borsa OR dolar OR faiz OR enflasyon OR "merkez bankası")'},
     {"key": "oil", "name": "Petrol", "market": "BIST", "query": '("Brent crude" OR "oil prices" OR OPEC)'},
     {"key": "em_risk", "name": "Gelişen piyasalar ve küresel risk", "market": "US",
      "query": '("emerging markets" OR "global selloff" OR "market turmoil" OR "risk-off")'},
@@ -134,16 +145,18 @@ DEFAULT_THEMES = [
 
 
 def _gdelt(params: dict) -> dict | None:
-    for attempt in range(2):
+    """GDELT isteği: 5 sn'de bir sınırına uyar; 429 ya da bağlantı hatasında artan beklemeyle 2 kez daha dener."""
+    for attempt in range(3):
         wait = _last_call[0] + GDELT_GAP - time.monotonic()
         if wait > 0:
             time.sleep(wait)
         _last_call[0] = time.monotonic()
+        n0 = len(http.FAILURES)
         r = http.get(GDELT, params={**params, "format": "json"}, timeout=45, retries=0)
         if r is None:
-            if attempt == 0 and http.FAILURES and "429" in http.FAILURES[-1][1]:
-                http.FAILURES.pop()            # hız sınırı: bekleyip bir kez daha dene
-                time.sleep(GDELT_GAP)
+            if attempt < 2:
+                del http.FAILURES[n0:]            # yeniden denenecek: son denemenin hatası kalsın
+                time.sleep(GDELT_GAP * (attempt + 2))
                 continue
             return None
         try:
@@ -240,9 +253,12 @@ def collect_gdelt(ctx: Context) -> list[Item]:
         if st.get(key) and now - parse_iso(st[key]) < cool:
             continue
         vol = _series(_gdelt({"query": theme["query"], "mode": "timelinevolraw", "timespan": "3d"}))
-        tone = _series(_gdelt({"query": theme["query"], "mode": "timelinetone", "timespan": "3d"}))
         checked += 1
-        s = spike(vol, tone, now)
+        s = spike(vol, [], now)
+        # Ton yalnız hacim belirgin arttığında çekilir (istek sayısını yarıya indirir)
+        if s and s["ratio"] and s["ratio"] >= float(cfg.get("tone_check_ratio", 1.5)) \
+                and s["count"] >= int(theme.get("min_count", cfg.get("min_count", 12))):
+            s = spike(vol, _series(_gdelt({"query": theme["query"], "mode": "timelinetone", "timespan": "3d"})), now)
         why = triggered(s, {**cfg, **theme})
         log.info("GDELT %s: %s → %s", theme["key"], s, why)
         if not why:
