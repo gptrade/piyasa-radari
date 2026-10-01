@@ -185,7 +185,8 @@ def analyst_items(stocks: list, px: dict, max_age_days: int = 3) -> list[Item]:
                 pt_txt = f"; hedef {pt:g} {cur}" + (f" (önce {ptp:g})" if ptp and ptp != pt else "")
             last = p.get("last")
             upside = f", son fiyata göre %{(pt / last - 1) * 100:+.0f}" if pt and last else ""
-            title = f"{c['firm']}, {st.symbol} notunu {verb}: {grade}{pt_txt}".replace(": ;", ":")
+            when = "" if d >= today else f" ({d.strftime('%d.%m')})"
+            title = f"{c['firm']}, {st.symbol} notunu {verb}{when}: {grade}{pt_txt}".replace(": ;", ":")
             label = {"up": "Not artırımı", "down": "Not indirimi", "init": "Kapsama başladı"}.get(act, "Analist notu")
             if act in ("main", "reit") and sdir:
                 label = "Hedef yükseltildi" if sdir > 0 else "Hedef düşürüldü"
@@ -194,10 +195,10 @@ def analyst_items(stocks: list, px: dict, max_age_days: int = 3) -> list[Item]:
                 id=make_id("anl", st.symbol, c["firm"], c["date"], c.get("to") or "", str(pt or "")),
                 source="Yahoo Finance · Analist", source_type="news", market=st.market, title=title,
                 summary=what, url=f"https://finance.yahoo.com/quote/{st.yahoo}/analysis/",
-                published=iso(datetime.combine(d, datetime.min.time(), tzinfo=UTC) + timedelta(hours=12))
-                if d < today else iso(now_utc()),
+                # Akış en yeni N kaydı tuttuğu için eski tarihli not kesilip kaybolmasın: bulunduğu an
+                published=iso(now_utc()),
                 tickers=[st.symbol], lang="tr",
-                extra={"no_ai": True, "analyst": act or "note", "firm": c["firm"], "pt": pt},
+                extra={"no_ai": True, "analyst": act or "note", "firm": c["firm"], "pt": pt, "grade_date": c["date"]},
                 analysis={"sentiment": {1: "bullish", -1: "bearish"}.get(sdir, "neutral"),
                           "confidence": 70 if act in ("up", "down") else 60,
                           "materiality": "medium" if sdir else "low", "horizon": "weeks", "category": "Analist",
