@@ -27,6 +27,9 @@ bist:
   - symbol: THYAO
     name: Türk Hava Yolları
     aliases: ["Türk Hava Yolları", "THY"]
+  - symbol: GRTHO
+    name: Grainturk Holding AS
+    aliases: ["Grainturk"]    
 
 us:
   - symbol: NVDA
