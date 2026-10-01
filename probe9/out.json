@@ -1,7 +1,7 @@
 {
  "valuation": {
   "VAKBN": {
-   "updated": "2026-10-01T21:13:19Z",
+   "updated": "2026-10-01T21:15:30Z",
    "pe": 4.1722,
    "fpe": 6.0898,
    "pb": 0.9262,
@@ -21,7 +21,7 @@
    "fin_ccy": "TRY"
   },
   "TTKOM": {
-   "updated": "2026-10-01T21:13:19Z",
+   "updated": "2026-10-01T21:15:30Z",
    "pe": 6.9287,
    "fpe": 7.1167,
    "pb": 0.692,
@@ -43,12 +43,12 @@
    "fin_ccy": "TRY"
   },
   "KLNMA": {
-   "updated": "2026-10-01T21:13:19Z",
+   "updated": "2026-10-01T21:15:30Z",
    "pe": 8.5444,
    "pb": 1.9876,
    "ps": 4.3465,
    "mcap": 76899999744.0,
-   "ev": 207278997504.0,
+   "ev": 210279006208.0,
    "roe": 0.3056,
    "margin": 0.5805,
    "rev_g": 0.268,
@@ -60,7 +60,7 @@
    "fin_ccy": "TRY"
   },
   "GOZDE": {
-   "updated": "2026-10-01T21:13:20Z",
+   "updated": "2026-10-01T21:15:30Z",
    "pb": 0.272,
    "ps": 18780.393,
    "ev_ebitda": -64.313,
@@ -77,13 +77,13 @@
    "fin_ccy": "TRY"
   },
   "GLRMK": {
-   "updated": "2026-10-01T21:13:20Z",
+   "updated": "2026-10-01T21:15:30Z",
    "pe": 14.7763,
    "pb": 1.6149,
    "ps": 0.9875,
-   "ev_ebitda": 7.959,
+   "ev_ebitda": 8.557,
    "mcap": 45809201152.0,
-   "ev": 42895392768.0,
+   "ev": 46121394176.0,
    "roe": 0.147,
    "margin": 0.0673,
    "de": 62.486,
@@ -94,7 +94,7 @@
    "industry": "Engineering & Construction"
   },
   "ENTRA": {
-   "updated": "2026-10-01T21:13:20Z",
+   "updated": "2026-10-01T21:15:30Z",
    "pb": 0.3798,
    "ps": 5.7153,
    "ev_ebitda": 15.526,
@@ -112,7 +112,7 @@
    "industry": "Utilities - Renewable"
   },
   "A1CAP": {
-   "updated": "2026-10-01T21:13:21Z",
+   "updated": "2026-10-01T21:15:30Z",
    "pe": 1.0775,
    "pb": 0.3187,
    "ps": 0.106,
@@ -129,7 +129,7 @@
    "fin_ccy": "TRY"
   },
   "THYAO": {
-   "updated": "2026-10-01T21:13:21Z",
+   "updated": "2026-10-01T21:15:31Z",
    "mcap": 393159180288.0,
    "roe": 0.1313,
    "margin": 0.1019,
@@ -144,7 +144,7 @@
    "fx_mismatch": true
   },
   "NVDA": {
-   "updated": "2026-10-01T21:13:21Z",
+   "updated": "2026-10-01T21:15:31Z",
    "pe": 29.2228,
    "fpe": 14.7091,
    "pb": 24.3446,
@@ -167,7 +167,7 @@
    "fin_ccy": "USD"
   },
   "AAPL": {
-   "updated": "2026-10-01T21:13:22Z",
+   "updated": "2026-10-01T21:15:31Z",
    "pe": 37.8373,
    "fpe": 34.4699,
    "pb": 44.8804,
@@ -190,9 +190,9 @@
    "fin_ccy": "USD"
   },
   "MSFT": {
-   "updated": "2026-10-01T21:13:22Z",
-   "pe": 28.5682,
-   "fpe": 21.6853,
+   "updated": "2026-10-01T21:15:31Z",
+   "pe": 28.3158,
+   "fpe": 21.6885,
    "pb": 8.6091,
    "ps": 11.4749,
    "ev_ebitda": 19.875,
@@ -206,14 +206,14 @@
    "rev_g": 0.177,
    "eps_g": 0.317,
    "beta": 1.108,
-   "eps": 17.95,
-   "feps": 23.6473,
+   "eps": 18.11,
+   "feps": 23.6439,
    "sector": "Technology",
    "industry": "Software - Infrastructure",
    "fin_ccy": "USD"
   },
   "TSLA": {
-   "updated": "2026-10-01T21:13:22Z",
+   "updated": "2026-10-01T21:15:31Z",
    "pe": 334.066,
    "fpe": 163.7124,
    "pb": 16.0996,
@@ -235,9 +235,9 @@
    "fin_ccy": "USD"
   },
   "AMD": {
-   "updated": "2026-10-01T21:13:23Z",
-   "pe": 157.074,
-   "fpe": 39.5122,
+   "updated": "2026-10-01T21:15:31Z",
+   "pe": 155.881,
+   "fpe": 39.5249,
    "pb": 14.9482,
    "ps": 24.3352,
    "ev_ebitda": 103.519,
@@ -250,8 +250,8 @@
    "rev_g": 0.501,
    "eps_g": 1.595,
    "beta": 2.476,
-   "eps": 3.92,
-   "feps": 15.5833,
+   "eps": 3.95,
+   "feps": 15.5783,
    "sector": "Technology",
    "industry": "Semiconductors",
    "fin_ccy": "USD"
@@ -279,42 +279,47 @@
      "files": [
       {
        "type": "Bildirim sayfası"
+      },
+      {
+       "type": "PDF",
+       "pages": 44
       }
      ],
      "chars": 40003
     }
    },
    "analysis": {
-    "sentiment": "bearish",
-    "confidence": 80,
-    "materiality": "high",
-    "horizon": "days",
+    "sentiment": "neutral",
+    "confidence": 60,
+    "materiality": "medium",
+    "horizon": "weeks",
     "category": "Finansal Rapor",
     "headline_tr": "Birko Mensucat, 2026 yılı 6 aylık dönemde 44,9 milyon TL net zarar açıkladı.",
-    "summary": "Birko Birleşik Koyunlulular Mensucat (BRKO), 30.06.2026 sona eren 6 aylık dönemde 148,48 milyon TL hasılat elde ederken, 44,95 milyon TL net dönem zararı kaydetmiştir. Önceki yılın aynı döneminde de net zarar bildiren şirket, artan finansman giderleri ve faaliyet giderleri baskısı altında kalmıştır. Bağımsız denetim raporu ise olumlu görüş içermektedir.",
+    "summary": "Birko Birleşik Koyunlulular Mensucat, 30 Haziran 2026 sona eren 6 aylık dönemde 44.950.045 TL net dönem zararı kaydetti (önceki yıl aynı dönemde 80.668.189 TL zarar vardı). Şirket bu dönemde Neva Capital Yapı'yı bünyesine katmış ve özkaynakları bağlı ortaklık edinimiyle birlikte artmıştır. Bağımsız denetim kuruluşu rapora olumlu görüş vermiştir.",
     "event_label": "Finansal Sonuçlar",
-    "what": "6 aylık net zarar 44,9 milyon TL oldu",
-    "why": "Yüksek finansman giderleri kârlılığı olumsuz etkiledi",
-    "risk": "Finansman maliyetlerinin yüksek kalması ve borç yükü",
+    "what": "6 aylık konsolide mali sonuçlar açıklandı",
+    "why": "Bağlı ortaklık edinimi ve nakit akışları değişti",
+    "risk": "Net zarar ve yüksek işletme sermayesi açığı",
     "key_points": [
-     "Hasılat 30.06.2026 itibarıyla 148.483.485 TL olarak gerçekleşti.",
-     "Brüt kâr 58.153.903 TL oldu (Önceki dönem: 12.394.018 TL).",
-     "Net dönem zararı 44.950.045 TL olarak gerçekleşti.",
-     "Finansman giderleri 160.429.655 TL'ye ulaştı."
+     "30.06.2026 itibarıyla 6 aylık net dönem zararı 44.950.045 TL olarak gerçekleşti (30.06.2025: 80.668.189 TL zarar).",
+     "Toplam özkaynaklar, bağlı ortaklık ediniminin (733,7 milyon TL) etkisiyle 2.644.688.976 TL'ye yükseldi (31.12.2025: 1.955.148.870 TL).",
+     "İşletme faaliyetlerinden net nakit akışı 6 aylık dönemde -715.665.067 TL oldu (30.06.2025: -10.439.876 TL).",
+     "Personel sayısı 67 kişiye ulaştı (31.12.2025: 23 kişi)."
     ],
     "risks": [
-     "Yüksek finansman giderlerinin net kârı baskılaması",
-     "Esas faaliyet dışı giderlerin büyüklüğü",
-     "Net parasal pozisyon kayıpları"
+     "Faaliyetlerden elde edilen nakit akışındaki belirgin negatif yönlü bozulma",
+     "Sürdürülen faaliyetlerden zarar yazılmaya devam edilmesi",
+     "Yüksek enflasyon muhasebesi uygulamalarının finansal tablolar üzerindeki baskısı"
     ],
     "affected_tickers": [
      "BRKO"
     ],
     "figures": {
-     "Hasılat": "148.483.485 TL (6A2026)",
-     "Brüt Kâr": "58.153.903 TL (6A2026)",
-     "Net Zarar": "-44.950.045 TL (6A2026)",
-     "Finansman Giderleri": "-160.429.655 TL (6A2026)"
+     "net_zarar_6m26": "44.950.045 TL",
+     "net_zarar_6m25": "80.668.189 TL",
+     "toplam_ozkaynak_30_06_2026": "2.644.688.976 TL",
+     "toplam_ozkaynak_31_12_2025": "1.955.148.870 TL",
+     "isletme_faaliyet_nakit_akisi_6m26": "-715.665.067 TL"
     },
     "model": "gemini-3.5-flash-lite",
     "provider": "Gemini"
@@ -341,40 +346,47 @@
      "files": [
       {
        "type": "Bildirim sayfası"
+      },
+      {
+       "type": "PDF",
+       "pages": 22
       }
      ],
-     "chars": 3643
+     "chars": 27196
     }
    },
    "analysis": {
     "sentiment": "neutral",
-    "confidence": 50,
-    "materiality": "low",
+    "confidence": 55,
+    "materiality": "medium",
     "horizon": "days",
-    "category": "Faaliyet Raporu",
-    "headline_tr": "Birko Mensucat 2026 Yılı 6 Aylık Konsolide Faaliyet Raporu Açıklandı",
-    "summary": "Birko Birleşik Koyunlulular Mensucat, 2026 yılı 6 aylık konsolide faaliyet raporunu ve sınırlı denetim raporunu yayımlamıştır. Vizyon Grup Bağımsız Denetim tarafından yapılan incelemede, faaliyet raporundaki bilgilerin finansal tablolarla tutarlı olduğu ve olumlu görüş verildiği belirtilmiştir. Rapor, rutin bir dönemsel bilgilendirme niteliğinde olup, metin içerisinde detaylı ciro veya kâr rakamlarına yer verilmemiştir.",
-    "event_label": "Faaliyet Raporu",
-    "what": "6 aylık konsolide faaliyet raporu açıklandı",
-    "why": "Rutin finansal bildirim niteliğinde",
-    "risk": "Şirkete özgü ek finansal detay eksikliği",
+    "category": "Finansal Sonuçlar",
+    "headline_tr": "Birko Mensucat, 2026 yılı ilk yarı yılında 44,9 milyon TL net zarar açıkladı.",
+    "summary": "Birko Birleşik Koyunlulular Mensucat (BRKO), 01.01.2026-30.06.2026 dönemine ait konsolide faaliyet raporunda 44.950.045 TL net dönem zararı açıkladı. Şirket geçen yılın aynı döneminde de 80.668.189 TL net zarar açıklamıştı; böylece zararda sınırlı bir iyileşme görülse de operasyonel ve finansal baskı devam etmektedir. Rapor dönemi itibarıyla bağımsız denetim kuruluşu tarafından olumlu görüş verilmiştir.",
+    "event_label": "6 Aylık Bilanço",
+    "what": "Şirket 6 aylık dönemde 44.9m TL net zarar bildirdi",
+    "why": "Finansal performans ve operasyonel karlılık takibi için önemli",
+    "risk": "Yüksek finansman giderleri ve operasyonel zarar",
     "key_points": [
-     "2026 6 aylık konsolide faaliyet raporu yayımlandı.",
-     "Bağımsız denetim kuruluşu Vizyon Grup olumlu görüş bildirdi.",
-     "Rapor detayları ekteki PDF dosyasında yer almaktadır.",
-     "Önceki döneme ait bildirim 11.05.2026 tarihinde yapılmıştır."
+     "6 aylık net zarar 44,9 milyon TL olarak gerçekleşti (Önceki yıl aynı dönem: 80,7 milyon TL zarar).",
+     "Esas faaliyet kârı 2,75 milyon TL seviyesinde gerçekleşti.",
+     "Finansman giderleri net 160,4 milyon TL olarak kaydedildi.",
+     "Ödenmiş sermaye 140 milyon TL düzeyinde sabit kalırken, özkaynaklar 2,64 milyar TL olarak raporlandı."
     ],
     "risks": [
-     "Metin içinde detaylı finansal veri bulunmuyor",
-     "Rutin dönemsel bildirim",
-     "Sektörel ve operasyonel riskler raporda detaylandırılmamış"
+     "Yüksek finansman giderlerinin net kârlılığı baskılaması.",
+     "Esas faaliyet kâr marjlarının düşük kalması.",
+     "Genel yönetim ve faaliyet giderlerindeki yüksek seyir."
     ],
     "affected_tickers": [
      "BRKO"
     ],
     "figures": {
-     "denetim_görüşü": "Olumlu",
-     "dönem": "2026 6 Aylık"
+     "hasılat": "yok",
+     "faaliyet_karı": "30.06.2026: 2.753.486 TL",
+     "net_kar": "30.06.2026: -44.950.045 TL, y/y iyileşme",
+     "ozkaynaklar": "30.06.2026: 2.644.688.976 TL",
+     "odenmis_sermaye": "140.000.000 TL"
     },
     "model": "gemini-3.5-flash-lite",
     "provider": "Gemini"
@@ -401,37 +413,107 @@
      "files": [
       {
        "type": "Bildirim sayfası"
+      },
+      {
+       "type": "PDF",
+       "pages": 45
       }
      ],
-     "chars": 1858
+     "chars": 40000
     }
    },
    "analysis": {
     "sentiment": "neutral",
-    "confidence": 40,
+    "confidence": 70,
     "materiality": "low",
-    "horizon": "intraday",
-    "category": "Değerleme Raporu",
-    "headline_tr": "HLGYO, Ankara Kızılay Binası 2026 3. Çeyrek Değerleme Raporunu Açıkladı",
-    "summary": "Halk GYO, portföyünde yer alan Ankara'daki Kızılay Binası için hazırlanan 2026 yılı üçüncü çeyrek değerleme raporunu KAP üzerinden yayımlamıştır. Bildirim rutin bir portföy varlığı değerlemesi niteliğindedir. Finansal tablolar üzerinde doğrudan ve ani bir etki yaratması beklenmemektedir.",
-    "event_label": "Değerleme Raporu",
-    "what": "Ankara Kızılay binası değerleme raporu açıklandı",
-    "why": "Portföy varlığının güncel değerini gösterir",
-    "risk": "Gayrimenkul değer artışının yavaşlaması",
+    "horizon": "days",
+    "category": "Gayrimenkul Değerleme",
+    "headline_tr": "HLGYO, Ankara Kızılay Binası'nın 2026 yılı 3. çeyrek değerleme raporunu açıkladı.",
+    "summary": "Halk GYO, Ankara Çankaya'da bulunan Kızılay Binası'nın 2026 yılı üçüncü çeyrek değerleme raporunu kamuoyuyla paylaştı. Rapora göre gayrimenkulün KDV hariç mevcut toplam değeri 330.000.000 TL olarak belirlenirken, önceki dönemlerde açıklanan değerlerle karşılaştırıldığında varlık değerinde artış kaydedildiği görülmektedir. Rapor, SPK mevzuatına uygun olarak hazırlanmış olup portföy değerlemesi niteliğindedir.",
+    "event_label": "Değerleme Raporu Açıklaması",
+    "what": "Ankara Kızılay Binası 3Ç26 değerleme raporu açıklandı",
+    "why": "Portföydeki gayrimenkulün piyasa değerini güncelliyor",
+    "risk": "Gayrimenkul piyasasındaki dalgalanmalar ve değerleme varsayımları",
     "key_points": [
-     "Şirket portföyündeki Ankara Kızılay Binası için değerleme yapılmıştır.",
-     "Rapor Form Gayrimenkul Değerleme ve Danışmanlık A.Ş. tarafından hazırlanmıştır.",
-     "Bildirim 2026 yılı üçüncü çeyrek dönemine aittir.",
-     "Rapor detayları ekteki PDF dosyasında yer almaktadır."
+     "Ankara Kızılay Binası KDV hariç mevcut toplam değeri: 330.000.000 TL",
+     "Ankara Kızılay Binası KDV dahil mevcut toplam değeri: 396.000.000 TL",
+     "Vergi öncesi toplam aylık kira değeri: 1.285.600 TL",
+     "Önceki dönem (30.06.2026) raporundaki 310.000.000 TL'lik KDV hariç değere göre artış gerçekleşmiştir."
     ],
     "risks": [
-     "Gayrimenkul piyasasındaki dalgalanmalar",
-     "Ticari gayrimenkul değerlerinde olası düşüşler"
+     "Ticari gayrimenkul piyasasındaki talep ve kira dalgalanmaları",
+     "Bölgesel arz fazlası riskleri"
     ],
     "affected_tickers": [
      "HLGYO"
     ],
-    "figures": {},
+    "figures": {
+     "KDV hariç toplam değer": "3Ç26: 330.000.000 TL",
+     "KDV dahil toplam değer": "3Ç26: 396.000.000 TL",
+     "Vergi öncesi aylık kira değeri": "3Ç26: 1.285.600 TL",
+     "Önceki dönem KDV hariç değer": "2Ç26: 310.000.000 TL"
+    },
+    "model": "gemini-3.5-flash-lite",
+    "provider": "Gemini"
+   }
+  },
+  {
+   "title": "8-K - Current report",
+   "source": "SEC EDGAR",
+   "tickers": [
+    "AAPL"
+   ],
+   "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000018/0000320193-26-000018-index.htm",
+   "market": "US",
+   "published": "2026-10-01T21:15:34Z",
+   "extra": {
+    "form": "8-K",
+    "doc": {
+     "kind": "8-K eki (EX-99)",
+     "files": [
+      {
+       "type": "EX-99",
+       "name": "a8-kex991q3202606272026.htm"
+      }
+     ],
+     "chars": 12496
+    }
+   },
+   "analysis": {
+    "sentiment": "bullish",
+    "confidence": 85,
+    "materiality": "high",
+    "horizon": "days",
+    "category": "Finansal Sonuçlar",
+    "headline_tr": "Apple, 3Ç26'da gelir ve hisse başına kârda tüm zamanların Haziran çeyreği rekorunu kırdı.",
+    "summary": "Apple, 27 Haziran 2026'da sona eren mali 2026 üçüncü çeyreğinde, yıllık bazda %16 artışla 109.4 milyar dolar toplam net satış bildirdi. Şirketin net kârı 29.79 milyar dolara yükselirken, seyreltilmiş hisse başına kârı %29 artışla 2.02 dolar olarak gerçekleşti. Sonuçlar, iPhone, Mac ve Hizmetler segmentlerinde rekor büyüme ve tarife iadelerinin olumlu etkileriyle desteklendi.",
+    "event_label": "Güçlü Finansal Sonuç",
+    "what": "Apple 3Ç26'da rekor gelir ve kâr açıkladı",
+    "why": "iPhone ve Hizmetler segmenti güçlü büyüdü",
+    "risk": "Tarife iadelerinin marja geçici olumlu etkisi",
+    "key_points": [
+     "Toplam net satışlar 3Ç26'da 109.4 milyar dolar (+%16 y/y) olarak gerçekleşti.",
+     "iPhone gelirleri 54.25 milyar dolara (+%21 y/y) yükseldi.",
+     "Hizmetler gelirleri 30.74 milyar dolara (+%12 y/y) ulaştı.",
+     "Seyreltilmiş hisse başına kâr (EPS) 2.02 dolar (+%29 y/y) oldu."
+    ],
+    "risks": [
+     "Brüt kâr marjında tarife iadelerinden kaynaklanan 2 yüzde puanlık geçici etki.",
+     "Küresel ekonomik koşullar ve jeopolitik gerilimler.",
+     "Tedarik zinciri ve bileşen maliyetlerindeki belirsizlikler."
+    ],
+    "affected_tickers": [
+     "AAPL"
+    ],
+    "figures": {
+     "3Ç26 Net Satışlar": "109,417 milyon USD, +%16 y/y",
+     "3Ç26 Brüt Marj": "50.1%",
+     "3Ç26 Seyreltilmiş EPS": "2.02 USD, +%29 y/y",
+     "3Ç26 Net Kâr": "29,789 milyon USD, +%27 y/y",
+     "3Ç26 iPhone Geliri": "54,252 milyon USD, +%22 y/y",
+     "3Ç26 Hizmetler Geliri": "30,739 milyon USD, +%12 y/y",
+     "Çeyreklik Temettü": "0.27 USD / hisse"
+    },
     "model": "gemini-3.5-flash-lite",
     "provider": "Gemini"
    }
