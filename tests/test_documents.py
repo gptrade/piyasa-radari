@@ -68,3 +68,9 @@ def test_prompt_uses_doc_text_and_note():
     p = Analyzer({"analysis": {"enabled": False}}).prompt(it, "")
     assert p.startswith("BELGE ÖZETİ: Bu kayıt bir Finansal rapor") and "Z" * 10000 in p
     assert '"full_text"' not in p
+
+
+def test_pdf_bytes_unwraps_kap_download():
+    raw = b"\xac\xed\x00\x05ur\x00\x02[B\xac\xf3\x17\xf8\x06\x08T\xe0\x02\x00\x00xp\x00\x0b\x05\xbc%PDF-1.7\n..."
+    assert dc.pdf_bytes(raw).startswith(b"%PDF-1.7")
+    assert dc.pdf_bytes(b"PK\x03\x04 excel") is None

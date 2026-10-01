@@ -66,6 +66,13 @@ def html_text(s: str) -> str:
     return re.sub(r"\s*\n\s*", "\n", s).strip()
 
 
+def pdf_bytes(content: bytes) -> bytes | None:
+    """KAP indirmesi PDF'i Java serileştirme başlığıyla sarmalayabiliyor (b'\\xac\\xed…[B…%PDF'): baştaki
+    sarmalayıcı atlanır. PDF değilse None."""
+    i = content.find(b"%PDF", 0, 2048)
+    return content[i:] if i >= 0 else None
+
+
 def pdf_text(data: bytes) -> tuple[str, int]:
     from pypdf import PdfReader
     reader = PdfReader(io.BytesIO(data))
@@ -111,10 +118,11 @@ def fetch_kap(it: Item) -> tuple[str, list[dict]] | None:
         f = http.get(link, timeout=90, retries=1)
         if f is None or len(f.content) > MAX_PDF_BYTES:
             continue
-        if not f.content.startswith(b"%PDF"):
+        data = pdf_bytes(f.content)
+        if data is None:
             continue                                       # Excel/Word ekleri: bildirim sayfasındaki metin yeterli
         try:
-            text, n = pdf_text(f.content)
+            text, n = pdf_text(data)
         except Exception as e:
             log.warning("KAP eki okunamadı (%s): %s", link[-12:], e)
             continue
