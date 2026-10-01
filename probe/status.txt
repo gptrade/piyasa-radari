@@ -1,5 +1,0 @@
-https://www.borsaistanbul.com/en/data/equity-market-data 200 84721
-https://www.borsaistanbul.com/tr/sayfa/2433/pay-piyasasi-verileri 000 0
-https://www.borsaistanbul.com/tr/sayfa/2433/pay-piyasasi-verileri FAIL
-https://www.borsaistanbul.com/veriler/verileri/pay-piyasasi-verileri 404 8558
-zip 200 15615

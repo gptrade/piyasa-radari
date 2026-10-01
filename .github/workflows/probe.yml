@@ -12,19 +12,44 @@ jobs:
       - uses: actions/checkout@v4
       - name: indir
         run: |
-          mkdir -p probe && cd probe
+          rm -rf probe && mkdir -p probe2 && cd probe2
           UA="Mozilla/5.0 (X11; Linux x86_64) piyasa-radari-arastirma"
-          for u in "https://www.borsaistanbul.com/en/data/equity-market-data" "https://www.borsaistanbul.com/tr/sayfa/2433/pay-piyasasi-verileri" "https://www.borsaistanbul.com/veriler/verileri/pay-piyasasi-verileri"; do
-            f=$(echo "$u" | sed 's#[^a-z0-9]#_#g' | cut -c1-80).html
-            curl -sSL -m 40 -A "$UA" -o "$f" -w "$u %{http_code} %{size_download}\n" "$u" >> status.txt || echo "$u FAIL" >> status.txt
-          done
-          curl -sSL -m 60 -A "$UA" -o DataFilePaths.zip -w "zip %{http_code} %{size_download}\n" https://www.borsaistanbul.com/files/DataFilePaths.zip >> status.txt || true
-          (unzip -o DataFilePaths.zip -d dfp >/dev/null 2>&1 && ls -laR dfp > dfp_list.txt) || true
-          grep -hoE 'href="[^"]+"' *.html | sort -u > links.txt || true
-          grep -iE 'short|aciga|açığa|foreign|yabanci|yabancı|genel|assembly|margin|kredili|member|uye|üye|xls|csv|zip' links.txt > links_ilgili.txt || true
-          rm -f *.zip
-          ls -la
+          B=https://www.borsaistanbul.com
+          get() { curl -sSL -m 60 -A "$UA" -o "$2" -w "$1 %{http_code} %{size_download} %{content_type}\n" "$B$1" >> status.txt || echo "$1 FAIL" >> status.txt; }
+          get /datum/acigasat.zip acigasat.zip
+          get /data/gk/gk2026.zip gk2026.zip
+          for d in 30 29; do get /data/thb/2026/09/thb202609${d}1.zip thb_${d}_1.zip; get /data/thb/2026/09/thb202609${d}2.zip thb_${d}_2.zip; get /data/thm/2026/09/thm202609${d}1.zip thm_${d}_1.zip; get /data/thm/2026/09/thm202609${d}2.zip thm_${d}_2.zip; done
+          get /data/ratio/ratio2026.zip ratio2026.zip
+          for z in *.zip; do mkdir -p "x_${z%.zip}"; unzip -o -q "$z" -d "x_${z%.zip}" 2>/dev/null || echo "$z unzip fail" >> status.txt; done
+          find . -path ./.git -prune -o -type f ! -name '*.zip' -printf '%p %s\n' > files.txt
+          # her dosyanın ilk satırları (metin) — büyük dosyaları kırp
+          for f in $(find . -mindepth 2 -type f); do echo "=== $f"; case "$f" in *.xls|*.xlsx) echo "(excel)";; *) iconv -f windows-1254 -t utf-8 "$f" 2>/dev/null | head -25 || head -25 "$f";; esac; done > heads.txt
+          python3 - <<'PY'
+          import glob, subprocess
+          subprocess.run(["pip","install","-q","openpyxl","xlrd"])
+          import openpyxl, xlrd
+          out=open("excel_heads.txt","w")
+          for f in glob.glob("x_*/**/*.xls*", recursive=True):
+              out.write(f"=== {f}\n")
+              try:
+                  if f.endswith("x"):
+                      wb=openpyxl.load_workbook(f, read_only=True)
+                      for ws in wb.worksheets[:2]:
+                          out.write(f"## {ws.title}\n")
+                          for i,row in enumerate(ws.iter_rows(values_only=True)):
+                              if i>30: break
+                              out.write(repr([c for c in row if c is not None])+"\n")
+                  else:
+                      wb=xlrd.open_workbook(f)
+                      for ws in wb.sheets()[:2]:
+                          out.write(f"## {ws.name} {ws.nrows}x{ws.ncols}\n")
+                          for i in range(min(30, ws.nrows)):
+                              out.write(repr([c for c in ws.row_values(i) if c not in ("",None)])+"\n")
+              except Exception as e:
+                  out.write(f"ERR {e}\n")
+          PY
+          rm -f *.zip; find . -mindepth 2 -type f -size +300k -delete
       - name: kaydet
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add probe && git commit -qm "probe sonuçları" && git push -q
+          git add -A probe2 && git commit -qm "probe sonuçları" && git push -q
