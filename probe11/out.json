@@ -195,19 +195,19 @@
    "reaction": null
   },
   {
-   "source": "Investing.com Türkiye · IMF",
+   "source": "Anadolu Ajansı · IMF",
    "source_type": "macro",
    "market": "BIST",
-   "title": "Lübnan’a yeni IMF programı için reformlar şart - Investing.com Türkiye",
-   "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxPa0VUVkVJWTFteHM5VUNLQ3dRbTQyYjBDb3pzdzNMOFpWc0Z6QWdBMFc0bkVFS0c0RHpSVTY5ZEdfdlBkWHNWdjVfNk1yUHA5TTg3NktPaEJHTWRCbEsxRDl5enBxSGFCVUFLUHd2bDlJNThUT1ZsWUYxVE1KZElRRkdZRi0zYkZmeTl0WmJCWjNseFlEdG5USWgtSUZlR0lQckE?oc=5",
-   "published": "2026-10-01T18:22:10Z",
+   "title": "Türkiye ile Ukrayna arasındaki Serbest Ticaret Anlaşması'nda yeni dönem - Anadolu Ajansı",
+   "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxNSS1SaFVEZmxoblRZMkM2ZUhYLWtPa05mQTFpVW0zdzNnUFJQSVc4YUpFcnBvRFJneF9sTzhmbkNpU1J5V3ZUSVEza2NLUXJNUGpoa1FWWWIxM29IblhlXzA5aVhlY3lqajhnVHpRU2pTcDZuXzNmdEJpWXE4dkJEaWdHajdOY0xudlVzbWtjODFjX0lGU3lGVWx0SkRzcDhCN1BWdGZzY3NlaFk?oc=5",
+   "published": "2026-10-01T17:18:58Z",
    "tickers": [],
-   "summary": "Lübnan’a yeni IMF programı için reformlar şart Investing.com Türkiye",
+   "summary": "Türkiye ile Ukrayna arasındaki Serbest Ticaret Anlaşması'nda yeni dönem Anadolu Ajansı",
    "lang": "tr",
    "extra": {
     "topic": "IMF"
    },
-   "id": "3facffbbef6d46f4",
+   "id": "1dafa4c825de1db2",
    "analysis": null,
    "reaction": null
   }
@@ -215,34 +215,46 @@
  "gdelt": {
   "source": "GDELT · Dünya basını",
   "source_type": "macro",
-  "market": "US",
-  "title": "Gelişen piyasalar ve küresel risk: haber hacmi olağanın 1,0 katı",
-  "url": "https://www.livemint.com/market/treasuries-surge-as-france-s-fiscal-woes-boost-haven-demand-11790882315885.html",
-  "published": "2026-10-01T22:39:08Z",
+  "market": "BIST",
+  "title": "Petrol: haber hacmi olağanın 0,9 katı",
+  "url": "https://pakobserver.net/oil-prices-rise-as-china-halts-petroleum-products-exports/",
+  "published": "2026-10-01T22:44:26Z",
   "tickers": [],
-  "summary": "GDELT: 'Gelişen piyasalar ve küresel risk' temasında son 2 saatte 14 haber (3 günlük olağan ~14); ortalama ton None (3 günlük ortalama None). Öne çıkan başlıklar: - Treasuries Surge as France Fiscal Woes Boost Haven Demand (livemint.com) - Adquisición de NIO por parte de Geely : Alianza por baterías (theclinic.cl) - US stocks : US market rebounds to close higher as surging Treasury yields recede (economictimes.indiatimes.com) - هل يغرق العالم حقاً في بحر الديون ؟ (albayan.ae) - Trading Day : Stocks find footing as Treasury yields ease (aol.com) - Google Stock Drops 3 . 8 % After Hours , Erasing About $160 Billion in Value (247wallst.com) - Insider Buying : Royce Global Value Trust ( NYSE : RGT ) President Purchases $10 , 565 . 46 in Stock (tickerreport.com) - Entrenched premium leaves gold primed to climb despite surge in US bond yields - Mining Engineering Online (me.smenet.org)",
+  "summary": "GDELT: 'Petrol' temasında son 2 saatte 113 haber (3 günlük olağan ~128); ortalama ton None (3 günlük ortalama None). Öne çıkan başlıklar: - Oil Prices Rise as China Halts Petroleum Products Exports (pakobserver.net) - European Markets Slide To Multi - Month Lows Amid Energy , Yield Surge (rttnews.com) - Labour just crashed the economy - disaster for Burnham and even Liz Truss is gloating (aol.co.uk) - Swings in bond market shake markets worldwide as AI optimism boosts Wall Street (latimes.com) - US stocks : US market rebounds to close higher as surging Treasury yields recede (economictimes.indiatimes.com) - Rising bond yields rattle markets worldwide and overshadow hopes for AI stocks (q101online.com) - Swings in the bond market shake stock markets worldwide , as AI optimism supports Wall Street (reflector.com) - Swings in the bond market shake stock markets worldwide , as AI optimism supports Wall Street (nvdaily.com)",
   "lang": "tr",
   "extra": {
    "gdelt": {
-    "theme": "em_risk",
+    "theme": "oil",
     "why": "hacim+ton",
-    "count": 14,
-    "usual_count": 13.8,
-    "ratio": 1.02,
+    "count": 113,
+    "usual_count": 128.0,
+    "ratio": 0.87,
     "tone": null,
     "base_tone": null,
     "articles": [
      {
-      "title": "Treasuries Surge as France Fiscal Woes Boost Haven Demand",
-      "domain": "livemint.com",
-      "url": "https://www.livemint.com/market/treasuries-surge-as-france-s-fiscal-woes-boost-haven-demand-11790882315885.html",
+      "title": "Oil Prices Rise as China Halts Petroleum Products Exports",
+      "domain": "pakobserver.net",
+      "url": "https://pakobserver.net/oil-prices-rise-as-china-halts-petroleum-products-exports/",
       "language": "English"
      },
      {
-      "title": "Adquisición de NIO por parte de Geely : Alianza por baterías",
-      "domain": "theclinic.cl",
-      "url": "https://www.theclinic.cl/2026/10/01/adquisicion-de-nio-por-parte-de-geely-alianza/",
-      "language": "Spanish"
+      "title": "European Markets Slide To Multi - Month Lows Amid Energy , Yield Surge",
+      "domain": "rttnews.com",
+      "url": "https://www.rttnews.com/story.aspx?Id=3695903",
+      "language": "English"
+     },
+     {
+      "title": "  Labour just crashed the economy  - disaster for Burnham and even Liz Truss is gloating",
+      "domain": "aol.co.uk",
+      "url": "https://www.aol.co.uk/articles/labour-just-crashed-economy-disaster-205100000.html",
+      "language": "English"
+     },
+     {
+      "title": "Swings in bond market shake markets worldwide as AI optimism boosts Wall Street",
+      "domain": "latimes.com",
+      "url": "https://www.latimes.com/business/story/2026-10-01/swings-in-bond-market-shake-stock-markets-worldwide-as-ai-optimism-supports-wall-street",
+      "language": "English"
      },
      {
       "title": "US stocks : US market rebounds to close higher as surging Treasury yields recede",
@@ -251,73 +263,61 @@
       "language": "English"
      },
      {
-      "title": "هل يغرق العالم حقاً في بحر الديون ؟ ",
-      "domain": "albayan.ae",
-      "url": "https://www.albayan.ae/financial-times/1555515",
-      "language": "Arabic"
-     },
-     {
-      "title": "Trading Day : Stocks find footing as Treasury yields ease",
-      "domain": "aol.com",
-      "url": "https://www.aol.com/articles/trading-day-stocks-footing-treasury-210432000.html",
+      "title": "Rising bond yields rattle markets worldwide and overshadow hopes for AI stocks",
+      "domain": "q101online.com",
+      "url": "https://q101online.com/news/030030-rising-bond-yields-rattle-markets-worldwide-and-overshadow-hopes-for-ai-stocks/",
       "language": "English"
      },
      {
-      "title": "Google Stock Drops 3 . 8 % After Hours , Erasing About $160 Billion in Value",
-      "domain": "247wallst.com",
-      "url": "https://247wallst.com/cards/google-goog-price-swing-01m3wmc6fagmjj5wd8e537mka7",
+      "title": "Swings in the bond market shake stock markets worldwide , as AI optimism supports Wall Street",
+      "domain": "reflector.com",
+      "url": "http://www.reflector.com/news/national/swings-in-the-bond-market-shake-stock-markets-worldwide-as-ai-optimism-supports-wall-street/article_89457bac-8069-55d7-a08f-bdf8187d53cd.html",
       "language": "English"
      },
      {
-      "title": "Insider Buying : Royce Global Value Trust ( NYSE : RGT ) President Purchases $10 , 565 . 46 in Stock",
-      "domain": "tickerreport.com",
-      "url": "https://www.tickerreport.com/banking-finance/13605032/insider-buying-royce-global-value-trust-nysergt-president-purchases-10565-46-in-stock.html",
-      "language": "English"
-     },
-     {
-      "title": "Entrenched premium leaves gold primed to climb despite surge in US bond yields - Mining Engineering Online",
-      "domain": "me.smenet.org",
-      "url": "https://me.smenet.org/entrenched-premium-leaves-gold-primed-to-climb-despite-surge-in-us-bond-yields/",
+      "title": "Swings in the bond market shake stock markets worldwide , as AI optimism supports Wall Street",
+      "domain": "nvdaily.com",
+      "url": "https://www.nvdaily.com/associated_press_national/swings-in-the-bond-market-shake-stock-markets-worldwide-as-ai-optimism-supports-wall-street/article_bc72bfff-c345-5398-938e-a4297c5408e5.html",
       "language": "English"
      }
     ]
    }
   },
-  "id": "e13a182be26a541c",
+  "id": "144fe0cb49bc625f",
   "analysis": {
    "sentiment": "neutral",
-   "confidence": 40,
+   "confidence": 45,
    "materiality": "low",
    "horizon": "intraday",
-   "category": "Makro Gelişme",
-   "headline_tr": "Küresel piyasalarda tahvil faizlerinin gerilemesiyle hisseler toparlanırken, haber hacmi normal seyrediyor.",
-   "summary": "GDELT verilerine göre küresel risk temalı haber hacmi son saatlerde olağan düzeyinde seyretmektedir. Fransa'nın mali sorunları güvenli liman talebini artırırken, ABD tahvil faizlerinin gerilemesi hisse senetlerinde kısa vadeli toparlanmayı desteklemiştir. Tek başına bir katalizör olmaktan uzaktır.",
-   "event_label": "Küresel Piyasa Notu",
-   "what": "Tahvil faizleri gevşedi ve küresel hisseler toparlandı",
-   "why": "Haber hacmi olağan seviyelerde ve tek başına yön belirlemiyor",
-   "risk": "Fransa'nın mali sorunları ve küresel borç endişeleri",
+   "category": "makroekonomi",
+   "headline_tr": "Küresel piyasalar tahvil faizleri ve petrol fiyatları ile dalgalanıyor",
+   "summary": "Küresel basında yer alan haberlere göre, Çin'in petrol ürünleri ihracatını durdurması petrol fiyatlarını yukarı iterken, tahvil faizlerindeki dalgalanmalar dünya genelinde hisse senedi piyasalarını sarsmaktadır. ABD piyasaları yapay zeka iyimserliği ve tahvil getirilerinin gerilemesiyle toparlanma kaydederken, Avrupa piyasaları enerji ve getiri baskısıyla gerilemiştir. Bu durum Borsa İstanbul için dış riskler ve enerji maliyetleri açısından yakından izlenmektedir.",
+   "event_label": "Küresel Piyasa Gelişmeleri",
+   "what": "Tahvil faizleri ve petrol piyasası dalgalanıyor",
+   "why": "Küresel risk iştahını doğrudan etkilemektedir",
+   "risk": "Tahvil faizlerinde olası ani yükselişler",
    "key_points": [
-    "Tahvil faizlerindeki gevşeme ABD piyasalarında toparlanma sağladı.",
-    "Fransa'nın mali yapısına ilişkin endişeler güvenli liman talebini tetikledi.",
-    "GDELT haber hacmi ve tonu olağan seviyelerde kalmaya devam ediyor.",
-    "Piyasa genelinde belirgin bir yön değişimi veya sürpriz fiyatlama yok."
+    "Çin'in petrol ihracatını durdurması petrolü yükseltti",
+    "Tahvil faizlerindeki dalgalanmalar küresel piyasaları sarstı",
+    "ABD piyasaları yapay zeka iyimserliğiyle toparlandı",
+    "Avrupa hisseleri enerji ve getiri artışıyla geriledi"
    ],
    "risks": [
-    "Tahvil faizlerinde yeniden yaşanabilecek hızlı artışlar.",
-    "Avrupa merkezli mali ve borç krizlerinin yayılma etkisi."
+    "Tahvil faizlerinin yeniden yükseliş trendine girmesi",
+    "Enerji maliyetlerinin enflasyon baskısını artırması",
+    "Küresel risk iştahındaki olası zayıflama"
    ],
    "affected_tickers": [
+    "THYAO",
+    "NVDA",
     "AAPL",
     "MSFT",
-    "NVDA",
     "TSLA",
-    "AMD",
-    "THYAO",
-    "VAKBN"
+    "AMD"
    ],
    "figures": {
-    "haber_hacmi": "14",
-    "olagan_hacim": "13.8"
+    "Haber Hacmi": "113",
+    "Olağan Hacim": "128"
    },
    "model": "gemini-3.5-flash-lite",
    "provider": "Gemini"
