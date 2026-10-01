@@ -239,6 +239,88 @@ def technicals(daily: list[list[float]], live: bool = False, periods=EMA_PERIODS
     }
 
 
+# ------------------------------------------------------------------ teknik olaylar
+def tech_events(daily: list[list[float]], live: bool = False) -> list[dict]:
+    """Son bara ait *yeni* teknik olaylar (önceki barda olmayan). Haber olmasa da akışa düşer.
+
+    Her olay: key (aynı gün tekrar etmesin diye), dir (+1/−1/0), title, what, why, risk,
+    materiality, confidence, bar (YYYY-AA-GG). Kesişimler son barla bir önceki bar karşılaştırılarak
+    bulunur; seans sürerken son bar gün içi olduğundan olaya "gün içi" notu eklenir."""
+    from datetime import datetime, timezone
+    closes = [b[1] for b in daily]
+    if len(closes) < 60:
+        return []
+    bar = datetime.fromtimestamp(daily[-1][0], tz=timezone.utc).strftime("%Y-%m-%d")
+    note = " (gün içi, kapanışta değişebilir)" if live else ""
+    ev = []
+
+    def add(key, d, title, what, why, risk, mat="medium", conf=70, label=None):
+        ev.append({"key": key, "dir": d, "title": title, "label": label or title, "what": what + note, "why": why, "risk": risk,
+                   "materiality": mat, "confidence": conf, "bar": bar, "live": live})
+
+    def crossed(a, b):                                   # +1 yukarı, −1 aşağı, 0 yok
+        if None in (a[-1], a[-2], b[-1], b[-2]):
+            return 0
+        if a[-2] <= b[-2] and a[-1] > b[-1]:
+            return 1
+        if a[-2] >= b[-2] and a[-1] < b[-1]:
+            return -1
+        return 0
+
+    e55, e200 = ema_tv(closes, 55), ema_tv(closes, 200)
+    c = crossed(e55, e200)
+    if c:
+        add("x55_200", c, "Altın kesişim: EMA55, EMA200'ü yukarı kesti" if c > 0 else "Ölüm kesişimi: EMA55, EMA200'ü aşağı kesti",
+            "Orta vadeli ortalama uzun vadeliyi " + ("yukarı" if c > 0 else "aşağı") + " kesti",
+            "Uzun vadeli trend dönüşü sinyali olarak izlenir", "Gecikmeli bir göstergedir; yatay piyasada yanıltabilir", "high", 80,
+            "Altın kesişim" if c > 0 else "Ölüm kesişimi")
+    for n, e, conf in ((200, e200, 75), (55, e55, 70)):
+        c = crossed(closes, e)
+        if c:
+            add(f"p{n}", c, f"Fiyat EMA{n} {'üstüne çıktı' if c > 0 else 'altına indi'}",
+                f"Kapanış EMA{n} ({e[-1]:.2f}) {'üstüne çıktı' if c > 0 else 'altına indi'}",
+                ("Uzun" if n == 200 else "Orta") + " vadeli trend desteği/direnci kırıldı",
+                "Tek günlük kırılım; teyit için birkaç kapanış beklenir", "medium", conf, f"EMA{n} kırılımı")
+    r_now, r_prev = _rsi(closes), _rsi(closes[:-1])
+    if r_now is not None and r_prev is not None:
+        if r_prev < 70 <= r_now:
+            add("rsi", 0, f"RSI {r_now:.0f}: aşırı alım bölgesine girdi", f"RSI 14, 70'in üstüne çıktı ({r_prev:.0f} → {r_now:.0f})",
+                "Güçlü yükselişin ardından düzeltme riski artar", "Güçlü trendlerde RSI uzun süre 70 üstünde kalabilir", label="RSI aşırı alım")
+        elif r_prev > 30 >= r_now:
+            add("rsi", 0, f"RSI {r_now:.0f}: aşırı satım bölgesine indi", f"RSI 14, 30'un altına indi ({r_prev:.0f} → {r_now:.0f})",
+                "Sert düşüşün ardından tepki yükselişi olasılığı artar", "Düşüş trendinde RSI uzun süre 30 altında kalabilir", label="RSI aşırı satım")
+        elif r_prev >= 70 > r_now:
+            add("rsi", -1, f"RSI {r_now:.0f}: aşırı alımdan çıktı", f"RSI 14, 70'in altına döndü ({r_prev:.0f} → {r_now:.0f})",
+                "Yükseliş ivmesi zayıflıyor olabilir", "Kısa süreli soluklanma da olabilir", label="RSI aşırı alımdan çıkış")
+        elif r_prev <= 30 < r_now:
+            add("rsi", 1, f"RSI {r_now:.0f}: aşırı satımdan çıktı", f"RSI 14, 30'un üstüne döndü ({r_prev:.0f} → {r_now:.0f})",
+                "Satış baskısı azalıyor olabilir", "Düşüş trendi sürebilir", label="RSI aşırı satımdan çıkış")
+    if len(closes) >= 254:
+        hi_prev, lo_prev = max(closes[-253:-1]), min(closes[-253:-1])
+        hi_prev2, lo_prev2 = max(closes[-254:-2]), min(closes[-254:-2])
+        if closes[-1] > hi_prev and closes[-2] <= hi_prev2:
+            add("h52", 1, "52 haftanın en yüksek kapanışı", f"Fiyat ({closes[-1]:.2f}) son bir yılın zirvesini ({hi_prev:.2f}) aştı",
+                "Zirve kırılımı güçlü talebe işaret eder", "Kırılım başarısız olursa geri çekilme görülebilir", "medium", 72, "52 hafta zirvesi")
+        elif closes[-1] < lo_prev and closes[-2] >= lo_prev2:
+            add("l52", -1, "52 haftanın en düşük kapanışı", f"Fiyat ({closes[-1]:.2f}) son bir yılın dibinin ({lo_prev:.2f}) altına indi",
+                "Destek kırılımı satış baskısına işaret eder", "Aşırı satımdan tepki gelebilir", "medium", 72, "52 hafta dibi")
+    vols = [(b[0], b[1], b[2]) for b in daily if len(b) > 2 and b[2]]
+    if live and len(vols) > 1:
+        vols = vols[:-1]                                  # süren seansın hacmi eksik: son tamamlanmış gün
+    if len(vols) >= 22:
+        avg = sum(v[2] for v in vols[-21:-1]) / 20
+        if avg and vols[-1][2] >= 3 * avg:
+            chg = (vols[-1][1] / vols[-2][1] - 1) * 100
+            d = 1 if chg > 0.3 else -1 if chg < -0.3 else 0
+            vbar = datetime.fromtimestamp(vols[-1][0], tz=timezone.utc).strftime("%Y-%m-%d")
+            ev.append({"key": "vol", "dir": d, "label": "Hacim patlaması", "title": f"Hacim patlaması: ortalamanın {vols[-1][2] / avg:.1f} katı",
+                       "what": f"{vbar[8:10]}.{vbar[5:7]} işlem hacmi 20 günlük ortalamanın {vols[-1][2] / avg:.1f} katı, fiyat %{chg:+.1f}",
+                       "why": "Olağandışı hacim, kurumsal alım/satım ya da habere işaret edebilir",
+                       "risk": "Endeks değişikliği, blok satış gibi tek seferlik nedenler olabilir",
+                       "materiality": "medium", "confidence": 65, "bar": vbar, "live": False})
+    return ev
+
+
 def ta_context(p: dict | None) -> str:
     ta = (p or {}).get("ta")
     if not ta:
@@ -297,7 +379,8 @@ def fetch(stock: Stock, yahoo: str | None = None) -> dict | None:
         "currency": currency or ("TRY" if stock.market == "BIST" else "USD"),
         "last": last, "prev_close": prev,
         "change_pct": round((last / prev - 1) * 100, 2) if prev else None,
-        "ta": technicals(daily, live=bool(intraday) and now_utc().timestamp() - intraday[-1][0] < 20 * 60),
+        "ta": technicals(daily, live=(live := bool(intraday) and now_utc().timestamp() - intraday[-1][0] < 20 * 60)),
+        "events": tech_events(daily, live=live),
         # Panel için: gün içi 5 gün, günlük son ~6 ay yeter (dosya boyutu)
         "intraday": intraday, "daily": daily[-keep:], "ema": ema_overlay, "updated": iso(now_utc()),
         "next_earnings": next_earnings,

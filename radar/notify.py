@@ -18,6 +18,8 @@ def should_notify(item: Item, cfg: dict) -> bool:
     a = item.analysis
     if not a:
         return False
+    if item.source_type == "technical":                   # teknik olaylar: AI eşikleri yerine kendi ayarı
+        return bool(cfg.get("technical", True)) and LEVEL.get(a.get("materiality", "low"), 0) >= 1
     if cfg.get("only_directional", True) and a.get("sentiment") == "neutral":
         return False
     if int(a.get("confidence", 0)) < int(cfg.get("min_confidence", 70)):
@@ -47,7 +49,7 @@ def format_message(item: Item, site_url: str | None) -> str:
         lines += ["", e(a["summary"])]
     lines += ["", f"<i>{e(item.source)}</i>"]
     if item.url:
-        lines.append(f'<a href="{e(item.url)}">Kaynak</a>' +
+        lines.append(f'<a href="{e(item.url)}">{"Grafik" if item.source_type == "technical" else "Kaynak"}</a>' +
                      (f' · <a href="{e(site_url)}">Panel</a>' if site_url else ""))
     return "\n".join(lines)
 

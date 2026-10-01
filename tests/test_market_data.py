@@ -104,3 +104,51 @@ def test_bb_quotes_recent_tickers_and_cache(tmp_path, monkeypatch):
     assert set(doc["quotes"]) >= {"DAPGM"} and len(calls) == 1
     bb_quotes.update({}, fetcher=fake)                       # saat dolmadan yeniden çekmez
     assert len(calls) == 1
+
+
+def _bars(closes, vols=None, t0=1_700_000_000):
+    return [[t0 + i * 86400, c, (vols[i] if vols else 1000)] for i, c in enumerate(closes)]
+
+
+def test_tech_events_price_crosses_ema200_and_52w_high():
+    from radar.prices import tech_events
+    closes = [100 - i * 0.05 for i in range(300)]          # yavaş düşüş: fiyat EMA200 altında
+    closes += [closes[-1] + 30]                            # tek günde sert yükseliş: EMA200 ve 52h zirve kırılımı?
+    ev = {e["key"]: e for e in tech_events(_bars(closes))}
+    assert ev["p200"]["dir"] == 1 and "EMA200" in ev["p200"]["title"]
+    assert "p55" in ev
+    assert ev["h52"]["dir"] == 1
+    assert all(e["bar"] for e in ev.values())
+
+
+def test_tech_events_none_when_nothing_new():
+    from radar.prices import tech_events
+    closes = [100 + i * 0.1 for i in range(300)]           # düzgün yükseliş: yeni kesişim yok
+    keys = {e["key"] for e in tech_events(_bars(closes))}
+    assert not keys & {"p200", "p55", "x55_200", "l52"}
+
+
+def test_tech_events_volume_spike_uses_last_complete_day_when_live():
+    from radar.prices import tech_events
+    closes = [100 + (i % 3) * 0.1 for i in range(80)]
+    vols = [1000] * 78 + [5000, 10]                        # dün 5×, bugün (süren seans) eksik hacim
+    ev = {e["key"]: e for e in tech_events(_bars(closes, vols), live=True)}
+    assert "vol" in ev and ev["vol"]["live"] is False
+
+
+def test_technical_items_and_notify_rule():
+    from radar.config import Stock
+    from radar.notify import should_notify
+    from radar.pipeline import technical_items
+    px = {"THYAO": {"events": [{"key": "p200", "dir": 1, "title": "Fiyat EMA200 üstüne çıktı", "what": "w", "why": "y", "risk": "r",
+                                "materiality": "medium", "confidence": 75, "bar": "2026-10-01"},
+                               {"key": "rsi", "dir": 0, "title": "RSI 72: aşırı alım bölgesine girdi", "what": "w", "why": "y", "risk": "r",
+                                "materiality": "medium", "confidence": 70, "bar": "2026-10-01"}]}}
+    items = technical_items([Stock("THYAO", "Türk Hava Yolları", "BIST", [])], px)
+    assert len(items) == 2 and items[0].source_type == "technical" and items[0].extra["no_ai"]
+    assert items[0].analysis["sentiment"] == "bullish" and items[1].analysis["sentiment"] == "neutral"
+    again = technical_items([Stock("THYAO", "Türk Hava Yolları", "BIST", [])], px)
+    assert items[0].id == again[0].id                       # aynı gün aynı olay: aynı kimlik → tekrar gelmez
+    cfg = {"min_confidence": 70, "only_directional": True, "min_materiality": "medium", "technical": True}
+    assert should_notify(items[0], cfg) and should_notify(items[1], cfg)   # nötr RSI olayı da gider
+    assert not should_notify(items[0], {**cfg, "technical": False})

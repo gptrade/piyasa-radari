@@ -18,6 +18,7 @@ notify:
   min_confidence: 70           # bu güvenin altındaki sinyaller bildirilmez
   only_directional: true       # nötr değerlendirmeleri bildirme
   min_materiality: medium      # low | medium | high
+  technical: true              # teknik olaylar (EMA kesişimi, RSI eşiği, 52 hafta zirve/dip, hacim patlaması) Telegram'a gitsin
 
 feed:
   keep_items: 600              # panelde tutulacak en fazla kayıt
@@ -83,5 +84,7 @@ sources:
   x_twitter:
     enabled: true              # X_BEARER_TOKEN secret'ı yoksa sessizce atlanır
     max_results_per_query: 10
+  technical:
+    enabled: true              # haber olmasa da teknik olayları akışa ekle (fiyat verisinden, AI kotası harcamaz)
   reports_inbox:
     enabled: true              # inbox/ klasörüne atılan PDF raporları (aracı kurum, değerleme) analiz edilir

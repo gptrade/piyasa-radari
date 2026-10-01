@@ -12,9 +12,10 @@
   const EVENT = {
     measure: "Borsa tedbiri", buyback: "Geri alım", insider: "İçeriden işlem", earnings: "Finansal sonuç", analyst: "Analist",
     dividend: "Temettü / sermaye", deal: "Anlaşma / ihale", regulator: "Düzenleyici (SPK)", macro: "Makro", legal: "Hukuki",
-    news: "Haber", social: "Sosyal medya", report: "Rapor",
+    news: "Haber", social: "Sosyal medya", report: "Rapor", technical: "Teknik olay",
   };
-  const TYPE = { disclosure: "Bildirim", news: "Haber", social: "Sosyal", regulator: "SPK", macro: "Makro", report: "Rapor" };
+  const TYPE = { disclosure: "Bildirim", news: "Haber", social: "Sosyal", regulator: "SPK", macro: "Makro", report: "Rapor", technical: "Teknik" };
+  const isTech = it => it.source_type === "technical";
   const TIER = { 1: "Resmi / birincil kaynak", 2: "Yerleşik finans medyası", 3: "Diğer / sosyal" };
   const PAGE = 10;                         // tablo 10'ar kayıtla açılır; sağ şerit / ısı haritası aşağıda kalmasın
 
@@ -519,7 +520,7 @@
     let s = 0, w = 0, n = 0;
     for (const it of state.feed.items) {
       const a = it.analysis;
-      if (!a || ageMin(it.published) > hours * 60 || !relTickers(it).includes(sym)) continue;
+      if (!a || isTech(it) || ageMin(it.published) > hours * 60 || !relTickers(it).includes(sym)) continue;
       const k = MAT_W[a.materiality]; s += sign(a.sentiment) * a.confidence / 100 * k; w += k; n++;
     }
     return { net: w ? s / w : 0, n };
@@ -603,7 +604,7 @@
       const p = state.prices[w.symbol], chg = p?.change_pct, { net, n } = newsNet(w.symbol);
       if (chg == null || !n) return null;
       const nk = net > 0.15 ? 1 : net < -0.15 ? -1 : 0;
-      const items = state.feed.items.filter(it => it.analysis && ageMin(it.published) <= 1440 && relTickers(it).includes(w.symbol));
+      const items = state.feed.items.filter(it => it.analysis && !isTech(it) && ageMin(it.published) <= 1440 && relTickers(it).includes(w.symbol));
       return { t: w.symbol, name: w.name, chg, net, n, nk, mis: (nk === 1 && chg <= -0.5) || (nk === -1 && chg >= 0.5), items };
     }).filter(Boolean);
   }
@@ -741,6 +742,7 @@
       L("Soluk satırlar", [[DIM_IC("tekrar").replace("dim-ic", "dim-ic lg"), "Soluk satır simgesi. Üzerine gelince nedeni yazar:"], ...Object.entries(DIM_TIP).map(([k, v]) => [`<span class="tag">${k}</span>`, v]),
         [`<span class="chip" aria-pressed="true" style="height:22px;padding:0 8px">Solukları gizle</span>`, "Varsayılan olarak açık; kapatınca soluk satırlar da listelenir"]]),
       L("Kaynak ve diğer", [[`<span class="src-cell"><span class="t1">Bildirim</span></span>`, "Resmi kaynak (KAP, SEC, SPK, TCMB, şirket bülteni)"], [`<span class="src-cell">Haber <span class="x">×3</span></span>`, "Aynı haber 3 kaynakta"],
+        [`<span class="src-cell"><span class="t1">Teknik</span></span>`, "Haber değil, fiyattan çıkan olay: EMA kesişimi, RSI eşiği, 52 hafta zirve/dip, hacim patlaması (AI kotası harcamaz)"],
         [`<span class="new-dot"></span>`, "Son ziyaretinden sonra gelen güçlü sinyal"]]),
     ].join("");
   }
@@ -805,7 +807,9 @@
     const wrap = document.createElement("div");
     wrap.className = "tk-panel";
     const p = state.prices[sym];
-    const items = state.feed.items.filter(it => relTickers(it).includes(sym)).sort((a, b) => impact(b) - impact(a) || (b.published > a.published ? 1 : -1));
+    const all = state.feed.items.filter(it => relTickers(it).includes(sym));
+    const items = all.filter(it => !isTech(it)).sort((a, b) => impact(b) - impact(a) || (b.published > a.published ? 1 : -1));
+    const techs = all.filter(isTech).sort((a, b) => (b.published > a.published ? 1 : -1)).slice(0, 4);
     const { net, n } = newsNet(sym);
     const nk = !n ? null : net > 0.15 ? 1 : net < -0.15 ? -1 : 0;
     const head = document.createElement("div");
@@ -825,6 +829,8 @@
       $$("#viewSeg button").forEach(x => x.setAttribute("aria-checked", String(x.dataset.view === state.view)));
       render(); openTicker(sym, state.panelFrom);
     };
+    if (techs.length) head.insertAdjacentHTML("beforeend", `<p class="d-sub">Teknik olaylar</p><ul class="tp-news">${techs.map(it => { const k = sign(it.analysis?.sentiment); return `
+      <li><button type="button" data-id="${it.id}"><span class="dir ${dirCls(k)}">${glyph(k)}</span><span class="tp-t">${esc(it.analysis?.headline_tr || it.title)}</span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>`);
     $$(".tp-news button", head).forEach(b => b.onclick = () => openItem(b.dataset.id, sym));
     const px = document.createElement("div");
     px.className = "tp-sec";
@@ -869,7 +875,7 @@
     const blank = (t, name = "") => ({ t, name, n: 0, s: 0, w: 0, top: null, last: null, items: [] });
     (state.feed.watchlist || []).filter(w => market() === "ALL" || w.market === market()).forEach(w => m.set(w.symbol, blank(w.symbol, w.name)));
     const hn = state.hideNoise; state.hideNoise = false;          // hisse özeti soluk kayıtları da sayar
-    const its = filtered(false); state.hideNoise = hn;
+    const its = filtered(false).filter(it => !isTech(it)); state.hideNoise = hn;
     for (const it of its) {
       for (const t of relTickers(it)) {
         const o = m.get(t) || blank(t);

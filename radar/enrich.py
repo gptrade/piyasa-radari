@@ -42,7 +42,7 @@ TIER2_OUTLETS = ("reuters", "bloomberg", "financial times", "ft.com", "wall stre
 
 def source_tier(item: dict) -> int:
     src = (item.get("source") or "")
-    if item.get("source_type") in ("disclosure", "regulator", "macro", "report") or src.startswith(TIER1_SOURCES):
+    if item.get("source_type") in ("disclosure", "regulator", "macro", "report", "technical") or src.startswith(TIER1_SOURCES):
         return 1
     if item.get("extra", {}).get("press_release"):
         return 1
@@ -57,6 +57,8 @@ def classify_event(item: dict) -> str:
     if extra.get("bist_measure"):
         return "measure"
     st = item.get("source_type")
+    if st == "technical":
+        return "technical"
     if st == "macro":
         return "macro"
     if st == "report":

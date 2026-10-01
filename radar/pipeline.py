@@ -39,7 +39,7 @@ COLLECTORS = [
     ("Rapor kutusu", reports.collect),
 ]
 
-PRIORITY = {"report": 0, "disclosure": 1, "regulator": 1, "macro": 1, "news": 2, "social": 3}
+PRIORITY = {"report": 0, "disclosure": 1, "regulator": 1, "macro": 1, "news": 2, "social": 3, "technical": 4}
 
 
 def _load(path, default):
@@ -114,6 +114,28 @@ def source_health(status: list[dict], prev: dict, now: str | None = None) -> dic
             h["last_data"] = now
         e.update({k: v for k, v in h.items() if v})
         out[e["name"]] = h
+    return out
+
+
+def technical_items(stocks: list, px: dict) -> list[Item]:
+    """Fiyat dosyasındaki teknik olaylardan akış kaydı üretir. Kimlik hisse + olay türü + bar tarihinden
+    türetilir; aynı gün aynı olay ikinci kez gelmez (seen_ids)."""
+    out = []
+    for st in stocks:
+        p = px.get(st.symbol) or {}
+        for ev in p.get("events") or []:
+            url = f"https://www.tradingview.com/chart/?symbol={st.tv}#teknik-{ev['key']}-{ev['bar']}"
+            sent = {1: "bullish", -1: "bearish"}.get(ev["dir"], "neutral")
+            out.append(Item(
+                source="Teknik analiz", source_type="technical", market=st.market,
+                title=f"{st.symbol}: {ev['title']}", url=url, published=iso(now_utc()), tickers=[st.symbol],
+                summary=ev["what"], lang="tr",
+                extra={"no_ai": True, "tech": ev["key"], "bar": ev["bar"], "live": ev.get("live", False)},
+                analysis={"sentiment": sent, "confidence": ev["confidence"], "materiality": ev["materiality"],
+                          "horizon": "days", "category": "Teknik", "event_label": ev.get("label") or ev["title"],
+                          "headline_tr": ev["title"], "what": ev["what"], "why": ev["why"], "risk": ev["risk"],
+                          "summary": "", "affected_tickers": [st.symbol], "provider": "kural (teknik)"},
+            ))
     return out
 
 
@@ -213,6 +235,17 @@ def run() -> dict:
     except Exception as e:
         log.warning("Geri alım fiyatları alınamadı: %s", e)
     watch_desc = ", ".join(f"{s.symbol} ({s.name})" for s in stocks)
+
+    # 3a) Teknik olaylar: haber olmasa da EMA kesişimi, RSI eşiği, 52 hafta zirve/dip, hacim patlaması
+    tcfg = (settings.get("sources") or {}).get("technical") or {}
+    if tcfg.get("enabled", True):
+        n_tech = 0
+        for it in technical_items(stocks, px):
+            if it.id not in seen_ids:
+                seen_ids[it.id] = None
+                new.append(it)
+                n_tech += 1
+        status.append({"name": "Teknik sinyaller", "ok": True, "count": n_tech})
 
     # 3b) Yaklaşan bilançolar (Yahoo takvimi): N gün kala akışa bir kayıt
     ecfg = (settings.get("sources") or {}).get("earnings_calendar") or {}

@@ -91,6 +91,7 @@ dakika kotasından düşer (15 dk'da bir ≈ 2.900 çalıştırma/ay).
 | Kazanç takvimi | Yahoo takvimi | Bilançoya 7 gün kala akışa düşer; Earnings Hub'ın açık API'si yok |
 | TradingView | Resmi "Teknik Analiz" gömme bileşeni + grafik bağlantısı | Veri API'si yok; EMA 14/34/55/200 5 yıllık kapanıştan aynı yöntemle hesaplanır |
 | Godel Terminal, MarketVisuals | Sadece bağlantı | Üyelik/giriş gerektiriyor, API yok |
+| Teknik olaylar | Fiyat verisinden (5 yıllık günlük kapanış) | EMA55/EMA200 kesişimi, fiyatın EMA55/EMA200'ü kesmesi, RSI 70/30 eşikleri, 52 hafta zirve/dip, hacim patlaması (20 gün ortalamasının 3 katı). Haber olmasa da akışa "Teknik" türünde düşer, aynı gün aynı olay bir kez gelir, AI kotası harcamaz. Telegram'a gider (`notify.technical`), kapatmak için `sources.technical.enabled: false` |
 | Aracı kurum raporları | `inbox/` | Kapalı portallara giriş yapılmaz; raporu sen yüklersin |
 
 **TradingView:** Haber akışı için resmi bir API yok ve üyelik bilgileriyle otomatik oturum açıp
