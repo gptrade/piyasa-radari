@@ -352,7 +352,52 @@ def _next_earnings(tk) -> dict | None:
             "rev_est": num(cal.get("Revenue Average"))}
 
 
-def fetch(stock: Stock, yahoo: str | None = None) -> dict | None:
+ACTION_TR = {"up": "yükseltti", "down": "düşürdü", "init": "kapsama aldı", "main": "korudu", "reit": "yineledi"}
+
+
+def _num(v):
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    return round(f, 4) if f == f and f != 0 else None
+
+
+def analyst_data(tk, max_changes: int = 12) -> dict | None:
+    """Yahoo analist verisi: hedef fiyatlar, tavsiye dağılımı, son not değişiklikleri (yoksa None)."""
+    out: dict = {"updated": iso(now_utc())}
+    try:
+        t = tk.analyst_price_targets or {}
+        tg = {k: _num(t.get(k)) for k in ("mean", "median", "high", "low")}
+        if any(tg.values()):
+            out["targets"] = tg
+    except Exception:
+        pass
+    try:
+        rec = tk.recommendations
+        if rec is not None and len(rec):
+            row = rec.iloc[0]
+            dist = {k: int(row.get(k) or 0) for k in ("strongBuy", "buy", "hold", "sell", "strongSell")}
+            if sum(dist.values()):
+                out["rec"] = dist
+    except Exception:
+        pass
+    try:
+        ud = tk.upgrades_downgrades
+        if ud is not None and len(ud):
+            ch = []
+            for ts, r in ud.sort_index(ascending=False).head(max_changes).iterrows():
+                d = ts.date().isoformat() if hasattr(ts, "date") else str(ts)[:10]
+                ch.append({"date": d, "firm": str(r.get("Firm") or ""), "to": str(r.get("ToGrade") or ""),
+                           "from": str(r.get("FromGrade") or ""), "action": str(r.get("Action") or ""),
+                           "pt": _num(r.get("currentPriceTarget")), "pt_prev": _num(r.get("priorPriceTarget"))})
+            out["changes"] = ch
+    except Exception:
+        pass
+    return out if len(out) > 1 else None
+
+
+def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False) -> dict | None:
     import yfinance as yf
     try:
         tk = yf.Ticker(yahoo or stock.yahoo)
@@ -363,6 +408,7 @@ def fetch(stock: Stock, yahoo: str | None = None) -> dict | None:
         except Exception:
             currency = None
         next_earnings = _next_earnings(tk)
+        an = analyst_data(tk) if analyst else None
     except Exception as e:
         log.warning("%s fiyat alınamadı: %s", yahoo or stock.yahoo, e)
         return None
@@ -384,6 +430,7 @@ def fetch(stock: Stock, yahoo: str | None = None) -> dict | None:
         # Panel için: gün içi 5 gün, günlük son ~6 ay yeter (dosya boyutu)
         "intraday": intraday, "daily": daily[-keep:], "ema": ema_overlay, "updated": iso(now_utc()),
         "next_earnings": next_earnings,
+        **({"analyst": an} if an else {}),
     }
 
 
@@ -400,11 +447,26 @@ def _store(st: Stock, p: dict | None) -> dict | None:
     return p
 
 
-def update_all(stocks: list[Stock]) -> dict[str, dict]:
+def _old_analyst(st: Stock) -> dict | None:
+    path = PRICE_DIR / f"{st.symbol}.json"
+    try:
+        return json.loads(path.read_text()).get("analyst") if path.exists() else None
+    except Exception:
+        return None
+
+
+def update_all(stocks: list[Stock], analyst_hours: float | None = 6) -> dict[str, dict]:
+    """analyst_hours: analist verisi bu kadar saatte bir yenilenir (None → hiç alınmaz)."""
     PRICE_DIR.mkdir(parents=True, exist_ok=True)
     out: dict[str, dict] = {}
     for st in stocks:
-        p = _store(st, fetch(st))
+        old = _old_analyst(st) if analyst_hours is not None else None
+        due = analyst_hours is not None and (
+            not old or now_utc() - parse_iso(old["updated"]) > timedelta(hours=analyst_hours))
+        p = fetch(st, analyst=due)
+        if p is not None and analyst_hours is not None and "analyst" not in p and old:
+            p["analyst"] = old                       # bu tur yenilenmediyse eskisini taşı
+        p = _store(st, p)
         if p:
             out[st.symbol] = p
     markets = {s.market for s in stocks}

@@ -667,6 +667,14 @@ main:focus { outline: none; }
 .tp-news button:hover { background: var(--row-hover); }
 .tp-news .dir { font-size: var(--fs-sm); }
 .tp-news .tp-t { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.an-bar { display: flex; height: 20px; border-radius: var(--r-sm); overflow: hidden; gap: 2px; margin: var(--s-1) 0 var(--s-2); font-size: var(--fs-xs); font-weight: var(--fw-semibold); }
+.an-bar span { display: grid; place-items: center; min-width: 4px; color: #fff; }
+.an-bar .an-sb { background: var(--up); }
+.an-bar .an-b { background: color-mix(in srgb, var(--up) 65%, var(--surface)); }
+.an-bar .an-h { background: var(--neutral); }
+.an-bar .an-s { background: color-mix(in srgb, var(--down) 65%, var(--surface)); }
+.an-bar .an-ss { background: var(--down); }
+.an-tx td:nth-child(2) { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tp-more, .tp-empty { font-size: var(--fs-xs); color: var(--text-3); margin-top: var(--s-2); }
 .sp-back { margin: var(--s-3) var(--s-4) 0; }
 #spTitle:focus { outline: none; }

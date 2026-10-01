@@ -837,6 +837,8 @@
     if (p) px.append(pricePanelFor(sym, { market: p.market }));
     else px.innerHTML = stateHTML({ kind: "info", compact: true, title: "Fiyat verisi yok", msg: "Teknik görünüm yalnızca izleme listesindeki hisseler için hesaplanır." });
     wrap.append(px, head);
+    const an = analystSection(sym, p);
+    if (an) wrap.append(an);
     const bb = p?.market === "BIST" && window.radarBB?.forTicker(sym);
     if (bb && (bb.tx.length || bb.pg)) {
       const sec = document.createElement("div");
@@ -849,6 +851,43 @@
       wrap.append(sec);
     }
     return wrap;
+  }
+  // Analist görüşü: tavsiye dağılımı, hedef fiyat, son not değişiklikleri (Yahoo Finance)
+  const REC = [["strongBuy", "Güçlü al", "sb"], ["buy", "Al", "b"], ["hold", "Tut", "h"], ["sell", "Sat", "s"], ["strongSell", "Güçlü sat", "ss"]];
+  const ACT = { up: "▲ artırdı", down: "▼ indirdi", init: "kapsama", main: "korudu", reit: "yineledi" };
+  function analystSection(sym, p) {
+    const a = p?.analyst;
+    const news = state.feed.items.filter(it => it.extra?.analyst_query && relTickers(it).includes(sym))
+      .sort((x, y) => (y.published > x.published ? 1 : -1)).slice(0, 3);
+    if (!a && !news.length) return null;
+    const sec = document.createElement("div");
+    sec.className = "tp-sec";
+    const cur = p.currency === "TRY" ? "₺" : p.currency === "USD" ? "$" : (p.currency || "");
+    let html = `<p class="d-sub">Analist görüşü</p>`;
+    const rec = a?.rec, tot = rec ? REC.reduce((t, [k]) => t + (rec[k] || 0), 0) : 0;
+    if (tot) {
+      const buy = (rec.strongBuy || 0) + (rec.buy || 0), sell = (rec.sell || 0) + (rec.strongSell || 0);
+      html += `<div class="an-bar" role="img" aria-label="${REC.map(([k, l]) => `${l} ${rec[k] || 0}`).join(", ")}">${REC.filter(([k]) => rec[k]).map(([k, l, c]) =>
+        `<span class="an-${c}" style="flex:${rec[k]}" data-tip="${l}: ${rec[k]}">${rec[k] / tot >= .08 ? rec[k] : ""}</span>`).join("")}</div>
+        <p class="tp-sub an-leg">${fmt.int(tot)} analist · <span class="up">%${fmt.int(Math.round(buy / tot * 100))} al</span> · %${fmt.int(Math.round((tot - buy - sell) / tot * 100))} tut · <span class="down">%${fmt.int(Math.round(sell / tot * 100))} sat</span></p>`;
+    }
+    const tg = a?.targets;
+    if (tg?.mean) {
+      const up = p.last ? (tg.mean / p.last - 1) * 100 : null;
+      html += `<p class="tp-sub">Ortalama hedef <b>${fmt.num(tg.mean, 2)} ${cur}</b>${up != null ? ` · <span class="${dirCls(up > 0 ? 1 : up < 0 ? -1 : 0)}">${fmt.pct(up)}</span> potansiyel` : ""}${tg.low && tg.high ? ` · aralık ${fmt.num(tg.low, 2)}–${fmt.num(tg.high, 2)}` : ""}</p>`;
+    }
+    const ch = (a?.changes || []).slice(0, 5);
+    if (ch.length) html += `<table class="tx an-tx"><thead><tr><th>Tarih</th><th>Kurum</th><th>Not</th><th class="num">Hedef</th></tr></thead><tbody>${ch.map(c => {
+      const k = c.action === "up" ? 1 : c.action === "down" ? -1 : 0;
+      return `<tr><td>${fmt.date(c.date)}</td><td>${esc(c.firm)}</td><td><span class="${dirCls(k)}" data-tip="${esc(ACT[c.action] || c.action || "")}">${esc(c.to || "—")}</span></td>
+        <td class="num">${c.pt ? fmt.num(c.pt, 2) : "—"}${c.pt && c.pt_prev && c.pt_prev !== c.pt ? ` <span class="${dirCls(c.pt > c.pt_prev ? 1 : -1)}">${c.pt > c.pt_prev ? "▲" : "▼"}</span>` : ""}</td></tr>`; }).join("")}</tbody></table>`;
+    if (!tot && !tg?.mean && !ch.length && a) html += `<p class="tp-empty">Yahoo'da bu hisse için analist verisi yok.</p>`;
+    if (news.length) html += `<p class="d-sub">Analist haberleri</p><ul class="tp-news">${news.map(it => { const k = it.analysis ? sign(it.analysis.sentiment) : null; return `
+      <li><button type="button" data-id="${it.id}"><span class="dir ${dirCls(k)}">${it.analysis ? glyph(k) : "·"}</span><span class="tp-t">${esc(it.analysis?.headline_tr || it.title)}</span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>`;
+    if (a) html += `<p class="tp-more">Kaynak: <a href="https://finance.yahoo.com/quote/${encodeURIComponent(p.yahoo || sym)}/analysis/" target="_blank" rel="noopener">Yahoo Finance</a>${a.updated ? ` · ${fmt.ago(a.updated)} güncellendi` : ""}</p>`;
+    sec.innerHTML = html;
+    $$(".tp-news button", sec).forEach(b => b.onclick = () => openItem(b.dataset.id, sym));
+    return sec;
   }
   // Panelde tek bir kaydın ayrıntısı (hisse panelinden açılınca "← hisse" ile geri dönülür)
   function openItem(id, backTo) {
