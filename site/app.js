@@ -268,7 +268,7 @@
     return `<tr class="row${reason ? " dim" : ""}${state.open.has(it.id) ? " open" : ""}" data-id="${it.id}" tabindex="0" aria-expanded="${state.open.has(it.id)}">
       <td class="c-dir">${dirHTML(a)}</td>
       <td class="c-tk">${tk}</td>
-      <td class="c-ol"><div class="ol-t" data-tip="${esc(full)}">${isNew ? `<span class="new-dot" aria-label="yeni"></span>` : ""}${reason ? DIM_IC(reason) : ""}${simBadge(it)}${text} <span class="ol-src">· ${esc(it.source.split(" · ")[0])}</span></div></td>
+      <td class="c-ol"><div class="ol-t" data-tip="${esc(full)}">${isNew ? `<span class="new-dot" aria-label="yeni"></span>` : ""}${reason ? DIM_IC(reason) : ""}${simBadge(it)}${docBadge(it)}${text} <span class="ol-src">· ${esc(it.source.split(" · ")[0])}</span></div></td>
       <td class="c-imp">${imp}</td>
       <td class="c-rx num">${rxHTML(it)}</td>
       <td class="c-src"><span class="src-cell" data-tip="${esc(srcTip)}"><span class="${t1 ? "t1" : ""}">${TYPE[it.source_type] || "Haber"}</span>${it.dups ? ` <span class="x">×${it.dups + 1}</span>` : ""}</span></td>
@@ -285,6 +285,28 @@
     td.append(detailContent(it)); tr.append(td);
     tr.addEventListener("click", e => e.stopPropagation());
     return tr;
+  }
+
+
+  // Belge özeti: AI'ın okuduğu sunum / finansal rapor / 8-K eki (belge metni yayımlanmaz, yalnız özet)
+  function docLabel(d) {
+    const pdf = (d.files || []).filter(f => f.type === "PDF" && f.pages);
+    const pages = pdf.reduce((n, f) => n + f.pages, 0);
+    return `${esc(d.kind)}${pdf.length ? ` · ${pdf.length} PDF, ${pages} sayfa` : ""}${(d.files || []).some(f => f.type === "EX-99") ? ` · ${d.files.filter(f => f.type === "EX-99").length} ek` : ""}`;
+  }
+  function docBadge(it) {
+    const d = it.extra?.doc;
+    return d ? `<span class="doc-badge" data-tip="AI belgenin kendisini okudu: ${docLabel(d)}">Belge</span> ` : "";
+  }
+  function docSummary(it) {
+    const d = it.extra?.doc, a = it.analysis;
+    if (!d || !a) return "";
+    const figs = Object.entries(a.figures || {});
+    return `<div class="doc-sum"><p class="d-sub">Belge özeti · ${docLabel(d)}</p>
+      ${a.key_points?.length ? `<ul class="doc-points">${a.key_points.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      ${figs.length ? `<table class="doc-figs"><tbody>${figs.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table>` : ""}
+      ${a.risks?.length ? `<p class="doc-risks"><b>Riskler:</b> ${a.risks.map(esc).join(" · ")}</p>` : ""}
+      <p class="doc-note">AI özeti; rakamları kaynak belgeden doğrula.</p></div>`;
   }
 
   // Dış servislerin kendi duygu skorları (AI'ın yerine geçmez; karnede ayrı notlanır)
@@ -315,6 +337,7 @@
       </p>
       ${a ? `<dl class="slots"><dt>Ne oldu</dt><dd>${esc(a.what || a.headline_tr || it.title)}</dd><dt>Neden önemli</dt><dd>${esc(a.why || first(a.summary) || "—")}</dd>
         <dt>Risk</dt><dd class="risk">${esc(a.risk || a.risks?.[0] || "—")}</dd></dl>${a.summary ? `<p class="d-sum">${esc(a.summary)}</p>` : ""}` : ""}
+      ${docSummary(it)}
       ${secondOpinions(it)}
       ${it.summary && it.summary !== it.title ? `<p class="d-sub">Orijinal metin</p><p class="d-sum">${esc(it.summary)}</p>` : ""}
       <p class="d-sub">Kaynaklar</p>

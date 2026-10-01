@@ -81,7 +81,8 @@ def parse_rows(rows: list[dict], watch: set[str], scope: str) -> list[Item]:
         subject = row.get("subject") or "Bildirim"
         summary = row.get("summary") or row.get("kapTitle") or ""
         extra = {"subject": subject, "filer": row.get("kapTitle"),
-                 "class": row.get("disclosureClass"), "index": idx, "watch": bool(tickers)}
+                 "class": row.get("disclosureClass"), "index": idx, "watch": bool(tickers),
+                 "att": int(row.get("attachmentCount") or 0)}
         source = "KAP"
         if is_bist_row(row):
             measure = bist_measure(f"{summary} {subject}")

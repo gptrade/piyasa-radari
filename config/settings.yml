@@ -67,6 +67,9 @@ sources:
     per_request: 8
     min_relevance: 0.3         # haber bu hisseyle en az bu kadar ilgiliyse etiketlenir
     lookback_hours: 24
+  documents:
+    enabled: true              # izleme listesi şirketlerinin sunum/finansal rapor/faaliyet raporu (KAP) ve 8-K EX-99 (SEC) belgelerini AI'a okut
+    max_per_run: 4             # turda en fazla belge (AI kotası ve süre için)
   yahoo_finance_rss:
     enabled: true
     max_per_stock: 8

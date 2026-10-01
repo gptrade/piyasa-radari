@@ -13,7 +13,7 @@ from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
-from . import anomaly, bb_quotes, bist_data, calendar_events, scorecard
+from . import anomaly, bb_quotes, documents, bist_data, calendar_events, scorecard
 from .sources import Context, alphavantage, feeds, finnhub, kap, marketaux, reports, social, spk, tcmb, tr_official, vendors
 
 log = logging.getLogger("radar")
@@ -455,6 +455,19 @@ def run() -> dict:
     # 4) AI değerlendirme — önce rapor & bildirim, sonra en yeni haberler
     analyzer = Analyzer(settings)
     watch = {s.symbol for s in stocks}
+    # 4a) Belge okuma: yatırımcı sunumu, finansal/faaliyet raporu, SEC 8-K EX-99 → AI tam metinle özetler
+    dcfg = (settings.get("sources") or {}).get("documents") or {}
+    if analyzer.enabled and dcfg.get("enabled", True):
+        n0 = len(http.FAILURES)
+        try:
+            ds = documents.attach(sorted(new, key=lambda i: i.published, reverse=True), watch, dcfg)
+            entry = {"name": "Belge okuma", "ok": True, "count": ds["count"]}
+            if http.FAILURES[n0:]:
+                entry["warnings"] = sorted({f"{h}: {w}" for h, w in http.FAILURES[n0:]})[:4]
+            status.append(entry)
+        except Exception as e:
+            log.exception("Belge okuma hatası")
+            status.append({"name": "Belge okuma", "ok": False, "count": 0, "error": str(e)[:200]})
     queue = fair_order(sorted(new, key=lambda i: (PRIORITY.get(i.source_type, 9), -parse_iso(i.published).timestamp())), watch)
     for it in queue:
         if not analyzer.can_run():
