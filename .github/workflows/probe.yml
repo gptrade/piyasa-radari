@@ -1,4 +1,4 @@
-name: probe-bist
+name: probe-bist  # tekrar
 on:
   push:
     branches: [arastirma-bist-veri]
