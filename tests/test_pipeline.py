@@ -19,6 +19,7 @@ def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline.digest, "DIGEST_FILE", tmp_path / "digest.json")
     monkeypatch.setattr(pipeline.scorecard, "ARCHIVE", tmp_path / "signals.json")
     monkeypatch.setattr(pipeline.scorecard, "SCORE", tmp_path / "scorecard.json")
+    monkeypatch.setattr(pipeline.calendar_events, "CAL_FILE", tmp_path / "calendar.json")
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     return tmp_path

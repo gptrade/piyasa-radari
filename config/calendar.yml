@@ -1,0 +1,71 @@
+# Makro takvim (Takvim sekmesi). Tarihler resmi takvimlerden alınmıştır; yeni yılın takvimi açıklanınca buraya ekle.
+# Kaynaklar (doğrulama: 1 Ekim 2026):
+#   TCMB PPK ve raporlar: TCMB 2026–2027 toplantı takvimi
+#   FOMC: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+#   ABD TÜFE: https://www.bls.gov/schedule/news_release/cpi.htm
+#   TÜİK TÜFE ve GSYH: TÜİK 2026 veri yayın takvimi
+# time: yerel saat (tz alanındaki saat diliminde); panel İstanbul saatine çevirir. importance: 1 düşük · 2 orta · 3 yüksek
+# Hesaplanan olaylar (burada yazmaz): VİOP endeks vadeli vade sonu (çift ayların son iş günü), ABD aylık opsiyon
+# vadesi (ayın 3. cuması; Mart/Haziran/Eylül/Aralık "dörtlü vade"), izleme listesindeki şirketlerin bilanço ve
+# temettü tarihleri (Yahoo).
+
+events:
+  - name: TCMB faiz kararı (PPK)
+    market: BIST
+    kind: cb
+    importance: 3
+    time: "14:00"
+    tz: Europe/Istanbul
+    url: https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Temel+Faaliyetler/Para+Politikasi/PPK
+    dates: [2026-01-22, 2026-03-12, 2026-04-22, 2026-06-11, 2026-07-23, 2026-09-10, 2026-10-22, 2026-12-10,
+            2027-01-21, 2027-03-18, 2027-04-22, 2027-06-10]
+  - name: TCMB Enflasyon Raporu
+    market: BIST
+    kind: report
+    importance: 2
+    tz: Europe/Istanbul
+    url: https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Yayinlar/Raporlar/Enflasyon+Raporu
+    dates: [2026-02-12, 2026-05-14, 2026-08-13, 2026-11-12, 2027-02-11, 2027-05-13]
+  - name: TCMB Finansal İstikrar Raporu
+    market: BIST
+    kind: report
+    importance: 1
+    tz: Europe/Istanbul
+    url: https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Yayinlar/Raporlar/Finansal+Istikrar+Raporu
+    dates: [2026-05-22, 2026-11-27, 2027-05-28]
+  - name: Türkiye TÜFE (enflasyon)
+    market: BIST
+    kind: macro
+    importance: 3
+    time: "10:00"
+    tz: Europe/Istanbul
+    url: https://data.tuik.gov.tr/Kategori/GetKategori?p=enflasyon-ve-fiyat-106
+    dates: [2026-02-03, 2026-03-03, 2026-04-03, 2026-05-04, 2026-06-05, 2026-07-03, 2026-08-03,
+            2026-09-03, 2026-10-05, 2026-11-03, 2026-12-03]
+  - name: Türkiye GSYH (büyüme)
+    market: BIST
+    kind: macro
+    importance: 2
+    time: "10:00"
+    tz: Europe/Istanbul
+    url: https://data.tuik.gov.tr/Kategori/GetKategori?p=ulusal-hesaplar-113
+    dates: [2026-03-02, 2026-06-01, 2026-08-31, 2026-12-01]
+  - name: Fed faiz kararı (FOMC)
+    market: US
+    kind: cb
+    importance: 3
+    time: "14:00"
+    tz: America/New_York
+    url: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    # kararın açıklandığı gün (toplantının 2. günü); * = ekonomik projeksiyonlu toplantı
+    dates: [2026-01-28, 2026-03-18*, 2026-04-29, 2026-06-17*, 2026-07-29, 2026-09-16*, 2026-10-28, 2026-12-09*,
+            2027-01-27, 2027-03-17*, 2027-04-28, 2027-06-09*, 2027-07-28, 2027-09-15*, 2027-10-27, 2027-12-08*]
+  - name: ABD TÜFE (CPI)
+    market: US
+    kind: macro
+    importance: 3
+    time: "08:30"
+    tz: America/New_York
+    url: https://www.bls.gov/cpi/
+    dates: [2026-01-13, 2026-02-13, 2026-03-11, 2026-04-10, 2026-05-12, 2026-06-10, 2026-07-14, 2026-08-12,
+            2026-09-11, 2026-10-14, 2026-11-10, 2026-12-10]
