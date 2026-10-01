@@ -12,51 +12,27 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: marketaux
+      - uses: actions/checkout@v4
+        with: { ref: onizleme-marketaux, path: app }
+      - name: marketaux kuru çalıştırma
         env:
-          MX: ${{ secrets.MARKETAUX_API_TOKEN || secrets.MARKETAUX_API_KEY || secrets.MARKETAUX_TOKEN || secrets.MARKETAUX }}
-          HAS_A: ${{ secrets.MARKETAUX_API_TOKEN != '' }}
-          HAS_B: ${{ secrets.MARKETAUX_API_KEY != '' }}
-          HAS_C: ${{ secrets.MARKETAUX_TOKEN != '' }}
-          HAS_D: ${{ secrets.MARKETAUX != '' }}
+          MARKETAUX_API_TOKEN: ${{ secrets.MARKETAUX_API_TOKEN }}
         run: |
           set +e
-          mkdir -p probe6
-          pip install -q requests
-          python - <<'PY' > probe6/sonuc.txt 2>&1
-          import os, json, requests
-          print("secret adları: TOKEN", os.environ["HAS_A"], "API_KEY", os.environ["HAS_B"], "MX_TOKEN", os.environ["HAS_C"], "MARKETAUX", os.environ["HAS_D"])
-          t = os.environ.get("MX")
-          if not t:
-              print("ANAHTAR YOK"); raise SystemExit
-          B = "https://api.marketaux.com/v1"
-          def get(path, **p):
-              r = requests.get(B + path, params={**p, "api_token": t}, timeout=30)
-              try: j = r.json()
-              except Exception: j = {"raw": r.text[:300]}
-              return r.status_code, j
-          # 1) BIST varlık araması
-          for q in ["Turk Hava Yollari", "THYAO", "Vakifbank", "Turk Telekom", "Akbank"]:
-              s, j = get("/entity/search", search=q, countries="tr")
-              print("ENTITY", q, s, [(d.get("symbol"), d.get("name"), d.get("exchange")) for d in j.get("data", [])][:5], j.get("error"))
-          # 2) Türkiye haberleri
-          s, j = get("/news/all", countries="tr", filter_entities="true", limit=3)
-          print("NEWS tr", s, j.get("meta"), j.get("error"))
-          for a in j.get("data", []):
-              print("  ", a["published_at"], a["source"], a["language"], "|", a["title"][:90])
-              for e in a.get("entities", [])[:4]:
-                  print("      ", e.get("symbol"), e.get("name"), e.get("country"), e.get("sentiment_score"), e.get("match_score"))
-          # 3) BIST sembolleriyle (farklı yazımlar)
-          for syms in ["THYAO.IS", "THYAO", "TTKOM.IS,VAKBN.IS,AKBNK.IS"]:
-              s, j = get("/news/all", symbols=syms, filter_entities="true", limit=3)
-              print("NEWS", syms, s, (j.get("meta") or {}).get("found"), [a["title"][:60] for a in j.get("data", [])], j.get("error"))
-          # 4) ABD
-          s, j = get("/news/all", symbols="NVDA,AAPL,MSFT,TSLA,AMD", filter_entities="true", language="en", limit=3)
-          print("NEWS US", s, j.get("meta"), j.get("error"))
-          for a in j.get("data", []):
-              print("  ", a["published_at"], a["source"], "|", a["title"][:90])
-              for e in a.get("entities", [])[:4]:
-                  print("      ", e.get("symbol"), e.get("sentiment_score"), e.get("match_score"), [h.get("sentiment") for h in e.get("highlights", [])][:3])
+          mkdir -p probe7
+          cd app && pip install -q -r requirements.txt
+          python - <<'PY' > ../probe7/sonuc.txt 2>&1
+          from datetime import timedelta
+          from radar.config import load_settings, load_watchlist, TickerMatcher
+          from radar.models import now_utc
+          from radar.sources import Context, marketaux
+          from radar import http
+          st = load_watchlist()
+          ctx = Context(settings=load_settings(), stocks=st, matcher=TickerMatcher(st), since=now_utc() - timedelta(hours=6))
+          items = marketaux.collect(ctx)
+          print("kayıt:", len(items), "uyarı:", http.FAILURES)
+          for i in items:
+              print(" ", i.published[:16], i.market, i.tickers, i.extra.get("mx"), "|", i.source, "|", i.title[:90])
           PY
       - name: kaydet
         run: |
