@@ -13,7 +13,7 @@ def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline, "DATA", tmp_path)
     monkeypatch.setattr(pipeline, "FEED", tmp_path / "feed.json")
     monkeypatch.setattr(pipeline, "STATE", tmp_path / "state.json")
-    monkeypatch.setattr(prices, "update_all", lambda stocks: {})
+    monkeypatch.setattr(prices, "update_all", lambda stocks, *a, **k: {})
     monkeypatch.setattr(pipeline.tcmb, "update_macro", lambda settings: None)
     monkeypatch.setattr(pipeline.bb_quotes, "update", lambda settings: None)
     monkeypatch.setattr(pipeline.digest, "DIGEST_FILE", tmp_path / "digest.json")

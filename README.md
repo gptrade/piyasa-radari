@@ -87,7 +87,10 @@ dakika kotasından düşer (15 dk'da bir ≈ 2.900 çalıştırma/ay).
 | X (Twitter) | Resmi API v2 | Ücretli anahtar gerekir |
 | Fiyatlar | yfinance (Yahoo) | Gecikmeli; BIST için `.IS` eki |
 | Investing.com Türkiye | Resmi RSS: BİST, şirket haberleri, insider, analist dereceleri, kazanç görüşmeleri, hisse analizleri | Hem BIST hem ABD hisseleriyle eşleşir |
-| Barchart | Google News `site:barchart.com` araması | Barchart'ın açık RSS'i doğrulanamadı |
+| Barchart, MarketWatch, TradingView (ABD) · Fintables, TradingView (BIST) | Google News `site:` araması, hisse başına tek sorgu (`google_news.sites`) | TradingView ve Fintables'ın resmi haber akışı/API'si yok, kullanım koşulları kazımayı yasaklıyor; yalnızca Google'ın indekslediği başlık + bağlantı alınır |
+| MarketWatch | Dow Jones resmi RSS (Top Stories) | ABD hisseleri şirket adıyla eşleşir |
+| Analist haberleri | Google News: "hedef fiyat / tavsiye / model portföy" (BIST), "price target / upgrade / downgrade" (ABD) (`google_news.analyst_terms`) | Hisse panelinde "Analist haberleri" altında da listelenir |
+| Analist notları | Yahoo Finance (yfinance): not değişiklikleri, hedef fiyatlar, tavsiye dağılımı | Son 3 günün not artırımı/indirimi akışa kural tabanlı düşer (AI kotası harcamaz, Telegram kurallarına tabi). Hedef fiyat ve dağılım hisse panelinde; 6 saatte bir yenilenir (`sources.analyst`). BIST'te kapsama sınırlı |
 | Kazanç takvimi | Yahoo takvimi | Bilançoya 7 gün kala akışa düşer; Earnings Hub'ın açık API'si yok |
 | TradingView | Resmi "Teknik Analiz" gömme bileşeni + grafik bağlantısı | Veri API'si yok; EMA 14/34/55/200 5 yıllık kapanıştan aynı yöntemle hesaplanır |
 | Godel Terminal, MarketVisuals | Sadece bağlantı | Üyelik/giriş gerektiriyor, API yok |

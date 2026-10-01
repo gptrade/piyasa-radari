@@ -34,10 +34,17 @@ sources:
   google_news:
     enabled: true
     max_per_stock: 8           # her hisse için her turda en fazla kaç haber
-    # Doğrudan RSS'i olmayan siteler Google News "site:" aramasıyla izlenir
+    max_per_site_query: 6      # site: aramasından hisse başına en fazla kaç haber
+    # Doğrudan RSS'i olmayan siteler Google News "site:" aramasıyla izlenir (hisse başına tek sorgu, OR ile).
+    # TradingView ve Fintables'ın resmi haber akışı/API'si yok ve kullanım koşulları kazımayı yasaklıyor;
+    # bu yüzden yalnızca Google News'in indekslediği sayfalar (başlık + bağlantı) alınır.
     sites:
-      US: [barchart.com]
-      BIST: []
+      US: [barchart.com, marketwatch.com, tradingview.com]
+      BIST: [fintables.com, tradingview.com]
+    # Analist görüşü araması (hedef fiyat, tavsiye, not değişikliği); hisse başına tek sorgu
+    analyst_terms:
+      US: [price target, upgrade, downgrade, analyst rating]
+      BIST: [hedef fiyat, tavsiye, model portföy, aracı kurum]
   yahoo_finance_rss:
     enabled: true
     max_per_stock: 8
@@ -76,6 +83,8 @@ sources:
       - {name: Investing · Hisse analizleri, url: "https://tr.investing.com/rss/stock.rss", market: ALL}
       - name: Dünya Gazetesi
         url: https://www.dunya.com/rss
+      # MarketWatch (Dow Jones resmi RSS); ABD hisseleri şirket adıyla eşleşir
+      - {name: MarketWatch, url: "https://feeds.content.dowjones.io/public/rss/mw_topstories", market: US, lang: en}
   reddit:
     enabled: true
     subreddits: ["stocks", "wallstreetbets", "investing"]
@@ -84,6 +93,10 @@ sources:
   x_twitter:
     enabled: true              # X_BEARER_TOKEN secret'ı yoksa sessizce atlanır
     max_results_per_query: 10
+  analyst:
+    enabled: true              # Yahoo: not değişiklikleri (upgrade/downgrade) akışa, hedef fiyat & tavsiye dağılımı hisse paneline
+    max_age_days: 3            # bundan eski not değişiklikleri akışa düşmez
+    refresh_hours: 6           # analist verisi bu sıklıkla yenilenir (istek sayısını sınırlar)
   technical:
     enabled: true              # haber olmasa da teknik olayları akışa ekle (fiyat verisinden, AI kotası harcamaz)
   reports_inbox:

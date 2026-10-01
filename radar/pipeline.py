@@ -6,13 +6,13 @@ import logging
 import os
 import re
 import unicodedata
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from . import digest, http, notify, prices
 from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
-from .models import Item, iso, now_utc, parse_iso
+from .models import UTC, Item, iso, now_utc, parse_iso
 from . import bb_quotes
 from .sources import Context, feeds, kap, reports, social, spk, tcmb
 
@@ -139,6 +139,77 @@ def technical_items(stocks: list, px: dict) -> list[Item]:
     return out
 
 
+GRADE_DIR = (("strong buy", 1), ("outperform", 1), ("overweight", 1), ("buy", 1), ("accumulate", 1),
+             ("positive", 1), ("add", 1), ("strong sell", -1), ("underperform", -1), ("underweight", -1),
+             ("sell", -1), ("reduce", -1), ("negative", -1))
+
+
+def grade_dir(grade: str) -> int:
+    g = (grade or "").lower()
+    return next((d for k, d in GRADE_DIR if k in g), 0)
+
+
+def analyst_items(stocks: list, px: dict, max_age_days: int = 3) -> list[Item]:
+    """Yahoo analist not değişikliklerinden akış kaydı (kural tabanlı, AI kotası harcamaz)."""
+    from datetime import date
+    from .models import make_id
+    out = []
+    today = now_utc().date()
+    for st in stocks:
+        p = px.get(st.symbol) or {}
+        cur = p.get("currency") or ""
+        for c in ((p.get("analyst") or {}).get("changes") or []):
+            try:
+                d = date.fromisoformat(c["date"])
+            except (KeyError, ValueError):
+                continue
+            if (today - d).days > max_age_days or not c.get("firm"):
+                continue
+            act = c.get("action") or ""
+            if act == "up":
+                sdir = 1
+            elif act == "down":
+                sdir = -1
+            elif act == "init":
+                sdir = grade_dir(c.get("to"))
+            else:
+                sdir = 0
+            pt = c.get("pt")
+            ptp = c.get("pt_prev")
+            if pt and ptp and act in ("main", "reit") and abs(pt / ptp - 1) >= 0.03:
+                sdir = 1 if pt > ptp else -1                     # not aynı, hedef fiyat belirgin değişti
+            verb = prices.ACTION_TR.get(act, "güncelledi")
+            grade = f"{c['from']} → {c['to']}" if c.get("from") and act in ("up", "down") else (c.get("to") or "")
+            pt_txt = ""
+            if pt:
+                pt_txt = f"; hedef {pt:g} {cur}" + (f" (önce {ptp:g})" if ptp and ptp != pt else "")
+            last = p.get("last")
+            upside = f", son fiyata göre %{(pt / last - 1) * 100:+.0f}" if pt and last else ""
+            title = f"{c['firm']}, {st.symbol} notunu {verb}: {grade}{pt_txt}".replace(": ;", ":")
+            label = {"up": "Not artırımı", "down": "Not indirimi", "init": "Kapsama başladı"}.get(act, "Analist notu")
+            if act in ("main", "reit") and sdir:
+                label = "Hedef yükseltildi" if sdir > 0 else "Hedef düşürüldü"
+            what = f"{c['firm']} notu {grade or 'aynı'}{pt_txt}{upside}"
+            out.append(Item(
+                id=make_id("anl", st.symbol, c["firm"], c["date"], c.get("to") or "", str(pt or "")),
+                source="Yahoo Finance · Analist", source_type="news", market=st.market, title=title,
+                summary=what, url=f"https://finance.yahoo.com/quote/{st.yahoo}/analysis/",
+                published=iso(datetime.combine(d, datetime.min.time(), tzinfo=UTC) + timedelta(hours=12))
+                if d < today else iso(now_utc()),
+                tickers=[st.symbol], lang="tr",
+                extra={"no_ai": True, "analyst": act or "note", "firm": c["firm"], "pt": pt},
+                analysis={"sentiment": {1: "bullish", -1: "bearish"}.get(sdir, "neutral"),
+                          "confidence": 70 if act in ("up", "down") else 60,
+                          "materiality": "medium" if sdir else "low", "horizon": "weeks", "category": "Analist",
+                          "event_label": label, "headline_tr": title, "what": what,
+                          "why": "Aracı kurum görüş değişiklikleri kısa vadede fiyatı etkileyebilir; tek kurumun görüşü, "
+                                 "konsensüsle birlikte değerlendirilmeli.",
+                          "risk": "Analist notları geriden gelebilir; hedef fiyatlar sık revize edilir.",
+                          "summary": "", "affected_tickers": [st.symbol], "provider": "kural (analist)"},
+            ))
+    return out
+
+
 def fair_order(queue: list[Item], watch: set[str]) -> list[Item]:
     """AI kotasını hisseler arasında adil dağıt: öncelik sınıfı (bildirim, rapor, haber…) korunur,
     her sınıfın içinde hisseler sırayla birer kayıt alır (her hissenin en yenisi önce).
@@ -222,7 +293,8 @@ def run() -> dict:
     log.info("Yeni kayıt: %d / toplanan %d", len(new), len(collected))
 
     # 3) Fiyatlar ve makro seriler
-    px = prices.update_all(stocks)
+    acfg = (settings.get("sources") or {}).get("analyst") or {}
+    px = prices.update_all(stocks, float(acfg.get("refresh_hours", 6)) if acfg.get("enabled", True) else None)
     try:
         macro = tcmb.update_macro(settings)
         status.append({"name": "TCMB EVDS", "ok": True, "count": len((macro or {}).get("series", []))})
@@ -246,6 +318,16 @@ def run() -> dict:
                 new.append(it)
                 n_tech += 1
         status.append({"name": "Teknik sinyaller", "ok": True, "count": n_tech})
+
+    # 3a') Analist not değişiklikleri (Yahoo): kural tabanlı, AI kotası harcamaz
+    if acfg.get("enabled", True):
+        n_an = 0
+        for it in analyst_items(stocks, px, int(acfg.get("max_age_days", 3))):
+            if it.id not in seen_ids:
+                seen_ids[it.id] = None
+                new.append(it)
+                n_an += 1
+        status.append({"name": "Analist notları", "ok": True, "count": n_an})
 
     # 3b) Yaklaşan bilançolar (Yahoo takvimi): N gün kala akışa bir kayıt
     ecfg = (settings.get("sources") or {}).get("earnings_calendar") or {}

@@ -144,8 +144,16 @@ def collect_sec(ctx: Context) -> list[Item]:
 
 
 # ---------------------------------------------------------------- Google News
+def site_query(st, sites: list[str]) -> str:
+    """'"NVDA" (site:a.com OR site:b.com)'. ABD'de sembol, BIST'te şirket adı daha isabetli."""
+    who = f'"{st.symbol}"' if st.market == "US" else f'"{st.name}" OR "{st.symbol}"'
+    where = " OR ".join(f"site:{x}" for x in sites)
+    return f"({who}) ({where})"
+
+
 def collect_google_news(ctx: Context) -> list[Item]:
-    if not ctx.cfg("google_news").get("enabled", True):
+    gcfg = ctx.cfg("google_news")
+    if not gcfg.get("enabled", True):
         return []
     out: list[Item] = []
     for st in ctx.stocks:
@@ -159,14 +167,28 @@ def collect_google_news(ctx: Context) -> list[Item]:
             lang = "en"
         out += entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
                                 market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol],
-                                limit=int(ctx.cfg("google_news").get("max_per_stock", 8)))
-        # Doğrudan RSS'i olmayan siteler (ör. Barchart): Google News "site:" aramasıyla
-        for site in (ctx.cfg("google_news").get("sites") or {}).get(st.market, []):
-            q = f'"{st.symbol}" site:{site}' if st.market == "US" else f'"{st.name}" site:{site}'
-            hl = "hl=en-US&gl=US&ceid=US:en" if st.market == "US" else "hl=tr&gl=TR&ceid=TR:tr"
+                                limit=int(gcfg.get("max_per_stock", 8)))
+        # Doğrudan RSS'i olmayan siteler (Barchart, MarketWatch, TradingView, Fintables): Google News
+        # "site:" aramasıyla. İstek sayısını düşük tutmak için siteler tek sorguda OR ile birleşir.
+        hl = "hl=en-US&gl=US&ceid=US:en" if st.market == "US" else "hl=tr&gl=TR&ceid=TR:tr"
+        sites = (gcfg.get("sites") or {}).get(st.market, [])
+        if sites:
+            q = site_query(st, sites)
             url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:7d&{hl}"
             out += entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
-                                    market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol], limit=4)
+                                    market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol],
+                                    limit=int(gcfg.get("max_per_site_query", 6)))
+        # Analist görüşleri (hedef fiyat, tavsiye, not değişikliği)
+        terms = (gcfg.get("analyst_terms") or {}).get(st.market)
+        if terms:
+            who = f'"{st.name}" OR "{st.symbol}"'
+            ors = " OR ".join(f'"{t}"' if " " in t else t for t in terms)
+            q = f"({who}) ({ors})"
+            url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:7d&{hl}"
+            for it in entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
+                                       market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol], limit=4):
+                it.extra["analyst_query"] = True
+                out.append(it)
     log.info("Google News: %d haber", len(out))
     return out
 

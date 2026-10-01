@@ -37,7 +37,8 @@ TIER2_OUTLETS = ("reuters", "bloomberg", "financial times", "ft.com", "wall stre
                  "cnbc", "yahoo finance", "marketwatch", "barron", "seeking alpha", "investing.com",
                  "associated press", "ap news", "anadolu", "aa ", "aa ekonomi", "dünya", "ekonomim",
                  "para analiz", "bloomberght", "bloomberg ht", "forbes", "the economist", "nikkei",
-                 "morningstar", "zacks", "benzinga", "motley fool", "tipranks", "barchart", "investing")
+                 "morningstar", "zacks", "benzinga", "motley fool", "tipranks", "barchart", "investing",
+                 "tradingview", "fintables")
 
 
 def source_tier(item: dict) -> int:
@@ -68,6 +69,8 @@ def classify_event(item: dict) -> str:
                      a.get("category", ""), a.get("event_label", "")]).lower()
     if extra.get("earnings_date"):
         return "earnings"
+    if extra.get("analyst"):
+        return "analyst"
     if (extra.get("form") or "") == "4":
         return "insider"
     for key, rx in _RULES:
