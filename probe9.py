@@ -35,6 +35,18 @@ a = requests.get("https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK
 link = re.findall(r'<link[^>]+href="([^"]+-index\.htm)"', a.text)[0]
 pick.append(Item(source="SEC EDGAR", source_type="disclosure", market="US", title="8-K - Current report", url=link,
                  published=iso(now_utc()), tickers=["AAPL"], lang="en", extra={"form": "8-K"}))
+print("== hata ayıklama: KAP eki")
+pg = requests.get(pick[0].url, headers={"User-Agent": http.DEFAULT_UA}, timeout=60).text
+links = documents.KAP_FILE.findall(pg); print("linkler", links[:3])
+for l in links[:1]:
+    f = requests.get(l, headers={"User-Agent": http.DEFAULT_UA}, timeout=60)
+    print("indir", f.status_code, f.headers.get("content-type"), f.headers.get("content-disposition"), len(f.content), f.content[:80])
+print("== hata ayıklama: SEC")
+base = link.rsplit("/", 1)[0]
+ij = requests.get(base + "/index.json", headers=SEC_UA, timeout=30)
+print("index", ij.status_code, [x["name"] for x in ij.json()["directory"]["item"]] if ij.ok else ij.text[:200])
+print("atom linkleri", re.findall(r'<link[^>]+href="([^"]+-index\.htm)"', a.text)[:5])
+print("atom başlıklar", re.findall(r"<title>([^<]+)</title>", a.text)[:6])
 watch = {t for i in pick for t in i.tickers}
 t0 = time.time()
 ds = documents.attach(pick, watch, {"max_per_run": 4})

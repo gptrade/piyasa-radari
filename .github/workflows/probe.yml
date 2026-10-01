@@ -1,4 +1,4 @@
-name: probe-bist  # p9
+name: probe-bist  # p9b
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -17,7 +17,7 @@ jobs:
       - name: belge ve değerleme kuru çalıştırma
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.PIYASA_RADARI }}
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
         run: |
           set +e
