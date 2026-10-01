@@ -366,7 +366,9 @@ def run() -> dict:
 
     # 3) Fiyatlar ve makro seriler
     acfg = (settings.get("sources") or {}).get("analyst") or {}
-    px = prices.update_all(stocks, float(acfg.get("refresh_hours", 6)) if acfg.get("enabled", True) else None)
+    vcfg = (settings.get("sources") or {}).get("valuation") or {}
+    px = prices.update_all(stocks, float(acfg.get("refresh_hours", 6)) if acfg.get("enabled", True) else None,
+                           float(vcfg.get("refresh_hours", 24)) if vcfg.get("enabled", True) else None)
     try:
         macro = tcmb.update_macro(settings)
         status.append({"name": "TCMB EVDS", "ok": True, "count": len((macro or {}).get("series", []))})
