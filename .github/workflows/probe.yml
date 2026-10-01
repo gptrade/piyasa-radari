@@ -19,6 +19,9 @@ jobs:
             [ -z "$name" ] && continue
             curl -sSL -m 30 -A "$UA" -H "Accept-Language: tr,en;q=0.8" -o "probe3/raw/$name" -w "$name %{http_code} %{size_download} %{content_type} %{url_effective}\n" "$url" >> probe3/status.txt 2>>probe3/err.txt || echo "$name FAIL" >> probe3/status.txt
           done < probe_urls.txt
+          # BDDK: hata türü (sertifika mı, erişim mi?) — yalnız teşhis için
+          curl -sS -m 40 -o /dev/null -w "bddk_verbose %{http_code} %{ssl_verify_result}\n" https://www.bddk.org.tr/Duyuru/Liste/39 >> probe3/status.txt 2>>probe3/err.txt || true
+          echo | openssl s_client -connect www.bddk.org.tr:443 -servername www.bddk.org.tr 2>&1 | grep -E "verify|depth|subject|issuer" | head -12 >> probe3/bddk_tls.txt || true
           python3 - <<'PY'
           import os, re, glob
           out = open("probe3/summary.txt", "w")
