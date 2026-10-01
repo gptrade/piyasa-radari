@@ -1,4 +1,4 @@
-name: probe-bist  # mx
+name: probe-bist  # p8
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -14,27 +14,25 @@ jobs:
         with: { python-version: "3.12" }
       - uses: actions/checkout@v4
         with: { ref: onizleme-marketaux, path: app }
-      - name: marketaux kuru çalıştırma
+      - name: kaynak sondajı
         env:
-          MARKETAUX_API_TOKEN: ${{ secrets.MARKETAUX_API_TOKEN }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          FINNHUB_TOKEN: ${{ secrets.FINNHUB_TOKEN }}
+          FINNHUB_KEY: ${{ secrets.FINNHUB_KEY }}
+          FINNHUB_API_TOKEN: ${{ secrets.FINNHUB_API_TOKEN }}
+          FINNHUB: ${{ secrets.FINNHUB }}
+          ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+          ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
+          ALPHAVANTAGE_KEY: ${{ secrets.ALPHAVANTAGE_KEY }}
+          AV_API_KEY: ${{ secrets.AV_API_KEY }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
         run: |
           set +e
-          mkdir -p probe7
-          cd app && pip install -q -r requirements.txt
-          python - <<'PY' > ../probe7/sonuc.txt 2>&1
-          from datetime import timedelta
-          from radar.config import load_settings, load_watchlist, TickerMatcher
-          from radar.models import now_utc
-          from radar.sources import Context, marketaux
-          from radar import http
-          st = load_watchlist()
-          ctx = Context(settings=load_settings(), stocks=st, matcher=TickerMatcher(st), since=now_utc() - timedelta(hours=6))
-          items = marketaux.collect(ctx)
-          print("kayıt:", len(items), "uyarı:", http.FAILURES)
-          for i in items:
-              print(" ", i.published[:16], i.market, i.tickers, i.extra.get("mx"), "|", i.source, "|", i.title[:90])
-          PY
+          mkdir -p probe8
+          pip install -q requests yfinance
+          python probe8.py > probe8/sonuc.txt 2>&1
       - name: kaydet
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe7; git commit -qm "probe6 sonuçları" || true; git push -q
+          git add -A probe8; git commit -qm "probe8 sonuçları" || true; git push -q
