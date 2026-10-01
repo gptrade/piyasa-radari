@@ -1,0 +1,23 @@
+secret adları: TOKEN true API_KEY false MX_TOKEN false MARKETAUX false
+ENTITY Turk Hava Yollari 200 [] None
+ENTITY THYAO 200 [] None
+ENTITY Vakifbank 200 [] None
+ENTITY Turk Telekom 200 [] None
+ENTITY Akbank 200 [('AKBNK.IS', 'Akbank T.A.S.', None)] None
+NEWS tr 200 {'found': 1560, 'returned': 3, 'limit': 3, 'page': 1} None
+   2026-10-01T06:23:16.000000Z smart-lab.ru ru | Хотите 70 000% доходности?
+       XU100.IS BIST 100 tr None 26.945038
+   2026-09-30T12:21:35.000000Z thebell.io ru | Пирамида на $18 млрд: почему крах инвестфондов в Турции стал проблемой для Эрдогана
+       XU100.IS BIST 100 tr None 15.719696
+   2026-09-30T12:13:53.000000Z markets.businessinsider.com en | Turkiye Garanti Bankasi A.S.: Redemption of the debt instrument at abroad within the Mediu
+       GARAN.IS Turkiye Garanti Bankasi A.S. tr -0.3612 236.85547
+NEWS THYAO.IS 200 9 ['Transtornos nos aeroportos globais seguem nesta segunda-feir', 'Venezuela ordena que companhias aéreas internacionais retome', 'Turkish Airlines, GE Aerospace sign engine deal for 75 Boein'] None
+NEWS THYAO 200 0 [] None
+NEWS TTKOM.IS,VAKBN.IS,AKBNK.IS 200 18 ['Türk Telekomünikasyon Anonim Sirketi (TRKNY) Q2 2026 Earning', 'Türk Telekomünikasyon Anonim Sirketi 2026 Q2 - Results - Ear', 'Türk Telekomünikasyon Anonim Sirketi (TRKNY) Q1 2026 Earning'] None
+NEWS US 200 {'found': 251181, 'returned': 3, 'limit': 3, 'page': 1} None
+   2026-10-01T18:00:50.000000Z gurufocus.com | Morgan Stanley Lowers Apple (AAPL) Price Target Amid Mixed Revenue Outlook
+       AAPL 0.427063 26.96342 [0.5994, 0.7783, 0]
+   2026-10-01T17:53:02.000000Z seekingalpha.com | AMD: At All-Time Highs, We're Expanding Our Short Position (NASDAQ:AMD)
+       AMD 0.20095 72.75291 [0.4019, 0]
+   2026-10-01T17:32:53.000000Z business-standard.com | How to tame the dragon: India seeks homegrown brands to take on China
+       AAPL 0.7845 7.680731 [0.7845]
