@@ -13,7 +13,7 @@ from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
-from . import bb_quotes
+from . import bb_quotes, scorecard
 from .sources import Context, feeds, kap, reports, social, spk, tcmb
 
 log = logging.getLogger("radar")
@@ -431,6 +431,13 @@ def run() -> dict:
     items = retain(items, {s.symbol for s in stocks}, total=int(fcfg.get("keep_items", 800)),
                    max_per_ticker=int(fcfg.get("max_per_ticker", 90)), min_per_ticker=int(fcfg.get("min_per_ticker", 25)),
                    max_age_days=int(fcfg.get("max_age_days", 30)))
+
+    # 5a) Sinyal arşivi ve karnesi (yönlü sinyaller 1 ve 5 seans sonra endekse göre notlanır)
+    try:
+        scorecard.update(items, px, {s.symbol for s in stocks})
+    except Exception as e:
+        log.exception("Karne hatası")
+        status.append({"name": "Sinyal karnesi", "ok": False, "count": 0, "error": str(e)[:200]})
 
     FEED.write_text(json.dumps({
         "generated": iso(now_utc()),
