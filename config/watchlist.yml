@@ -21,9 +21,6 @@ bist:
   - symbol: ENTRA
     name: IC Enterra Yenilenebilir Enerji
     aliases: ["Enterra", "IC Enterra"]
-  - symbol: A1CAP
-    name: A1 Capital Yatırım
-    aliases: ["A1 Capital"]
   - symbol: THYAO
     name: Türk Hava Yolları
     aliases: ["Türk Hava Yolları", "THY"]
