@@ -2,7 +2,7 @@ name: probe-bist
 on:
   push:
     branches: [arastirma-bist-veri]
-    paths: [".github/workflows/probe.yml"]
+    paths: [".github/workflows/probe.yml", "probe_urls.txt"]
 permissions:
   contents: write
 jobs:
@@ -13,45 +13,32 @@ jobs:
       - name: indir
         run: |
           set +e
-          rm -rf probe && mkdir -p probe2 && cd probe2
-          UA="Mozilla/5.0 (X11; Linux x86_64) piyasa-radari-arastirma"
-          B=https://www.borsaistanbul.com
-          get() { curl -sSL -m 60 -A "$UA" -o "$2" -w "$1 %{http_code} %{size_download} %{content_type}\n" "$B$1" >> status.txt || echo "$1 FAIL" >> status.txt; }
-          get /datum/acigasat.zip acigasat.zip
-          get /data/gk/gk2026.zip gk2026.zip
-          for d in 30 29; do get /data/thb/2026/09/thb202609${d}1.zip thb_${d}_1.zip; get /data/thb/2026/09/thb202609${d}2.zip thb_${d}_2.zip; get /data/thm/2026/09/thm202609${d}1.zip thm_${d}_1.zip; get /data/thm/2026/09/thm202609${d}2.zip thm_${d}_2.zip; done
-          get /data/ratio/ratio2026.zip ratio2026.zip
-          for z in *.zip; do mkdir -p "x_${z%.zip}"; unzip -o -q "$z" -d "x_${z%.zip}" 2>/dev/null || echo "$z unzip fail" >> status.txt; done
-          find . -path ./.git -prune -o -type f ! -name '*.zip' -printf '%p %s\n' > files.txt
-          # her dosyanın ilk satırları (metin) — büyük dosyaları kırp
-          for f in $(find . -mindepth 2 -type f); do echo "=== $f"; case "$f" in *.xls|*.xlsx) echo "(excel)";; *) iconv -f windows-1254 -t utf-8 "$f" 2>/dev/null | head -25 || head -25 "$f";; esac; done > heads.txt
+          rm -rf probe3 && mkdir -p probe3/raw
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36"
+          while read -r name url; do
+            [ -z "$name" ] && continue
+            curl -sSL -m 30 -A "$UA" -H "Accept-Language: tr,en;q=0.8" -o "probe3/raw/$name" -w "$name %{http_code} %{size_download} %{content_type} %{url_effective}\n" "$url" >> probe3/status.txt 2>>probe3/err.txt || echo "$name FAIL" >> probe3/status.txt
+          done < probe_urls.txt
           python3 - <<'PY'
-          import glob, subprocess
-          subprocess.run(["pip","install","-q","openpyxl","xlrd"])
-          import openpyxl, xlrd
-          out=open("excel_heads.txt","w")
-          for f in glob.glob("x_*/**/*.xls*", recursive=True):
-              out.write(f"=== {f}\n")
-              try:
-                  if f.endswith("x"):
-                      wb=openpyxl.load_workbook(f, read_only=True)
-                      for ws in wb.worksheets[:2]:
-                          out.write(f"## {ws.title}\n")
-                          for i,row in enumerate(ws.iter_rows(values_only=True)):
-                              if i>30: break
-                              out.write(repr([c for c in row if c is not None])+"\n")
-                  else:
-                      wb=xlrd.open_workbook(f)
-                      for ws in wb.sheets()[:2]:
-                          out.write(f"## {ws.name} {ws.nrows}x{ws.ncols}\n")
-                          for i in range(min(30, ws.nrows)):
-                              out.write(repr([c for c in ws.row_values(i) if c not in ("",None)])+"\n")
-              except Exception as e:
-                  out.write(f"ERR {e}\n")
+          import os, re, glob
+          out = open("probe3/summary.txt", "w")
+          for f in sorted(glob.glob("probe3/raw/*")):
+              b = open(f, "rb").read()
+              t = b.decode("utf-8", "replace")
+              n = os.path.basename(f)
+              items = len(re.findall(r"<item[\s>]", t)) + len(re.findall(r"<entry[\s>]", t))
+              titles = re.findall(r"<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>", t, re.S)[:6]
+              links = sorted(set(re.findall(r'href="([^"]*(?:rss|RSS|xml|feed|Duyuru|duyuru|Bulten|bulten|ihale|announcement|eskiler)[^"]*)"', t)))[:40]
+              out.write(f"=== {n} bytes={len(b)} items={items}\n")
+              out.write("titles: " + " | ".join(x.strip()[:90] for x in titles) + "\n")
+              for l in links: out.write("  " + l + "\n")
+              if items == 0:
+                  txt = re.sub(r"<script.*?</script>|<style.*?</style>", " ", t, flags=re.S)
+                  txt = re.sub(r"<[^>]+>", " ", txt); txt = re.sub(r"\s+", " ", txt)
+                  out.write("text: " + txt[:700] + "\n")
           PY
-          echo "python exit $?" >> status.txt
-          rm -f *.zip; find . -mindepth 2 -type f -size +300k -delete
+          find probe3/raw -size +400k -delete
       - name: kaydet
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe2 .; git commit -qm "probe sonuçları" || true; git push -q
+          git add -A probe3; git commit -qm "probe3 sonuçları" || true; git push -q
