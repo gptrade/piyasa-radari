@@ -45,7 +45,7 @@ sources:
     # bu yüzden yalnızca Google News'in indekslediği sayfalar (başlık + bağlantı) alınır.
     sites:
       US: [barchart.com, marketwatch.com, tradingview.com]
-      BIST: [fintables.com, tradingview.com]
+      BIST: [fintables.com, tradingview.com, paraanaliz.com]
     # Analist görüşü araması (hedef fiyat, tavsiye, not değişikliği); hisse başına tek sorgu
     analyst_terms:
       US: [price target, upgrade, downgrade, analyst rating]
@@ -63,7 +63,7 @@ sources:
     max_per_run: 3
   tcmb:
     enabled: true
-    feeds: ["PPK Kararları", "Basın Duyuruları", "Başkanın Konuşmaları"]
+    feeds: ["PPK Kararları", "Basın Duyuruları", "Başkanın Konuşmaları", "Yayınlar", "Veriler"]
   evds:
     enabled: true              # EVDS_API_KEY secret'ı yoksa atlanır
     lookback_days: 400
@@ -88,6 +88,8 @@ sources:
       - {name: Investing · Hisse analizleri, url: "https://tr.investing.com/rss/stock.rss", market: ALL}
       - name: Dünya Gazetesi
         url: https://www.dunya.com/rss
+      - {name: Ekonomim · Şirket, url: "https://www.ekonomim.net/rss/sirket-12", market: BIST}
+      - {name: Ekonomim · Piyasa, url: "https://www.ekonomim.net/rss/piyasa-10", market: BIST}
       # MarketWatch (Dow Jones resmi RSS); ABD hisseleri şirket adıyla eşleşir
       - {name: MarketWatch, url: "https://feeds.content.dowjones.io/public/rss/mw_topstories", market: US, lang: en}
   reddit:
@@ -104,6 +106,25 @@ sources:
     min_move_pct: 2.0          # ve en az bu kadar (%)
     lookback_days: 60
     news_hours: 24             # bu kadar saat içinde önemli haber/bildirim varsa "habersiz" sayılmaz
+  # Türkiye resmi kaynakları (radar/sources/tr_official.py). interval_min: en sık çekim aralığı (boru hattı 15 dk'da bir çalışır)
+  tuik:
+    enabled: true              # turkiye.gov.tr TÜİK haber bülteni listesi; yalnız piyasayı ilgilendiren bültenler
+    interval_min: 15
+  bddk:
+    enabled: true              # basın ve mevzuat duyuruları
+    interval_min: 30
+  resmi_gazete:
+    enabled: true              # günün sayısı (gece 00:00'dan sonra bir kez); vergi, kambiyo, bankacılık vb. anahtar kelimeler
+    interval_min: 60
+  bist_announcements:
+    enabled: true              # Borsa İstanbul duyuruları (endeks dönemsel değişiklikleri, pazar geçişleri, VİOP/prosedür); gong törenleri hariç
+    interval_min: 15
+  spk_press:
+    enabled: true              # SPK basın duyuruları (bülten ayrı: spk)
+    interval_min: 30
+  hazine:
+    enabled: true              # HMB sitesi yalnız JavaScript ile çalışıyor: ihale/borçlanma haberleri haber aramasıyla
+    interval_min: 30
   bist_bulletin:
     enabled: true              # Borsa İstanbul günlük bülteni (resmi, ücretsiz gün sonu dosyası): açığa satış payı
     agm: true                  # Borsa İstanbul genel kurul listesi → Takvim

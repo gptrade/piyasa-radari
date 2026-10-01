@@ -11,10 +11,10 @@
   const SENT_TR = { bullish: "Yükseliş", bearish: "Düşüş", neutral: "Nötr" };
   const EVENT = {
     measure: "Borsa tedbiri", buyback: "Geri alım", insider: "İçeriden işlem", earnings: "Finansal sonuç", analyst: "Analist",
-    dividend: "Temettü / sermaye", deal: "Anlaşma / ihale", regulator: "Düzenleyici (SPK)", macro: "Makro", legal: "Hukuki",
+    dividend: "Temettü / sermaye", deal: "Anlaşma / ihale", regulator: "Düzenleyici (SPK, BDDK, Borsa)", macro: "Makro", legal: "Hukuki",
     news: "Haber", social: "Sosyal medya", report: "Rapor", technical: "Teknik olay", anomaly: "Habersiz hareket",
   };
-  const TYPE = { disclosure: "Bildirim", news: "Haber", social: "Sosyal", regulator: "SPK", macro: "Makro", report: "Rapor", technical: "Teknik" };
+  const TYPE = { disclosure: "Bildirim", news: "Haber", social: "Sosyal", regulator: "Düzenleyici", macro: "Makro", report: "Rapor", technical: "Teknik" };
   const isTech = it => it.source_type === "technical";
   const isAnom = it => !!it.extra?.anomaly;
   // Son 24 saatteki habersiz hareket kaydı (varsa en yenisi)
