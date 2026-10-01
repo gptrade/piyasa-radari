@@ -8,8 +8,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="tokens.css?v=20261001i">
-<link rel="stylesheet" href="style.css?v=20261001i">
+<link rel="stylesheet" href="tokens.css?v=20261001j">
+<link rel="stylesheet" href="style.css?v=20261001j">
 <script>
   // Kayıtlı tema ve kenar çubuğu durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
   (function () {
@@ -141,7 +141,7 @@
                 <button type="button" role="radio" data-view="feed" aria-checked="true">Akış <span class="n" id="cntFeed"></span></button>
                 <button type="button" role="radio" data-view="signals" aria-checked="false">Güçlü sinyaller <span class="n" id="cntSig"></span></button>
                 <button type="button" role="radio" data-view="saved" aria-checked="false">Kaydedilenler <span class="n" id="cntSaved"></span></button>
-                <button type="button" role="radio" data-view="tickers" aria-checked="false" data-tip="Her hisse için tek satır: net haber yönü, haber sayısı, en önemli olay, bugünkü fiyat">Hisseler <span class="n" id="cntTk"></span></button>
+                <button type="button" role="radio" data-view="tickers" aria-checked="false" data-tip="İzleme listesindeki her hisse tek satırda: bugünkü fiyat, teknik görünüm, RSI, 52 hafta konumu, haber yönü. Tıkla: hisse paneli">Hisseler <span class="n" id="cntTk"></span></button>
               </div>
               <div class="search">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -178,7 +178,7 @@
             </div>
             <div class="tk-scroll" id="tkWrap" hidden>
               <table class="tbl tk-tbl" aria-label="Hisse bazında sinyaller">
-                <colgroup><col class="k-tk"><col class="k-dir"><col class="k-n"><col class="k-top"><col class="k-px"><col class="k-age"></colgroup>
+                <colgroup><col class="k-tk"><col class="k-px"><col class="k-ta"><col class="k-rsi"><col class="k-52"><col class="k-dir"><col class="k-n"><col class="k-top"></colgroup>
                 <thead id="tkHead"></thead><tbody id="tkBody"></tbody>
               </table>
             </div>
@@ -225,14 +225,14 @@
 </div>
 
 <aside class="side-panel" id="sidePanel" aria-label="Sinyal ayrıntısı" hidden>
-  <div class="sp-head"><h2 class="card-title" id="spTitle">Ayrıntı</h2><span class="kbd" aria-hidden="true">↑ ↓</span>
+  <div class="sp-head"><h2 class="card-title" id="spTitle" tabindex="-1">Ayrıntı</h2><span class="kbd" aria-hidden="true">↑ ↓</span>
     <button type="button" class="btn btn-icon" id="spClose" aria-label="Ayrıntıyı kapat" data-tip="Kapat (Esc)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></div>
   <div class="sp-body" id="spBody"></div>
 </aside>
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="shell.js?v=20261001i"></script>
-<script src="app.js?v=20261001i"></script>
-<script src="buybacks.js?v=20261001i"
+<script src="shell.js?v=20261001j"></script>
+<script src="app.js?v=20261001j"></script>
+<script src="buybacks.js?v=20261001j"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>

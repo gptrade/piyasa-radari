@@ -119,6 +119,15 @@
     badge();
     render();
   }
+  // Sinyal Takip'teki hisse paneli için: son işlemler ve program bilgisi
+  window.radarBB = {
+    forTicker(t) {
+      if (!S.loaded) return null;
+      const tx = S.rows.filter(r => r.t === t && r.kind === "tx").sort((a, b) => b.date - a.date).slice(0, 5);
+      const pg = S.prog?.get(t);
+      return { tx, pg: pg ? { ...pg, dur: durShort(pg.dur) } : null };
+    },
+  };
   function badge() {
     const n = S.rows.filter(r => r.kind === "tx" && r.pub >= Date.now() - DAY).length;
     sh.setBadge("geri-alim", n, `Son 24 saatte ${n} geri alım işlemi bildirildi`);

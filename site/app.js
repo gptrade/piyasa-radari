@@ -23,6 +23,7 @@
     view: "feed", sort: { k: "time", d: -1 }, ticker: null, ids: null, idsLabel: "", focusText: "",
     types: new Set(), q: "", col: {}, hideNoise: store.get("hideNoise", true),
     open: new Set(), saved: new Set(store.get("saved", [])), limit: PAGE, sel: null, tkSort: { k: "n", d: -1 }, stripAll: false,
+    panel: null, panelTk: null, panelFrom: null,
     seenBefore: null, reasons: new Map(),
   };
   const market = () => sh.market;
@@ -251,7 +252,7 @@
   function rowHTML(it) {
     const a = it.analysis, tks = relTickers(it), reason = state.reasons.get(it.id);
     const more = tks.length > 1 ? `<span class="tk-more" data-tip="Ayrıca: ${esc(tks.slice(1).join(", "))}">+${tks.length - 1}</span>` : "";
-    const tk = tks.length ? `<span class="tk"><span class="tk-sym">${esc(tks[0])}</span>${more}</span>`
+    const tk = tks.length ? `<span class="tk"><button type="button" class="tk-sym tk-link" data-sym="${esc(tks[0])}" data-tip="${esc(tks[0])} hisse paneli: teknik görünüm, tüm haberler">${esc(tks[0])}</button>${more}</span>`
       : `<span class="tk-gen" data-tip="Belirli bir hisse yok: piyasa geneli">${it.market === "BIST" ? "BIST" : "ABD"} geneli</span>`;
     const isNew = state.seenBefore && it.published > state.seenBefore && isSignal(a);
     const text = a?.event_label ? `<b>${esc(a.event_label)}</b> · ${esc(a.what || a.headline_tr || it.title)}` : esc(a?.headline_tr || it.title);
@@ -434,8 +435,11 @@
         : stateHTML({ kind: "info", title: "Fiyat verisi yok", msg: "Bu kayıt izleme listesindeki bir hisseye bağlı değil.", compact: true }));
       return box;
     }
-    const p = state.prices[sym], m = p.market || it.market;
-    const newsTs = Math.floor(new Date(it.published) / 1000);
+    return pricePanelFor(sym, { market: it.market, newsTs: Math.floor(new Date(it.published) / 1000), reaction: it.reaction, box });
+  }
+  // Hisse fiyat paneli: grafik (1G…6A, EMA), tepki, teknik görünüm, TradingView ve dış bağlantılar. newsTs yoksa haber çizgisi çizilmez.
+  function pricePanelFor(sym, { market, newsTs = null, reaction = null, box = document.createElement("div") } = {}) {
+    const p = state.prices[sym], m = p.market || market;
     box.innerHTML = `
       <div class="px-head"><span class="px-sym">${esc(sym)} · ${esc(p.currency || "")}</span>
         <div class="px-rng" role="group" aria-label="Grafik aralığı">${["1G", "1H", "1A", "3A", "6A"].map(r => `<button type="button" data-r="${r}" aria-pressed="false" ${["1A", "3A", "6A"].includes(r) ? `data-tip="Günlük · EMA 14/34/55/200 ile"` : ""}>${r}</button>`).join("")}</div></div>
@@ -456,9 +460,9 @@
       const c = $(".chg", box); c.textContent = shown == null ? "—" : `${glyph(k)} ${fmt.pct(shown, 2)}`; c.className = "rx chg " + dirCls(k);
     };
     $$(".px-rng button", box).forEach(b => b.onclick = () => paint(b.dataset.r));
-    const age = Date.now() / 1000 - newsTs;
-    paint(age < 20 * 3600 ? "1G" : age < 6 * 86400 ? "1H" : age < 30 * 86400 ? "1A" : "3A");
-    const r = it.reaction;
+    const age = newsTs == null ? null : Date.now() / 1000 - newsTs;
+    paint(age == null ? "3A" : age < 20 * 3600 ? "1G" : age < 6 * 86400 ? "1H" : age < 30 * 86400 ? "1A" : "3A");
+    const r = reaction;
     if (r && r.n_after === 0) $(".react-slot", box).innerHTML = `<p class="react">Haberden sonra henüz işlem olmadı (seans kapalı)</p>`;
     else if (r && r.since != null) {
       const b = v => `<b class="${dirCls(v, 0.05)}">${glyph(Math.abs(v) < 0.05 ? 0 : v)} ${fmt.pct(v)}</b>`;
@@ -566,8 +570,10 @@
       b.setAttribute("aria-pressed", String(state.ticker === w.symbol));
       b.setAttribute("aria-label", `${w.symbol} bugün ${chg == null ? "fiyat yok" : fmt.pct(chg, 2)}, son 24 saatte ${n} haber${nk != null ? `, net ${nk > 0 ? "olumlu" : nk < 0 ? "olumsuz" : "nötr"}` : ""}${dis ? ", haber ile fiyat ters" : ""}`);
       b.dataset.tip = `<b>${esc(w.symbol)}</b> · ${esc(w.name)}<br>Bugün: ${chg == null ? "fiyat yok" : glyph(k) + " " + fmt.pct(chg, 2)}<br>Son 24 sa: ${n} sinyal${n ? `, net ${nk > 0 ? "▲ olumlu" : nk < 0 ? "▼ olumsuz" : "● nötr"}` : ""}` +
-        (dis ? `<br><b>≠ Haber yönü ile fiyat ters</b>` : "") + (p?.ta ? `<br>Teknik: ${esc(p.ta.trend)}, RSI ${p.ta.rsi == null ? "—" : fmt.num(p.ta.rsi, 0)}` : "") + "<br><i>Tıkla: tabloyu bu hisseye süz</i>";
-      b.onclick = () => { state.ticker = state.ticker === w.symbol ? null : w.symbol; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE; render(); };
+        (dis ? `<br><b>≠ Haber yönü ile fiyat ters</b>` : "") + (p?.ta ? `<br>Teknik: ${esc(p.ta.trend)}, RSI ${p.ta.rsi == null ? "—" : fmt.num(p.ta.rsi, 0)}` : "") + "<br><i>Tıkla: hisse paneli (teknik görünüm, haberler)</i>";
+      b.dataset.sym = w.symbol;
+      if (state.panelTk === w.symbol) b.classList.add("panel");
+      b.onclick = () => openTicker(w.symbol, b);
       box.append(b);
     }
     if (hiddenN || (state.stripAll && all.length > cap)) {
@@ -680,9 +686,9 @@
       const heads = n.items.slice().sort((a, b) => impact(b) - impact(a)).slice(0, 4).map(it =>
         `<li>${glyph(sign(it.analysis.sentiment))} ${esc(it.analysis.event_label || "")} ${esc((it.analysis.what || it.analysis.headline_tr || it.title).slice(0, 80))}</li>`).join("");
       g.dataset.tip = `<b>${esc(n.t)}</b> · ${esc(n.name)}<br>Bugün: ${glyph(k)} ${fmt.pct(n.chg, 2)}<br>Son 24 sa: ${n.n} haber, net ${glyph(n.nk)} ${n.nk > 0 ? "olumlu" : n.nk < 0 ? "olumsuz" : "nötr"} (${fmt.num(n.net, 2)})` +
-        (n.mis ? `<br><b>≠ Haber yönü ile fiyat ters</b>` : "") + `<ul>${heads}</ul><i>Tıkla: tabloyu bu hisseye süz</i>`;
+        (n.mis ? `<br><b>≠ Haber yönü ile fiyat ters</b>` : "") + `<ul>${heads}</ul><i>Tıkla: hisse paneli</i>`;
       const ids = n.items.map(i => i.id);
-      const pick = () => { state.ticker = state.ticker === n.t ? null : n.t; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE; render(); };
+      const pick = () => openTicker(n.t, g);
       g.addEventListener("click", pick);
       g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
       g.addEventListener("mouseenter", () => highlight(ids)); g.addEventListener("mouseleave", () => highlight([]));
@@ -699,7 +705,7 @@
     $("#cntFeed").textContent = fmt.int(items.length);
     $("#cntSig").textContent = fmt.int(items.filter(i => isSignal(i.analysis)).length);
     $("#cntSaved").textContent = fmt.int(items.filter(i => state.saved.has(i.id)).length);
-    $("#cntTk").textContent = fmt.int(new Set(items.flatMap(relTickers)).size);
+    $("#cntTk").textContent = fmt.int(new Set([...items.flatMap(relTickers), ...(state.feed.watchlist || []).filter(w => market() === "ALL" || w.market === market()).map(w => w.symbol)]).size);
     const ms = $("#mSort"), v = `${state.sort.k}:${state.sort.d}`;
     if ([...ms.options].some(o => o.value === v)) ms.value = v;
   }
@@ -756,6 +762,7 @@
   function selectRow(tr, { focus = false } = {}) {
     const it = tr && state.feed.items.find(i => i.id === tr.dataset.id);
     if (!it) return;
+    state.panel = "item"; state.panelTk = null; $("#sidePanel").dataset.mode = "item";
     state.sel = it.id;
     $$("#sigBody tr.row.sel").forEach(r => { r.classList.remove("sel"); r.setAttribute("aria-expanded", "false"); });
     tr.classList.add("sel"); tr.setAttribute("aria-expanded", "true");
@@ -768,18 +775,104 @@
   function closePanel(refocus = true) {
     if ($("#sidePanel").hidden) return;
     $("#sidePanel").hidden = true;
+    if (state.panel === "ticker") {
+      const from = state.panelFrom; state.panel = null; state.panelTk = null; state.panelFrom = null;
+      $$("#heatmap .hm.panel").forEach(b => b.classList.remove("panel"));
+      if (refocus && from?.isConnected) from.focus();
+      return;
+    }
+    state.panel = null;
     const tr = state.sel && $(`#sigBody tr.row[data-id="${state.sel}"]`);
     $$("#sigBody tr.row.sel").forEach(r => { r.classList.remove("sel"); r.setAttribute("aria-expanded", "false"); });
     state.sel = null;
     if (refocus && tr) tr.focus();
   }
 
+  // ─────────────────────────────── hisse paneli (haberden bağımsız teknik görünüm)
+  const VIEW_LBL = { "güçlü al": "GÜÇLÜ AL", "al": "AL", "nötr": "NÖTR", "sat": "SAT", "güçlü sat": "GÜÇLÜ SAT" };
+  function openTicker(sym, from = document.activeElement) {
+    const w = (state.feed.watchlist || []).find(x => x.symbol === sym);
+    state.panel = "ticker"; state.panelTk = sym; state.panelFrom = from; $("#sidePanel").dataset.mode = "ticker";
+    $$("#sigBody tr.row.sel").forEach(r => { r.classList.remove("sel"); r.setAttribute("aria-expanded", "false"); });
+    state.sel = null;
+    $("#spTitle").textContent = w ? `${sym} · ${w.name}` : sym;
+    const body = $("#spBody"); body.innerHTML = ""; body.append(tickerContent(sym)); body.scrollTop = 0;
+    $("#sidePanel").hidden = false;
+    $$("#heatmap .hm").forEach(b => b.classList.toggle("panel", b.dataset.sym === sym));
+    $("#spTitle").focus({ preventScroll: true });
+  }
+  function tickerContent(sym) {
+    const wrap = document.createElement("div");
+    wrap.className = "tk-panel";
+    const p = state.prices[sym];
+    const items = state.feed.items.filter(it => relTickers(it).includes(sym)).sort((a, b) => impact(b) - impact(a) || (b.published > a.published ? 1 : -1));
+    const { net, n } = newsNet(sym);
+    const nk = !n ? null : net > 0.15 ? 1 : net < -0.15 ? -1 : 0;
+    const head = document.createElement("div");
+    head.className = "tp-sec";
+    head.innerHTML = `
+      <div class="tp-acts">
+        <button type="button" class="btn" data-a="filter" aria-pressed="${state.ticker === sym}">${state.ticker === sym ? "✓ Akış bu hisseye süzülü" : "Akışı bu hisseye süz"}</button>
+      </div>
+      <p class="tp-sub">Haber (son 24 sa): ${n ? `<b>${fmt.int(n)}</b> · net <span class="${dirCls(nk)}">${glyph(nk)} ${nk > 0 ? "olumlu" : nk < 0 ? "olumsuz" : "nötr"}</span>` : "yok"}</p>
+      ${items.length ? `<ul class="tp-news">${items.slice(0, 5).map(it => { const a = it.analysis, k = a ? sign(a.sentiment) : null; return `
+        <li><button type="button" data-id="${it.id}"><span class="dir ${dirCls(k)}">${a ? glyph(k) : "·"}</span>
+          <span class="tp-t">${a?.event_label ? `<b>${esc(a.event_label)}</b> · ` : ""}${esc(a?.what || a?.headline_tr || it.title)}</span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>
+        ${items.length > 5 ? `<p class="tp-more">+${items.length - 5} kayıt daha · “Akışı bu hisseye süz” ile hepsini gör</p>` : ""}` : `<p class="tp-empty">Akışta bu hisse için kayıt yok. Teknik görünüm aşağıda.</p>`}`;
+    $('[data-a="filter"]', head).onclick = () => {
+      if (state.ticker === sym) { state.ticker = null; } else { state.ticker = sym; state.view = state.view === "tickers" ? "feed" : state.view; }
+      state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE;
+      $$("#viewSeg button").forEach(x => x.setAttribute("aria-checked", String(x.dataset.view === state.view)));
+      render(); openTicker(sym, state.panelFrom);
+    };
+    $$(".tp-news button", head).forEach(b => b.onclick = () => openItem(b.dataset.id, sym));
+    const px = document.createElement("div");
+    px.className = "tp-sec";
+    if (p) px.append(pricePanelFor(sym, { market: p.market }));
+    else px.innerHTML = stateHTML({ kind: "info", compact: true, title: "Fiyat verisi yok", msg: "Teknik görünüm yalnızca izleme listesindeki hisseler için hesaplanır." });
+    wrap.append(px, head);
+    const bb = p?.market === "BIST" && window.radarBB?.forTicker(sym);
+    if (bb && (bb.tx.length || bb.pg)) {
+      const sec = document.createElement("div");
+      sec.className = "tp-sec";
+      sec.innerHTML = `<p class="d-sub">Pay geri alımı</p>
+        ${bb.pg ? `<p class="tp-sub">${bb.pg.ended ? "Program sonlandı" : "Program"}: ${[bb.pg.maxQty ? `azami ${fmt.int(bb.pg.maxQty)} pay` : "", bb.pg.maxFund ? `fon ${fmt.num(bb.pg.maxFund / 1e6, 1)} mn ₺` : "", bb.pg.dur].filter(Boolean).join(" · ") || "ayrıntı yok"}</p>` : ""}
+        ${bb.tx.length ? `<table class="tx"><thead><tr><th>Tarih</th><th class="num">Fiyat (₺)</th><th class="num">Adet</th></tr></thead><tbody>${bb.tx.map(r =>
+          `<tr><td>${fmt.date(r.date)}</td><td class="num">${r.price ? fmt.num(r.price, 2) : "—"}</td><td class="num">${fmt.int(r.qty)}</td></tr>`).join("")}</tbody></table>` : ""}
+        <p class="tp-more"><a href="#geri-alim">Şirket Geri Alım sekmesinde aç</a></p>`;
+      wrap.append(sec);
+    }
+    return wrap;
+  }
+  // Panelde tek bir kaydın ayrıntısı (hisse panelinden açılınca "← hisse" ile geri dönülür)
+  function openItem(id, backTo) {
+    const it = state.feed.items.find(i => i.id === id);
+    if (!it) return;
+    const from = state.panelFrom;
+    state.panel = "item"; state.sel = id; $("#sidePanel").dataset.mode = "ticker";
+    $("#spTitle").textContent = [relTickers(it)[0], it.analysis?.event_label].filter(Boolean).join(" · ") || "Ayrıntı";
+    const body = $("#spBody"); body.innerHTML = "";
+    if (backTo) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "link-btn sp-back"; b.textContent = `← ${backTo} paneli`;
+      b.onclick = () => openTicker(backTo, from);
+      body.append(b);
+    }
+    body.append(detailContent(it)); body.scrollTop = 0;
+    $("#sidePanel").hidden = false;
+  }
+
   // ─────────────────────────────── hisse bazında görünüm
+  // İzleme listesindeki her hisse (haberi olmasa da) + akışta geçen diğer hisseler; teknik sütunlar fiyat dosyasından
   function tickerRows() {
     const m = new Map();
-    for (const it of filtered(false)) {
+    const blank = (t, name = "") => ({ t, name, n: 0, s: 0, w: 0, top: null, last: null, items: [] });
+    (state.feed.watchlist || []).filter(w => market() === "ALL" || w.market === market()).forEach(w => m.set(w.symbol, blank(w.symbol, w.name)));
+    const hn = state.hideNoise; state.hideNoise = false;          // hisse özeti soluk kayıtları da sayar
+    const its = filtered(false); state.hideNoise = hn;
+    for (const it of its) {
       for (const t of relTickers(it)) {
-        const o = m.get(t) || { t, n: 0, s: 0, w: 0, top: null, last: null, items: [] };
+        const o = m.get(t) || blank(t);
         o.n++; o.items.push(it);
         const a = it.analysis;
         if (a) { const k = MAT_W[a.materiality]; o.s += sign(a.sentiment) * a.confidence / 100 * k; o.w += k; }
@@ -788,42 +881,55 @@
         m.set(t, o);
       }
     }
-    return [...m.values()].map(o => {
+    const q = state.q.toLocaleLowerCase("tr");
+    return [...m.values()].filter(o => !q || o.n || `${o.t} ${o.name}`.toLocaleLowerCase("tr").includes(q)).map(o => {
+      const p = state.prices[o.t], ta = p?.ta;
       o.net = o.w ? o.s / o.w : null;
       o.nk = o.net == null ? null : o.net > 0.15 ? 1 : o.net < -0.15 ? -1 : 0;
-      o.chg = state.prices[o.t]?.change_pct ?? null;
+      o.chg = p?.change_pct ?? null;
       o.mis = o.chg != null && ((o.nk === 1 && o.chg <= -0.5) || (o.nk === -1 && o.chg >= 0.5));
-      o.name = (state.feed.watchlist || []).find(w => w.symbol === o.t)?.name || "";
+      o.ta = ta || null; o.score = ta?.score ?? null; o.rsi = ta?.rsi ?? null; o.pos52 = ta?.pos52 ?? null;
+      o.name = o.name || (state.feed.watchlist || []).find(w => w.symbol === o.t)?.name || "";
       return o;
     });
   }
-  const TK_COLS = [["t", "Hisse", "k-tk"], ["net", "Net haber yönü", "k-dir"], ["n", "Haber", "k-n num"], ["top", "En önemli olay", "k-top", true], ["chg", "Bugün", "k-px num"], ["last", "Son haber", "k-age num"]];
+  const TK_COLS = [["t", "Hisse", "k-tk"], ["chg", "Bugün", "k-px num"], ["score", "Teknik", "k-ta"], ["rsi", "RSI", "k-rsi num"], ["pos52", "52h konum", "k-52 num"],
+    ["net", "Haber yönü", "k-dir"], ["n", "Haber", "k-n num"], ["top", "En önemli olay", "k-top", true]];
+  const TK_TIPS = { score: "Günlük/haftalık trend, EMA 14/34/55/200 dizilimi, MACD ve RSI'dan kaba skor", rsi: "RSI 14 · 70 üstü aşırı alım, 30 altı aşırı satım",
+    pos52: "Fiyatın 52 haftalık aralıktaki yeri (%0 = en düşük, %100 = en yüksek)", net: "Son haberlerin AI yön ortalaması (önem ve güvenle ağırlıklı)", n: "Akıştaki kayıt sayısı (soluklar dahil; kaynak türü ve arama filtrelerine göre)" };
   function renderTickers() {
     const rows = tickerRows(), k = state.tkSort.k, d = state.tkSort.d;
     rows.sort((a, b) => {
       const va = a[k], vb = b[k];
-      if (va == null && vb == null) return b.n - a.n;
+      if (va == null && vb == null) return b.n - a.n || a.t.localeCompare(b.t);
       if (va == null) return 1; if (vb == null) return -1;
       return (typeof va === "string" ? va.localeCompare(vb, "tr") : va - vb) * d || b.n - a.n;
     });
     $("#tkHead").innerHTML = `<tr>${TK_COLS.map(([c, l, cls, nosort]) => nosort ? `<th scope="col" class="${cls}">${l}</th>` :
-      `<th scope="col" class="${cls}" aria-sort="${c === k ? (d > 0 ? "ascending" : "descending") : "none"}"><button type="button" class="th-sort" data-k="${c}">${l}<span class="arr" aria-hidden="true">${c === k ? (d > 0 ? "▲" : "▼") : "▼"}</span></button></th>`).join("")}</tr>`;
+      `<th scope="col" class="${cls}" aria-sort="${c === k ? (d > 0 ? "ascending" : "descending") : "none"}"><button type="button" class="th-sort" data-k="${c}" ${TK_TIPS[c] ? `data-tip="${esc(TK_TIPS[c])}"` : ""}>${l}<span class="arr" aria-hidden="true">${c === k ? (d > 0 ? "▲" : "▼") : "▼"}</span></button></th>`).join("")}</tr>`;
     $$("#tkHead .th-sort").forEach(b => b.onclick = () => {
       const c = b.dataset.k; state.tkSort = state.tkSort.k === c ? { k: c, d: -state.tkSort.d } : { k: c, d: c === "t" ? 1 : -1 };
       renderTickers(); $(`#tkHead .th-sort[data-k="${c}"]`)?.focus();
     });
+    const NA = t => `<span class="tag na" data-tip="${esc(t)}">N/A</span>`;
     $("#tkBody").innerHTML = rows.map(o => {
       const a = o.top?.analysis, ck = o.chg == null || Math.abs(o.chg) < 0.05 ? 0 : o.chg;
-      const top = o.top ? (a?.event_label ? `<b>${esc(a.event_label)}</b> · ${esc(a.what || a.headline_tr || o.top.title)}` : esc(a?.headline_tr || o.top.title)) : "—";
-      return `<tr class="row" data-t="${esc(o.t)}" tabindex="0" aria-label="${esc(o.t)}: ${o.n} haber; tıkla, akışı bu hisseye süz">
+      const top = o.top ? (a?.event_label ? `<b>${esc(a.event_label)}</b> · ${esc(a.what || a.headline_tr || o.top.title)}` : esc(a?.headline_tr || o.top.title)) : `<span class="muted">Haber yok</span>`;
+      const vk = o.ta ? (VIEW_K[o.ta.view] ?? 0) : null;
+      const taTip = o.ta ? `<b>${VIEW_LBL[o.ta.view] || "NÖTR"}</b> · skor ${o.ta.score > 0 ? "+" : ""}${o.ta.score}<br>Günlük trend: ${esc(o.ta.trend || "—")} · haftalık: ${esc(o.ta.weekly_trend || "—")}<br>EMA dizilimi: ${esc(o.ta.ema_align || "—")}` +
+        (o.ta.signals?.length ? `<ul>${o.ta.signals.slice(0, 3).map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "") : "";
+      const rsiTag = o.rsi == null ? NA("Teknik veri yok") : o.rsi >= 70 ? `<span class="tag warn" data-tip="Aşırı alım bölgesi (RSI ≥ 70)">${fmt.num(o.rsi, 0)}</span>` : o.rsi <= 30 ? `<span class="tag warn" data-tip="Aşırı satım bölgesi (RSI ≤ 30)">${fmt.num(o.rsi, 0)}</span>` : fmt.num(o.rsi, 0);
+      return `<tr class="row" data-t="${esc(o.t)}" tabindex="0" aria-label="${esc(o.t)} hisse panelini aç">
         <td><span class="tk"><span class="tk-sym">${esc(o.t)}</span></span>${o.name ? `<span class="tk-name">${esc(o.name)}</span>` : ""}</td>
-        <td>${o.nk == null ? `<span class="tag na" data-tip="Bu hissenin haberlerinde AI değerlendirmesi yok">N/A</span>` : `<span class="dir ${dirCls(o.nk)}" style="display:inline">${glyph(o.nk)}</span><span class="netlbl">${o.nk > 0 ? "olumlu" : o.nk < 0 ? "olumsuz" : "nötr"} · ${fmt.num(o.net, 2)}</span>`}</td>
-        <td class="num">${fmt.int(o.n)}</td>
-        <td><span class="k-top-t" data-tip="${esc(o.top?.title || "")}">${top}</span></td>
-        <td class="num">${o.mis ? `<span class="mis" data-tip="Haber yönü ile fiyat ters">≠</span> ` : ""}${o.chg == null ? `<span class="tag na" data-tip="Fiyat verisi yok (izleme listesi dışı)">N/A</span>` : `<span class="rx ${dirCls(ck)}">${glyph(ck)} ${fmt.pct(o.chg, 2)}</span>`}</td>
-        <td class="num"><span class="age" data-tip="${esc(fmt.full(o.last))}">${fmt.ago(o.last)}</span></td></tr>`;
+        <td class="num">${o.mis ? `<span class="mis" data-tip="Haber yönü ile fiyat ters">≠</span> ` : ""}${o.chg == null ? NA("Fiyat verisi yok (izleme listesi dışı)") : `<span class="rx ${dirCls(ck)}">${glyph(ck)} ${fmt.pct(o.chg, 2)}</span>`}</td>
+        <td>${o.ta ? `<span class="tag ${dirCls(vk)}" data-tip="${esc(taTip)}">${glyph(vk)} ${VIEW_LBL[o.ta.view] || "NÖTR"}</span>` : NA("Teknik veri yok (izleme listesi dışı)")}</td>
+        <td class="num">${rsiTag}</td>
+        <td class="num">${o.pos52 == null ? "—" : `<span class="p52" data-tip="52 hafta: ${fmt.num(o.ta.lo52)} – ${fmt.num(o.ta.hi52)}"><i style="width:${Math.max(4, Math.min(100, o.pos52))}%"></i></span>${fmt.num(o.pos52, 0)}`}</td>
+        <td>${o.nk == null ? (o.n ? NA("Bu hissenin haberlerinde AI değerlendirmesi yok") : `<span class="muted">—</span>`) : `<span class="dir ${dirCls(o.nk)}" style="display:inline">${glyph(o.nk)}</span><span class="netlbl">${o.nk > 0 ? "olumlu" : o.nk < 0 ? "olumsuz" : "nötr"}</span>`}</td>
+        <td class="num">${o.n ? `<span data-tip="Son haber: ${esc(fmt.full(o.last))}">${fmt.int(o.n)}</span>` : "0"}</td>
+        <td><span class="k-top-t" ${o.top ? `data-tip="${esc(o.top.title)}"` : ""}>${top}</span></td></tr>`;
     }).join("");
-    $("#sigCount").textContent = rows.length ? `${fmt.int(rows.length)} hisse · satıra tıkla: akışı o hisseye süz` : "";
+    $("#sigCount").textContent = rows.length ? `${fmt.int(rows.length)} hisse · satıra tıkla: hisse paneli (teknik görünüm ve haberler)` : "";
     $("#sigState").innerHTML = rows.length ? "" : stateHTML({ kind: "empty", title: "Bu filtrelerle hisse yok", msg: "Filtreleri gevşet ya da temizle." });
   }
   function pickTicker(t) {
@@ -958,13 +1064,15 @@
     });
     $("#spClose").onclick = () => closePanel();
     document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#sidePanel").hidden && $("#legend").hidden) closePanel(); });
-    addEventListener("resize", () => { if (!wide()) closePanel(false); });
+    addEventListener("resize", () => { if (!wide() && state.panel === "item" && !$("#sidePanel").hidden && !$("#spBody .sp-back")) closePanel(false); });
+    // tablodaki hisse adı: hisse paneli
+    $("#sigBody").addEventListener("click", e => { const b = e.target.closest(".tk-link"); if (b) { e.stopPropagation(); openTicker(b.dataset.sym, b); } }, true);
     // hisse görünümü: satır → akışı o hisseye süz
-    $("#tkBody").addEventListener("click", e => { const tr = e.target.closest("tr.row"); if (tr) pickTicker(tr.dataset.t); });
+    $("#tkBody").addEventListener("click", e => { const tr = e.target.closest("tr.row"); if (tr) openTicker(tr.dataset.t, tr); });
     $("#tkBody").addEventListener("keydown", e => {
       const tr = e.target.closest("tr.row");
       if (!tr || e.target !== tr) return;
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickTicker(tr.dataset.t); }
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTicker(tr.dataset.t, tr); }
       else if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); const r = $$("#tkBody tr.row"), i = r.indexOf(tr); r[i + (e.key === "ArrowDown" ? 1 : -1)]?.focus(); }
     });
     $("#mSort").onchange = e => { const [k, d] = e.target.value.split(":"); state.sort = { k, d: +d }; state.limit = PAGE; render(); };

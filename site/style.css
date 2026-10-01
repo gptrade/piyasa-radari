@@ -620,13 +620,13 @@ main:focus { outline: none; }
 
 /* ───────── hisse bazında görünüm ───────── */
 .tk-tbl { table-layout: fixed; }
-.tk-tbl col.k-tk { width: 96px; } .tk-tbl col.k-dir { width: 120px; } .tk-tbl col.k-n { width: 80px; } .tk-tbl col.k-px { width: 118px; } .tk-tbl col.k-age { width: 96px; }
+.tk-tbl col.k-tk { width: 104px; } .tk-tbl col.k-px { width: 108px; } .tk-tbl col.k-ta { width: 112px; } .tk-tbl col.k-rsi { width: 56px; } .tk-tbl col.k-52 { width: 88px; } .tk-tbl col.k-dir { width: 96px; } .tk-tbl col.k-n { width: 60px; }
 .tk-tbl td { height: 48px; }
 .tk-tbl .k-top-t { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.35; font-size: var(--fs-md); }
 .tk-tbl .k-top-t b { font-weight: var(--fw-bold); }
 .tk-tbl .netlbl { font-size: var(--fs-sm); color: var(--text-2); margin-left: 4px; }
 .tk-tbl .tk-name { display: block; font: var(--fs-2xs) var(--font-sans); color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (max-width: 767px) { .tk-scroll { overflow-x: auto; } .tk-tbl { min-width: 640px; } }
+@media (max-width: 767px) { .tk-scroll { overflow-x: auto; } .tk-tbl { min-width: 860px; } }
 
 /* ───────── geniş ekranda yan panel detayı ───────── */
 .side-panel { position: fixed; top: var(--topbar-h); right: 0; bottom: 0; z-index: 35; width: calc(var(--rail-w) + var(--s-6) + 4px); background: var(--surface);
@@ -654,3 +654,28 @@ main:focus { outline: none; }
 .hm.more { background: var(--surface-2); color: var(--text-2); border: 1px dashed var(--border-strong); }
 .hm.more:hover { color: var(--accent-ink); border-color: var(--accent); }
 .hm.more b { font-size: var(--fs-md); } .hm.more .v { font: var(--fw-medium) var(--fs-2xs) var(--font-sans); white-space: normal; }
+
+/* ───────── hisse paneli ───────── */
+.tk-link { font: inherit; color: inherit; padding: 1px 3px; margin: -1px -3px; border-radius: var(--r-xs); text-decoration: underline dotted var(--text-3); text-underline-offset: 3px; }
+.tk-link:hover { color: var(--accent-ink); background: var(--accent-soft); text-decoration-color: var(--accent); }
+.tk-panel .tp-sec { padding: var(--s-4); border-top: 1px solid var(--border); }
+.tk-panel .tp-sec:first-child { border-top: 0; }
+.tp-acts { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-bottom: var(--s-3); }
+.tp-sub { font-size: var(--fs-sm); color: var(--text-2); margin-bottom: var(--s-2); }
+.tp-news { list-style: none; margin: 0; padding: 0; }
+.tp-news button { display: grid; grid-template-columns: 16px 1fr auto; gap: var(--s-2); align-items: baseline; width: 100%; text-align: left; padding: 6px var(--s-2); margin: 0 calc(-1 * var(--s-2)); border-radius: var(--r-sm); font-size: var(--fs-sm); }
+.tp-news button:hover { background: var(--row-hover); }
+.tp-news .dir { font-size: var(--fs-sm); }
+.tp-news .tp-t { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.tp-more, .tp-empty { font-size: var(--fs-xs); color: var(--text-3); margin-top: var(--s-2); }
+.sp-back { margin: var(--s-3) var(--s-4) 0; }
+#spTitle:focus { outline: none; }
+.hm.panel { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
+.p52 { display: inline-block; width: 34px; height: 6px; border-radius: 3px; background: var(--surface-3); margin-right: 6px; vertical-align: 1px; overflow: hidden; }
+.p52 i { display: block; height: 100%; background: var(--imp-2); }
+.muted { color: var(--text-3); }
+/* panel dar ekranlarda da açılır (hisse paneli): sağdan kayan sayfa, mobilde tam genişlik */
+@media (max-width: 1399px) { .side-panel { width: min(460px, 100vw); } }
+@media (max-width: 767px) { .side-panel { width: 100vw; top: 0; z-index: 45; } }
+.side-panel[data-mode="ticker"] .kbd { display: none; }
+@media (max-width: 1399px) { .side-panel .kbd { display: none; } }
