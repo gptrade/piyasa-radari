@@ -60,6 +60,13 @@ sources:
     interval_min: 30           # her ABD hissesi için 30 dakikada bir istek
     per_symbol: 8              # istek başına en fazla haber (en yeniler)
     lookback_hours: 24
+  alphavantage:
+    enabled: true              # ALPHAVANTAGE_API_KEY secret'ı gerekir; ücretsiz plan günde 25 istek → turda en fazla 1 istek
+    interval_min: 60           # ABD hisseleri sırayla: her istek bir sembol
+    max_per_day: 20            # günlük sınırın altında kal (elle deneme payı)
+    per_request: 8
+    min_relevance: 0.3         # haber bu hisseyle en az bu kadar ilgiliyse etiketlenir
+    lookback_hours: 24
   yahoo_finance_rss:
     enabled: true
     max_per_stock: 8

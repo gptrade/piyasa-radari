@@ -97,28 +97,35 @@ def record(d: dict, px: dict, watch: set[str]) -> dict | None:
     }
 
 
-MX_MIN = 0.2          # Marketaux skoru bu mutlak değerin altındaysa yönsüz sayılır
+# Dış duygu skorları (extra içindeki anahtar → değerlendirici adı, yönsüz sayılma eşiği). Ana toplamlara karışmaz.
+EXTERNAL = {"mx": ("Marketaux", 0.2), "av": ("Alpha Vantage", 0.15)}
+EXTERNAL_PV = {name for name, _ in EXTERNAL.values()}
+MX_MIN = EXTERNAL["mx"][1]
 
 
-def mx_records(d: dict, px: dict, watch: set[str]) -> list[dict]:
-    """Marketaux'nun kendi duygu skorundan ikinci değerlendirici kaydı (karnede 'Değerlendiren: Marketaux')."""
+def ext_records(d: dict, px: dict, watch: set[str]) -> list[dict]:
+    """Dış servislerin kendi duygu skorundan ikinci değerlendirici kayıtları (karnede 'Değerlendiren: Marketaux' vb.)."""
     out = []
-    for t, score in ((d.get("extra") or {}).get("mx") or {}).items():
-        if t not in watch or not px.get(t) or abs(score) < MX_MIN:
-            continue
-        p = px[t]
-        m = p.get("market") or d.get("market") or "US"
-        tz = EX_TZ.get(m, EX_TZ["US"])
-        p0 = price_at(d["published"], p, tz)
-        if not p0:
-            continue
-        idx = px.get(prices.INDEXES[m].symbol) if m in prices.INDEXES else None
-        k = 1 if score > 0 else -1
-        out.append({"id": f"{d['id']}|mx|{t}", "k": f"mx|{t}|{k}", "t": t, "m": m, "ts": d["published"],
-                    "title": (d.get("title") or "")[:140], "src": (d.get("source") or "").split(" · ")[0],
-                    "kind": kind(d), "ev": d.get("event") or "news", "d": k, "c": round(abs(score) * 100),
-                    "mat": "low", "pv": "Marketaux", "p0": p0, "i0": price_at(d["published"], idx, tz)})
+    for key, (pv, lim) in EXTERNAL.items():
+        for t, score in ((d.get("extra") or {}).get(key) or {}).items():
+            if t not in watch or not px.get(t) or score is None or abs(score) < lim:
+                continue
+            p = px[t]
+            m = p.get("market") or d.get("market") or "US"
+            tz = EX_TZ.get(m, EX_TZ["US"])
+            p0 = price_at(d["published"], p, tz)
+            if not p0:
+                continue
+            idx = px.get(prices.INDEXES[m].symbol) if m in prices.INDEXES else None
+            k = 1 if score > 0 else -1
+            out.append({"id": f"{d['id']}|{key}|{t}", "k": f"{key}|{t}|{k}", "t": t, "m": m, "ts": d["published"],
+                        "title": (d.get("title") or "")[:140], "src": (d.get("source") or "").split(" · ")[0],
+                        "kind": kind(d), "ev": d.get("event") or "news", "d": k, "c": round(abs(score) * 100),
+                        "mat": "low", "pv": pv, "p0": p0, "i0": price_at(d["published"], idx, tz)})
     return out
+
+
+mx_records = ext_records      # geriye uyumluluk
 
 
 def _close_after(daily: list, pub_date, k: int, tz, today):
@@ -198,7 +205,7 @@ def aggregate(recs: list[dict], now: datetime | None = None) -> dict:
         for wk, days in WINDOWS.items():
             lo = iso(now - timedelta(days=days)) if days else ""
             every = [r for r in recs if (scope == "ALL" or r["m"] == scope) and r["ts"] >= lo]
-            rs = [r for r in every if r.get("pv") != "Marketaux"]      # dış skor ana toplamlara karışmaz
+            rs = [r for r in every if r.get("pv") not in EXTERNAL_PV]      # dış skor ana toplamlara karışmaz
             w = {"total": {f"h{h}": _stats(rs, h) for h in HORIZONS},
                  "pending": sum(1 for r in rs if "x1" not in r), "dims": {}}
             for dk, fn in DIMS.items():
@@ -212,7 +219,7 @@ def aggregate(recs: list[dict], now: datetime | None = None) -> dict:
                                         for key, g in groups.items()), key=lambda x: -x["count"])
             sc[wk] = w
         out["scopes"][scope] = sc
-    graded = sorted((r for r in recs if "x1" in r and r.get("pv") != "Marketaux"), key=lambda r: r["ts"], reverse=True)[:60]
+    graded = sorted((r for r in recs if "x1" in r and r.get("pv") not in EXTERNAL_PV), key=lambda r: r["ts"], reverse=True)[:60]
     out["recent"] = [{k: r.get(k) for k in ("id", "t", "m", "ts", "title", "kind", "d", "c", "r1", "x1", "r5", "x5")}
                      for r in graded]
     return out
@@ -234,9 +241,8 @@ def update(items: list[dict], px: dict, watch: set[str]) -> dict:
         seen.setdefault(r["k"], []).append(parse_iso(r["ts"]).timestamp())
     added = 0
     for d in sorted(items, key=lambda x: x.get("published", "")):
-        if d["id"] in ids:
-            continue
-        for r in [record(d, px, watch), *mx_records(d, px, watch)]:
+        # Kayıt arşivdeyse bile sonradan eklenen dış skorlar (kopya haberden taşınan) ayrıca arşivlenir
+        for r in [record(d, px, watch), *ext_records(d, px, watch)]:
             if not r or r["id"] in ids:
                 continue
             ts = parse_iso(r["ts"]).timestamp()

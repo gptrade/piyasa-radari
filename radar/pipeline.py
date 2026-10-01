@@ -14,7 +14,7 @@ from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
 from . import anomaly, bb_quotes, bist_data, calendar_events, scorecard
-from .sources import Context, feeds, finnhub, kap, marketaux, reports, social, spk, tcmb, tr_official, vendors
+from .sources import Context, alphavantage, feeds, finnhub, kap, marketaux, reports, social, spk, tcmb, tr_official, vendors
 
 log = logging.getLogger("radar")
 
@@ -39,6 +39,7 @@ COLLECTORS = [
     ("Yahoo Finance", feeds.collect_yahoo),
     ("Marketaux", marketaux.collect),
     ("Finnhub", finnhub.collect),
+    ("Alpha Vantage", alphavantage.collect),
     ("Basın bültenleri", feeds.collect_press_wires),
     ("TR haber RSS", feeds.collect_turkish_rss),
     ("Reddit", feeds.collect_reddit),
@@ -108,7 +109,8 @@ def earnings_items(stocks, px: dict, days_ahead: int) -> list[Item]:
 
 # Anahtarı olmadan çalışmayan kaynaklar: tanımlı değilse "kapalı" gösterilir (hata sayılmaz)
 NEEDS_KEY = {"X": "X_BEARER_TOKEN", "TCMB EVDS": "EVDS_API_KEY", "Matriks": "MATRIKS_API_KEY", "Foreks": "FOREKS_USERNAME",
-             "Marketaux": "MARKETAUX_API_TOKEN", "Finnhub": "FINNHUB_API_KEY"}
+             "Marketaux": "MARKETAUX_API_TOKEN", "Finnhub": "FINNHUB_API_KEY",
+             "Alpha Vantage": "ALPHAVANTAGE_API_KEY"}
 
 
 def source_health(status: list[dict], prev: dict, now: str | None = None) -> dict:
@@ -506,7 +508,7 @@ def run() -> dict:
         # Sadece tanımlı olup olmadıkları (değerler asla yazılmaz)
         "secrets": {k: bool(os.environ.get(k)) for k in (
             "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "SEC_USER_AGENT",
-            "EVDS_API_KEY", "X_BEARER_TOKEN", "MATRIKS_API_KEY", "FOREKS_USERNAME", "MARKETAUX_API_TOKEN", "FINNHUB_API_KEY")},
+            "EVDS_API_KEY", "X_BEARER_TOKEN", "MATRIKS_API_KEY", "FOREKS_USERNAME", "MARKETAUX_API_TOKEN", "FINNHUB_API_KEY", "ALPHAVANTAGE_API_KEY")},
         "items": items,
     }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
