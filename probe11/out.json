@@ -1,0 +1,327 @@
+{
+ "items": [
+  {
+   "source": "Fed · Para politikası",
+   "source_type": "macro",
+   "market": "US",
+   "title": "Federal Reserve issues FOMC statement",
+   "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
+   "published": "2026-09-16T18:00:00Z",
+   "tickers": [],
+   "summary": "Federal Reserve issues FOMC statement",
+   "lang": "en",
+   "extra": {
+    "cb": "Fed",
+    "high_impact": true
+   },
+   "id": "2b6c2e3bc4b7a387",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "Fed · Para politikası",
+   "source_type": "macro",
+   "market": "US",
+   "title": "Federal Reserve Board and Federal Open Market Committee release economic projections from the September 15-16 FOMC meeting",
+   "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916b.htm",
+   "published": "2026-09-16T18:00:00Z",
+   "tickers": [],
+   "summary": "Federal Reserve Board and Federal Open Market Committee release economic projections from the September 15-16 FOMC meeting",
+   "lang": "en",
+   "extra": {
+    "cb": "Fed",
+    "high_impact": true
+   },
+   "id": "e646fb2188caa1ca",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "Fed · Konuşmalar",
+   "source_type": "macro",
+   "market": "US",
+   "title": "Jefferson, The U.S. Economy and Monetary Policy",
+   "url": "https://www.federalreserve.gov/newsevents/speech/jefferson20261001a.htm",
+   "published": "2026-10-01T17:30:00Z",
+   "tickers": [],
+   "summary": "Speech At the Darden School of Business, University of Virginia, Charlottesville, Virginia",
+   "lang": "en",
+   "extra": {
+    "cb": "Fed"
+   },
+   "id": "8020eac6a1109b8c",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "Fed · Konuşmalar",
+   "source_type": "macro",
+   "market": "US",
+   "title": "Cook, The Dual Mandate in Rural America",
+   "url": "https://www.federalreserve.gov/newsevents/speech/cook20260930a.htm",
+   "published": "2026-09-30T19:25:00Z",
+   "tickers": [],
+   "summary": "Speech At the 2026 Investing in Rural America Conference, Federal Reserve Bank of Richmond, Asheville, North Carolina",
+   "lang": "en",
+   "extra": {
+    "cb": "Fed"
+   },
+   "id": "f6cc35948629c3b3",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "Fed · Konuşmalar",
+   "source_type": "macro",
+   "market": "US",
+   "title": "Barr, Economic Conditions and Monetary Policy",
+   "url": "https://www.federalreserve.gov/newsevents/speech/barr20260929a.htm",
+   "published": "2026-09-29T16:40:00Z",
+   "tickers": [],
+   "summary": "Speech At the Detroit Economic Club, Detroit, Michigan",
+   "lang": "en",
+   "extra": {
+    "cb": "Fed"
+   },
+   "id": "cfbef65a2e4ecce2",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "Fed · Konuşmalar",
+   "source_type": "macro",
+   "market": "US",
+   "title": "Cook, An Update on AI and the Economy",
+   "url": "https://www.federalreserve.gov/newsevents/speech/cook20260928a.htm",
+   "published": "2026-09-28T17:25:00Z",
+   "tickers": [],
+   "summary": "Speech At the Oakland Tech Week Opening Keynote, cohosted by the Kapor Center, Oakland, California",
+   "lang": "en",
+   "extra": {
+    "cb": "Fed"
+   },
+   "id": "dc584340016b1df2",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "ECB",
+   "source_type": "macro",
+   "market": "BIST",
+   "title": "Isabel Schnabel: Monetary policy in a world of overlapping shocks",
+   "url": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp260930_1~7c6c120482.en.html",
+   "published": "2026-09-30T15:45:00Z",
+   "tickers": [],
+   "summary": "",
+   "lang": "en",
+   "extra": {
+    "cb": "ECB",
+    "high_impact": false
+   },
+   "id": "89bc08607235edb8",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "ECB",
+   "source_type": "macro",
+   "market": "BIST",
+   "title": "ECB amends monetary policy implementation guidelines as part of regular review",
+   "url": "https://www.ecb.europa.eu//press/pr/date/2026/html/ecb.pr260929~050089e922.en.html",
+   "published": "2026-09-29T08:00:00Z",
+   "tickers": [],
+   "summary": "",
+   "lang": "en",
+   "extra": {
+    "cb": "ECB",
+    "high_impact": false
+   },
+   "id": "d3f49f2c645cdeb8",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "ECB",
+   "source_type": "macro",
+   "market": "BIST",
+   "title": "Christine Lagarde: Hearing of the Committee on Economic and Monetary Affairs of the European Parliament",
+   "url": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp260928~a875675544.en.html",
+   "published": "2026-09-28T13:30:00Z",
+   "tickers": [],
+   "summary": "",
+   "lang": "en",
+   "extra": {
+    "cb": "ECB",
+    "high_impact": false
+   },
+   "id": "2bea36d7bebb74ec",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "ECB",
+   "source_type": "macro",
+   "market": "BIST",
+   "title": "Philip R. Lane: The outlook for the euro area economy",
+   "url": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp260924~e0eceef02c.en.pdf",
+   "published": "2026-09-24T09:00:00Z",
+   "tickers": [],
+   "summary": "",
+   "lang": "en",
+   "extra": {
+    "cb": "ECB",
+    "high_impact": false
+   },
+   "id": "9512fcc7c4e16f3f",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "ECB",
+   "source_type": "macro",
+   "market": "BIST",
+   "title": "Philip R. Lane: The Outlook for the Euro Area Economy",
+   "url": "https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp260923_1~ac21bf46e3.en.pdf",
+   "published": "2026-09-23T16:30:00Z",
+   "tickers": [],
+   "summary": "",
+   "lang": "en",
+   "extra": {
+    "cb": "ECB",
+    "high_impact": false
+   },
+   "id": "6468075a0d8ba63c",
+   "analysis": null,
+   "reaction": null
+  },
+  {
+   "source": "Investing.com Türkiye · IMF",
+   "source_type": "macro",
+   "market": "BIST",
+   "title": "Lübnan’a yeni IMF programı için reformlar şart - Investing.com Türkiye",
+   "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxPa0VUVkVJWTFteHM5VUNLQ3dRbTQyYjBDb3pzdzNMOFpWc0Z6QWdBMFc0bkVFS0c0RHpSVTY5ZEdfdlBkWHNWdjVfNk1yUHA5TTg3NktPaEJHTWRCbEsxRDl5enBxSGFCVUFLUHd2bDlJNThUT1ZsWUYxVE1KZElRRkdZRi0zYkZmeTl0WmJCWjNseFlEdG5USWgtSUZlR0lQckE?oc=5",
+   "published": "2026-10-01T18:22:10Z",
+   "tickers": [],
+   "summary": "Lübnan’a yeni IMF programı için reformlar şart Investing.com Türkiye",
+   "lang": "tr",
+   "extra": {
+    "topic": "IMF"
+   },
+   "id": "3facffbbef6d46f4",
+   "analysis": null,
+   "reaction": null
+  }
+ ],
+ "gdelt": {
+  "source": "GDELT · Dünya basını",
+  "source_type": "macro",
+  "market": "US",
+  "title": "Gelişen piyasalar ve küresel risk: haber hacmi olağanın 1,0 katı",
+  "url": "https://www.livemint.com/market/treasuries-surge-as-france-s-fiscal-woes-boost-haven-demand-11790882315885.html",
+  "published": "2026-10-01T22:39:08Z",
+  "tickers": [],
+  "summary": "GDELT: 'Gelişen piyasalar ve küresel risk' temasında son 2 saatte 14 haber (3 günlük olağan ~14); ortalama ton None (3 günlük ortalama None). Öne çıkan başlıklar: - Treasuries Surge as France Fiscal Woes Boost Haven Demand (livemint.com) - Adquisición de NIO por parte de Geely : Alianza por baterías (theclinic.cl) - US stocks : US market rebounds to close higher as surging Treasury yields recede (economictimes.indiatimes.com) - هل يغرق العالم حقاً في بحر الديون ؟ (albayan.ae) - Trading Day : Stocks find footing as Treasury yields ease (aol.com) - Google Stock Drops 3 . 8 % After Hours , Erasing About $160 Billion in Value (247wallst.com) - Insider Buying : Royce Global Value Trust ( NYSE : RGT ) President Purchases $10 , 565 . 46 in Stock (tickerreport.com) - Entrenched premium leaves gold primed to climb despite surge in US bond yields - Mining Engineering Online (me.smenet.org)",
+  "lang": "tr",
+  "extra": {
+   "gdelt": {
+    "theme": "em_risk",
+    "why": "hacim+ton",
+    "count": 14,
+    "usual_count": 13.8,
+    "ratio": 1.02,
+    "tone": null,
+    "base_tone": null,
+    "articles": [
+     {
+      "title": "Treasuries Surge as France Fiscal Woes Boost Haven Demand",
+      "domain": "livemint.com",
+      "url": "https://www.livemint.com/market/treasuries-surge-as-france-s-fiscal-woes-boost-haven-demand-11790882315885.html",
+      "language": "English"
+     },
+     {
+      "title": "Adquisición de NIO por parte de Geely : Alianza por baterías",
+      "domain": "theclinic.cl",
+      "url": "https://www.theclinic.cl/2026/10/01/adquisicion-de-nio-por-parte-de-geely-alianza/",
+      "language": "Spanish"
+     },
+     {
+      "title": "US stocks : US market rebounds to close higher as surging Treasury yields recede",
+      "domain": "economictimes.indiatimes.com",
+      "url": "https://economictimes.indiatimes.com/markets/us-stocks/news/us-stocks-us-market-rebounds-to-close-higher-as-surging-treasury-yields-recede/articleshow/134626994.cms",
+      "language": "English"
+     },
+     {
+      "title": "هل يغرق العالم حقاً في بحر الديون ؟ ",
+      "domain": "albayan.ae",
+      "url": "https://www.albayan.ae/financial-times/1555515",
+      "language": "Arabic"
+     },
+     {
+      "title": "Trading Day : Stocks find footing as Treasury yields ease",
+      "domain": "aol.com",
+      "url": "https://www.aol.com/articles/trading-day-stocks-footing-treasury-210432000.html",
+      "language": "English"
+     },
+     {
+      "title": "Google Stock Drops 3 . 8 % After Hours , Erasing About $160 Billion in Value",
+      "domain": "247wallst.com",
+      "url": "https://247wallst.com/cards/google-goog-price-swing-01m3wmc6fagmjj5wd8e537mka7",
+      "language": "English"
+     },
+     {
+      "title": "Insider Buying : Royce Global Value Trust ( NYSE : RGT ) President Purchases $10 , 565 . 46 in Stock",
+      "domain": "tickerreport.com",
+      "url": "https://www.tickerreport.com/banking-finance/13605032/insider-buying-royce-global-value-trust-nysergt-president-purchases-10565-46-in-stock.html",
+      "language": "English"
+     },
+     {
+      "title": "Entrenched premium leaves gold primed to climb despite surge in US bond yields - Mining Engineering Online",
+      "domain": "me.smenet.org",
+      "url": "https://me.smenet.org/entrenched-premium-leaves-gold-primed-to-climb-despite-surge-in-us-bond-yields/",
+      "language": "English"
+     }
+    ]
+   }
+  },
+  "id": "e13a182be26a541c",
+  "analysis": {
+   "sentiment": "neutral",
+   "confidence": 40,
+   "materiality": "low",
+   "horizon": "intraday",
+   "category": "Makro Gelişme",
+   "headline_tr": "Küresel piyasalarda tahvil faizlerinin gerilemesiyle hisseler toparlanırken, haber hacmi normal seyrediyor.",
+   "summary": "GDELT verilerine göre küresel risk temalı haber hacmi son saatlerde olağan düzeyinde seyretmektedir. Fransa'nın mali sorunları güvenli liman talebini artırırken, ABD tahvil faizlerinin gerilemesi hisse senetlerinde kısa vadeli toparlanmayı desteklemiştir. Tek başına bir katalizör olmaktan uzaktır.",
+   "event_label": "Küresel Piyasa Notu",
+   "what": "Tahvil faizleri gevşedi ve küresel hisseler toparlandı",
+   "why": "Haber hacmi olağan seviyelerde ve tek başına yön belirlemiyor",
+   "risk": "Fransa'nın mali sorunları ve küresel borç endişeleri",
+   "key_points": [
+    "Tahvil faizlerindeki gevşeme ABD piyasalarında toparlanma sağladı.",
+    "Fransa'nın mali yapısına ilişkin endişeler güvenli liman talebini tetikledi.",
+    "GDELT haber hacmi ve tonu olağan seviyelerde kalmaya devam ediyor.",
+    "Piyasa genelinde belirgin bir yön değişimi veya sürpriz fiyatlama yok."
+   ],
+   "risks": [
+    "Tahvil faizlerinde yeniden yaşanabilecek hızlı artışlar.",
+    "Avrupa merkezli mali ve borç krizlerinin yayılma etkisi."
+   ],
+   "affected_tickers": [
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "TSLA",
+    "AMD",
+    "THYAO",
+    "VAKBN"
+   ],
+   "figures": {
+    "haber_hacmi": "14",
+    "olagan_hacim": "13.8"
+   },
+   "model": "gemini-3.5-flash-lite",
+   "provider": "Gemini"
+  },
+  "reaction": null
+ }
+}

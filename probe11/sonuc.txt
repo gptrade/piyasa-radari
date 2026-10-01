@@ -1,0 +1,49 @@
+radar.global Merkez bankaları ve kurumlar: 21 kayıt
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> HTTP 429
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> HTTP 429
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> HTTP 429
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> HTTP 429
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> HTTP 429
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> HTTP 429
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> HTTP 429
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> HTTP 429
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> HTTP 429
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+radar.http GET https://api.gdeltproject.org/api/v2/doc/doc -> ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+== merkez bankaları 21 uyarı []
+  2026-09-16T18:00 US | Fed · Para politikası | Federal Reserve issues FOMC statement | yüksek | metin 6000
+  2026-09-16T18:00 US | Fed · Para politikası | Federal Reserve Board and Federal Open Market Committee release economic projections from the Septem | yüksek | metin 6000
+  2026-10-01T17:30 US | Fed · Konuşmalar | Jefferson, The U.S. Economy and Monetary Policy  | metin 0
+  2026-09-30T19:25 US | Fed · Konuşmalar | Cook, The Dual Mandate in Rural America  | metin 0
+  2026-09-29T16:40 US | Fed · Konuşmalar | Barr, Economic Conditions and Monetary Policy  | metin 0
+  2026-09-28T17:25 US | Fed · Konuşmalar | Cook, An Update on AI and the Economy  | metin 0
+  2026-09-30T15:45 BIST | ECB | Isabel Schnabel: Monetary policy in a world of overlapping shocks  | metin 0
+  2026-09-29T08:00 BIST | ECB | ECB amends monetary policy implementation guidelines as part of regular review  | metin 0
+  2026-09-28T13:30 BIST | ECB | Christine Lagarde: Hearing of the Committee on Economic and Monetary Affairs of the European Parliam  | metin 0
+  2026-09-24T09:00 BIST | ECB | Philip R. Lane: The outlook for the euro area economy  | metin 0
+  2026-09-23T16:30 BIST | ECB | Philip R. Lane: The Outlook for the Euro Area Economy  | metin 0
+  2026-10-01T18:22 BIST | Investing.com Türkiye · IMF | Lübnan’a yeni IMF programı için reformlar şart - Investing.com Türkiye  | metin 0
+  2026-10-01T16:28 BIST | ensondakika.com.tr · IMF | Öğrenciler temiz yarınlar için sosyal sorumluluk kampanyası düzenleyecek - ensondakika.com.tr  | metin 0
+  2026-09-30T07:34 BIST | Harici · IMF | IMF: Ukrayna’nın finansman açığı 54 milyar dolara ulaşabilir - Harici  | metin 0
+  2026-09-30T07:18 BIST | Radio Televizioni Shqiptar · IMF | IMF ve Dünya Bankası, Arnavutluk değerlendirmesini tamamladı: Finansal sistemde ilerleme, ödeme alty  | metin 0
+  2026-10-01T20:24 BIST | Traders Union · IMF | Cameroon faces weaker 2026 outlook as IMF flags energy and hydrocarbon pressures - Traders Union  | metin 0
+  2026-10-01T19:09 BIST | Briefs Finance · Yaptırımlar | Treasury Sanctions Iran Autos, Rail & Metals - Briefs Finance  | metin 0
+  2026-10-01T18:35 BIST | Squire Patton Boggs · Yaptırımlar | Sanctions brief – October 2026 | Insights - Squire Patton Boggs  | metin 0
+  2026-10-01T18:16 BIST | qz.com · Yaptırımlar | Treasury sanctions Iran's automotive and rail sectors - qz.com  | metin 0
+  2026-10-01T17:11 BIST | CNBC · Yaptırımlar | Treasury sanctions operation targets Iran's auto, rail industries in latest economic attack - CNBC  | metin 0
+  2026-10-01T07:53 BIST | news.cgtn.com · Yaptırımlar | US 10-year Treasury yields hit 24-year high amid global bond sell-off - news.cgtn.com  | metin 0
+== GDELT ham ölçümler
+  tr_econ bins 199 {'count': 0, 'usual_count': 0.4, 'ratio': None, 'tone': None, 'base_tone': None} → None
+  tr_risk bins 0 None → None
+  tr_press bins 0 None → None
+  oil bins 0 None → None
+  em_risk bins 199 {'count': 14, 'usual_count': 13.8, 'ratio': 1.02, 'tone': None, 'base_tone': None} → None
+== örnek GDELT kaydı (zorlanmış): Gelişen piyasalar ve küresel risk: haber hacmi olağanın 1,0 katı
+GDELT: 'Gelişen piyasalar ve küresel risk' temasında son 2 saatte 14 haber (3 günlük olağan ~14); ortalama ton None (3 günlük ortalama None). Öne çıkan başlıklar: - Treasuries Surge as France Fiscal Woes Boost Haven Demand (livemint.com) - Adquisición de NIO por parte de Geely : Alianza por baterías (theclinic.cl) - US stocks : US market rebounds to close higher as surging Treasury yields recede (economictimes.indiatimes.com) - هل يغرق العالم حقاً في بحر الديون ؟ (albayan.ae) - Trading Day : Stocks find footing as Treasury yields ease (aol.com) - Google Stock Drops 3 . 8 % After Hours , Erasing About $160 Billion in Value (247wallst.com) - Insider Buying : Royce Global Value Trust ( NYSE : RGT ) President Purchases $10 , 565 . 46 in Stock (tickerreport.com) - Entrenched premium leaves gold primed to climb despite surge in US bond yields - Mining Engineering Online (me.smenet.org)
+uyarılar [('api.gdeltproject.org', 'HTTP 429'), ('api.gdeltproject.org', 'ConnectionError'), ('api.gdeltproject.org', 'HTTP 429'), ('api.gdeltproject.org', 'ConnectionError'), ('api.gdeltproject.org', 'HTTP 429'), ('api.gdeltproject.org', 'HTTP 429'), ('api.gdeltproject.org', 'ConnectionError'), ('api.gdeltproject.org', 'ConnectionError')]
+== AI: Federal Reserve issues FOMC statement
+{"sentiment": "neutral", "confidence": 40, "materiality": "medium", "horizon": "intraday", "category": "Makroekonomik Gelişme", "headline_tr": "Federal Reserve FOMC Açıklaması Yayımlandı", "summary": "Federal Reserve FOMC toplantı metni ve açıklaması kamuoyuna duyuruldu. Piyasa geneli için kritik olan bu açıklama, faiz oranları ve para politikasının geleceği hakkında sinyaller içermektedir.", "event_label": "FOMC Açıklaması", "what": "Fed FOMC kararları ve metni yayımlandı", "why": "Küresel piyasaların yönünü doğrudan etkiler", "risk": "Beklenmeyen şahin veya güvercin ton", "key_points": ["Fed FOMC resmi açıklaması yayımlandı.", "Para politikası duruşu güncellendi.", "Küresel risk iştahı üzerinde belirleyicidir.", "ABD ve gelişen piyasa varlıklarını etkiler."], "risks": ["Beklentilerden farklı bir politika mesajı.", "Küresel piyasalarda volatilite artışı.", "Dolar endeksinde sert hareketler."], "affected_tickers": ["NVDA", "AAPL", "MSFT", "TSLA", "AMD", "THYAO", "VAKBN"], "figures": {"etki_alani": "Küresel Piyasa"}, "model": "gemini-3.5-flash-lite", "provider": "Gemini"}
+== AI: Gelişen piyasalar ve küresel risk: haber hacmi olağanın 1,0 katı
+{"sentiment": "neutral", "confidence": 40, "materiality": "low", "horizon": "intraday", "category": "Makro Gelişme", "headline_tr": "Küresel piyasalarda tahvil faizlerinin gerilemesiyle hisseler toparlanırken, haber hacmi normal seyrediyor.", "summary": "GDELT verilerine göre küresel risk temalı haber hacmi son saatlerde olağan düzeyinde seyretmektedir. Fransa'nın mali sorunları güvenli liman talebini artırırken, ABD tahvil faizlerinin gerilemesi hisse senetlerinde kısa vadeli toparlanmayı desteklemiştir. Tek başına bir katalizör olmaktan uzaktır.", "event_label": "Küresel Piyasa Notu", "what": "Tahvil faizleri gevşedi ve küresel hisseler toparlandı", "why": "Haber hacmi olağan seviyelerde ve tek başına yön belirlemiyor", "risk": "Fransa'nın mali sorunları ve küresel borç endişeleri", "key_points": ["Tahvil faizlerindeki gevşeme ABD piyasalarında toparlanma sağladı.", "Fransa'nın mali yapısına ilişkin endişeler güvenli liman talebini tetikledi.", "GDELT haber hacmi ve tonu olağan seviyelerde kalmaya devam ediyor.", "Piyasa genelinde belirgin bir yön değişimi veya sürpriz fiyatlama yok."], "risks": ["Tahvil faizlerinde yeniden yaşanabilecek hızlı artışlar.", "Avrupa merkezli mali ve borç krizlerinin yayılma etkisi."], "affected_tickers": ["AAPL", "MSFT", "NVDA", "TSLA", "AMD", "THYAO", "VAKBN"], "figures": {"haber_hacmi": "14", "olagan_hacim": "13.8"}, "model": "gemini-3.5-flash
