@@ -1,0 +1,60 @@
+== fed_press HTTP 200 text/xml entries=20
+    Wed, 30 Sep 2026 13:00:00 GMT | Federal Reserve Board finalizes changes to enhance the transparency and public accountability of its stress te | https://www.federalreserve.gov/newsevents/pressreleases/bcreg20260930a.htm | tags: ['Banking and Consumer Regulatory Policy']
+    Tue, 29 Sep 2026 20:00:00 GMT | Agencies publish resolution plan feedback letters for 15 banking organizations | https://www.federalreserve.gov/newsevents/pressreleases/bcreg20260929a.htm | tags: ['Banking and Consumer Regulatory Policy']
+    Fri, 25 Sep 2026 20:30:00 GMT | Federal Reserve Board announces approval of application by Peoples Bancorp Inc. | https://www.federalreserve.gov/newsevents/pressreleases/orders20260925a.htm | tags: ['Orders on Banking Applications']
+    Thu, 24 Sep 2026 18:30:00 GMT | Federal Reserve Board requests public comment on two proposals related to establishing a regulatory framework  | https://www.federalreserve.gov/newsevents/pressreleases/bcreg20260924a.htm | tags: ['Banking and Consumer Regulatory Policy']
+    Thu, 24 Sep 2026 15:00:00 GMT | Federal Reserve Board issues enforcement action with former employee of Sandy Spring Bank | https://www.federalreserve.gov/newsevents/pressreleases/enforcement20260924a.htm | tags: ['Enforcement Actions']
+    Tue, 22 Sep 2026 20:30:00 GMT | Federal Reserve Board announces approval of application by BancFirst Corporation | https://www.federalreserve.gov/newsevents/pressreleases/orders20260922a.htm | tags: ['Orders on Banking Applications']
+== fed_monetary HTTP 200 text/xml entries=15
+    Wed, 16 Sep 2026 18:00:00 GMT | Federal Reserve issues FOMC statement | https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm | tags: ['Monetary Policy']
+    Wed, 16 Sep 2026 18:00:00 GMT | Federal Reserve Board and Federal Open Market Committee release economic projections from the September 15-16  | https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916b.htm | tags: ['Monetary Policy']
+    Tue, 25 Aug 2026 18:00:00 GMT | Minutes of the Board's discount rate meetings on July 20 and July 29, 2026 | https://www.federalreserve.gov/newsevents/pressreleases/monetary20260825a.htm | tags: ['Monetary Policy']
+    Wed, 19 Aug 2026 18:00:00 GMT | Minutes of the Federal Open Market Committee, July 28–29, 2026 | https://www.federalreserve.gov/newsevents/pressreleases/monetary20260819a.htm | tags: ['Monetary Policy']
+    Wed, 29 Jul 2026 18:00:00 GMT | Federal Reserve issues FOMC statement | https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm | tags: ['Monetary Policy']
+    Tue, 14 Jul 2026 18:00:00 GMT | Minutes of the Board's discount rate meetings on June 8 and June 17, 2026 | https://www.federalreserve.gov/newsevents/pressreleases/monetary20260714a.htm | tags: ['Monetary Policy']
+== fed_speeches HTTP 200 text/xml entries=15
+    Thu, 1 Oct 2026 19:00:00 GMT | Bowman, Modernizing Financial Regulation: Initial Observations from eSLR | https://www.federalreserve.gov/newsevents/speech/bowman20261001a.htm | tags: ['Speech']
+    Thu, 1 Oct 2026 17:30:00 GMT | Jefferson, The U.S. Economy and Monetary Policy | https://www.federalreserve.gov/newsevents/speech/jefferson20261001a.htm | tags: ['Speech']
+    Thu, 1 Oct 2026 14:00:00 GMT | Waller, The Data Version of Godzilla versus Kong: FRED Takes on AI | https://www.federalreserve.gov/newsevents/speech/waller20261001a.htm | tags: ['Speech']
+    Wed, 30 Sep 2026 19:25:00 GMT | Cook, The Dual Mandate in Rural America | https://www.federalreserve.gov/newsevents/speech/cook20260930a.htm | tags: ['Speech']
+    Tue, 29 Sep 2026 19:00:00 GMT | Waller, Payments in the Age of AI Agents | https://www.federalreserve.gov/newsevents/speech/waller20260928a.htm | tags: ['Speech']
+    Tue, 29 Sep 2026 16:40:00 GMT | Barr, Economic Conditions and Monetary Policy | https://www.federalreserve.gov/newsevents/speech/barr20260929a.htm | tags: ['Speech']
+== ecb_press HTTP 200 application/rss+xml entries=15
+    Thu, 01 Oct 2026 17:30:00 +0200 | Isabel Schnabel: Central banks on-chain | https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp261001_1~a0be67193b.en.pdf | tags: []
+    Thu, 01 Oct 2026 15:30:00 +0200 | Christine Lagarde: Where AI risks meet | https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp261001~cf3c630379.en.html | tags: []
+    Wed, 30 Sep 2026 19:00:00 +0200 | Christine Lagarde: Interview with La Croix | https://www.ecb.europa.eu//press/inter/date/2026/html/ecb.in260930~10084a5f3d.en.html | tags: []
+    Wed, 30 Sep 2026 17:45:00 +0200 | Isabel Schnabel: Monetary policy in a world of overlapping shocks | https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp260930_1~7c6c120482.en.html | tags: []
+    Wed, 30 Sep 2026 04:20:00 +0200 | Frank Elderson: Supervisory risk appetite, efficiency and effectiveness | https://www.ecb.europa.eu//press/key/date/2026/html/ecb.sp260930~d495288355.en.html | tags: []
+    Tue, 29 Sep 2026 10:00:00 +0200 | ECB amends monetary policy implementation guidelines as part of regular review | https://www.ecb.europa.eu//press/pr/date/2026/html/ecb.pr260929~050089e922.en.html | tags: []
+== ecb_blog HTTP 200 application/rss+xml entries=15
+    Thu, 24 Sep 2026 12:00:00 +0200 | How policymakers’ speeches and interviews move markets | https://www.ecb.europa.eu//press/blog/date/2026/html/ecb.blog20260924~3240af33dc.en.html | tags: []
+    Tue, 15 Sep 2026 11:00:00 +0200 | Why Europeans save differently — and how to put those savings to work | https://www.ecb.europa.eu//press/blog/date/2026/html/ecb.blog20260915~dacebb4a6f.en.html | tags: []
+    Wed, 02 Sep 2026 11:00:00 +0200 | Can synthetic securitisation support economic growth? | https://www.ecb.europa.eu//press/blog/date/2026/html/ecb.blog20260902~4ea10b9f9a.en.html | tags: []
+    Tue, 01 Sep 2026 11:00:00 +0200 | Why the drivers of inflation matter for monetary policy | https://www.ecb.europa.eu//press/blog/date/2026/html/ecb.blog20260901~8d48e51f14.en.html | tags: []
+    Mon, 31 Aug 2026 11:00:00 +0200 | Big tech, big debt: when US tech giants tap the euro area bond market | https://www.ecb.europa.eu//press/blog/date/2026/html/ecb.blog20260831~dac6a37e73.en.html | tags: []
+    Wed, 26 Aug 2026 11:00:00 +0200 | AI adoption and the productivity promise: what workers report | https://www.ecb.europa.eu//press/blog/date/2026/html/ecb.blog20260826~e1c1a89999.en.html | tags: []
+== treasury_press HTTP 404 text/html; charset=UTF-8 entries=0
+   body: <!DOCTYPE html> <!--           __  __  ____    ______                                   _________________    .====/ /=/ /=/ __/===/_  __/==================================/######__________/   .==  / / / /  \ \      / / _______ ___  ___ __ ________ __    /######__________/  .==  / /_/ /  __\ \    / /
+== ofac_recent HTTP 404 text/html; charset=UTF-8 entries=0
+   body: <!DOCTYPE html> <html lang="en" dir="ltr" prefix="og: https://ogp.me/ns#">   <head>     <meta charset="utf-8" /> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19138737-27"></script> <script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments)};gtag(
+== ofac_old HTTP 403 text/html; charset=UTF-8 entries=0
+   body: <!DOCTYPE html> <html lang="en" dir="ltr" prefix="og: https://ogp.me/ns#">   <head>     <meta charset="utf-8" /> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19138737-27"></script> <script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments)};gtag(
+== imf_news HTTP 403 text/html entries=0
+   body: <HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1>   You don't have permission to access "http&#58;&#47;&#47;www&#46;imf&#46;org&#47;en&#47;News&#47;RSS&#63;" on this server.<P> Reference&#32;&#35;18&#46;8ff7d517&#46;1790894042&#46;b9a8e04f <P>https&#58;&#47;&#47;errors&#
+== imf_pr HTTP 403 text/html entries=0
+   body: <HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1>   You don't have permission to access "http&#58;&#47;&#47;www&#46;imf&#46;org&#47;en&#47;Publications&#47;RSS&#63;" on this server.<P> Reference&#32;&#35;18&#46;8ff7d517&#46;1790894042&#46;b9a8e364 <P>https&#58;&#47;&#47;
+== imf_rss_list HTTP 403 text/html entries=0
+   body: <HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1>   You don't have permission to access "http&#58;&#47;&#47;www&#46;imf&#46;org&#47;en&#47;Home&#47;rss&#45;list" on this server.<P> Reference&#32;&#35;18&#46;8ff7d517&#46;1790894042&#46;b9a8e64d <P>https&#58;&#47;&#47;erro
+
+######## GDELT
+-- timelinevolraw ("Turkish lira" OR "Turkey economy") 200 11249
+   series ['Article Count'] n 199
+   first [{'date': '20260928T224500Z', 'value': 0, 'norm': 1441}, {'date': '20260928T230000Z', 'value': 0, 'norm': 1098}] last [{'date': '20261001T213000Z', 'value': 1, 'norm': 2784}, {'date': '20261001T214500Z', 'value': 0, 'norm': 3152}, {'date': '20261001T220000Z', 'value': 0, 'norm': 2880}]
+-- timelinetone ("Turkish lira" OR "Turkey economy") 200 9025
+   series ['Average Tone'] n 199
+   first [{'date': '20260928T224500Z', 'value': 0}, {'date': '20260928T230000Z', 'value': 0}] last [{'date': '20261001T213000Z', 'value': -2.7379}, {'date': '20261001T214500Z', 'value': 0}, {'date': '20261001T220000Z', 'value': 0}]
+-- timelinevolraw (sourcecountry:turkey sourcelang:turkish) (borsa OR dolar OR faiz) 200 53
+   not json: Parentheses may only be used around OR'd statements.
+
+-- artlist ("Turkish lira" OR "Turkey economy") 429 444
+   not json: Please limit requests to one every 5 seconds or contact kalev.leetaru5@gmail.com for larger queries. All high-traffic users should switch to our ngrams dataset: https://blog.gdeltproject.org/using-the-new-web-ngrams-dataset-to-find-relevant-coverage/. For trend analysis, please see our daily newslet
