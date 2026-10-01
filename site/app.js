@@ -288,6 +288,18 @@
   }
 
 
+
+  // GDELT alarmı: hacim/ton ölçüsü ve öne çıkan başlıklar (bağlantılarıyla)
+  function gdeltBlock(it) {
+    const g = it.extra?.gdelt;
+    if (!g) return "";
+    const d = g.tone != null && g.base_tone != null ? g.tone - g.base_tone : null;
+    return `<div class="doc-sum"><p class="d-sub">Dünya basını · GDELT</p>
+      <p class="tp-sub">Son 2 saatte <b>${fmt.int(g.count)}</b> haber (olağan ~${fmt.int(g.usual_count)})${g.ratio ? ` · hacim <b>${fmt.num(g.ratio, 1)} kat</b>` : ""}${d != null ? ` · ton ${fmt.num(g.tone, 1)} (3 günlük ${fmt.num(g.base_tone, 1)}, <span class="${dirCls(d > 0 ? 1 : -1)}">${d > 0 ? "+" : ""}${fmt.num(d, 1)}</span>)` : ""}</p>
+      ${(g.articles || []).length ? `<ul class="doc-points">${g.articles.map(a => `<li>${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.title || a.url)}</a>` : esc(a.title)} <span class="t3">· ${esc(a.domain || "")}</span></li>`).join("")}</ul>` : ""}
+      <p class="doc-note">Ton: GDELT'in metin tabanlı ortalama duygu ölçüsü (eksi = olumsuz). Alarm bir olayı işaret eder, doğrulamak için başlıklara bak.</p></div>`;
+  }
+
   // Belge özeti: AI'ın okuduğu sunum / finansal rapor / 8-K eki (belge metni yayımlanmaz, yalnız özet)
   function docLabel(d) {
     const pdf = (d.files || []).filter(f => f.type === "PDF" && f.pages);
@@ -339,8 +351,9 @@
       ${a ? `<dl class="slots"><dt>Ne oldu</dt><dd>${esc(a.what || a.headline_tr || it.title)}</dd><dt>Neden önemli</dt><dd>${esc(a.why || first(a.summary) || "—")}</dd>
         <dt>Risk</dt><dd class="risk">${esc(a.risk || a.risks?.[0] || "—")}</dd></dl>${a.summary ? `<p class="d-sum">${esc(a.summary)}</p>` : ""}` : ""}
       ${docSummary(it)}
+      ${gdeltBlock(it)}
       ${secondOpinions(it)}
-      ${it.summary && it.summary !== it.title ? `<p class="d-sub">Orijinal metin</p><p class="d-sum">${esc(it.summary)}</p>` : ""}
+      ${it.summary && it.summary !== it.title && !it.extra?.gdelt ? `<p class="d-sub">Orijinal metin</p><p class="d-sum">${esc(it.summary)}</p>` : ""}
       <p class="d-sub">Kaynaklar</p>
       <ul class="d-sources">
         <li><span class="tag ${it.tier === 1 ? "accent" : ""}">${TYPE[it.source_type] || "Haber"}</span><span>${esc(it.source)} · ${TIER[it.tier || 3]}</span>${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">Habere git ↗</a>` : ""}</li>

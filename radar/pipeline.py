@@ -14,7 +14,7 @@ from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
 from . import anomaly, bb_quotes, documents, bist_data, calendar_events, scorecard
-from .sources import Context, alphavantage, feeds, finnhub, kap, marketaux, reports, social, spk, tcmb, tr_official, vendors
+from .sources import Context, alphavantage, feeds, finnhub, global_macro, kap, marketaux, reports, social, spk, tcmb, tr_official, vendors
 
 log = logging.getLogger("radar")
 
@@ -34,6 +34,8 @@ COLLECTORS = [
     ("Borsa İstanbul duyuruları", tr_official.collect_bist_announcements),
     ("SPK duyuruları", tr_official.collect_spk_press),
     ("Hazine (haber)", tr_official.collect_hazine),
+    ("Fed · ECB · IMF", global_macro.collect_central_banks),
+    ("GDELT (dünya basını)", global_macro.collect_gdelt),
     ("SEC EDGAR", feeds.collect_sec),
     ("Google News", feeds.collect_google_news),
     ("Yahoo Finance", feeds.collect_yahoo),
