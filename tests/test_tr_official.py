@@ -63,7 +63,8 @@ def test_resmi_gazete_filters_relevant_and_runs_once_a_day(ctx, monkeypatch):
     assert any("Özel Tüketim Vergisi" in x for x in titles)
     assert not any("Malvarlığının Dondurulması" in x for x in titles)    # "tasarrufunda" tek başına eşleşmez
     assert not any("Üniversitesi" in x for x in titles)
-    assert items[0].source.startswith("Resmi Gazete · ")
+    assert items[0].source == "Resmi Gazete · Cumhurbaşkanı kararları"
+    assert not any("Kamulaştır" in x for x in titles)
     assert t.collect_resmi_gazete(ctx) == [] and len(calls) == 1          # gün içinde bir kez
 
 
@@ -92,3 +93,16 @@ def test_vendor_adapters_off_without_creds_and_explicit_when_configured(ctx, mon
     monkeypatch.setenv("MATRIKS_API_SECRET", "y")
     with pytest.raises(RuntimeError, match="bağlantı henüz yazılmadı"):
         vendors.collect_matriks(ctx)
+
+
+def test_hazine_filters_foreign_and_unrelated(ctx, monkeypatch):
+    import feedparser
+    rss = """<rss><channel>
+      <item><title>Hazine 2 milyar liralık iç borçlanma ihalesi düzenledi - AA</title><link>https://aa/1</link><pubDate>Thu, 01 Oct 2026 10:00:00 GMT</pubDate><source url="https://aa.com.tr">Anadolu Ajansı</source></item>
+      <item><title>ABD Hazine tahvil faizleri yirmi yılın zirvesinde - X</title><link>https://x/2</link><pubDate>Thu, 01 Oct 2026 10:00:00 GMT</pubDate></item>
+      <item><title>1 Ekim Döviz Fiyatları - Y</title><link>https://y/3</link><pubDate>Thu, 01 Oct 2026 10:00:00 GMT</pubDate></item>
+    </channel></rss>"""
+    monkeypatch.setattr(t, "fetch_feed", lambda url, **k: feedparser.parse(rss))
+    items = t.collect_hazine(ctx)
+    assert [i.title for i in items] == ["Hazine 2 milyar liralık iç borçlanma ihalesi düzenledi - AA"] * len(t.HAZINE_QUERIES)
+    assert items[0].source == "Anadolu Ajansı · Hazine"

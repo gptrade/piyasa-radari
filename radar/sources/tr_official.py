@@ -48,8 +48,11 @@ RG_KEYS = ["vergi", "ötv", "kdv", "harç", "gümrük", "merkez bankası", "serm
            "yatırım teşvik", "yatırımlarda devlet yardım", "devlet yardımları", "kamu ihale", "borsa", "halka arz",
            "sigortacılık", "bireysel emeklilik", "finansal kiralama", "faktoring", "kripto", "varlık barışı",
            "tasarruf tedbir", "döviz", "menkul kıymet", "kaynak kullanımını destekleme"]
+RG_SKIP = ["kamulaştır", "üniversite", "atama", "taşınmaz"]       # arazi kamulaştırma, akademik, atama kararları
 BIST_SKIP = ["opening bell", "gong"]
-HAZINE_QUERIES = ['"Hazine" ihale sonuçları tahvil', '"Hazine" iç borçlanma ihale', '"Hazine ve Maliye" borçlanma stratejisi']
+HAZINE_QUERIES = ['"iç borçlanma" Hazine', 'Hazine "ihalesinde" "milyar lira"', '"Hazine ve Maliye Bakanlığı" ihale tahvil']
+HAZINE_MUST = ["iç borç", "ihale", "borçlanma", "tahvil ihracı", "kira sertifikası", "itfa"]
+HAZINE_SKIP = ["abd", "amerikan", "fed ", "treasury", "dolar endeksi", "döviz fiyat"]
 
 
 # ------------------------------------------------------------------ ortak
@@ -80,6 +83,12 @@ def due(name: str, minutes: float) -> bool:
 def _clean(s: str) -> str:
     s = htmlmod.unescape(re.sub(r"<[^>]+>", " ", s or ""))
     return re.sub(r"\s+", " ", s.replace("\xa0", " ")).strip(" –-")
+
+
+def tr_cap(s: str) -> str:
+    """'CUMHURBAŞKANI KARARLARI' → 'Cumhurbaşkanı kararları' (Türkçe İ/ı doğru)."""
+    low = s.replace("I", "ı").replace("İ", "i").lower()
+    return (low[:1].replace("i", "İ").replace("ı", "I").upper() + low[1:]) if low else s
 
 
 def _has(text: str, keys: list[str]) -> bool:
@@ -237,9 +246,9 @@ def collect_resmi_gazete(ctx: Context) -> list[Item]:
     _save_state(st)
     keys = cfg.get("keywords") or RG_KEYS
     pub = today.replace(hour=0, minute=5, second=0, microsecond=0)
-    out = [_item(source=f"Resmi Gazete · {row['section'].title()}" if row["section"] else "Resmi Gazete",
+    out = [_item(source=f"Resmi Gazete · {tr_cap(row['section'])}" if row["section"] else "Resmi Gazete",
                  title=row["title"], url=row["url"], published=pub, ctx=ctx, issuer="Resmi Gazete")
-           for row in rows if _has(row["title"], keys)]
+           for row in rows if _has(row["title"], keys) and not _has(row["title"], RG_SKIP)]
     log.info("Resmi Gazete: %d / %d düzenleme ilgili", len(out), len(rows))
     return out
 
@@ -319,6 +328,8 @@ def collect_hazine(ctx: Context) -> list[Item]:
         for it in entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="macro",
                                    market="BIST", since=ctx.since, lang="tr", allow_empty=True, limit=4,
                                    extra={"issuer": "Hazine"}):
+            if not _has(it.title, HAZINE_MUST) or _has(it.title, HAZINE_SKIP) or "instagram" in it.source.lower():
+                continue
             it.source = it.source.replace(" · Google News", "") + " · Hazine"
             out.append(it)
     log.info("Hazine haberleri: %d", len(out))
