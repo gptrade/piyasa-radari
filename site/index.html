@@ -8,8 +8,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="tokens.css?v=20261001m">
-<link rel="stylesheet" href="style.css?v=20261001m">
+<link rel="stylesheet" href="tokens.css?v=20261001p">
+<link rel="stylesheet" href="style.css?v=20261001p">
 <script>
   // Kayıtlı tema ve kenar çubuğu durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
   (function () {
@@ -45,6 +45,11 @@
         <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="10" cy="10" r="2" fill="currentColor"/><path d="M10 10l4.5-4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
         <span>Sinyal Takip</span>
         <span class="badge" id="sigBadge" hidden></span>
+      </a>
+      <a class="nav-item" href="#portfoy" data-route="portfoy">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="6" width="14" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7.5 6V4.5h5V6M3 10.5h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span>Portföy</span>
+        <span class="badge" id="pfBadge" hidden></span>
       </a>
       <a class="nav-item" href="#geri-alim" data-route="geri-alim">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 8A5.5 5.5 0 0 0 5.2 6.2M4.5 12a5.5 5.5 0 0 0 10.3 1.8M5 3.5v3h3M15 16.5v-3h-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -224,6 +229,18 @@
         <div id="calBody"></div>
       </section>
 
+      <!-- ─────────── Portföy (yalnız bu tarayıcıda saklanır) ─────────── -->
+      <section class="view" id="view-portfoy" aria-labelledby="pageTitle" hidden>
+        <div class="toolbar pf-tools">
+          <span class="pf-priv"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            Yalnız bu tarayıcıda saklanır <span class="t3" id="pfCount"></span></span>
+          <button type="button" class="btn" id="pfFx" data-tip="ABD pozisyonlarını TL'ye çevirmek için kur (varsayılan: TCMB EVDS)">USD/TRY kuru</button>
+          <button type="button" class="btn" id="pfImport" data-tip="Daha önce Dışa aktar → Portföy yedeği ile indirdiğin JSON dosyasını yükle">İçe aktar</button>
+          <input type="file" id="pfFile" accept="application/json,.json" hidden>
+        </div>
+        <div id="pfBody"></div>
+      </section>
+
       <!-- ─────────── Şirket Geri Alım (veri: kap-geri-alim-takibi reposu) ─────────── -->
       <section class="view" id="view-geri-alim" aria-labelledby="pageTitle" hidden>
         <div class="toolbar">
@@ -253,10 +270,11 @@
   <div class="sp-body" id="spBody"></div>
 </aside>
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="shell.js?v=20261001m"></script>
-<script src="app.js?v=20261001m"></script>
-<script src="calendar.js?v=20261001m"></script>
-<script src="buybacks.js?v=20261001m"
+<script src="shell.js?v=20261001p"></script>
+<script src="app.js?v=20261001p"></script>
+<script src="calendar.js?v=20261001p"></script>
+<script src="portfolio.js?v=20261001p"></script>
+<script src="buybacks.js?v=20261001p"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>
