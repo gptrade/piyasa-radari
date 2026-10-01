@@ -1,4 +1,4 @@
-name: probe-bist  # p9c
+name: probe-bist  # p10
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -12,19 +12,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - uses: actions/checkout@v4
-        with: { ref: onizleme-degerleme-belgeler, path: app }
-      - name: belge ve değerleme kuru çalıştırma
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.PIYASA_RADARI }}
-          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+      - name: küresel kaynak sondajı
         run: |
           set +e
-          mkdir -p probe9
-          pip install -q -r app/requirements.txt
-          python probe9.py > probe9/sonuc.txt 2>&1
+          mkdir -p probe10
+          pip install -q requests feedparser
+          python probe10.py > probe10/sonuc.txt 2>&1
       - name: kaydet
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe9; git commit -qm "probe9 sonuçları" || true; git push -q
+          git add -A probe10; git commit -qm "probe10 sonuçları" || true; git push -q
