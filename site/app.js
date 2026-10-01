@@ -939,7 +939,7 @@
     }
     return wrap;
   }
-  // Değerleme çarpanları (Yahoo, günde bir). İzleme listesinde aynı piyasa + sektörde başka hisse varsa emsal medyanı.
+  // Değerleme çarpanları (Yahoo, günde bir). İzleme listesinde aynı piyasa + alt sektörde başka hisse varsa emsal medyanı.
   const VAL = [
     ["pe", "F/K", "x", "Fiyat / son 12 ay hisse başı kâr"], ["fpe", "İleri F/K", "x", "Fiyat / gelecek 12 ay beklenen hisse başı kâr"],
     ["pb", "PD/DD", "x", "Piyasa değeri / defter değeri"], ["ev_ebitda", "FD/FAVÖK", "x", "Firma değeri / FAVÖK (bankalarda anlamsız)"],
@@ -966,8 +966,8 @@
   function valuationSection(sym, p) {
     const v = p?.valuation;
     if (!v) return null;
-    const peers = Object.entries(state.prices).filter(([s, q]) => s !== sym && q?.market === p.market && q?.valuation?.sector
-      && q.valuation.sector === v.sector && !q.valuation.fx_mismatch).map(([s, q]) => [s, q.valuation]);
+    const peers = Object.entries(state.prices).filter(([s, q]) => s !== sym && q?.market === p.market && q?.valuation?.industry
+      && q.valuation.industry === v.industry && !q.valuation.fx_mismatch).map(([s, q]) => [s, q.valuation]);
     const rows = VAL.filter(([k]) => v[k] != null).map(([k, l, kind, tip]) => {
       const med = peers.length && ["pe", "fpe", "pb", "ev_ebitda", "ps", "roe", "margin"].includes(k) ? median(peers.map(([, q]) => q[k])) : null;
       return `<tr><th scope="row"><span data-tip="${esc(tip)}">${l}</span></th><td class="num">${valFmt(v[k], kind)}</td>${peers.length ? `<td class="num t3">${med == null ? "" : valFmt(med, kind)}</td>` : ""}</tr>`;
@@ -978,7 +978,7 @@
       <p class="tp-sub">${v.mcap ? `Piyasa değeri <b>${bigMoney(v.mcap, p.currency)}</b>` : ""}${v.sector ? `${v.mcap ? " · " : ""}${esc(v.sector)}${v.industry ? ` / ${esc(v.industry)}` : ""}` : ""}</p>
       ${v.fx_mismatch ? `<p class="tp-warn">Bilanço ${esc(v.fin_ccy)} cinsinden, fiyat ${esc(p.currency)}: Yahoo'nun fiyat tabanlı çarpanları (F/K, PD/DD, FD/FAVÖK) tutarsız olduğu için gösterilmiyor.</p>` : ""}
       ${v.loss ? `<p class="tp-sub">Son 12 ayda net zarar: F/K hesaplanmaz.</p>` : ""}
-      ${rows ? `<table class="tx val-tx"><thead><tr><th>Ölçüt</th><th class="num">${esc(sym)}</th>${peers.length ? `<th class="num" data-tip="İzleme listesinde aynı sektördeki hisselerin medyanı: ${esc(peers.map(([s]) => s).join(", "))}">Liste emsali</th>` : ""}</tr></thead><tbody>${rows}</tbody></table>` : `<p class="tp-empty">Yahoo'da bu hisse için değerleme verisi yok.</p>`}
+      ${rows ? `<table class="tx val-tx"><thead><tr><th>Ölçüt</th><th class="num">${esc(sym)}</th>${peers.length ? `<th class="num" data-tip="İzleme listesinde aynı alt sektördeki (Yahoo sınıflaması) hisselerin medyanı: ${esc(peers.map(([s]) => s).join(", "))}">Liste emsali</th>` : ""}</tr></thead><tbody>${rows}</tbody></table>` : `<p class="tp-empty">Yahoo'da bu hisse için değerleme verisi yok.</p>`}
       <p class="tp-more">Kaynak: <a href="https://finance.yahoo.com/quote/${encodeURIComponent(p.yahoo || sym)}/key-statistics/" target="_blank" rel="noopener">Yahoo Finance</a>${v.updated ? ` · ${fmt.ago(v.updated)} güncellendi` : ""}${p.market === "BIST" ? " · BIST'te enflasyon muhasebesi (TMS 29) nedeniyle çarpanlar sapabilir" : ""}</p>`;
     return sec;
   }

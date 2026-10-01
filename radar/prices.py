@@ -436,16 +436,18 @@ def valuation_data(tk, currency: str | None = None) -> dict | None:
         v = _num(v)
         if v is not None:
             out[k] = v
-    if out.get("eps") is not None and out["eps"] < 0:
-        out.pop("pe", None)                              # zarar: F/K anlamsız
+    fin, ccy = info.get("financialCurrency"), info.get("currency") or currency
+    mismatch = bool(fin and ccy and fin != ccy)
+    # Zarar: F/K anlamsız. Kur uyumsuzluğunda ya da marj pozitifken eksi EPS tutarsız veridir, zarar sayılmaz.
+    if out.get("eps") is not None and out["eps"] < 0 and not mismatch and (out.get("margin") is None or out["margin"] < 0):
+        out.pop("pe", None)
         out["loss"] = True
     for k in ("sector", "industry"):
         if info.get(k):
             out[k] = str(info[k])
-    fin, ccy = info.get("financialCurrency"), info.get("currency") or currency
     if fin:
         out["fin_ccy"] = fin
-    if fin and ccy and fin != ccy:
+    if mismatch:
         out["fx_mismatch"] = True
         for k in PRICE_BASED + ("eps", "feps", "dy"):
             out.pop(k, None)

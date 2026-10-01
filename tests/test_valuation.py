@@ -29,8 +29,11 @@ def test_currency_mismatch_hides_price_multiples():
 
 
 def test_loss_drops_pe():
-    v = prices.valuation_data(TK({**AAPL, "trailingEps": -1.0}))
+    v = prices.valuation_data(TK({**AAPL, "trailingEps": -1.0, "profitMargins": -0.05}))
     assert "pe" not in v and v["loss"]
+    v = prices.valuation_data(TK({**AAPL, "trailingEps": -1.0}))          # marj pozitif: tutarsız veri, zarar sayılmaz
+    assert "loss" not in v
+    assert "loss" not in prices.valuation_data(TK(THYAO))
 
 
 def test_valuation_refreshed_daily(tmp_path, monkeypatch):

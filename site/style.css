@@ -839,6 +839,7 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .doc-note { font-size: var(--fs-xs); color: var(--text-3); margin-top: var(--s-2); }
 
 /* Değerleme tablosu (hisse paneli) */
+.val-tx thead th:first-child { text-align: left; }
 .val-tx th[scope="row"] { font-weight: 400; text-align: left; color: var(--text-2); }
 .val-tx td.num { font-family: var(--font-mono); }
 .tp-warn { font-size: var(--fs-xs); color: var(--warn, #b45309); background: var(--warn-soft, transparent); padding: 6px 8px; border-radius: 6px; margin-bottom: var(--s-2); }
