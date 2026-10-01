@@ -1,4 +1,4 @@
-name: probe-bist
+name: probe-bist  # mx
 on:
   push:
     branches: [arastirma-bist-veri]
