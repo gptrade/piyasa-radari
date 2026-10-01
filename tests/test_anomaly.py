@@ -67,3 +67,10 @@ def test_disclosure_or_important_news_explains_move():
 def test_small_move_below_floor_ignored():
     px = make_px(1.5, 0.0)
     assert anomaly.anomaly_items([GOZDE], px, [], {"z": 0.5, "min_move_pct": 2.0}) == []
+
+
+def test_low_materiality_investigation_news_still_explains():
+    px = make_px(9.0, 0.2)
+    recent = [{"tickers": ["GOZDE"], "published": iso(now_utc() - timedelta(hours=2)), "source_type": "news", "tier": 3,
+               "title": "GOZDE hakkında SPK soruşturması: idari para cezası", "analysis": {"materiality": "low"}}]
+    assert anomaly.anomaly_items([GOZDE], px, recent) == []

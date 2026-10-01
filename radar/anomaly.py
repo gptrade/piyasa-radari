@@ -13,7 +13,10 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from . import prices
+from .enrich import classify_event
 from .models import Item, iso, make_id, now_utc, parse_iso
+
+STRONG_EVENTS = {"legal", "measure", "regulator", "earnings", "deal", "buyback", "dividend", "insider", "analyst"}
 
 EX_TZ = {"BIST": ZoneInfo("Europe/Istanbul"), "US": ZoneInfo("America/New_York")}
 
@@ -71,6 +74,9 @@ def explained(sym: str, recent: list[dict], hours: int = 24) -> tuple[bool, int]
         if d.get("source_type") in ("disclosure", "regulator", "report"):
             return True, weak
         if (d.get("tier") or 3) <= 2 and a.get("materiality") in ("medium", "high"):
+            return True, weak
+        # Fiyatı oynatabilecek olay türleri, AI düşük önem dese de açıklama sayılır (soruşturma, tedbir, bilanço…)
+        if d.get("source_type") != "social" and classify_event(d) in STRONG_EVENTS:
             return True, weak
         weak += 1
     return False, weak
