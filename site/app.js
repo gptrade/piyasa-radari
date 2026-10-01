@@ -300,6 +300,7 @@
       </p>
       ${a ? `<dl class="slots"><dt>Ne oldu</dt><dd>${esc(a.what || a.headline_tr || it.title)}</dd><dt>Neden önemli</dt><dd>${esc(a.why || first(a.summary) || "—")}</dd>
         <dt>Risk</dt><dd class="risk">${esc(a.risk || a.risks?.[0] || "—")}</dd></dl>${a.summary ? `<p class="d-sum">${esc(a.summary)}</p>` : ""}` : ""}
+      ${it.extra?.mx && Object.keys(it.extra.mx).length ? `<p class="mx-line" data-tip="Marketaux'nun kendi duygu skoru (−1…+1). Sözlük tabanlıdır, finans dilini yanlış okuyabilir (ör. 'hedef fiyat düşürüldü' → olumlu); karnede AI'dan ayrı notlanır.">İkinci görüş · Marketaux: ${Object.entries(it.extra.mx).map(([t, v]) => `${esc(t)} <span class="${dirCls(v > 0.2 ? 1 : v < -0.2 ? -1 : 0)}">${v > 0 ? "+" : v < 0 ? "−" : ""}${fmt.num(Math.abs(v), 2)}</span>`).join(" · ")}</p>` : ""}
       ${it.summary && it.summary !== it.title ? `<p class="d-sub">Orijinal metin</p><p class="d-sum">${esc(it.summary)}</p>` : ""}
       <p class="d-sub">Kaynaklar</p>
       <ul class="d-sources">
@@ -1077,7 +1078,7 @@
   // ─────────────────────────────── Karne: sinyallerin geriye dönük isabeti (data/scorecard.json)
   const K_DIM = { kind: "Kaynak türü", ev: "Olay türü", conf: "AI güveni", mat: "Önem", dir: "Yön", t: "Hisse", src: "Kaynak", pv: "Değerlendiren" };
   const K_WIN = { 30: "30 gün", 90: "90 gün", all: "Tümü" };
-  const kGroup = (dim, g) => dim === "ev" ? (EVENT[g] || g) : dim === "mat" ? (MAT_TR[g] || g) : dim === "pv" ? (g === "AI" ? "AI (Claude / Gemini)" : "Kural (teknik, analist notu)") : g;
+  const kGroup = (dim, g) => dim === "ev" ? (EVENT[g] || g) : dim === "mat" ? (MAT_TR[g] || g) : dim === "pv" ? (g === "AI" ? "AI (Claude / Gemini)" : g === "Marketaux" ? "Marketaux skoru (dış, sözlük tabanlı)" : "Kural (teknik, analist notu)") : g;
   const kPct = (v, d = 1) => v == null ? "—" : `<span class="${dirCls(v > 0 ? 1 : v < 0 ? -1 : 0)}">${fmt.pct(v, d)}</span>`;
   function hitBar(st) {
     if (!st?.n) return `<span class="t3">—</span>`;

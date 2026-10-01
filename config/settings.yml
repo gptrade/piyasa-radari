@@ -50,6 +50,11 @@ sources:
     analyst_terms:
       US: [price target, upgrade, downgrade, analyst rating]
       BIST: [hedef fiyat, tavsiye, model portföy, aracı kurum]
+  marketaux:
+    enabled: true              # MARKETAUX_API_TOKEN secret'ı gerekir; ücretsiz plan günde 100 istek → saatte bir, piyasa başına 1 istek
+    interval_min: 60
+    limit: 3                   # istek başına haber (ücretsiz planda en fazla 3)
+    lookback_hours: 6
   yahoo_finance_rss:
     enabled: true
     max_per_stock: 8

@@ -97,6 +97,30 @@ def record(d: dict, px: dict, watch: set[str]) -> dict | None:
     }
 
 
+MX_MIN = 0.2          # Marketaux skoru bu mutlak değerin altındaysa yönsüz sayılır
+
+
+def mx_records(d: dict, px: dict, watch: set[str]) -> list[dict]:
+    """Marketaux'nun kendi duygu skorundan ikinci değerlendirici kaydı (karnede 'Değerlendiren: Marketaux')."""
+    out = []
+    for t, score in ((d.get("extra") or {}).get("mx") or {}).items():
+        if t not in watch or not px.get(t) or abs(score) < MX_MIN:
+            continue
+        p = px[t]
+        m = p.get("market") or d.get("market") or "US"
+        tz = EX_TZ.get(m, EX_TZ["US"])
+        p0 = price_at(d["published"], p, tz)
+        if not p0:
+            continue
+        idx = px.get(prices.INDEXES[m].symbol) if m in prices.INDEXES else None
+        k = 1 if score > 0 else -1
+        out.append({"id": f"{d['id']}|mx|{t}", "k": f"mx|{t}|{k}", "t": t, "m": m, "ts": d["published"],
+                    "title": (d.get("title") or "")[:140], "src": (d.get("source") or "").split(" · ")[0],
+                    "kind": kind(d), "ev": d.get("event") or "news", "d": k, "c": round(abs(score) * 100),
+                    "mat": "low", "pv": "Marketaux", "p0": p0, "i0": price_at(d["published"], idx, tz)})
+    return out
+
+
 def _close_after(daily: list, pub_date, k: int, tz, today):
     """Yayın gününden sonraki k. tam seans kapanışı: (tarih, kapanış) ya da None (henüz yok)."""
     seen = 0
@@ -173,12 +197,13 @@ def aggregate(recs: list[dict], now: datetime | None = None) -> dict:
         sc = {}
         for wk, days in WINDOWS.items():
             lo = iso(now - timedelta(days=days)) if days else ""
-            rs = [r for r in recs if (scope == "ALL" or r["m"] == scope) and r["ts"] >= lo]
+            every = [r for r in recs if (scope == "ALL" or r["m"] == scope) and r["ts"] >= lo]
+            rs = [r for r in every if r.get("pv") != "Marketaux"]      # dış skor ana toplamlara karışmaz
             w = {"total": {f"h{h}": _stats(rs, h) for h in HORIZONS},
                  "pending": sum(1 for r in rs if "x1" not in r), "dims": {}}
             for dk, fn in DIMS.items():
                 groups: dict[str, list] = {}
-                for r in rs:
+                for r in (every if dk == "pv" else rs):
                     key = fn(r)
                     if dk == "src" and outlets.get(key, 0) < MIN_OUTLET:
                         key = "Diğer"
@@ -187,7 +212,7 @@ def aggregate(recs: list[dict], now: datetime | None = None) -> dict:
                                         for key, g in groups.items()), key=lambda x: -x["count"])
             sc[wk] = w
         out["scopes"][scope] = sc
-    graded = sorted((r for r in recs if "x1" in r), key=lambda r: r["ts"], reverse=True)[:60]
+    graded = sorted((r for r in recs if "x1" in r and r.get("pv") != "Marketaux"), key=lambda r: r["ts"], reverse=True)[:60]
     out["recent"] = [{k: r.get(k) for k in ("id", "t", "m", "ts", "title", "kind", "d", "c", "r1", "x1", "r5", "x5")}
                      for r in graded]
     return out
@@ -211,16 +236,16 @@ def update(items: list[dict], px: dict, watch: set[str]) -> dict:
     for d in sorted(items, key=lambda x: x.get("published", "")):
         if d["id"] in ids:
             continue
-        r = record(d, px, watch)
-        if not r:
-            continue
-        ts = parse_iso(r["ts"]).timestamp()
-        if any(abs(ts - x) < 12 * 3600 for x in seen.get(r["k"], [])):
-            continue
-        recs.append(r)
-        ids.add(r["id"])
-        seen.setdefault(r["k"], []).append(ts)
-        added += 1
+        for r in [record(d, px, watch), *mx_records(d, px, watch)]:
+            if not r or r["id"] in ids:
+                continue
+            ts = parse_iso(r["ts"]).timestamp()
+            if any(abs(ts - x) < 12 * 3600 for x in seen.get(r["k"], [])):
+                continue
+            recs.append(r)
+            ids.add(r["id"])
+            seen.setdefault(r["k"], []).append(ts)
+            added += 1
     graded = sum(grade(r, px) for r in recs if "x5" not in r)
     lo = iso(now_utc() - timedelta(days=KEEP_DAYS))
     recs = sorted((r for r in recs if r["ts"] >= lo), key=lambda r: r["ts"])
