@@ -687,3 +687,5 @@ main:focus { outline: none; }
 @media (max-width: 767px) { .side-panel { width: 100vw; top: 0; z-index: 45; } }
 .side-panel[data-mode="ticker"] .kbd { display: none; }
 @media (max-width: 1399px) { .side-panel .kbd { display: none; } }
+.tp-norm { color: var(--text-3); font-size: var(--fs-xs); margin-left: var(--s-1); border-bottom: 1px dotted var(--border); cursor: help; }
+.tip .t3 { opacity: .75; }

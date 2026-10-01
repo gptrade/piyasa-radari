@@ -21,7 +21,11 @@ notify:
   technical: true              # teknik olaylar (EMA kesişimi, RSI eşiği, 52 hafta zirve/dip, hacim patlaması) Telegram'a gitsin
 
 feed:
-  keep_items: 600              # panelde tutulacak en fazla kayıt
+  keep_items: 800              # panelde tutulacak en fazla kayıt
+  # Hisse başına denge: çok haber üreten hisse diğerlerini akıştan itmesin
+  max_per_ticker: 90           # bir hisse en fazla bu kadar kayıt tutar (önce düşük önemli/zayıf kaynaklı olanlar atılır)
+  min_per_ticker: 25           # az haber alan hisse son bu kadar kaydını eski de olsa korur
+  max_age_days: 30             # bundan eski kayıt tutulmaz
   lookback_hours: 48           # ilk çalıştırmada ne kadar geriye bakılsın
 
 sources:

@@ -516,15 +516,40 @@
   function clearFocus() { state.ids = null; state.idsLabel = ""; state.focusText = ""; state.ticker = null; state.limit = PAGE; render(); }
 
   // ─────────────────────────────── sağ şerit: ısı haritası
-  function newsNet(sym, hours = 24) {
+  // Haber yönü, haberlerin ve AI'ın genel iyimserliğinden arındırılır. Hissenin "normal" seviyesi feed'deki 1–7 gün
+  // önceki kayıtlarından hesaplanır (az kayıt varsa aynı piyasanın ortalamasına doğru büzülür). Ham yön ile normalin
+  // farkı yalnız ham yönle aynı işaretteyse sayılır ve hamdan büyük olamaz: olağan iyimserlik olumluyu nötre indirir,
+  // nötr haber olumsuza dönmez. net = etkin yön, raw = ham ortalama, base = normal seviye.
+  const SHRINK = 10;
+  let baseMemo = { feed: null, map: new Map(), mkt: {} };
+  function netStats(sym, from, to, mkt) {
     let s = 0, w = 0, n = 0;
     for (const it of state.feed.items) {
       const a = it.analysis;
-      if (!a || isTech(it) || ageMin(it.published) > hours * 60 || !relTickers(it).includes(sym)) continue;
+      if (!a || isTech(it)) continue;
+      const age = ageMin(it.published);
+      if (age < from || age > to || (sym && !relTickers(it).includes(sym)) || (mkt && it.market !== mkt)) continue;
       const k = MAT_W[a.materiality]; s += sign(a.sentiment) * a.confidence / 100 * k; w += k; n++;
     }
-    return { net: w ? s / w : 0, n };
+    return { m: w ? s / w : 0, n };
   }
+  function baseline(sym) {
+    if (baseMemo.feed !== state.feed) baseMemo = { feed: state.feed, map: new Map(), mkt: {} };
+    if (!baseMemo.map.has(sym)) {
+      const mkt = (state.feed.watchlist || []).find(w => w.symbol === sym)?.market || "US";
+      if (!(mkt in baseMemo.mkt)) baseMemo.mkt[mkt] = netStats(null, 0, 7 * 1440, mkt).m;
+      const { m, n } = netStats(sym, 1440, 7 * 1440);          // 1–7 gün önceki kayıtlar
+      baseMemo.map.set(sym, (m * n + baseMemo.mkt[mkt] * SHRINK) / (n + SHRINK));
+    }
+    return baseMemo.map.get(sym);
+  }
+  function newsNet(sym, hours = 24) {
+    const { m: raw, n } = netStats(sym, 0, hours * 60);
+    const base = baseline(sym), adj = raw - base;
+    const net = !n ? 0 : adj > 0 && raw > 0 ? Math.min(adj, raw) : adj < 0 && raw < 0 ? Math.max(adj, raw) : 0;
+    return { net, raw, base, n };
+  }
+  const netTxt = v => `${v > 0 ? "+" : v < 0 ? "−" : ""}${fmt.num(Math.abs(v), 2)}`;
   // Kutu zemini renk karışımından hesaplanır; yazı rengi gerçek kontrasta göre seçilir
   const hex = h => { h = h.replace("#", ""); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
   const lum = c => { const [r, g, b] = c.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
@@ -570,7 +595,7 @@
       b.innerHTML = `<b>${esc(w.symbol)}</b><span class="v">${chg == null ? "N/A" : `${glyph(k)} ${fmt.pct(chg, 2)}`}</span>${nk != null ? `<span class="nw" aria-hidden="true">${glyph(nk)}${n}</span>` : ""}`;
       b.setAttribute("aria-pressed", String(state.ticker === w.symbol));
       b.setAttribute("aria-label", `${w.symbol} bugün ${chg == null ? "fiyat yok" : fmt.pct(chg, 2)}, son 24 saatte ${n} haber${nk != null ? `, net ${nk > 0 ? "olumlu" : nk < 0 ? "olumsuz" : "nötr"}` : ""}${dis ? ", haber ile fiyat ters" : ""}`);
-      b.dataset.tip = `<b>${esc(w.symbol)}</b> · ${esc(w.name)}<br>Bugün: ${chg == null ? "fiyat yok" : glyph(k) + " " + fmt.pct(chg, 2)}<br>Son 24 sa: ${n} sinyal${n ? `, net ${nk > 0 ? "▲ olumlu" : nk < 0 ? "▼ olumsuz" : "● nötr"}` : ""}` +
+      b.dataset.tip = `<b>${esc(w.symbol)}</b> · ${esc(w.name)}<br>Bugün: ${chg == null ? "fiyat yok" : glyph(k) + " " + fmt.pct(chg, 2)}<br>Son 24 sa: ${n} sinyal${n ? `, net ${nk > 0 ? "▲ olumlu" : nk < 0 ? "▼ olumsuz" : "● nötr"} <span class="t3">(normale göre ${netTxt(net)})</span>` : ""}` +
         (dis ? `<br><b>≠ Haber yönü ile fiyat ters</b>` : "") + (p?.ta ? `<br>Teknik: ${esc(p.ta.trend)}, RSI ${p.ta.rsi == null ? "—" : fmt.num(p.ta.rsi, 0)}` : "") + "<br><i>Tıkla: hisse paneli (teknik görünüm, haberler)</i>";
       b.dataset.sym = w.symbol;
       if (state.panelTk === w.symbol) b.classList.add("panel");
@@ -642,7 +667,7 @@
     });
     mk("line", { x1: cx(0), x2: cx(0), y1: T, y2: T + ph, class: "axis" });
     [[-1, "▼ olumsuz", "start"], [0, "● nötr", "middle"], [1, "olumlu ▲", "end"]].forEach(([v, t, a]) => txt(t, { x: cx(v), y: T + ph + 14, class: "tick", "text-anchor": a }));
-    txt("Net haber yönü (24 sa)", { x: L + pw / 2, y: H - 3, class: "axis-title", "text-anchor": "middle" });
+    txt("Haber yönü, normale göre (24 sa)", { x: L + pw / 2, y: H - 3, class: "axis-title", "text-anchor": "middle" });
     txt("Bugün fiyat", { x: 0, y: 0, class: "axis-title", "text-anchor": "middle", transform: `translate(10 ${T + ph / 2}) rotate(-90)` });
     $("#scNote").textContent = "";
     if (!nodes.length) {
@@ -810,7 +835,7 @@
     const all = state.feed.items.filter(it => relTickers(it).includes(sym));
     const items = all.filter(it => !isTech(it)).sort((a, b) => impact(b) - impact(a) || (b.published > a.published ? 1 : -1));
     const techs = all.filter(isTech).sort((a, b) => (b.published > a.published ? 1 : -1)).slice(0, 4);
-    const { net, n } = newsNet(sym);
+    const { net, raw, base, n } = newsNet(sym);
     const nk = !n ? null : net > 0.15 ? 1 : net < -0.15 ? -1 : 0;
     const head = document.createElement("div");
     head.className = "tp-sec";
@@ -818,7 +843,8 @@
       <div class="tp-acts">
         <button type="button" class="btn" data-a="filter" aria-pressed="${state.ticker === sym}">${state.ticker === sym ? "✓ Akış bu hisseye süzülü" : "Akışı bu hisseye süz"}</button>
       </div>
-      <p class="tp-sub">Haber (son 24 sa): ${n ? `<b>${fmt.int(n)}</b> · net <span class="${dirCls(nk)}">${glyph(nk)} ${nk > 0 ? "olumlu" : nk < 0 ? "olumsuz" : "nötr"}</span>` : "yok"}</p>
+      <p class="tp-sub">Haber (son 24 sa): ${n ? `<b>${fmt.int(n)}</b> · net <span class="${dirCls(nk)}">${glyph(nk)} ${nk > 0 ? "olumlu" : nk < 0 ? "olumsuz" : "nötr"}</span>
+        <span class="tp-norm" data-tip="Haberler ve AI genelde iyimser yazar; olumlu haberden hissenin olağan iyimserlik payı düşülür. Ham ortalama ${netTxt(raw)}, normal seviye ${netTxt(base)} (son 1–7 gün), etkin yön ${netTxt(net)} (±0,15 üstü olumlu/olumsuz).">ham ${netTxt(raw)} · normal ${netTxt(base)}</span>` : "yok"}</p>
       ${items.length ? `<ul class="tp-news">${items.slice(0, 5).map(it => { const a = it.analysis, k = a ? sign(a.sentiment) : null; return `
         <li><button type="button" data-id="${it.id}"><span class="dir ${dirCls(k)}">${a ? glyph(k) : "·"}</span>
           <span class="tp-t">${a?.event_label ? `<b>${esc(a.event_label)}</b> · ` : ""}${esc(a?.what || a?.headline_tr || it.title)}</span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>

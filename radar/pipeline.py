@@ -211,6 +211,58 @@ def analyst_items(stocks: list, px: dict, max_age_days: int = 3) -> list[Item]:
     return out
 
 
+MAT_RANK = {"high": 3, "medium": 2, "low": 1}
+
+
+def _value(d: dict) -> tuple:
+    """Kayıt değeri (küçük = önce atılır): önem, kaynak kalitesi, tazelik."""
+    a = d.get("analysis") or {}
+    return (MAT_RANK.get(a.get("materiality"), 0), -(d.get("tier") or 3), d.get("published", ""))
+
+
+def _protected(d: dict) -> bool:
+    """Resmi bildirim/birincil kaynak ya da yüksek önemli kayıt kotaya takılmaz (yaş sınırı hariç)."""
+    return d.get("tier") == 1 and d.get("source_type") != "technical" or \
+        (d.get("analysis") or {}).get("materiality") == "high"
+
+
+def retain(items: list[dict], watch: set[str], total: int = 800, max_per_ticker: int = 90,
+           min_per_ticker: int = 25, max_age_days: int = 30) -> list[dict]:
+    """Akışta tutulacak kayıtlar. Salt "en yeni N" yerine hisse başına denge:
+    - çok haber üreten hisse (ör. NVDA) en fazla `max_per_ticker` kayıt tutar; fazlası önce düşük önemli,
+      zayıf kaynaklı ve eski olanlardan atılır (resmi bildirim ve yüksek önemli kayıtlar korunur),
+    - az haber alan hisse (ör. küçük BIST hissesi) son `min_per_ticker` kaydını eski de olsa korur,
+    - toplam `total`'ı aşarsa, en düşük değerli kayıtlar en kalabalık hisselerden atılır.
+    """
+    horizon = iso(now_utc() - timedelta(days=max_age_days))
+    items = sorted((d for d in items if d.get("published", "") >= horizon), key=lambda d: d["published"], reverse=True)
+
+    def key(d):
+        return next((t for t in d.get("tickers") or [] if t in watch), "_genel")
+
+    groups: dict[str, list[dict]] = {}
+    for d in items:
+        groups.setdefault(key(d), []).append(d)
+    keep: dict[str, list[dict]] = {}
+    for k, g in groups.items():                       # g: yeniden eskiye
+        prot = [d for d in g if _protected(d)]
+        rest = sorted((d for d in g if not _protected(d)), key=_value, reverse=True)
+        keep[k] = prot + rest[: max(0, max_per_ticker - len(prot))]
+    n = sum(len(v) for v in keep.values())
+    if n > total:                                     # en kalabalık gruptan en düşük değerliyi at
+        pools = {k: sorted((d for d in v if not _protected(d)), key=_value) for k, v in keep.items()}
+        while n > total:
+            k = max(pools, key=lambda x: (len(keep[x]) if pools[x] and len(keep[x]) > min_per_ticker else -1))
+            if not pools[k] or len(keep[k]) <= min_per_ticker:
+                break
+            drop = pools[k].pop(0)
+            keep[k] = [d for d in keep[k] if d is not drop]
+            n -= 1
+    out = [d for v in keep.values() for d in v]
+    out.sort(key=lambda d: d["published"], reverse=True)
+    return out
+
+
 def fair_order(queue: list[Item], watch: set[str]) -> list[Item]:
     """AI kotasını hisseler arasında adil dağıt: öncelik sınıfı (bildirim, rapor, haber…) korunur,
     her sınıfın içinde hisseler sırayla birer kayıt alır (her hissenin en yenisi önce).
@@ -375,8 +427,10 @@ def run() -> dict:
             if p:
                 idx = px.get(prices.INDEXES[d.get("market", "BIST")].symbol) if d.get("market") in prices.INDEXES else None
                 d["reaction"] = prices.reaction(d["published"], p, idx)
-    items.sort(key=lambda d: d["published"], reverse=True)
-    items = items[: int((settings.get("feed") or {}).get("keep_items", 600))]
+    fcfg = settings.get("feed") or {}
+    items = retain(items, {s.symbol for s in stocks}, total=int(fcfg.get("keep_items", 800)),
+                   max_per_ticker=int(fcfg.get("max_per_ticker", 90)), min_per_ticker=int(fcfg.get("min_per_ticker", 25)),
+                   max_age_days=int(fcfg.get("max_age_days", 30)))
 
     FEED.write_text(json.dumps({
         "generated": iso(now_utc()),
