@@ -24,7 +24,13 @@ _RULES = [
     ("buyback", r"geri al[ıi]m|repurchase|buyback|payların geri alınması"),
     ("insider", r"pay al[ıi]m sat[ıi]m bildirimi|form 4\b|insider|içeriden"),
     ("earnings", r"finansal rapor|bilanço|kâr|kar açıkla|10-q|10-k|earnings|quarterly results|revenue|gelir tablosu|faaliyet raporu"),
-    ("analyst", r"hedef fiyat|tavsiye|upgrade|downgrade|price target|analist|analyst|rating|model portföy|\bal tavsiyesi|outperform|overweight"),
+    # Yalnız aracı kurum aksiyonları: not değişikliği, hedef fiyat, tavsiye, kapsama. "Analist yorumu" türü
+    # görüş yazıları ve "Ryzen upgrade" gibi ürün haberleri analist sayılmaz.
+    ("analyst", r"\bupgrade[sd]? (?:to|\w+ to)\b|\bupgrades\b|\bdowngrade|rating (?:upgrade|downgrade|cut|raised)"
+                r"|price target|target price|\b(?:buy|sell|hold|outperform|overweight|underweight|underperform|neutral"
+                r"|equal[- ]weight|market perform) rating|initiat\w* (?:coverage|at)|reiterat\w* (?:buy|sell|outperform"
+                r"|overweight|underweight)|hedef fiyat|\b(?:al|sat|tut|endeks üstü getiri) tavsiye|model portföy"
+                r"|not artırım|not indirim|analist (?:al|sat|tut)\b|kapsama (?:al|başla)"),
     ("dividend", r"temettü|kâr payı|kar payı|dividend|bedelsiz|bedelli|sermaye artırımı|stock split"),
     ("deal", r"yeni iş ilişkisi|sözleşme|ihale|anlaşma|agreement|contract|partnership|acquisition|satın al|merger|birleşme"),
     ("legal", r"dava|ceza|soruşturma|lawsuit|class action|probe|sec charges|idari para"),
@@ -65,8 +71,9 @@ def classify_event(item: dict) -> str:
     if st == "report":
         return "report"
     a = item.get("analysis") or {}
+    # AI'ın serbest yazdığı kategori ("Analist Yorumu" vb.) yanıltıcı olduğundan metne katılmaz; etiket katılır
     text = " ".join([item.get("title", ""), extra.get("subject") or "", extra.get("form") or "",
-                     a.get("category", ""), a.get("event_label", "")]).lower()
+                     a.get("event_label", "")]).lower()
     if extra.get("earnings_date"):
         return "earnings"
     if extra.get("analyst"):
