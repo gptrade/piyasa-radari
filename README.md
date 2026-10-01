@@ -93,6 +93,15 @@ dakika kotasından düşer (15 dk'da bir ≈ 2.900 çalıştırma/ay).
 | Fiyatlar | yfinance (Yahoo) | Gecikmeli; BIST için `.IS` eki |
 | Investing.com Türkiye | Resmi RSS: BİST, şirket haberleri, insider, analist dereceleri, kazanç görüşmeleri, hisse analizleri | Hem BIST hem ABD hisseleriyle eşleşir |
 | Barchart, MarketWatch, TradingView (ABD) · Fintables, TradingView (BIST) | Google News `site:` araması, hisse başına tek sorgu (`google_news.sites`) | TradingView ve Fintables'ın resmi haber akışı/API'si yok, kullanım koşulları kazımayı yasaklıyor; yalnızca Google'ın indekslediği başlık + bağlantı alınır |
+| TÜİK | turkiye.gov.tr TÜİK haber bülteni listesi (15 dk) | Başlık sonucu içerir ("işsizlik oranı %7,8"); yalnız piyasayı ilgilendiren bültenler (TÜFE, ÜFE, GSYH, işsizlik, dış ticaret, güven endeksleri, konut, sanayi…) |
+| BDDK | Basın ve mevzuat duyuruları (30 dk) | Sunucu ara sertifikayı göndermiyor; GlobalSign'ın herkese açık ara sertifikası güvenilen köklere eklenir (doğrulama kapatılmaz) |
+| Resmi Gazete | Günün sayısı (gece bir kez) | Vergi, kambiyo, bankacılık, sermaye piyasası, enerji piyasası, teşvik vb. anahtar kelimeli düzenlemeler |
+| Borsa İstanbul duyuruları | /en/announcement listesi (15 dk) | Endeks dönemsel değişiklikleri, pazar geçişleri, açığa satış kuralları, prosedür değişiklikleri; gong törenleri hariç |
+| SPK basın duyuruları | Yıl listesi (30 dk) | Bültenden ayrı; şirket adı geçerse hisseye bağlanır |
+| Hazine | Haber araması (30 dk) | HMB sitesi yalnız JavaScript ile çalışıyor; ihale/borçlanma haberleri Google News'ten |
+| TCMB | + Yayınlar ve Veriler RSS | Enflasyon Raporu, FİR, Piyasa Katılımcıları Anketi, ödemeler dengesi, rezervler |
+| Ekonomim | Resmi RSS (Şirket, Piyasa) | |
+| Matriks / Foreks | Yalnız arayüz (`radar/sources/vendors.py`) | `MATRIKS_API_KEY`+`MATRIKS_API_SECRET` ya da `FOREKS_USERNAME`+`FOREKS_PASSWORD` tanımlanırsa devreye girer; bağlantı kodu sözleşme sonrası yazılacak |
 | Borsa İstanbul günlük bülteni | Resmi ücretsiz gün sonu dosyası `/data/thb/YYYY/AA/thbYYYYAAGG1.zip` (seans sonrası yayımlanır) | İzleme listesi BIST hisseleri için açığa satış hacminin toplam hacimdeki payı, açığa satış izni ve brüt takas tedbiri bayrakları `data/bist_flows.json`'da birikir (~45 seans). Pay 20 seans ortalamasının 2 katını ve %5'i aşarsa akışa "Açığa satış artışı" düşer (`sources.bist_bulletin`). Hisseler görünümünde "Açığa sat." sütunu, hisse panelinde son 30 seans grafiği. Ham dosya yeniden yayımlanmaz |
 | Borsa İstanbul genel kurul listesi | `/data/gk/gkYYYY.zip` (günde bir) | İzleme listesi BIST hisselerinin genel kurulları (tarih, saat, gündem, KAP bağlantısı) Takvim'e düşer |
 | MarketWatch | Dow Jones resmi RSS (Top Stories) | ABD hisseleri şirket adıyla eşleşir |

@@ -19,6 +19,8 @@ FEEDS = {
     "PPK Kararları": "PPK+Kararlari",
     "Basın Duyuruları": "Basin+Duyurulari",
     "Başkanın Konuşmaları": "Baskanin+Konusmalari",
+    "Yayınlar": "Yayinlar",            # Enflasyon Raporu, Finansal İstikrar Raporu, Piyasa Katılımcıları Anketi…
+    "Veriler": "Veriler",              # ödemeler dengesi, rezervler, haftalık menkul kıymet istatistikleri…
 }
 
 EVDS_URL = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
