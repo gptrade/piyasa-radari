@@ -66,3 +66,11 @@ def test_turkey_filter_and_article_text():
     page = '<nav>Menu Home About</nav><div id="article"><p>For release at 2:00 p.m.</p><p>Inflation remains elevated.</p></div>'
     t = gm.article_text(page)
     assert t.startswith("For release at") and "Menu" not in t and "Inflation remains elevated." in t
+
+
+def test_tiers():
+    from radar.enrich import source_tier
+    assert source_tier({"source": "Fed · Para politikası", "source_type": "macro"}) == 1
+    assert source_tier({"source": "GDELT · Dünya basını", "source_type": "macro"}) == 2
+    assert source_tier({"source": "CNBC · Yaptırımlar", "source_type": "macro", "extra": {"topic": "Yaptırımlar"}}) == 2
+    assert source_tier({"source": "ensondakika.com.tr · IMF", "source_type": "macro", "extra": {"topic": "IMF"}}) == 3

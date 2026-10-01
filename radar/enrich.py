@@ -51,6 +51,12 @@ TIER2_OUTLETS = ("reuters", "bloomberg", "financial times", "ft.com", "wall stre
 
 def source_tier(item: dict) -> int:
     src = (item.get("source") or "")
+    ex = item.get("extra") or {}
+    if src.startswith("GDELT"):                       # dünya basını taraması: birincil kaynak değil
+        return 2
+    if ex.get("topic"):                               # Google News konu araması (IMF, yaptırımlar): yayın organına göre
+        low = src.lower()
+        return 2 if any(o in low for o in TIER2_OUTLETS) else 3
     if item.get("source_type") in ("disclosure", "regulator", "macro", "report", "technical") or src.startswith(TIER1_SOURCES):
         return 1
     if item.get("extra", {}).get("press_release"):
