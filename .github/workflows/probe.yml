@@ -2,7 +2,7 @@ name: probe-bist
 on:
   push:
     branches: [arastirma-bist-veri]
-    paths: [".github/workflows/probe.yml", "probe_urls.txt"]
+    paths: [".github/workflows/probe.yml"]
 permissions:
   contents: write
 jobs:
@@ -10,19 +10,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: indir
+      - uses: actions/checkout@v4
+        with: { ref: onizleme-tr-kaynaklar, path: app }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: kuru çalıştırma
         run: |
           set +e
-          rm -rf probe3 && mkdir -p probe4 && cd probe4
-          curl -sS -m 30 -o inter.der http://secure.globalsign.com/cacert/gsrsaovsslca2018.crt
-          openssl x509 -inform der -in inter.der -out inter.pem && echo "inter ok" > status.txt
-          cat /etc/ssl/certs/ca-certificates.crt inter.pem > bundle.pem
-          for u in "https://www.bddk.org.tr/Duyuru/Liste/39" "https://www.bddk.org.tr/Duyuru/Liste/40" "https://www.bddk.org.tr/BultenAylik"; do
-            n=$(echo "$u" | sed 's#[^a-zA-Z0-9]#_#g' | cut -c1-60)
-            curl -sSL -m 40 --cacert bundle.pem -A "Mozilla/5.0" -o "$n.html" -w "$u %{http_code} %{size_download}\n" "$u" >> status.txt 2>>err.txt
-          done
-          rm -f inter.der bundle.pem
+          cd app && pip install -q -r requirements.txt
+          mkdir -p ../probe5
+          python - <<'PY' > ../probe5/sonuc.txt 2>&1
+          from datetime import timedelta
+          from radar.config import load_settings, load_watchlist, TickerMatcher
+          from radar.models import now_utc
+          from radar.sources import Context, tr_official as t, tcmb, feeds
+          from radar import http
+          st = load_watchlist()
+          ctx = Context(settings=load_settings(), stocks=st, matcher=TickerMatcher(st), since=now_utc() - timedelta(days=3))
+          for name, fn in [("TÜİK", t.collect_tuik), ("BDDK", t.collect_bddk), ("Resmi Gazete", t.collect_resmi_gazete),
+                           ("Borsa İstanbul", t.collect_bist_announcements), ("SPK duyuru", t.collect_spk_press),
+                           ("Hazine", t.collect_hazine), ("TCMB", tcmb.collect)]:
+              n0 = len(http.FAILURES)
+              try:
+                  items = fn(ctx)
+              except Exception as e:
+                  print(f"## {name}: HATA {e!r}"); continue
+              print(f"## {name}: {len(items)} kayıt; uyarı: {http.FAILURES[n0:]}")
+              for i in items[:8]:
+                  print(f"   [{i.source_type}] {i.published[:16]} {i.source} | {i.title[:110]} | {','.join(i.tickers)}")
+          ek = [f for f in ctx.cfg("turkish_news_rss")["feeds"] if "Ekonomim" in f["name"]]
+          for f in ek:
+              fd = feeds.fetch_feed(f["url"])
+              print(f"## {f['name']}: {len(fd.entries) if fd else 'yok'} giriş")
+          PY
       - name: kaydet
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe4 probe3; git commit -qm "probe3 sonuçları" || true; git push -q
+          git add -A probe5; git commit -qm "probe5 sonuçları" || true; git push -q
