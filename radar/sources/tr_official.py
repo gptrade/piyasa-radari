@@ -104,6 +104,14 @@ def _item(*, source: str, title: str, url: str, published: datetime, ctx: Contex
                 tickers=list(tickers), lang=lang, extra={"issuer": issuer, **(extra or {})})
 
 
+def _check(rows: list, url: str, text: str) -> list:
+    """Liste boşsa kaynak durumunda görünür uyarı (biçim değişti ya da engel/doğrulama sayfası döndü)."""
+    if not rows:
+        hint = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", text or ""))[:80].strip()
+        http.note_failure(url, f"liste boş ({len(text or '')} bayt: {hint})")
+    return rows
+
+
 def _window(published: datetime, days: int) -> bool:
     return published >= now_utc() - timedelta(days=days)
 
@@ -130,7 +138,7 @@ def collect_tuik(ctx: Context) -> list[Item]:
         return []
     keys = cfg.get("keywords") or TUIK_KEYS
     out = []
-    for row in parse_tuik(r.text):
+    for row in _check(parse_tuik(r.text), TUIK_URL, r.text):
         if not _window(row["date"], 3) or not _has(row["title"] + " " + row["url"], keys):
             continue
         hi = _has(row["title"] + row["url"], ["tüketici fiyat", "enflasyon", "hasıla", "işsizlik"])
@@ -193,7 +201,7 @@ def collect_bddk(ctx: Context) -> list[Item]:
         if r.status_code != 200:
             http.note_failure(url, f"HTTP {r.status_code}")
             continue
-        for row in parse_bddk(r.text)[:20]:
+        for row in _check(parse_bddk(r.text), url, r.text)[:20]:
             if _window(row["date"], 7):
                 out.append(_item(source=f"BDDK · {kind}", title=row["title"], url=row["url"], published=row["date"],
                                  ctx=ctx, issuer="BDDK"))
@@ -279,7 +287,7 @@ def collect_bist_announcements(ctx: Context) -> list[Item]:
     if r is None:
         return []
     out = []
-    for row in parse_bist_announcements(r.text):
+    for row in _check(parse_bist_announcements(r.text), BIST_ANN_URL, r.text):
         if not _window(row["date"], 5) or _has(row["title"], BIST_SKIP):
             continue
         out.append(_item(source="Borsa İstanbul · Duyuru", title=row["title"], url=row["url"], published=row["date"],
@@ -310,7 +318,8 @@ def collect_spk_press(ctx: Context) -> list[Item]:
     if r is None:
         return []
     out = [_item(source="SPK · Basın duyurusu", title=row["title"], url=row["url"], published=row["date"], ctx=ctx, issuer="SPK")
-           for row in parse_spk_press(r.text)[:15] if _window(row["date"], 7)]
+           for row in _check(parse_spk_press(r.text), r.url if hasattr(r, "url") else SPK_PRESS_URL, r.text)[:15]
+           if _window(row["date"], 7)]
     log.info("SPK duyuruları: %d", len(out))
     return out
 
