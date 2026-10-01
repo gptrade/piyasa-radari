@@ -18,6 +18,7 @@ notify:
   min_confidence: 70           # bu güvenin altındaki sinyaller bildirilmez
   only_directional: true       # nötr değerlendirmeleri bildirme
   min_materiality: medium      # low | medium | high
+  anomaly: true                # habersiz hareket uyarıları Telegram'a gitsin
   technical: true              # teknik olaylar (EMA kesişimi, RSI eşiği, 52 hafta zirve/dip, hacim patlaması) Telegram'a gitsin
 
 feed:
@@ -97,6 +98,12 @@ sources:
   x_twitter:
     enabled: true              # X_BEARER_TOKEN secret'ı yoksa sessizce atlanır
     max_results_per_query: 10
+  anomaly:
+    enabled: true              # habersiz hareket: endeksten arındırılmış olağandışı fiyat hareketi, önemli haber/bildirim yokken
+    z: 2.5                     # artık hareket, son 60 günün artık oynaklığının en az bu katı
+    min_move_pct: 2.0          # ve en az bu kadar (%)
+    lookback_days: 60
+    news_hours: 24             # bu kadar saat içinde önemli haber/bildirim varsa "habersiz" sayılmaz
   analyst:
     enabled: true              # Yahoo: not değişiklikleri (upgrade/downgrade) akışa, hedef fiyat & tavsiye dağılımı hisse paneline
     max_age_days: 3            # bundan eski not değişiklikleri akışa düşmez

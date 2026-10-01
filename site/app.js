@@ -12,10 +12,13 @@
   const EVENT = {
     measure: "Borsa tedbiri", buyback: "Geri alım", insider: "İçeriden işlem", earnings: "Finansal sonuç", analyst: "Analist",
     dividend: "Temettü / sermaye", deal: "Anlaşma / ihale", regulator: "Düzenleyici (SPK)", macro: "Makro", legal: "Hukuki",
-    news: "Haber", social: "Sosyal medya", report: "Rapor", technical: "Teknik olay",
+    news: "Haber", social: "Sosyal medya", report: "Rapor", technical: "Teknik olay", anomaly: "Habersiz hareket",
   };
   const TYPE = { disclosure: "Bildirim", news: "Haber", social: "Sosyal", regulator: "SPK", macro: "Makro", report: "Rapor", technical: "Teknik" };
   const isTech = it => it.source_type === "technical";
+  const isAnom = it => !!it.extra?.anomaly;
+  // Son 24 saatteki habersiz hareket kaydı (varsa en yenisi)
+  const anomFor = sym => state.feed.items.find(it => isAnom(it) && ageMin(it.published) <= 1440 && (it.tickers || []).includes(sym));
   const TIER = { 1: "Resmi / birincil kaynak", 2: "Yerleşik finans medyası", 3: "Diğer / sosyal" };
   const PAGE = 10;                         // tablo 10'ar kayıtla açılır; sağ şerit / ısı haritası aşağıda kalmasın
 
@@ -593,11 +596,13 @@
       const fg = bg === mid ? ink : contrast(white, bg) >= 4.5 ? white : contrast(dark, bg) >= contrast(white, bg) ? dark : white;
       b.style.background = `rgb(${bg.join(",")})`; b.style.color = `rgb(${fg.join(",")})`;
       const k = chg == null || Math.abs(chg) < 0.05 ? 0 : chg;
-      b.innerHTML = `<b>${esc(w.symbol)}</b><span class="v">${chg == null ? "N/A" : `${glyph(k)} ${fmt.pct(chg, 2)}`}</span>${nk != null ? `<span class="nw" aria-hidden="true">${glyph(nk)}${n}</span>` : ""}`;
+      const an = anomFor(w.symbol);
+      if (an) b.classList.add("anom");
+      b.innerHTML = `<b>${an ? `<span class="an-flag" aria-hidden="true">⚡</span>` : ""}${esc(w.symbol)}</b><span class="v">${chg == null ? "N/A" : `${glyph(k)} ${fmt.pct(chg, 2)}`}</span>${nk != null ? `<span class="nw" aria-hidden="true">${glyph(nk)}${n}</span>` : ""}`;
       b.setAttribute("aria-pressed", String(state.ticker === w.symbol));
-      b.setAttribute("aria-label", `${w.symbol} bugün ${chg == null ? "fiyat yok" : fmt.pct(chg, 2)}, son 24 saatte ${n} haber${nk != null ? `, net ${nk > 0 ? "olumlu" : nk < 0 ? "olumsuz" : "nötr"}` : ""}${dis ? ", haber ile fiyat ters" : ""}`);
+      b.setAttribute("aria-label", `${w.symbol} bugün ${chg == null ? "fiyat yok" : fmt.pct(chg, 2)}, son 24 saatte ${n} haber${nk != null ? `, net ${nk > 0 ? "olumlu" : nk < 0 ? "olumsuz" : "nötr"}` : ""}${dis ? ", haber ile fiyat ters" : ""}${an ? ", habersiz olağandışı hareket" : ""}`);
       b.dataset.tip = `<b>${esc(w.symbol)}</b> · ${esc(w.name)}<br>Bugün: ${chg == null ? "fiyat yok" : glyph(k) + " " + fmt.pct(chg, 2)}<br>Son 24 sa: ${n} sinyal${n ? `, net ${nk > 0 ? "▲ olumlu" : nk < 0 ? "▼ olumsuz" : "● nötr"} <span class="t3">(normale göre ${netTxt(net)})</span>` : ""}` +
-        (dis ? `<br><b>≠ Haber yönü ile fiyat ters</b>` : "") + (p?.ta ? `<br>Teknik: ${esc(p.ta.trend)}, RSI ${p.ta.rsi == null ? "—" : fmt.num(p.ta.rsi, 0)}` : "") + "<br><i>Tıkla: hisse paneli (teknik görünüm, haberler)</i>";
+        (dis ? `<br><b>≠ Haber yönü ile fiyat ters</b>` : "") + (an ? `<br><b>⚡ ${esc(an.analysis?.headline_tr || an.title)}</b>` : "") + (p?.ta ? `<br>Teknik: ${esc(p.ta.trend)}, RSI ${p.ta.rsi == null ? "—" : fmt.num(p.ta.rsi, 0)}` : "") + "<br><i>Tıkla: hisse paneli (teknik görünüm, haberler)</i>";
       b.dataset.sym = w.symbol;
       if (state.panelTk === w.symbol) b.classList.add("panel");
       b.onclick = () => openTicker(w.symbol, b);
@@ -771,6 +776,7 @@
         [`<span class="chip" aria-pressed="true" style="height:22px;padding:0 8px">Solukları gizle</span>`, "Varsayılan olarak açık; kapatınca soluk satırlar da listelenir"]]),
       L("Kaynak ve diğer", [[`<span class="src-cell"><span class="t1">Bildirim</span></span>`, "Resmi kaynak (KAP, SEC, SPK, TCMB, şirket bülteni)"], [`<span class="src-cell">Haber <span class="x">×3</span></span>`, "Aynı haber 3 kaynakta"],
         [`<span class="src-cell"><span class="t1">Teknik</span></span>`, "Haber değil, fiyattan çıkan olay: EMA kesişimi, RSI eşiği, 52 hafta zirve/dip, hacim patlaması (AI kotası harcamaz)"],
+        [`<span class="an-flag">⚡</span>`, "Habersiz hareket: endeks etkisi çıkarıldıktan sonra son 60 günün normal oynaklığının 2,5 katını aşan (en az %2) hareket; son 24 saatte o hisseye ait bildirim ya da önemli haber yok"],
         [`<span class="new-dot"></span>`, "Son ziyaretinden sonra gelen güçlü sinyal"]]),
     ].join("");
   }
@@ -837,11 +843,12 @@
     const p = state.prices[sym];
     const all = state.feed.items.filter(it => relTickers(it).includes(sym));
     const items = all.filter(it => !isTech(it)).sort((a, b) => impact(b) - impact(a) || (b.published > a.published ? 1 : -1));
-    const techs = all.filter(isTech).sort((a, b) => (b.published > a.published ? 1 : -1)).slice(0, 4);
+    const techs = all.filter(it => isTech(it) && !isAnom(it)).sort((a, b) => (b.published > a.published ? 1 : -1)).slice(0, 4);
     const { net, raw, base, n } = newsNet(sym);
     const nk = !n ? null : net > 0.15 ? 1 : net < -0.15 ? -1 : 0;
     const head = document.createElement("div");
     head.className = "tp-sec";
+    const anm = anomFor(sym);
     head.innerHTML = `
       <div class="tp-acts">
         <button type="button" class="btn" data-a="filter" aria-pressed="${state.ticker === sym}">${state.ticker === sym ? "✓ Akış bu hisseye süzülü" : "Akışı bu hisseye süz"}</button>
@@ -865,6 +872,13 @@
     px.className = "tp-sec";
     if (p) px.append(pricePanelFor(sym, { market: p.market }));
     else px.innerHTML = stateHTML({ kind: "info", compact: true, title: "Fiyat verisi yok", msg: "Teknik görünüm yalnızca izleme listesindeki hisseler için hesaplanır." });
+    if (anm) {
+      const call = document.createElement("div");
+      call.className = "tp-sec";
+      call.innerHTML = `<button type="button" class="an-call" data-id="${anm.id}"><b>⚡ ${esc(anm.analysis?.headline_tr || anm.title)}</b><span>${esc(anm.analysis?.what || "")}</span><span class="t3">${esc(anm.analysis?.why || "")}</span></button>`;
+      $(".an-call", call).onclick = () => openItem(anm.id, sym);
+      wrap.append(call);
+    }
     wrap.append(px, head);
     const an = analystSection(sym, p);
     if (an) wrap.append(an);

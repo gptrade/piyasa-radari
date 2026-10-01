@@ -37,6 +37,8 @@ def kind(d: dict) -> str:
         return "Resmi bildirim (KAP/SEC)"
     if st == "regulator":
         return "Düzenleyici (SPK/TCMB)"
+    if (d.get("extra") or {}).get("anomaly"):
+        return "Habersiz hareket"
     if st == "technical":
         return "Teknik olay"
     if st == "report":

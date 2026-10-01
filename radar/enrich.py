@@ -18,6 +18,7 @@ EVENTS = {
     "news": "Haber",
     "social": "Sosyal",
     "report": "Rapor",
+    "anomaly": "Habersiz hareket",
 }
 
 _RULES = [
@@ -64,6 +65,8 @@ def classify_event(item: dict) -> str:
     if extra.get("bist_measure"):
         return "measure"
     st = item.get("source_type")
+    if extra.get("anomaly"):
+        return "anomaly"
     if st == "technical":
         return "technical"
     if st == "macro":

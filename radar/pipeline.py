@@ -13,7 +13,7 @@ from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
-from . import bb_quotes, scorecard
+from . import anomaly, bb_quotes, scorecard
 from .sources import Context, feeds, kap, reports, social, spk, tcmb
 
 log = logging.getLogger("radar")
@@ -371,6 +371,20 @@ def run() -> dict:
                 new.append(it)
                 n_tech += 1
         status.append({"name": "Teknik sinyaller", "ok": True, "count": n_tech})
+
+    # 3a'') Habersiz hareket: endeksten arındırılmış olağandışı hareket, ilgili önemli haber/bildirim yokken
+    ncfg = (settings.get("sources") or {}).get("anomaly") or {}
+    if ncfg.get("enabled", True):
+        n_an = 0
+        recent = [i.to_dict() for i in new] + feed
+        for d in recent:
+            enrich(d)
+        for it in anomaly.anomaly_items(stocks, px, recent, ncfg):
+            if it.id not in seen_ids:
+                seen_ids[it.id] = None
+                new.append(it)
+                n_an += 1
+        status.append({"name": "Habersiz hareket", "ok": True, "count": n_an})
 
     # 3a') Analist not değişiklikleri (Yahoo): kural tabanlı, AI kotası harcamaz
     if acfg.get("enabled", True):
