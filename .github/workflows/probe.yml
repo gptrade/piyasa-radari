@@ -13,35 +13,16 @@ jobs:
       - name: indir
         run: |
           set +e
-          rm -rf probe3 && mkdir -p probe3/raw
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36"
-          while read -r name url; do
-            [ -z "$name" ] && continue
-            curl -sSL -m 30 -A "$UA" -H "Accept-Language: tr,en;q=0.8" -o "probe3/raw/$name" -w "$name %{http_code} %{size_download} %{content_type} %{url_effective}\n" "$url" >> probe3/status.txt 2>>probe3/err.txt || echo "$name FAIL" >> probe3/status.txt
-          done < probe_urls.txt
-          # BDDK: hata türü (sertifika mı, erişim mi?) — yalnız teşhis için
-          curl -sS -m 40 -o /dev/null -w "bddk_verbose %{http_code} %{ssl_verify_result}\n" https://www.bddk.org.tr/Duyuru/Liste/39 >> probe3/status.txt 2>>probe3/err.txt || true
-          echo | openssl s_client -connect www.bddk.org.tr:443 -servername www.bddk.org.tr 2>&1 | grep -E "verify|depth|subject|issuer" | head -12 >> probe3/bddk_tls.txt || true
-          python3 - <<'PY'
-          import os, re, glob
-          out = open("probe3/summary.txt", "w")
-          for f in sorted(glob.glob("probe3/raw/*")):
-              b = open(f, "rb").read()
-              t = b.decode("utf-8", "replace")
-              n = os.path.basename(f)
-              items = len(re.findall(r"<item[\s>]", t)) + len(re.findall(r"<entry[\s>]", t))
-              titles = re.findall(r"<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>", t, re.S)[:6]
-              links = sorted(set(re.findall(r'href="([^"]*(?:rss|RSS|xml|feed|Duyuru|duyuru|Bulten|bulten|ihale|announcement|eskiler)[^"]*)"', t)))[:40]
-              out.write(f"=== {n} bytes={len(b)} items={items}\n")
-              out.write("titles: " + " | ".join(x.strip()[:90] for x in titles) + "\n")
-              for l in links: out.write("  " + l + "\n")
-              if items == 0:
-                  txt = re.sub(r"<script.*?</script>|<style.*?</style>", " ", t, flags=re.S)
-                  txt = re.sub(r"<[^>]+>", " ", txt); txt = re.sub(r"\s+", " ", txt)
-                  out.write("text: " + txt[:700] + "\n")
-          PY
-          find probe3/raw -size +400k -delete
+          rm -rf probe3 && mkdir -p probe4 && cd probe4
+          curl -sS -m 30 -o inter.der http://secure.globalsign.com/cacert/gsrsaovsslca2018.crt
+          openssl x509 -inform der -in inter.der -out inter.pem && echo "inter ok" > status.txt
+          cat /etc/ssl/certs/ca-certificates.crt inter.pem > bundle.pem
+          for u in "https://www.bddk.org.tr/Duyuru/Liste/39" "https://www.bddk.org.tr/Duyuru/Liste/40" "https://www.bddk.org.tr/BultenAylik"; do
+            n=$(echo "$u" | sed 's#[^a-zA-Z0-9]#_#g' | cut -c1-60)
+            curl -sSL -m 40 --cacert bundle.pem -A "Mozilla/5.0" -o "$n.html" -w "$u %{http_code} %{size_download}\n" "$u" >> status.txt 2>>err.txt
+          done
+          rm -f inter.der bundle.pem
       - name: kaydet
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe3; git commit -qm "probe3 sonuçları" || true; git push -q
+          git add -A probe4 probe3; git commit -qm "probe3 sonuçları" || true; git push -q
