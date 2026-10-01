@@ -12,7 +12,8 @@
   const SERIES = ["--series-1", "--series-2", "--series-3", "--series-4", "--series-5"];
 
   const S = { rows: null, quotes: {}, quotesAt: null, loaded: false, loading: false, error: null,
-    days: 30, q: "", watch: false, suspectOnly: false, sort: "amount", dir: -1, open: new Set(), updated: null };
+    days: 30, q: "", watch: false, suspectOnly: false, sort: "amount", dir: -1, open: new Set(), updated: null, limit: 20 };
+  const PAGE = 20;
 
   // ─────────────────────────────── birimler (başlıkta yazar, hücrede yalnız sayı)
   const mn = v => v == null ? "—" : fmt.num(v / 1e6, 2);            // mn ₺
@@ -32,17 +33,38 @@
     if (/tamamlan|sona er|bitir/.test(t)) return "end";
     return "other";
   }
+  // İşlem tarihi bildirimden sonra olamaz; bildirimden 60 günden eski de olmaz (ör. KAP'ta 2029 yazılmış tarih).
+  // Böyle tarihler bildirim tarihine çekilir ve satırda işaretlenir.
+  function txDate(r, pub) {
+    if (!r.transaction_date) return { d: pub, fixed: false };
+    const d = new Date(r.transaction_date + "T12:00:00Z");
+    if (isNaN(d) || !pub) return { d: pub, fixed: !!pub };
+    if (d - pub > DAY || pub - d > 60 * DAY) return { d: new Date(Date.UTC(pub.getUTCFullYear(), pub.getUTCMonth(), pub.getUTCDate(), 12)), fixed: true, raw: r.transaction_date };
+    return { d, fixed: false };
+  }
+  // Aynı işlem düzeltme bildirimiyle tekrar gelebilir: hisse + işlem günü + adet + fiyat aynıysa son bildirim tutulur
+  function dedup(rows) {
+    const seen = new Map();
+    for (const r of rows) {
+      if (r.kind !== "tx") continue;
+      const k = [r.t, r.date.toISOString().slice(0, 10), r.qty, r.price].join("|");
+      const prev = seen.get(k);
+      if (!prev || r.pub > prev.pub) { if (prev) prev.dup = true; seen.set(k, r); } else r.dup = true;
+    }
+    return rows.filter(r => !r.dup);
+  }
   function normalize(raw) {
-    return raw.map(r => {
+    return dedup(raw.map(r => {
       const pub = parseTR(r.publish_date);
-      const txd = r.transaction_date ? new Date(r.transaction_date + "T12:00:00Z") : pub;
+      const td = txDate(r, pub), txd = td.d;
       const price = r.price ?? (r.price_low && r.price_high ? (r.price_low + r.price_high) / 2 : null);
       return {
         id: r.disclosure_index, t: (r.tickers || "").split(/[,\s]+/)[0].toUpperCase(), name: r.company_title || "",
         pub, date: txd, price, qty: r.quantity, amount: price && r.quantity ? price * r.quantity : null,
         own: r.ownership_pct_after, url: r.source_url, type: r.notice_type || "", kind: kindOf(r), review: !!r.needs_review, fields: r.raw_fields || {},
+        dateFixed: td.fixed ? (td.raw || "geçersiz") : null,
       };
-    }).filter(r => r.t && r.pub);
+    }).filter(r => r.t && r.pub));
   }
   // Ayrıştırma hatası koruması: fiyat, şirketin medyan işlem fiyatından 10 kattan fazla saparsa ya da
   // mantıksız yüksekse işlem şüpheli sayılır; tutarı toplamlara girmez.
@@ -273,7 +295,8 @@
       maxFund: "Geri alım için ayrılan azami fon (ödenecek azami tutar)", dur: "Programın uygulanacağı süre", ratio: "Güncel fiyat ÷ ortalama geri alım fiyatı. 1'in üstü: şirket bugünkü fiyattan ucuza almış.", qty: "Dönemdeki toplam geri alınan pay (bin adet)", amount: "Fiyat × adet; şüpheli fiyatlı işlemler hariç" };
     const head = COLS.map(([c, l, num]) => `<th scope="col" class="${num ? "num" : ""}" aria-sort="${c === k ? (dir > 0 ? "ascending" : "descending") : "none"}">
       <button type="button" class="th-sort" data-c="${c}" ${TIPS[c] ? `data-tip="${esc(TIPS[c])}"` : ""}>${l}<span class="arr" aria-hidden="true">${c === k ? (dir > 0 ? "▲" : "▼") : "▼"}</span></button></th>`).join("");
-    const body = agg.map(o => {
+    const total = agg.length, shown = agg.slice(0, S.limit);
+    const body = shown.map(o => {
       const open = S.open.has(o.t) || (S.suspectOnly && o.suspect);
       const flags = [o.suspect ? `${o.suspect} işlemde fiyat şüpheli (toplamlara katılmadı)` : "", o.review ? `${o.review} bildirim elle kontrol istiyor` : ""].filter(Boolean).join(" · ");
       const rk = o.ratio == null ? null : Math.abs(o.ratio - 1) < 0.005 ? 0 : o.ratio - 1;
@@ -291,12 +314,14 @@
         <td class="num">${o.avg ? fmt.num(o.avg) : "—"}</td>
         ${showRatio ? `<td class="num"><span class="ratio ${dirCls(rk)}" data-tip="${esc(ratioTip)}">${o.ratio == null ? "—" : `${glyph(rk)} ${fmt.num(o.ratio)}`}</span></td>` : ""}
         <td class="num">${o.own == null ? "—" : fmt.num(o.own)}</td>
-        <td class="num">${o.last ? fmt.date(o.last) : "—"}</td>
+        <td class="num">${o.last ? `<span data-tip="${esc(fmt.date(o.last, { day: "numeric", month: "long", year: "numeric" }))}">${fmt.date(o.last)}</span>` : "—"}</td>
       </tr>${open ? `<tr class="drawer"><td colspan="${COLS.length}">${txList(o)}</td></tr>` : ""}`;
     }).join("");
     return `<section class="card card-flush" aria-labelledby="bbTblT">
       <div class="card-head"><h2 class="card-title" id="bbTblT">Şirket bazında (${agg.length})</h2><span class="card-meta">satıra tıkla: işlemler · başlığa tıkla: sırala${showRatio ? "" : " · güncel fiyat verisi yok"}</span></div>
       <div class="tbl-scroll bb-scroll"><table class="tbl bb-tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
+      ${total > shown.length || S.limit > PAGE ? `<div class="tbl-foot"><span>${fmt.int(shown.length)} / ${fmt.int(total)} şirket gösteriliyor</span>
+        <span>${total > shown.length ? `<button type="button" class="link-btn" id="bbMore">${Math.min(PAGE, total - shown.length)} şirket daha göster</button> · <button type="button" class="link-btn" id="bbShowAll">Tümünü göster</button>` : `<button type="button" class="link-btn" id="bbLess">İlk ${PAGE} şirkete dön</button>`}</span></div>` : ""}
       ${agg.length ? "" : sh.stateHTML({ kind: "empty", title: S.suspectOnly ? "Bu dönemde şüpheli işlem yok" : "Bu dönemde geri alım işlemi yok", msg: S.q || S.watch ? "Arama ya da “Sadece izleme listem” filtresi açık." : "Dönemi uzatmayı dene." })}</div></section>`;
   }
   function progLine(o) {
@@ -310,7 +335,7 @@
   function txList(o) {
     if (!o.tx.length) return progLine(o) + `<p class="meta">Bu dönemde işlem bildirimi yok.</p>`;
     return progLine(o) + `<table class="tx" aria-label="${esc(o.t)} işlemleri"><thead><tr><th>İşlem tarihi</th><th class="num">Fiyat (₺)</th><th class="num">Adet</th><th class="num">Tutar (₺)</th><th class="num">Sermaye payı (%)</th><th>Bildirim</th></tr></thead><tbody>` +
-      o.tx.map(r => `<tr class="${r.suspect ? "sus" : ""}"><td>${fmt.date(r.date, { day: "numeric", month: "short", year: "numeric" })}</td>
+      o.tx.map(r => `<tr class="${r.suspect ? "sus" : ""}"><td>${fmt.date(r.date, { day: "numeric", month: "short", year: "numeric" })}${r.dateFixed ? ` <span class="rv" data-tip="Bildirimdeki işlem tarihi (${esc(r.dateFixed)}) geçersizdi; bildirim tarihi kullanıldı">⚠</span>` : ""}</td>
         <td class="num">${r.price ? fmt.num(r.price, 3) : "—"}${r.suspect ? ` <span class="rv" data-tip="Fiyat şüpheli: şirketin diğer işlemlerinden çok farklı; KAP bildirimini kontrol et">⚠</span>` : ""}</td>
         <td class="num">${fmt.int(r.qty)}</td><td class="num">${r.suspect ? "—" : fmt.num(r.amount, 0)}</td>
         <td class="num">${r.own == null ? "—" : fmt.num(r.own)}</td>
@@ -343,9 +368,12 @@
     const scroll = $(".bb-scroll")?.scrollTop || 0;
     body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis(period, aggregate(period))}${dailyChart(period, aggregate(period), W)}${table(agg, showRatio)}</div>`;
     if ($(".bb-scroll")) $(".bb-scroll").scrollTop = scroll;
+    $("#bbMore")?.addEventListener("click", () => { S.limit += PAGE; render(); });
+    $("#bbShowAll")?.addEventListener("click", () => { S.limit = 1e9; render(); });
+    $("#bbLess")?.addEventListener("click", () => { S.limit = PAGE; render(); $("#bbTblT")?.scrollIntoView({ block: "start" }); });
     $$("#bbBody .th-sort").forEach(b => b.onclick = () => {
       const c = b.dataset.c;
-      S.dir = S.sort === c ? -S.dir : (["t", "name"].includes(c) ? 1 : -1); S.sort = c;
+      S.dir = S.sort === c ? -S.dir : (["t", "name"].includes(c) ? 1 : -1); S.sort = c; S.limit = PAGE;
       render(); $(`#bbBody .th-sort[data-c="${c}"]`)?.focus();
     });
   }
@@ -386,12 +414,12 @@
 
   // ─────────────────────────────── bağla
   $$("#bbPeriod button").forEach(b => b.onclick = () => {
-    S.days = +b.dataset.d; $$("#bbPeriod button").forEach(x => x.setAttribute("aria-checked", String(x === b))); render();
+    S.days = +b.dataset.d; S.limit = PAGE; $$("#bbPeriod button").forEach(x => x.setAttribute("aria-checked", String(x === b))); render();
   });
   sh.radioKeys($("#bbPeriod"));
-  $("#bbWatch").onchange = e => { S.watch = e.target.checked; render(); };
-  let t; $("#bbQ").oninput = e => { clearTimeout(t); t = setTimeout(() => { S.q = e.target.value.trim(); render(); }, 150); };
-  $("#bbSuspect").onclick = () => { S.suspectOnly = !S.suspectOnly; render(); $("#bbSuspect").focus(); };
+  $("#bbWatch").onchange = e => { S.watch = e.target.checked; S.limit = PAGE; render(); };
+  let t; $("#bbQ").oninput = e => { clearTimeout(t); t = setTimeout(() => { S.q = e.target.value.trim(); S.limit = PAGE; render(); }, 150); };
+  $("#bbSuspect").onclick = () => { S.suspectOnly = !S.suspectOnly; S.limit = PAGE; render(); $("#bbSuspect").focus(); };
   $("#bbBody").addEventListener("click", e => {
     const tr = e.target.closest("tr.row");
     if (tr && !e.target.closest("a, button")) toggleRow(tr);
