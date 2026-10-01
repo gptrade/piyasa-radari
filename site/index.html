@@ -142,6 +142,7 @@
                 <button type="button" role="radio" data-view="signals" aria-checked="false">Güçlü sinyaller <span class="n" id="cntSig"></span></button>
                 <button type="button" role="radio" data-view="saved" aria-checked="false">Kaydedilenler <span class="n" id="cntSaved"></span></button>
                 <button type="button" role="radio" data-view="tickers" aria-checked="false" data-tip="İzleme listesindeki her hisse tek satırda: bugünkü fiyat, teknik görünüm, RSI, 52 hafta konumu, haber yönü. Tıkla: hisse paneli">Hisseler <span class="n" id="cntTk"></span></button>
+                <button type="button" role="radio" data-view="karne" aria-checked="false" data-tip="Sinyallerin geriye dönük isabeti: yön ile 1 ve 5 seans sonraki endekse göre fazla getiri aynı mı? Kaynak, olay türü, güven ve hisse kırılımında">Karne <span class="n" id="cntKarne"></span></button>
               </div>
               <div class="search">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -182,6 +183,7 @@
                 <thead id="tkHead"></thead><tbody id="tkBody"></tbody>
               </table>
             </div>
+            <div class="karne" id="karneWrap" hidden></div>
             <div id="sigState"></div>
             <div class="tbl-foot"><span id="sigCount" aria-live="polite"></span><button type="button" class="link-btn" id="moreBtn" hidden>Daha fazla göster</button></div>
           </div>

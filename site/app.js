@@ -26,6 +26,7 @@
     open: new Set(), saved: new Set(store.get("saved", [])), limit: PAGE, sel: null, tkSort: { k: "n", d: -1 }, stripAll: false,
     panel: null, panelTk: null, panelFrom: null,
     seenBefore: null, reasons: new Map(),
+    card: null, karne: Object.assign({ h: 1, w: "90", dim: "kind" }, store.get("radar.karne", {})),
   };
   const market = () => sh.market;
 
@@ -96,16 +97,16 @@
   async function fetchAll() {
     const feed = await getJSON("data/feed.json");
     if (!feed) throw new Error("data/feed.json okunamadı");
-    const [digest, macro] = await Promise.all([getJSON("data/digest.json"), getJSON("data/macro.json")]);
+    const [digest, macro, card] = await Promise.all([getJSON("data/digest.json"), getJSON("data/macro.json"), getJSON("data/scorecard.json")]);
     const syms = new Set([...(feed.watchlist || []).map(w => w.symbol), ...feed.items.map(i => i.tickers?.[0]).filter(Boolean)]);
     const prices = {};
     await Promise.all([...syms].map(async s => { const p = await getJSON(`data/prices/${s}.json`); if (p) prices[s] = p; }));
-    return { feed, digest, macro, prices };
+    return { feed, digest, macro, prices, card };
   }
   async function load() { apply(await fetchAll()); }
-  function apply({ feed, digest, macro, prices }) {
+  function apply({ feed, digest, macro, prices, card }) {
     state.pending = null; $("#newPill").hidden = true;
-    Object.assign(state, { feed, digest, macro, prices, error: null, loading: false });
+    Object.assign(state, { feed, digest, macro, prices, card: card || null, error: null, loading: false });
     state.reasons = computeReasons(feed.items);
     sh.setUpdated("sinyal", feed.generated, { label: "Son tarama", staleMin: 45 });
     sh.setHealth(feed);
@@ -731,6 +732,8 @@
     $("#cntFeed").textContent = fmt.int(items.length);
     $("#cntSig").textContent = fmt.int(items.filter(i => isSignal(i.analysis)).length);
     $("#cntSaved").textContent = fmt.int(items.filter(i => state.saved.has(i.id)).length);
+    const kt = state.card?.scopes?.[market()]?.all?.total?.h1?.n;
+    $("#cntKarne").textContent = kt ? fmt.int(kt) : "";
     $("#cntTk").textContent = fmt.int(new Set([...items.flatMap(relTickers), ...(state.feed.watchlist || []).filter(w => market() === "ALL" || w.market === market()).map(w => w.symbol)]).size);
     const ms = $("#mSort"), v = `${state.sort.k}:${state.sort.d}`;
     if ([...ms.options].some(o => o.value === v)) ms.value = v;
@@ -1029,7 +1032,90 @@
     return html;
   }
 
+  // ─────────────────────────────── Karne: sinyallerin geriye dönük isabeti (data/scorecard.json)
+  const K_DIM = { kind: "Kaynak türü", ev: "Olay türü", conf: "AI güveni", mat: "Önem", dir: "Yön", t: "Hisse", src: "Kaynak", pv: "Değerlendiren" };
+  const K_WIN = { 30: "30 gün", 90: "90 gün", all: "Tümü" };
+  const kGroup = (dim, g) => dim === "ev" ? (EVENT[g] || g) : dim === "mat" ? (MAT_TR[g] || g) : dim === "pv" ? (g === "AI" ? "AI (Claude / Gemini)" : "Kural (teknik, analist notu)") : g;
+  const kPct = (v, d = 1) => v == null ? "—" : `<span class="${dirCls(v > 0 ? 1 : v < 0 ? -1 : 0)}">${fmt.pct(v, d)}</span>`;
+  function hitBar(st) {
+    if (!st?.n) return `<span class="t3">—</span>`;
+    const h = st.hit, lo = Math.max(0, h - st.moe), hi = Math.min(100, h + st.moe);
+    const [l, w] = h >= 50 ? [50, h - 50] : [h, 50 - h];
+    return `<span class="hb" role="img" aria-label="İsabet yüzde ${fmt.num(h, 0)}, ±${fmt.num(st.moe, 0)}">
+      <span class="hb-ci" style="left:${lo}%;width:${hi - lo}%"></span><span class="hb-fill ${h >= 50 ? "up" : "down"}" style="left:${l}%;width:${w}%"></span><span class="hb-mid"></span></span>
+      <span class="hb-v">%${fmt.num(h, 0)}</span>`;
+  }
+  function renderKarne() {
+    const box = $("#karneWrap"), c = state.card, K = state.karne;
+    if (!c) {
+      box.innerHTML = stateHTML({ kind: "info", title: "Karne henüz oluşmadı", msg: "Sinyal arşivi bir sonraki taramada başlar. Her yönlü sinyal, yayından sonraki 1. ve 5. seans kapanışında endekse göre notlanır." });
+      return;
+    }
+    const scope = c.scopes[market()] || c.scopes.ALL, w = scope[K.w] || scope.all, hk = "h" + K.h, tot = w.total[hk] || { n: 0 };
+    const seg = (name, opts, cur, lbl) => `<div class="seg" role="radiogroup" aria-label="${lbl}" data-k="${name}">${Object.entries(opts).map(([v, l]) =>
+      `<button type="button" role="radio" data-v="${v}" aria-checked="${String(v) === String(cur)}">${l}</button>`).join("")}</div>`;
+    let html = `<div class="k-tools">
+        <div class="k-ctl"><span aria-hidden="true">Ufuk</span>${seg("h", { 1: "1 seans", 5: "5 seans" }, K.h, "Ufuk")}</div>
+        <div class="k-ctl"><span aria-hidden="true">Dönem</span>${seg("w", K_WIN, K.w, "Dönem")}</div>
+        <label class="k-ctl">Kırılım <select id="kDim">${Object.entries(K_DIM).map(([k, l]) => `<option value="${k}"${k === K.dim ? " selected" : ""}>${l}</option>`).join("")}</select></label>
+      </div>
+      <div class="kpi-grid k-kpis">
+        <div class="kpi"><span class="kpi-label">Notlanan sinyal</span><span class="kpi-value">${fmt.int(tot.n)}</span><span class="kpi-sub">${fmt.int(w.pending)} bekliyor</span></div>
+        <div class="kpi"><span class="kpi-label">İsabet</span><span class="kpi-value">${tot.n ? `%${fmt.num(tot.hit, 0)}` : "—"}</span><span class="kpi-sub">${tot.n ? `±${fmt.num(tot.moe, 0)} puan · şans %50` : "şans %50"}</span></div>
+        <div class="kpi"><span class="kpi-label">Ort. fazla getiri</span><span class="kpi-value">${tot.n ? kPct(tot.ex, 2) : "—"}</span><span class="kpi-sub" data-tip="Yön ayarlı: olumsuz sinyalde düşüş kazanç sayılır">endekse göre</span></div>
+        <div class="kpi"><span class="kpi-label">Ort. ham getiri</span><span class="kpi-value">${tot.n ? kPct(tot.raw, 2) : "—"}</span><span class="kpi-sub">endeks düşülmeden</span></div>
+      </div>`;
+    const groups = (w.dims[K.dim] || []);
+    const graded = groups.filter(g => g[hk]?.n), waiting = groups.filter(g => !g[hk]?.n);
+    if (!tot.n) {
+      html += stateHTML({ kind: "info", compact: true, title: "Henüz notlanan sinyal yok",
+        msg: `${fmt.int(w.pending)} yönlü sinyal arşivde bekliyor. İlk notlar, yayından sonraki ilk seans kapanınca (${K.h === 1 ? "1 seans" : "5 seans"} ufku için ${K.h} seans sonra) gelir.` });
+    } else {
+      html += `<div class="tbl-scroll"><table class="tbl k-tbl" aria-label="Kırılım: ${esc(K_DIM[K.dim])}">
+        <thead><tr><th scope="col">${esc(K_DIM[K.dim])}</th><th scope="col" class="num" data-tip="Notlanan sinyal sayısı (arşivdeki toplam)">Sinyal</th>
+          <th scope="col" data-tip="Sinyal yönü ile endekse göre fazla getirinin aynı işaretli olma oranı. Orta çizgi %50 (yazı-tura); gölge: %95 güven aralığı">İsabet</th>
+          <th scope="col" class="num" data-tip="Yön ayarlı ortalama fazla getiri: olumlu sinyalde getiri, olumsuz sinyalde getirinin tersi; endeks getirisi düşülür">Ort. fazla getiri</th>
+          <th scope="col" class="num" data-tip="Yön ayarlı ortalama ham getiri (endeks düşülmeden)">Ham</th></tr></thead><tbody>
+        ${graded.map(g => { const st = g[hk], few = st.n < 10; return `<tr class="${few ? "few" : ""}">
+          <th scope="row">${esc(kGroup(K.dim, g.g))}${few ? ` <span class="tag" data-tip="10'dan az örnek: sonuç güvenilir değil">az örnek</span>` : ""}</th>
+          <td class="num">${fmt.int(st.n)}<span class="t3"> / ${fmt.int(g.count)}</span></td><td class="k-hit">${hitBar(st)}</td>
+          <td class="num">${kPct(st.ex, 2)}</td><td class="num">${kPct(st.raw, 2)}</td></tr>`; }).join("")}
+        </tbody></table></div>
+        ${waiting.length ? `<p class="k-note">Henüz notlanmamış: ${waiting.map(g => `${esc(kGroup(K.dim, g.g))} (${g.count})`).join(", ")}</p>` : ""}`;
+    }
+    const recent = (c.recent || []).filter(r => market() === "ALL" || r.m === market()).slice(0, 12);
+    if (recent.length) html += `<h3 class="d-sub k-sub">Son notlanan sinyaller</h3><div class="tbl-scroll"><table class="tbl k-tbl k-recent">
+      <thead><tr><th scope="col">Tarih</th><th scope="col">Hisse</th><th scope="col">Sinyal</th><th scope="col" class="num">1 seans</th><th scope="col" class="num">5 seans</th><th scope="col" class="num">Sonuç</th></tr></thead><tbody>
+      ${recent.map(r => { const x = r["x" + K.h], ok = x == null ? null : r.d * x > 0; return `<tr>
+        <td class="k-d">${fmt.date(r.ts)}</td><td><button type="button" class="tk-link" data-sym="${esc(r.t)}">${esc(r.t)}</button></td>
+        <td class="k-t"><span class="k-dir ${dirCls(r.d)}">${glyph(r.d)}</span>${esc(r.title)}<span class="k-meta">${esc(r.kind)}${r.c ? ` · güven %${r.c}` : ""}</span></td>
+        <td class="num">${r.x1 == null ? "—" : kPct(r.x1, 1)}</td><td class="num">${r.x5 == null ? "—" : kPct(r.x5, 1)}</td>
+        <td class="num">${ok == null ? `<span class="t3">bekliyor</span>` : ok ? `<span class="up" aria-label="isabetli">✓</span>` : `<span class="down" aria-label="isabetsiz">✕</span>`}</td></tr>`; }).join("")}
+      </tbody></table></div>`;
+    html += `<p class="k-note">Yöntem: yönlü sinyaller (olumlu/olumsuz) yayın anındaki fiyatla arşivlenir; aynı hisse, olay ve yön 12 saat içinde bir kez sayılır. Getiri, yayından sonraki 1. ve 5. tam seans kapanışına kadar; fazla getiri aynı aralıkta ${market() === "US" ? "S&P 500" : market() === "BIST" ? "BIST 100" : "BIST 100 / S&P 500"} getirisi düşülerek hesaplanır. Son 180 gün tutulur. Geçmiş isabet gelecek getirinin garantisi değildir.</p>`;
+    box.innerHTML = html;
+    $$(".seg", box).forEach(sg => sh.radioKeys(sg));
+  }
+  function bindKarne() {
+    const box = $("#karneWrap");
+    const save = () => { store.set("radar.karne", state.karne); renderKarne(); };
+    box.addEventListener("click", e => {
+      const b = e.target.closest(".seg button");
+      if (b) { const k = b.closest(".seg").dataset.k; state.karne[k] = k === "h" ? +b.dataset.v : b.dataset.v; save(); box.querySelector(`.seg[data-k="${k}"] button[aria-checked="true"]`)?.focus(); return; }
+      const t = e.target.closest(".tk-link");
+      if (t) openTicker(t.dataset.sym, t);
+    });
+    box.addEventListener("change", e => { if (e.target.id === "kDim") { state.karne.dim = e.target.value; save(); $("#kDim").focus(); } });
+  }
+
   function renderTable() {
+    const kMode = state.view === "karne";
+    $(".sig-tools").classList.toggle("is-karne", kMode);
+    $("#karneWrap").hidden = !kMode;
+    if (kMode) {
+      $(".sig-scroll").hidden = true; $("#tkWrap").hidden = true; $("#moreBtn").hidden = true;
+      $("#sigCount").textContent = ""; $("#sigState").innerHTML = ""; closePanel(false); renderKarne(); return;
+    }
     const tkMode = state.view === "tickers";
     $(".sig-scroll").hidden = tkMode; $("#tkWrap").hidden = !tkMode;
     if (tkMode) { $("#moreBtn").hidden = true; closePanel(false); renderTickers(); return; }
@@ -1077,7 +1163,7 @@
 
   // ─────────────────────────────── etkileşim
   function bind() {
-    head(); legend();
+    head(); legend(); bindKarne();
     $$("#viewSeg button").forEach(b => b.onclick = () => {
       state.view = b.dataset.view; state.limit = PAGE;
       $$("#viewSeg button").forEach(x => x.setAttribute("aria-checked", String(x === b)));

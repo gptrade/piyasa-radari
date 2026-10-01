@@ -153,6 +153,8 @@ def test_failures_are_reported_in_status(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline.tcmb, "update_macro", lambda settings: None)
     monkeypatch.setattr(pipeline.bb_quotes, "update", lambda settings: None)
     monkeypatch.setattr(pipeline.digest, "DIGEST_FILE", tmp_path / "digest.json")
+    monkeypatch.setattr(pipeline.scorecard, "ARCHIVE", tmp_path / "signals.json")
+    monkeypatch.setattr(pipeline.scorecard, "SCORE", tmp_path / "scorecard.json")
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 
     def flaky(ctx):

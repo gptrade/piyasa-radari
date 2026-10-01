@@ -689,3 +689,29 @@ main:focus { outline: none; }
 @media (max-width: 1399px) { .side-panel .kbd { display: none; } }
 .tp-norm { color: var(--text-3); font-size: var(--fs-xs); margin-left: var(--s-1); border-bottom: 1px dotted var(--border); cursor: help; }
 .tip .t3 { opacity: .75; }
+
+/* ─── Karne ─── */
+.sig-tools.is-karne .search, .sig-tools.is-karne .filter-row, .sig-tools.is-karne .banner { display: none; }
+.karne { padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-4); }
+.k-tools { display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-5); align-items: center; }
+.k-ctl { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--fs-xs); color: var(--text-3); font-weight: var(--fw-medium); }
+.k-ctl select { height: 32px; padding: 0 var(--s-2); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); font-size: var(--fs-sm); }
+.k-kpis { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.k-tbl { width: 100%; }
+.k-tbl th[scope="row"] { font-weight: var(--fw-medium); text-align: left; }
+.k-tbl tr.few th, .k-tbl tr.few td { color: var(--text-3); }
+.k-tbl .t3, .karne .t3 { color: var(--text-3); }
+.k-hit { white-space: nowrap; }
+.hb { position: relative; display: inline-block; width: 120px; height: 10px; vertical-align: middle; background: var(--surface-3); border-radius: var(--r-pill); overflow: hidden; }
+.hb-ci { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--text-3) 22%, transparent); }
+.hb-fill { position: absolute; top: 2px; bottom: 2px; border-radius: 2px; }
+.hb-fill.up { background: var(--up); } .hb-fill.down { background: var(--down); }
+.hb-mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--text-2); }
+.hb-v { display: inline-block; min-width: 3.2em; margin-left: var(--s-2); font: var(--fs-sm) var(--font-mono); text-align: right; }
+.k-sub { margin: 0; }
+.k-recent .k-t { max-width: 460px; }
+.k-recent .k-d { white-space: nowrap; }
+.k-recent .k-dir { font-size: var(--fs-xs); margin-right: 6px; }
+.k-recent .k-meta { display: block; font-size: var(--fs-xs); color: var(--text-3); margin-top: 2px; }
+.k-note { font-size: var(--fs-xs); color: var(--text-3); line-height: 1.5; margin: 0; }
+@media (max-width: 767px) { .hb { width: 72px; } .k-recent .k-t { min-width: 220px; } }
