@@ -1,0 +1,4 @@
+kayıt: 3 uyarı: []
+  2026-10-01T18:00 US ['AAPL'] {'AAPL': 0.427} | gurufocus.com · Marketaux | Morgan Stanley Lowers Apple (AAPL) Price Target Amid Mixed Revenue Outlook
+  2026-10-01T17:53 US ['AMD'] {'AMD': 0.201} | seekingalpha.com · Marketaux | AMD: At All-Time Highs, We're Expanding Our Short Position (NASDAQ:AMD)
+  2026-10-01T17:32 US ['AAPL'] {'AAPL': 0.784} | business-standard.com · Marketaux | How to tame the dragon: India seeks homegrown brands to take on China
