@@ -13,12 +13,14 @@ items = gm.collect_central_banks(ctx)
 print("== merkez bankaları", len(items), "uyarı", http.FAILURES)
 for i in items:
     print(" ", i.published[:16], i.market, "|", i.source, "|", i.title[:100], "| yüksek" if i.extra.get("high_impact") else "", "| metin", len(i.extra.get("full_text", "")))
+    if i.extra.get("full_text"): print("      >>", i.extra["full_text"][:260].replace("\n", " / "))
 print("== GDELT ham ölçümler")
 now = now_utc(); cfg = S["sources"]["gdelt"]
 forced = None
 for th in gm.DEFAULT_THEMES:
     vol = gm._series(gm._gdelt({"query": th["query"], "mode": "timelinevolraw", "timespan": "3d"}))
     tone = gm._series(gm._gdelt({"query": th["query"], "mode": "timelinetone", "timespan": "3d"}))
+    print("   uyarı sayısı", len(http.FAILURES))
     s = gm.spike(vol, tone, now)
     print(" ", th["key"], "bins", len(vol), s, "→", gm.triggered(s, cfg))
     if s and (forced is None or (s["ratio"] or 0) > (forced[1]["ratio"] or 0)):
