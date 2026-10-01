@@ -1,0 +1,38 @@
+tuik_portal 000 0  https://data.tuik.gov.tr/
+tuik_portal FAIL
+tuik_bulten 200 3692 text/html https://veriportali.tuik.gov.tr/Bulten/Index
+tuik_rss 200 3692 text/html https://veriportali.tuik.gov.tr/rss
+tuik_edevlet 200 30887 text/html; charset=UTF-8 https://www.turkiye.gov.tr/tuik-haber-bulteni
+tuik_takvim 200 3692 text/html https://veriportali.tuik.gov.tr/Search/TakvimTable
+bddk_basin 000 0  https://www.bddk.org.tr/Duyuru/Liste/39
+bddk_basin FAIL
+bddk_mevzuat 000 0  https://www.bddk.org.tr/Duyuru/Liste/40
+bddk_mevzuat FAIL
+bddk_tum 000 0  https://www.bddk.org.tr/Duyuru/Liste
+bddk_tum FAIL
+bddk_rss 000 0  https://www.bddk.org.tr/Rss
+bddk_rss FAIL
+hmb_home 200 5089 text/html https://www.hmb.gov.tr/
+hmb_feed 200 5089 text/html https://www.hmb.gov.tr/feed
+ms_hmb 403 9 text/plain https://ms.hmb.gov.tr/
+ms_hmb_feed 404 9 text/plain https://ms.hmb.gov.tr/feed/
+ms_ihale 404 9 text/plain https://ms.hmb.gov.tr/ihale-sonuclari
+ms_takvim 404 9 text/plain https://ms.hmb.gov.tr/ihale-takvimi
+rg_home 200 206030 text/html; charset=utf-8 https://www.resmigazete.gov.tr/
+rg_gun 200 17050 text/html https://www.resmigazete.gov.tr/eskiler/2026/10/20261001.htm
+rg_rss 200 206183 text/html; charset=utf-8 https://www.resmigazete.gov.tr/rss/
+bist_duyuru 000 0  https://www.borsaistanbul.com/tr/duyurular
+bist_duyuru FAIL
+bist_ann 200 85495 text/html; charset=UTF-8 https://www.borsaistanbul.com/en/announcement
+ekonomim_rsspage 200 32789 text/xml; charset=utf-8 https://www.ekonomim.com/rss
+ekonomim_net 200 25522 text/html; charset=UTF-8 https://www.ekonomim.net/rss
+ekonomim_export 200 72331 text/xml; charset=utf-8 https://www.ekonomim.com/export/rss
+paraanaliz 404 29101 text/html; charset=utf-8 https://www.paraanaliz.com/feed
+investing_rsspage 200 176412 text/html; charset=UTF-8 https://tr.investing.com/webmaster-tools/rss
+investing_95 200 4633 application/rss+xml https://tr.investing.com/rss/news_95.rss
+investing_ecal 200 4680 application/rss+xml https://tr.investing.com/rss/news_14.rss
+aa_finans 200 21924 application/xml https://www.aa.com.tr/tr/rss/default?cat=ekonomi
+bloomberght 200 53096 application/xml; charset=UTF-8 https://www.bloomberght.com/rss/tum-haberler.xml
+spk_duyuru 200 27238 text/html; charset=utf-8 https://spk.gov.tr/duyurular
+spk_rss 200 1396 text/html https://spk.gov.tr/404.html?aspxerrorpath=/rss
+tcmb_rssmenu 200 33012 text/html; charset=UTF-8 https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/
