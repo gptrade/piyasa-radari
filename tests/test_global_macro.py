@@ -59,6 +59,7 @@ def test_item_text():
 
 
 def test_turkey_filter_and_article_text():
+    assert not gm.MUST["IMF"].search("Türkiye ile Ukrayna arasındaki Serbest Ticaret Anlaşması")
     assert gm.TURKEY.search("IMF Türkiye'nin büyüme tahminini yükseltti")
     assert gm.TURKEY.search("US sanctions Turkish firms over Russia trade")
     assert not gm.TURKEY.search("Lübnan’a yeni IMF programı için reformlar şart")

@@ -66,7 +66,8 @@ def article_text(page: str) -> str:
     for marker in ('id="article"', "<main", 'class="section"', "<article"):
         i = page.find(marker)
         if i > 0:
-            page = page[i:]
+            j = page.find(">", i)
+            page = page[j + 1:] if j > 0 else page[i:]
             break
     text = html_text(page)
     for marker in ("For release at", "For immediate release", "Share this page"):
@@ -108,7 +109,7 @@ def collect_central_banks(ctx: Context) -> list[Item]:
         for it in [i for i in entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="macro",
                                    market="BIST", since=ctx.since, lang="tr" if "hl=tr" in hl else "en",
                                    allow_empty=True, extra={"topic": name}, limit=20)
-                   if TURKEY.search(i.title)][:int(cfg.get("per_query", 5))]:
+                   if TURKEY.search(i.title) and MUST[name].search(i.title)][:int(cfg.get("per_query", 5))]:
             pub = it.title.rsplit(" - ", 1)
             it.source = f"{pub[1].strip() if len(pub) == 2 else 'Google News'} · {name}"
             out.append(it)
@@ -119,6 +120,8 @@ def collect_central_banks(ctx: Context) -> list[Item]:
 HL_TR = "hl=tr&gl=TR&ceid=TR:tr"
 # Google aramaları gevşek eşleşir (Lübnan, Ukrayna, İran haberleri gelir): başlıkta Türkiye geçmeli
 TURKEY = re.compile(r"T[uü]rk|Türkiye|TCMB|\blira\b", re.I)
+MUST = {"IMF": re.compile(r"\bIMF\b|Uluslararası Para Fonu|International Monetary Fund", re.I),
+        "Yaptırımlar": re.compile(r"sanction|yaptırım|OFAC", re.I)}
 HL_EN = "hl=en-US&gl=US&ceid=US:en"
 DEFAULT_QUERIES = [
     ('IMF Türkiye', "IMF", HL_TR),
@@ -129,7 +132,7 @@ DEFAULT_QUERIES = [
 
 # ------------------------------------------------------------------ GDELT
 GDELT = "https://api.gdeltproject.org/api/v2/doc/doc"
-GDELT_GAP = 6.0           # GDELT: 5 saniyede en fazla bir istek
+GDELT_GAP = 8.0           # GDELT: 5 saniyede en fazla bir istek
 _last_call = [0.0]
 
 DEFAULT_THEMES = [
@@ -139,8 +142,6 @@ DEFAULT_THEMES = [
     {"key": "tr_press", "name": "Türk basını: piyasa gündemi", "market": "BIST",
      "query": 'sourcelang:turkish (borsa OR dolar OR faiz OR enflasyon OR "merkez bankası")'},
     {"key": "oil", "name": "Petrol", "market": "BIST", "query": '("Brent crude" OR "oil prices" OR OPEC)'},
-    {"key": "em_risk", "name": "Gelişen piyasalar ve küresel risk", "market": "US",
-     "query": '("emerging markets" OR "global selloff" OR "market turmoil" OR "risk-off")'},
 ]
 
 

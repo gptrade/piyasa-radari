@@ -73,7 +73,7 @@ sources:
     per_query: 5
   gdelt:
     enabled: true              # dünya basını haber hacmi/ton alarmı (ücretsiz, anahtarsız; 5 sn'de 1 istek sınırı)
-    interval_min: 30
+    interval_min: 60           # GitHub sunucularından GDELT sık sık hız sınırı (429) veriyor; seyrek ve az istek
     cooldown_hours: 6          # aynı tema için alarm aralığı
     min_count: 12              # son 2 saatte en az bu kadar haber yoksa alarm yok
     volume_ratio: 3            # haber payı olağanın en az bu katı

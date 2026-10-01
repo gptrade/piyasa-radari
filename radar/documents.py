@@ -58,7 +58,7 @@ def doc_kind(it: Item) -> str | None:
 
 
 def html_text(s: str) -> str:
-    s = re.sub(r"(?is)<(script|style|noscript|svg)\b.*?</\1>", " ", s)
+    s = re.sub(r"(?is)<!--.*?-->|<(script|style|noscript|svg)\b.*?</\1>", " ", s)
     s = re.sub(r"(?i)<br\s*/?>|</(p|div|tr|li|h\d|table)>", "\n", s)
     s = re.sub(r"(?i)</t[dh]>", " | ", s)
     s = htmlmod.unescape(re.sub(r"<[^>]+>", " ", s)).replace("\xa0", " ")
