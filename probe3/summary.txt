@@ -1,256 +1,65 @@
-=== aa_finans bytes=21924 items=30
-titles: Anadolu Ajansı Güncel Haberler | Anadolu Ajansı Güncel Haberler | Ticaret Bakanı Bolat, Rusya Ekonomik Kalkınma Bakanı Reşetnikov ile görüştü | Türkiye ile Ukrayna arasındaki Serbest Ticaret Anlaşması'nda yeni dönem | IMF, küresel ölçekte tahvil piyasalarının düzenli şekilde işlemeye devam ettiği görüşünde | Bakan Şimşek: Fon piyasalarında "sistemik problem yok"
-=== bist_ann bytes=85495 items=0
-titles: All News | Borsa İstanbul A.Ş.
-  /duyurular
-  /en/announcement/15522/borsa-istanbuls-opening-bell-rang-sa-ra-enerji-insaat-tic-ve-san
-  /en/announcement/15523/bist-dividend-and-bist-dividend-25-indices-periodic-review
-  /en/announcement/15527/bist-sustainability-themed-debt-securities-indices-periodic-review
-  /en/announcement/15530/announcement-amendments-regarding-debt-securities-market-procedure-swap-market-procedure-and-borsa-istanbul-money-market-procedure
-  /en/announcement/15531/borsa-istanbuls-opening-bell-rang-metgun-enerji-yatirimlari
-  /en/announcement/15534/borsa-istanbuls-opening-bell-rang-albayrak-hazir-beton-sanayi-ve-ticaret
-  /en/announcement/15537/borsa-istanbuls-opening-bell-rang-masfen-enerji
-  /en/announcement/15540/borsa-istanbuls-opening-bell-rang-kardemir-celik-sanayi
-  /en/announcement/15547/bist-buyback-index-periodic-review
-  /en/announcement/15552/borsa-istanbuls-opening-bell-rang-quick-sigorta
-  /en/announcement/15561/borsa-istanbuls-opening-bell-rang-citlekci-magazacilik-gida
-  /en/announcement/15568/borsa-istanbuls-opening-bell-rang-turker-vangolu-enerji-yatirim-turker-veyas
-  /en/announcement/15571/borsa-istanbuls-opening-bell-rang-kapeks-kimya-sanayi
-  /en/announcement/15572/announcement-amendments-regarding-debt-securities-market-and-borsa-istanbul-money-market-procedures
-  /en/announcement/15578/borsa-istanbuls-opening-bell-rang-intetra-teknoloji-ve-bilisim-hizmetleri
-  /en/announcement/15582/borsa-istanbuls-opening-bell-rang-bakirci-gayrimenkul-yatirim-ortakligi
-  /en/announcement/15585/bist-buyback-index-periodic-review
-  /en/announcement/15593/borsa-istanbuls-opening-bell-rang-net-global
-  /en/announcement/15595/re-determination-new-market-segments-shares-equity-markets-bist-stars-bist-main-and-bist-submarket
-  /en/announcement/15598/bist-stock-indices-periodic-review
-  /en/announcement/15599/uptick-rule-will-be-applied-until-further-announcement-starting-session-dated-22092026-equity-market
-  /en/announcement/15600/bist-kyd-fund-indices-periodic-review
-  /en/announcement/15601/bist-kyd-corporate-eurobond-indices-periodic-review
-  /en/announcement/15602/announcement-regarding-update-bist-market-cap-weighted-stock-indices-methodology
-  /en/announcement/15603/bist-participation-indices-periodic-review
-  /en/indices/index-announcements
-  /en/technical-resources/announcements
-  http://www.borsaistanbul.com/duyurular
-  http://www.borsaistanbul.com/en/announcement
-text:  All News | Borsa İstanbul A.Ş. Corporate About Borsa İstanbul Regulations Message from the CEO Organization Legal Framework Milestones in Borsa İstanbul History International Memberships Corporate Identity Subsidiaries and Affiliates Regulations Human Resources Careers Training Publications Sustainability Library Markets Equity Market Market Functioning Markets Products Settlement Principles Trading Hours Exchange Fees Debt Securities Market Market Functioning Products Trading Hours Exchange Fees / Registration Fees Swap Market Money Market Derivatives Market (VIOP) Market Functioning Contract Specifications Futures Options Settlement and Risk Management Education Precious Metals And Diamon
-=== bloomberght bytes=53096 items=50
-titles: Bloomberg HT - Tüm Haberler | Bloomberg HT | ABD Orta Doğu'ya üçüncü uçak gemisini gönderiyor | ABD'den AB'ye dizel baskısı | Şimşek: Sorunlu portföy yönetim şirketlerini ve fonları karantinaya aldık | ABD'den Irak'a yeni nakit dolar sevkiyatı
-  https://www.bloomberght.com/rss/tum-haberler.xml
-=== ekonomim_export bytes=72331 items=50
-titles: Ekonomim | Ekonomim | Fon soruşturmasında 8 kişi için tutuklama talebi | Pegasus&#039;tan Avrupa&#039;da dev satın alma: Havacılık devini bünyesine kattı | Avrupa borsaları günü düşüşle kapattı | Cumhurbaşkanı Yardımcısı Yılmaz: Yarın yapılacak fon toplantısında ilave tedbirler alınabi
-=== ekonomim_net bytes=25522 items=0
-titles: RSS Servisleri - Ekonomim, Ekonomi Haberleri, Borsa, Döviz, Altın Bilgileri
-  https://www.ekonomim.net/rss
-  https://www.ekonomim.net/rss/analiz-11
-  https://www.ekonomim.net/rss/dunya-2
-  https://www.ekonomim.net/rss/ekonomi-5
-  https://www.ekonomim.net/rss/genel-0
-  https://www.ekonomim.net/rss/gundem-1
-  https://www.ekonomim.net/rss/kultur-sanat-9
-  https://www.ekonomim.net/rss/para-4
-  https://www.ekonomim.net/rss/piyasa-10
-  https://www.ekonomim.net/rss/saglik-6
-  https://www.ekonomim.net/rss/sehir-13
-  https://www.ekonomim.net/rss/sirket-12
-  https://www.ekonomim.net/rss/siyaset-7
-  https://www.ekonomim.net/rss/teknoloji-8
-  https://www.ekonomim.net/rss/yatirim-3
-  https://www.ekonomim.net/rssmakale
-  https://www.ekonomim.net/sitemap.xml
-text:  RSS Servisleri - Ekonomim, Ekonomi Haberleri, Borsa, Döviz, Altın Bilgileri MENU SAĞLIK SİYASET YAZARLAR FOTO GALERİ WEB TV ASTROLOJİ RÜYA TABİRLERİ YEREL HABERLER HABER ARŞİVİ YOL TRAFIK DURUMU ETKİNLİK TAKVİMİ BİYOGRAFİLER E-Dergi RÖPORTAJLAR GAZETE MANŞETLERİ Künye Gizlilik Politikası HAKKIMIZDA KVK AYDINLATMA METNİ YAYIN GRUBLARIMIZ ekonomim tv TEPE PROMOSYON ekonomim MARKA HAKKI VE HUKUKİ UYARI İLETİŞİM Foto Galeri Web TV Yazarlar E-Dergi Anketler Nöbetçi Eczaneler Firma Rehberi Seri İlanlar DOLAR 44.6304 EURO 52.5769 GR ALTIN 6812.7 ÇEYREK 1482.9 İstanbul GÜNDEM PİYASA ANALİZ ŞİRKET Şehir EKONOMİ KÜLTÜR SANAT PARA YATIRIM TEKNOLOJİ DÜNYA Kapat RSS Servisleri Ana Sayfa RSS Servisleri E
-=== ekonomim_rsspage bytes=32789 items=25
-titles: Ekonomim | Ekonomim rss servisi | Fon soruşturmasında 8 kişi için tutuklama talebi | Pegasus&#039;tan Avrupa&#039;da dev satın alma: Havacılık devini bünyesine kattı | Avrupa borsaları günü düşüşle kapattı | Cumhurbaşkanı Yardımcısı Yılmaz: Yarın yapılacak fon toplantısında ilave tedbirler alınabi
-=== hmb_feed bytes=5089 items=0
+=== ekonomim_piyasa bytes=43045 items=50
+titles: Ekonomim, Ekonomi Haberleri, Borsa, Döviz, Altın Bilgileri | ECB Başkanından erken istifa sinyali | Bankacılık sektörünün net karı 676,3 milyar | Küresel piyasalar, belirsizliklerin etkisiyle başladı | Dijital rublede teknik sorunlar yaşanıyor | BIST 50&#039;de yukarı adım kuralı uygulanacak
+=== ekonomim_sirket bytes=45865 items=50
+titles: Ekonomim, Ekonomi Haberleri, Borsa, Döviz, Altın Bilgileri | Volkswagen, sendikayla sözleşmelerini feshedecek | Uzmanından uyarı: KKDİK kayıt takviminde yalnızca tonaja bakmak yanıltıcı olabiliyor | Volkswagen, 208 binden fazla aracını geri çağırıyor | Borsa İstanbul&#039;da gong Net Global Endüstriyel Yatırımlar AŞ için çaldı | Jaguar Land Rover 4 bin kişiyi işten çıkarmaya hazırlanıyor
+=== hmb_api bytes=5089 items=0
 titles: T.C. Hazine ve Maliye Bakanlığı
 text:  T.C. Hazine ve Maliye Bakanlığı You need to enable JavaScript to run this app. 
-=== hmb_home bytes=5089 items=0
+=== hmb_js bytes=5089 items=0
 titles: T.C. Hazine ve Maliye Bakanlığı
 text:  T.C. Hazine ve Maliye Bakanlığı You need to enable JavaScript to run this app. 
-=== investing_95 bytes=4633 items=10
-titles: Ekonomik İndikatör Haberleri | ABD fabrika faaliyetleri Eylül’de yavaşladı, fiyatlar yükseldi | İngiltere imalat büyümesi girdi ve satış fiyatlarındaki artışla ivme kazandı | İtalya’da işsizlik oranı Ağustos’ta %6,2’ye yükseldi | Avro Bölgesi imalat sektörü Eylül’de 52 aylık zirveye ulaştı | Yunanistan’da imalat büyümesi Eylül’de yavaşladı
-=== investing_ecal bytes=4680 items=10
-titles: Ekonomi Haberleri | İtalya’nın devlet bütçe açığı Eylül’de 27 milyar euroya yükseldi | ABD’de ipotek faizleri yüzde 7,28’e yükseldi, Ekim 2023’ten bu yana en yüksek seviye | AB yetkili: Çin’den gelen ithalatta endişe verici artış var | Fed’in Kashkari’si enflasyon savaşında faiz artışına kapı araladı | İran ABD ile diyaloğu sürdürmeyi hedefliyor - Pezeşkiyan
-=== investing_rsspage bytes=176412 items=0
-titles: Investing.com RSS Beslemeleri
-  http://www.feeddemon.com/
-  https://app.appsflyer.com/com.fusionmedia.investing?pid=direct_inv&c=legacy_desktop&af_channel=/webmaster-tools/rss&af_adset=tr&af_ad=footer&af_pmod_priority=null&af_sub_siteid=null&click_id=null&af_sub1=null&af_ad_id=null&af_sub2=null&af_sub3=null&af_sub4=null&af_sub5=null&af_keywords=null&af_adset_id=null
-  https://app.appsflyer.com/id909998122?pid=direct_inv&c=legacy_desktop&af_channel=/webmaster-tools/rss&af_adset=tr&af_ad=footer&af_pmod_priority=null&af_sub_siteid=null&click_id=null&af_sub1=null&af_ad_id=null&af_sub2=null&af_sub3=null&af_sub4=null&af_sub5=null&af_keywords=null&af_adset_id=null
-  https://au.investing.com/webmaster-tools/rss
-  https://br.investing.com/webmaster-tools/rss
-  https://ca.investing.com/webmaster-tools/rss
-  https://cn.investing.com/webmaster-tools/rss
-  https://de.investing.com/webmaster-tools/rss
-  https://es.investing.com/webmaster-tools/rss
-  https://fi.investing.com/webmaster-tools/rss
-  https://fr.investing.com/webmaster-tools/rss
-  https://gr.investing.com/webmaster-tools/rss
-  https://hi.investing.com/webmaster-tools/rss
-  https://hk.investing.com/webmaster-tools/rss
-  https://id.investing.com/webmaster-tools/rss
-  https://il.investing.com/webmaster-tools/rss
-  https://in.investing.com/webmaster-tools/rss
-  https://it.investing.com/webmaster-tools/rss
-  https://jp.investing.com/webmaster-tools/rss
-  https://kr.investing.com/webmaster-tools/rss
-  https://ms.investing.com/webmaster-tools/rss
-  https://mx.investing.com/webmaster-tools/rss
-  https://ng.investing.com/webmaster-tools/rss
-  https://nl.investing.com/webmaster-tools/rss
-  https://ph.investing.com/webmaster-tools/rss
-  https://pl.investing.com/webmaster-tools/rss
-  https://pt.investing.com/webmaster-tools/rss
-  https://ru.investing.com/webmaster-tools/rss
-  https://sa.investing.com/webmaster-tools/rss
-  https://se.investing.com/webmaster-tools/rss
-  https://th.investing.com/webmaster-tools/rss
-  https://tr.investing.com/rss/286.rss
-  https://tr.investing.com/rss/290.rss
-  https://tr.investing.com/rss/302.rss
-  https://tr.investing.com/rss/bonds.rss
-  https://tr.investing.com/rss/brokers.rss
-  https://tr.investing.com/rss/brokers_press.rss
-  https://tr.investing.com/rss/commodities.rss
-  https://tr.investing.com/rss/forex.rss
-  https://tr.investing.com/rss/market_overview.rss
-text:  Investing.com RSS Beslemeleri Son Dakika &nbsp; Kurlar Tüm Araç Çeşitleri Tüm Araç Çeşitleri Endeksler Hisse Senetleri ETF'ler Fonlar Emtia Dövizler Kripto Para Tahviller Sertifikalar Lütfen başka bir arama deneyiniz Sitede ara:&nbsp; Popüler Haberler Daha Altın Eylül’ü %6 kayıpla kapattı: Morgan Stanley’nin 5.000 dolar hedefi FTSE 100 bugün: Gilt getirileri yüzde 6’yı aşarken hisseler geriledi Bitcoin, inatçı tahvil getirileriyle 4. çeyreğe düşüşle başladı Popüler Analizler Daha Son Düşüşle Tarihi Dibine Gelmiş, Yüksek Potansiyelli Hisseler (%160 Potansiyel!) Koç’tan tarihi uyarı | TP2’de ne var? | Temerrüt dalgası Fonlarla İlgili SPK’dan Yeni Açıklama! Tarihler Yine Değişti! Daha %50 indi
-=== ms_hmb bytes=9 items=0
-titles: 
-text: Hata: 403
-=== ms_hmb_feed bytes=9 items=0
-titles: 
-text: Hata: 404
-=== ms_ihale bytes=9 items=0
-titles: 
-text: Hata: 404
-=== ms_takvim bytes=9 items=0
-titles: 
-text: Hata: 404
-=== paraanaliz bytes=29101 items=0
+=== paraanaliz_newssitemap bytes=29125 items=0
 titles: ParaAnaliz.com — Ekonomi, Piyasa ve Yatırım Analizleri
 text:  ParaAnaliz.com — Ekonomi, Piyasa ve Yatırım Analizleri 
-=== rg_gun bytes=17050 items=0
-titles: T.C. Resm� Gazete
-text:  T.C. Resm� Gazete 1 Ekim 2026 Tarihli ve 33387 Say�l� Resm� Gazete MEVZUAT &nbsp; &nbsp; Y�R�TME VE �DARE B�L�M� &nbsp; CUMHURBA�KANI KARARLARI ��&nbsp;&nbsp; Birle�mi� Milletler G�venlik Konseyinin 1267 (1999), 1988 (2011), 1989 (2011) ve 2253 (2015) Say�l� Kararlar�yla Listelenen Ki�i, Kurulu� veya Organizasyonlar�n Tasarrufunda Bulunan Malvarl���n�n Dondurulmas� Hakk�ndaki 30/9/2013 Tarihli ve 2013/5428 Say�l� Bakanlar Kurulu Karar�n�n Eki (1) Say�l� Listede De�i�iklik Yap�lmas�na �li�kin Karar (Karar Say�s�: 11821) ��&nbsp;&nbsp; Baz� Mallara Uygulanan �zel T�ketim Vergisi Tutarlar�n�n Yeniden Belirlenmesi Hakk�nda Karar (Karar Say�s�: 11822) ��&nbsp;&nbsp; �stanbul Teknik �niversitesi 
-=== rg_home bytes=206030 items=0
-titles: T.C. Resmî Gazete
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-0.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-1-1.htm
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-1.htm
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-10.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-11.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-12.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-13.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-14.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-2.htm
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-3-2.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-3-3.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-3.htm
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-4.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-5.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-6.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-7.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-8.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-9.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001.pdf
-text:  T.C. Resmî Gazete T.C. CUMHURBAŞKANLIĞI RESMÎ GAZETE Tarih Seçimi Arama Arşiv Son Mükerrer PDF Görüntüle 01 Ekim 2026 Tarihli ve 33387 Say&#x131;l&#x131; Resm&#xEE; Gazete Resmî Gazete’nin 07.02.1921 tarihinden itibaren yayımlanan tüm sayılarına erişebilirsiniz. Arama Tüm Kategoriler Yasama Y&#xFC;r&#xFC;tme ve &#x130;dare Yarg&#x131; Zaman Aralığı Bugün Son 1 Hafta Son 1 Ay Son Mükerrer Arşiv Filtreyi temizle Önceki Sayı YÜRÜTME VE İDARE BÖLÜMÜ CUMHURBAŞKANI KARARLARI –– Birleşmiş Milletler Güvenlik Konseyinin 1267 (1999), 1988 (2011), 1989 (2011) ve 2253 (2015) Sayılı Kararlarıyla Listelenen Kişi, Kuruluş veya Organizasyonların Tasarrufunda Bulunan Malvarlığının Dondurulması Hakkındaki 30
-=== rg_rss bytes=206183 items=0
-titles: T.C. Resmî Gazete
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-0.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-1-1.htm
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-1.htm
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-10.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-11.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-12.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-13.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-14.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-2.htm
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-3-2.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-3-3.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-3.htm
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-4.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-5.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-6.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-7.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-8.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001-9.pdf
-  https://www.resmigazete.gov.tr/eskiler/2026/10/20261001.pdf
-text:  T.C. Resmî Gazete T.C. CUMHURBAŞKANLIĞI RESMÎ GAZETE Tarih Seçimi Arama Arşiv Son Mükerrer PDF Görüntüle 01 Ekim 2026 Tarihli ve 33387 Say&#x131;l&#x131; Resm&#xEE; Gazete Resmî Gazete’nin 07.02.1921 tarihinden itibaren yayımlanan tüm sayılarına erişebilirsiniz. Arama Tüm Kategoriler Yasama Y&#xFC;r&#xFC;tme ve &#x130;dare Yarg&#x131; Zaman Aralığı Bugün Son 1 Hafta Son 1 Ay Son Mükerrer Arşiv Filtreyi temizle Önceki Sayı YÜRÜTME VE İDARE BÖLÜMÜ CUMHURBAŞKANI KARARLARI –– Birleşmiş Milletler Güvenlik Konseyinin 1267 (1999), 1988 (2011), 1989 (2011) ve 2253 (2015) Sayılı Kararlarıyla Listelenen Kişi, Kuruluş veya Organizasyonların Tasarrufunda Bulunan Malvarlığının Dondurulması Hakkındaki 30
-=== spk_duyuru bytes=27238 items=0
-titles: Sermaye Piyasası Kurulu  - Duyurular
+=== paraanaliz_sitemap bytes=29115 items=0
+titles: ParaAnaliz.com — Ekonomi, Piyasa ve Yatırım Analizleri
+text:  ParaAnaliz.com — Ekonomi, Piyasa ve Yatırım Analizleri 
+=== spk_basin bytes=49453 items=0
+titles: Sermaye Piyasası Kurulu  - 2026
   /bulten
   /duyurular
   /duyurular/basin-duyurulari
+  /duyurular/basin-duyurulari/2012
+  /duyurular/basin-duyurulari/2013
+  /duyurular/basin-duyurulari/2014
+  /duyurular/basin-duyurulari/2015
+  /duyurular/basin-duyurulari/2016
+  /duyurular/basin-duyurulari/2017
+  /duyurular/basin-duyurulari/2018
+  /duyurular/basin-duyurulari/2019
+  /duyurular/basin-duyurulari/2020
+  /duyurular/basin-duyurulari/2021
+  /duyurular/basin-duyurulari/2022
   /duyurular/basin-duyurulari/2022/lisanslama-sinavlari-basvurulari-hakkinda
-  /duyurular/baskanin-konusmalari
+  /duyurular/basin-duyurulari/2023
+  /duyurular/basin-duyurulari/2024
+  /duyurular/basin-duyurulari/2025
+  /duyurular/basin-duyurulari/2026
+  /duyurular/basin-duyurulari/2026/a1-capital-portfoy-yonetimi-a-s-bulls-portfoy-yonetimi-a-s-ve-pardus-portfoy-yonetimi-a-s-nin-kurucusu-oldugu-fonlara-iliskin-tasfiye-sureci-hakkinda-duyuru
+  /duyurular/basin-duyurulari/2026/basin-duyurusu_01082026
+  /duyurular/basin-duyurulari/2026/basin-duyurusu_11072026
+  /duyurular/basin-duyurulari/2026/basin-duyurusu_17092026
+  /duyurular/basin-duyurulari/2026/basin-duyurusu_28082026
+  /duyurular/basin-duyurulari/2026/bassagligi-duyurusu
+  /duyurular/basin-duyurulari/2026/dolandiricilik-girisimlerine-iliskin-duyuru
+  /duyurular/basin-duyurulari/2026/istege-bagli-iade-hesaplarina-iliskin-duyuru
+  /duyurular/basin-duyurulari/2026/meslek-personel-yardimciligi-giris-sinavi-sonuc-duyurusu_20260702
+  /duyurular/basin-duyurulari/2026/sozlesmeli-bilisim-personeli-alimi-sinavi-sonuc-duyurusu_20072026
+  /duyurular/basin-duyurulari/2026/sozlesmeli-bilisim-personeli-alimi-sinavi-sozlu-asamasi-duyurusu
+  /duyurular/basin-duyurulari/2026/tasfiye-konusu-fonlara-iliskin-sure-duzenlemesi
+  /duyurular/basin-duyurulari/2026/tasfiye-konusu-fonlardaki-yatirimci-sayisina-iliskin-aciklama
+  /duyurular/basin-duyurulari/2026/tasfiye-suresine-iliskin-basin-duyurusu
+  /duyurular/basin-duyurulari/2026/tasfiyedeki-fonlara-iliskin-ara-odeme-duyurusu
+  /duyurular/basin-duyurulari/2026/turkiye-finansal-okuryazarlik-gunu-programi-video-gosterimi
+  /duyurular/basin-duyurulari/2026/yatirim-fonlarina-iliskin-rehber-duzenleme-surecine-iliskin-aciklama
+  /duyurular/basin-duyurulari/2026/yesil-surdurulebilir-ve-sosyal-sermaye-piyasasi-araclari-rehberi-ve-surdurulebilirlik-baglantili-sermaye-piyasasi-araclari-rehberi-basin-duyurusu
+  /duyurular/basin-duyurulari/2026/ytmden-kaydilestirilmeyen-paylara-iliskin-duyuru
+  /duyurular/basin-duyurulari/2026?s=2
   /istatistikler/aylik-istatistik-bultenleri
-  /sirketler/duyurular-ve-veriler
-  /spk-bultenleri
-  /spk-bultenleri/2025-yili-spk-bultenleri
-  /spk-bultenleri/2026-yili-spk-bultenleri
-  /spk-bultenleri/gecmis-yillara-ait-bultenler
-  https://spk.gov.tr/duyurular
-  https://spk.gov.tr/duyurular/basin-duyurulari/2026
-  https://spk.gov.tr/duyurular/baskanin-konusmalari/2026
-  https://spk.gov.tr/spk-bultenleri
-text:  Sermaye Piyasası Kurulu - Duyurular &times; Hakkımızda Mevzuat SPK Bülteni Duyurular Yatırımcılar Şirketler Kurumlar İstatistikler Yayınlar Sermaye Piyasası Kurulu Capital Markets Board of Türkiye İletişim English Hakkımızda Görevimiz Organizasyon Kurul Başkanı Kurulumuzda Görev Yapmış SPK Başkanları Kurumsal Kimlik Kurul Bütçesi Mali Tablolar Stratejik Plan (2022-2026) Etik Komisyonu İnsan Kaynakları Uluslararası Faaliyetlerimiz Mevzuat SPK Bülteni 2026 Bültenleri 2025 Bültenleri Geçmiş Yıllara Ait Bültenler Bülten Üyelik İdari Yaptırımlar Duyurular ve Konuşmalar Başkan'ın Konuşmaları Basın Duyuruları Yatırımcılar Yatırımcı Bilgilendirme Kitapçıkları Yatırımların Takibi Şikayet Başvurusu N
-=== spk_rss bytes=1396 items=0
-titles: Sermaye Piyasası Kurulu - 404 İçerik Bulunamadı
-text: ﻿ Sermaye Piyasası Kurulu - 404 İçerik Bulunamadı Sayfa Bulunamadı Üzgünüz, aradığınız sayfa bulumadı. 
-=== tcmb_rssmenu bytes=33012 items=0
-titles: TCMB - RSS
-  /wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS
-  /wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/
-  /wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/Basin+Duyurulari
-  /wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/Baskanin+Konusmalari
-  /wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/PPK+Kararlari
-  /wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/Veriler
-  /wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/Yayinlar
-  /wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular
-  /wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Basin
-  /wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Basinla+Iliskiler
-  /wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Baskanin+Konusmalari
-  /wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Canli+Yayin
-  /wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Gorsel+Kutuphane
-  /wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Sosyal+Medya
-  /wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Takvim
-  https://twitter.com/intent/tweet?url=http://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS
-  https://www.linkedin.com/shareArticle?mini=true&url=http://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS
-  javascript:shareNsosyal('http://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS')
-text:  TCMB - RSS Merkez Bankasının temel amacı fiyat istikrarını sağlamaktır. Filter sub sontent Filter sub sontent Banka Hakkında Temel Faaliyetler İstatistikler Araştırma ve Yayınlar Duyurular ve Konuşmalar Banknotlar Banka Hakkında Genel Bakış Kurumsal Yapı Mevzuat Tarihçe Uluslararası İlişkiler Yatırımcı İlişkileri İnsan Kaynakları Eğitim &amp; Akademik TL Simgesi Sıkça Sorulan Sorular Kültürel ve Sanatsal Faaliyetler İletişim Temel Faaliyetler Para Politikası Piyasa İşlemleri Hazine İşlemleri Döviz Kuru Politikası Rezerv Yönetimi Ödeme Sistemleri Ödeme Hizmetleri Banknot Basımı İstatistikler Elektronik Veri Dağıtım Sistemi Veri Yayımlama Takvimi Enflasyon Verileri Ödemeler Dengesi ve İlgili 
-=== tuik_bulten bytes=3692 items=0
+text:  Sermaye Piyasası Kurulu - 2026 &times; Hakkımızda Mevzuat SPK Bülteni Duyurular Yatırımcılar Şirketler Kurumlar İstatistikler Yayınlar Sermaye Piyasası Kurulu Capital Markets Board of Türkiye İletişim English Hakkımızda Görevimiz Organizasyon Kurul Başkanı Kurulumuzda Görev Yapmış SPK Başkanları Kurumsal Kimlik Kurul Bütçesi Mali Tablolar Stratejik Plan (2022-2026) Etik Komisyonu İnsan Kaynakları Uluslararası Faaliyetlerimiz Mevzuat SPK Bülteni 2026 Bültenleri 2025 Bültenleri Geçmiş Yıllara Ait Bültenler Bülten Üyelik İdari Yaptırımlar Duyurular ve Konuşmalar Başkan'ın Konuşmaları Basın Duyuruları Yatırımcılar Yatırımcı Bilgilendirme Kitapçıkları Yatırımların Takibi Şikayet Başvurusu Nereye
+=== tcmb_veri bytes=14514 items=28
 titles: 
-text:  JavaScript Gerekli Bu web sitesini kullanabilmek için tarayıcınızda JavaScript'i etkinleştirmeniz gerekmektedir. JavaScript Required You need to enable JavaScript in your browser to use this website. 
-=== tuik_edevlet bytes=30887 items=0
-titles: Türkiye İstatistik Kurumu Başkanlığı (TÜİK) - TÜİK Haber Bülteni
-  //cdn.e-devlet.gov.tr/themes/ankara/assets/opensearch.xml
-  /rss
-  /tuik-haber-bulteni?lang=en_US
-  https://data.tuik.gov.tr/Bulten/Index?p=Devlet-Hesapları-2025-58117&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Ekonomik-Güven-Endeksi-Eylül-2026-58124&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Girişim-Özelliklerine-Göre-Dış-Ticaret-İstatistikleri-2025-58066&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Girişimlerde-Bilişim-Teknolojileri-Kullanım-Araştırması-2026-58021&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Hayvancılık-İstatistikleri-Haziran-2026-58164&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Hizmet,-Perakende-Ticaret-ve-İnşaat-Güven-Endeksleri-Eylül-2026-58158&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Hizmet-Üretici-Fiyat-Endeksi-Ağustos-2026-58098&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Kültürel-Miras-İstatistikleri-2025-58020&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Kümes-Hayvancılığı-Üretimi-Temmuz-2026-58053&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Mali-Aracı-Kuruluş-İstatistikleri-2025-58131&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Motorlu-Kara-Taşıtları-Ağustos-2026-58052&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Sektör-Bilançoları-2025-58019&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Süt-ve-Süt-Ürünleri-Üretimi-Temmuz-2026-58068&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Tarım-Ürünleri-Üretici-Fiyat-Endeksi-Ağustos-2026-57971&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Tarımsal-Girdi-Fiyat-Endeksi-Temmuz-2026-58084&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Uluslararası-Hizmet-Ticareti-İstatistikleri-2025-58079&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Yurt-Dışı-Üretici-Fiyat-Endeksi-Ağustos-2026-58110&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Yurt-İçi-Üretici-Fiyat-Endeksi-Ağustos-2026-58040&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=Ücretli-Çalışan-İstatistikleri-Temmuz-2026-57952&dil=1
-  https://data.tuik.gov.tr/Bulten/Index?p=İşgücü-İstatistikleri-Ağustos-2026-57987&dil=1
-  https://twitter.com/intent/tweet?url=https%3A%2F%2Fturkiye.gov.tr/tuik-haber-bulteni&text=T%C3%BCrkiye+%C4%B0statistik+Kurumu+Ba%C5%9Fkanl%C4%B1%C4%9F%C4%B1+%28T%C3%9C%C4%B0K%29T%C3%9C%C4%B0K+Haber+B%C3%BClteni&via=ekapi&related=ekapi
-  https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fturkiye.gov.tr/tuik-haber-bulteni
-text:  Türkiye İstatistik Kurumu Başkanlığı (TÜİK) - TÜİK Haber Bülteni E-Devlet'i kullanabilmeniz için Javascript'in etkin olması gerekir. Muhtemelen JavaScript devre dışı veya tarayıcınız JavaScript'i desteklemiyor. İçeriğe Git Ana Sayfa e-Devlet Kapısı Ana Bölümler Hızlı Çözüm Erişilebilirlik Özellikleri Salt Metin Görünümü Daha Belirgin Odaklama Aranan Terim Giriş Yap Ana Sayfa Türkiye İstatistik Kurumu Başkanlığı (TÜİK) TÜİK Haber Bülteni Türkiye İstatistik Kurumu Başkanlığı (TÜİK) TÜİK Haber Bülteni Paylaş Twitter'da Paylaş Facebook'da Paylaş Bu hizmet Türkiye İstatistik Kurumu Başkanlığı (TÜİK) işbirliği ile e-Devlet Kapısı altyapısı üzerinden sunulmaktadır. Yazdır Bu sayfada TÜİK tarafında
-=== tuik_rss bytes=3692 items=0
+  http://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/Veriler
+=== tcmb_yayin bytes=8500 items=17
 titles: 
-text:  JavaScript Gerekli Bu web sitesini kullanabilmek için tarayıcınızda JavaScript'i etkinleştirmeniz gerekmektedir. JavaScript Required You need to enable JavaScript in your browser to use this website. 
-=== tuik_takvim bytes=3692 items=0
-titles: 
-text:  JavaScript Gerekli Bu web sitesini kullanabilmek için tarayıcınızda JavaScript'i etkinleştirmeniz gerekmektedir. JavaScript Required You need to enable JavaScript in your browser to use this website. 
+  http://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/Yayinlar

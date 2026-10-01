@@ -1,0 +1,12 @@
+depth=0 C = TR, ST = \C4\B0stanbul, L = \C3\9Cmraniye, O = Bankac\C4\B1l\C4\B1k D\C3\BCzenleme ve Denetleme Kurumu Ba\C5\9Fkanl\C4\B1\C4\9F\C4\B1, CN = *.bddk.org.tr
+verify error:num=20:unable to get local issuer certificate
+verify return:1
+depth=0 C = TR, ST = \C4\B0stanbul, L = \C3\9Cmraniye, O = Bankac\C4\B1l\C4\B1k D\C3\BCzenleme ve Denetleme Kurumu Ba\C5\9Fkanl\C4\B1\C4\9F\C4\B1, CN = *.bddk.org.tr
+verify error:num=21:unable to verify the first certificate
+verify return:1
+depth=0 C = TR, ST = \C4\B0stanbul, L = \C3\9Cmraniye, O = Bankac\C4\B1l\C4\B1k D\C3\BCzenleme ve Denetleme Kurumu Ba\C5\9Fkanl\C4\B1\C4\9F\C4\B1, CN = *.bddk.org.tr
+verify return:1
+subject=C = TR, ST = \C4\B0stanbul, L = \C3\9Cmraniye, O = Bankac\C4\B1l\C4\B1k D\C3\BCzenleme ve Denetleme Kurumu Ba\C5\9Fkanl\C4\B1\C4\9F\C4\B1, CN = *.bddk.org.tr
+issuer=C = BE, O = GlobalSign nv-sa, CN = GlobalSign RSA OV SSL CA 2018
+Verification error: unable to verify the first certificate
+    Verify return code: 21 (unable to verify the first certificate)
