@@ -763,3 +763,54 @@ main:focus { outline: none; }
   .cal-ev { grid-template-columns: 52px minmax(0, 1fr) auto; grid-template-areas: "t main imp" "k main src"; row-gap: 2px; }
   .cal-t { grid-area: t; } .cal-k { grid-area: k; font-size: var(--fs-2xs); } .cal-main { grid-area: main; } .cal-imp { grid-area: imp; } .cal-src { grid-area: src; }
 }
+
+/* ─── Portföy ─── */
+#pfBody { display: flex; flex-direction: column; gap: var(--s-4); }
+.pf-tools { flex-wrap: wrap; gap: var(--s-2) var(--s-3); }
+.pf-priv { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; font-size: var(--fs-sm); color: var(--text-2); }
+.pf-priv svg { width: 16px; height: 16px; color: var(--text-3); }
+.pf-priv .t3 { color: var(--text-3); font-size: var(--fs-xs); margin-left: 4px; }
+.pf-alerts { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); }
+.pf-kpis { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.pf-mix { padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-3); }
+.pf-mix .card-head { padding: 0; }
+.pf-bar { display: flex; gap: 2px; height: 14px; border-radius: var(--r-sm); overflow: hidden; }
+.pf-bar span { min-width: 3px; }
+.pf-bar span:first-child { border-radius: 4px 0 0 4px; } .pf-bar span:last-child { border-radius: 0 4px 4px 0; }
+.pf-leg { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-4); list-style: none; margin: 0; padding: 0; font-size: var(--fs-xs); color: var(--text-2); }
+.pf-leg i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.pf-leg b { font-family: var(--font-mono); color: var(--text); font-weight: var(--fw-semibold); }
+.pf-tbl { width: 100%; }
+.pf-tbl th[scope="row"] { text-align: left; font-weight: var(--fw-medium); white-space: nowrap; }
+.pf-tbl th[scope="row"] .tag { margin-left: 6px; }
+.pf-tbl td { vertical-align: middle; }
+.pf-note { display: block; font-size: var(--fs-xs); color: var(--text-3); font-weight: var(--fw-regular, 400); max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.pf-w { display: block; font-size: var(--fs-xs); color: var(--text-3); }
+.pf-src { margin-left: 3px; font-size: var(--fs-2xs); color: var(--text-3); cursor: help; }
+.pf-sl span { display: block; white-space: nowrap; }
+.pf-sl small { color: var(--text-3); font-size: var(--fs-2xs); }
+.pf-al { margin-top: 2px; }
+.pf-al.down { color: var(--down); border-color: var(--down); }
+.pf-al.up { color: var(--up); border-color: var(--up); }
+.pf-al.warn { color: var(--warn); border-color: var(--warn-line); }
+tr.pf-stop > * { background: color-mix(in srgb, var(--down) 7%, transparent); }
+tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
+.pf-sig { font-size: var(--fs-xs); color: var(--text-2); }
+.pf-sig > span { display: block; white-space: nowrap; }
+.pf-sig .an-flag { display: inline; }
+.pf-ev { color: var(--text-3); }
+.pf-act { white-space: nowrap; text-align: right; }
+.pf-act .btn-icon { width: 28px; height: 28px; }
+.pf-news { padding-bottom: var(--s-2); }
+.pf-form { padding: var(--s-4); display: flex; flex-direction: column; gap: var(--s-3); }
+.pf-form .card-head { padding: 0; }
+.pf-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--s-3); }
+.pf-fields label { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-xs); color: var(--text-2); font-weight: var(--fw-medium); }
+.pf-fields label small { color: var(--text-3); font-weight: 400; }
+.pf-fields input, .pf-fields select { height: 34px; padding: 0 var(--s-2); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); font: var(--fs-sm) var(--font-mono); }
+.pf-fields input:focus-visible, .pf-fields select:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--accent); }
+.pf-wide { grid-column: span 2; }
+.pf-form-foot { display: flex; align-items: center; justify-content: flex-end; gap: var(--s-2); }
+.pf-err { margin-right: auto; color: var(--down); font-size: var(--fs-sm); }
+@media (max-width: 767px) { .pf-wide { grid-column: 1 / -1; } .pf-tbl { min-width: 860px; } }
+.pf-tbl tbody th, .pf-tbl tbody td { vertical-align: middle; }
