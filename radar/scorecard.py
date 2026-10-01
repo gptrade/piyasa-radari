@@ -39,6 +39,8 @@ def kind(d: dict) -> str:
         return "Düzenleyici (SPK/TCMB)"
     if (d.get("extra") or {}).get("anomaly"):
         return "Habersiz hareket"
+    if (d.get("extra") or {}).get("short_flow"):
+        return "Açığa satış (BIST)"
     if st == "technical":
         return "Teknik olay"
     if st == "report":

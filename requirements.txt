@@ -6,3 +6,4 @@ yfinance>=0.2.40
 pandas>=2.0
 pypdf>=4.0
 pytest>=8.0
+openpyxl>=3.1

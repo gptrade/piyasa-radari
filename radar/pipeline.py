@@ -13,7 +13,7 @@ from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
-from . import anomaly, bb_quotes, calendar_events, scorecard
+from . import anomaly, bb_quotes, bist_data, calendar_events, scorecard
 from .sources import Context, feeds, kap, reports, social, spk, tcmb
 
 log = logging.getLogger("radar")
@@ -355,8 +355,23 @@ def run() -> dict:
         log.exception("EVDS hatası")
         macro = None
         status.append({"name": "TCMB EVDS", "ok": False, "count": 0, "error": str(e)[:200]})
-    try:                                                    # Takvim: makro, vade sonu, bilanço ve temettü tarihleri
-        calendar_events.update(stocks, px)
+    scfg = (settings.get("sources") or {}).get("bist_bulletin") or {}
+    flows = {}
+    if scfg.get("enabled", True) and any(s.market == "BIST" for s in stocks):
+        try:                                                # Borsa İstanbul günlük bülteni: açığa satış
+            flows = bist_data.update_flows(stocks)
+            status.append({"name": "BIST bülteni", "ok": True, "count": len(flows.get("summary") or {})})
+        except Exception as e:
+            log.exception("BIST bülteni hatası")
+            status.append({"name": "BIST bülteni", "ok": False, "count": 0, "error": str(e)[:200]})
+    agm = []
+    if scfg.get("agm", True) and any(s.market == "BIST" for s in stocks):
+        try:
+            agm = bist_data.agm_events(stocks, bist_data.agm_list())
+        except Exception as e:
+            log.warning("Genel kurul listesi alınamadı: %s", e)
+    try:                                                    # Takvim: makro, vade sonu, bilanço, temettü, genel kurul
+        calendar_events.update(stocks, px, extra=agm)
     except Exception as e:
         log.warning("Takvim oluşturulamadı: %s", e)
     try:                                                    # Şirket Geri Alım: güncel / ortalama fiyat için
@@ -389,6 +404,13 @@ def run() -> dict:
                 new.append(it)
                 n_an += 1
         status.append({"name": "Habersiz hareket", "ok": True, "count": n_an})
+
+    # 3c) Açığa satış artışı (BIST bülteni)
+    if flows:
+        for it in bist_data.flow_items(stocks, flows, scfg):
+            if it.id not in seen_ids:
+                seen_ids[it.id] = None
+                new.append(it)
 
     # 3a') Analist not değişiklikleri (Yahoo): kural tabanlı, AI kotası harcamaz
     if acfg.get("enabled", True):
