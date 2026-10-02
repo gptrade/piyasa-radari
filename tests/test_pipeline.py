@@ -20,6 +20,7 @@ def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline.scorecard, "ARCHIVE", tmp_path / "signals.json")
     monkeypatch.setattr(pipeline.scorecard, "SCORE", tmp_path / "scorecard.json")
     monkeypatch.setattr(pipeline.calendar_events, "CAL_FILE", tmp_path / "calendar.json")
+    monkeypatch.setattr(pipeline.research, "STORE", tmp_path / "research.json")
     monkeypatch.setattr(pipeline.bist_data, "update_flows", lambda stocks: {})
     monkeypatch.setattr(pipeline.bist_data, "agm_list", lambda: [])
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
