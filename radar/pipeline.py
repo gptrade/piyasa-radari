@@ -13,7 +13,7 @@ from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
-from . import anomaly, bb_quotes, documents, bist_data, calendar_events, scorecard
+from . import anomaly, bb_quotes, documents, research, bist_data, calendar_events, scorecard
 from .sources import Context, alphavantage, feeds, finnhub, global_macro, kap, marketaux, reports, social, spk, tcmb, tr_official, vendors
 
 log = logging.getLogger("radar")
@@ -36,6 +36,8 @@ COLLECTORS = [
     ("Hazine (haber)", tr_official.collect_hazine),
     ("Fed · ECB · IMF", global_macro.collect_central_banks),
     ("GDELT (dünya basını)", global_macro.collect_gdelt),
+    ("Aracı kurum notları", research.collect_broker_notes),
+    ("Kurum görünümleri", research.collect_outlooks),
     ("SEC EDGAR", feeds.collect_sec),
     ("Google News", feeds.collect_google_news),
     ("Yahoo Finance", feeds.collect_yahoo),
@@ -516,6 +518,15 @@ def run() -> dict:
     except Exception as e:
         log.exception("Karne hatası")
         status.append({"name": "Sinyal karnesi", "ok": False, "count": 0, "error": str(e)[:200]})
+
+    # 5a') Araştırma: aracı kurum notları, kurum görünümleri, günlük sentez (research.json)
+    rcfg = (settings.get("sources") or {}).get("research") or {}
+    if rcfg.get("enabled", True):
+        try:
+            research.update(items, px, analyzer, stocks, rcfg)
+        except Exception as e:
+            log.exception("Araştırma hatası")
+            status.append({"name": "Araştırma sentezi", "ok": False, "count": 0, "error": str(e)[:200]})
 
     FEED.write_text(json.dumps({
         "generated": iso(now_utc()),

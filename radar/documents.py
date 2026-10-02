@@ -32,6 +32,7 @@ KAP_KINDS = [
 # Genel özel durum açıklamalarında sunum ekini yakalamak için (konu "Özel Durum Açıklaması (Genel)" olabiliyor)
 PRESENTATION = re.compile(r"sunum|presentation|analist toplant|investor day|webcast", re.I)
 SEC_FORMS = {"8-K", "6-K"}
+SEC_PERIODIC = {"10-Q": "10-Q çeyreklik rapor", "10-K": "10-K yıllık rapor"}
 MAX_PDF_BYTES = 20 * 1024 * 1024
 MAX_PAGES = 40
 MAX_CHARS = 40000
@@ -54,6 +55,8 @@ def doc_kind(it: Item) -> str | None:
         return None
     if it.source == "SEC EDGAR" and ex.get("form") in SEC_FORMS:
         return f"{ex['form']} eki (EX-99)"
+    if it.source == "SEC EDGAR" and ex.get("form") in SEC_PERIODIC:
+        return SEC_PERIODIC[ex["form"]]
     return None
 
 
@@ -140,15 +143,55 @@ def fetch_kap(it: Item) -> tuple[str, list[dict]] | None:
     return (fit(text, INCOME), files) if len(text) > 300 else None
 
 
+# 10-Q: Item 2 (MD&A) → Item 3; 10-K: Item 7 (MD&A) → Item 7A/8. Risk faktörleri: Item 1A → Item 2 / 1B.
+SECTIONS = {
+    "10-Q": [(r"Item\s*2\.?\s*Management.{0,3}s\s+Discussion", r"Item\s*3\.?\s*Quantitative|Item\s*4\.?\s*Controls"),
+             (r"Item\s*1A\.?\s*Risk\s+Factors", r"Item\s*2\.?\s*Unregistered|Item\s*5\.?|Item\s*6\.?\s*Exhibits")],
+    "10-K": [(r"Item\s*7\.?\s*Management.{0,3}s\s+Discussion", r"Item\s*7A\.?|Item\s*8\.?\s*Financial"),
+             (r"Item\s*1A\.?\s*Risk\s+Factors", r"Item\s*1B\.?|Item\s*1C\.?|Item\s*2\.?\s*Properties")],
+}
+
+
+def section(text: str, start: str, end: str, limit: int) -> str:
+    """Başlığın SON geçtiği yer (ilk geçişler içindekiler tablosudur) ile bitiş başlığı arası."""
+    starts = [m.start() for m in re.finditer(start, text, re.I)]
+    for st in reversed(starts):
+        m = re.search(end, text[st + 200:], re.I)
+        body = text[st:st + 200 + m.start()] if m else text[st:st + limit]
+        if len(body) > 1500:                     # içindekiler satırı değil, asıl bölüm
+            return body[:limit]
+    return ""
+
+
+def periodic_text(text: str, form: str) -> str:
+    mdna, risk = SECTIONS[form]
+    a = section(text, *mdna, limit=30000)
+    b = section(text, *risk, limit=8000)
+    parts = ([f"[YÖNETİMİN DEĞERLENDİRMESİ (MD&A)]\n{a}"] if a else []) + ([f"[RİSK FAKTÖRLERİ]\n{b}"] if b else [])
+    return "\n\n".join(parts)
+
+
 def fetch_sec(it: Item) -> tuple[str, list[dict]] | None:
     base = it.url.rsplit("/", 1)[0]
     r = http.get(f"{base}/index.json", headers={"User-Agent": http.SEC_UA}, timeout=30, retries=1)
     if r is None:
         return None
     try:
-        names = [x["name"] for x in r.json()["directory"]["item"]]
+        rows = r.json()["directory"]["item"]
+        names = [x["name"] for x in rows]
     except (ValueError, KeyError, TypeError):
         return None
+    form = it.extra.get("form")
+    if form in SEC_PERIODIC:
+        htm = [x for x in rows if x["name"].lower().endswith(".htm") and not re.search(r"index|^R\d|ex-?\d", x["name"], re.I)]
+        if not htm:
+            return None
+        main = max(htm, key=lambda x: int(x.get("size") or 0))["name"]
+        f = http.get(f"{base}/{main}", headers={"User-Agent": http.SEC_UA}, timeout=90, retries=1)
+        if f is None:
+            return None
+        text = periodic_text(html_text(f.text), form)
+        return (text, [{"type": form, "name": main}]) if len(text) > 1500 else None
     ex = [n for n in names if re.search(r"ex-?99", n, re.I) and n.lower().endswith((".htm", ".html", ".txt"))][:2]
     parts, files = [], []
     for n in ex:

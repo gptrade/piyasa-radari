@@ -105,16 +105,17 @@
   async function fetchAll() {
     const feed = await getJSON("data/feed.json");
     if (!feed) throw new Error("data/feed.json okunamadı");
-    const [digest, macro, card, flows] = await Promise.all([getJSON("data/digest.json"), getJSON("data/macro.json"), getJSON("data/scorecard.json"), getJSON("data/bist_flows.json")]);
+    const [digest, macro, card, flows, research] = await Promise.all([getJSON("data/digest.json"), getJSON("data/macro.json"), getJSON("data/scorecard.json"), getJSON("data/bist_flows.json"), getJSON("data/research.json")]);
     const syms = new Set([...(feed.watchlist || []).map(w => w.symbol), ...feed.items.map(i => i.tickers?.[0]).filter(Boolean)]);
     const prices = {};
     await Promise.all([...syms].map(async s => { const p = await getJSON(`data/prices/${s}.json`); if (p) prices[s] = p; }));
-    return { feed, digest, macro, prices, card, flows };
+    return { feed, digest, macro, prices, card, flows, research };
   }
   async function load() { apply(await fetchAll()); }
-  function apply({ feed, digest, macro, prices, card, flows }) {
+  function apply({ feed, digest, macro, prices, card, flows, research }) {
     state.pending = null; $("#newPill").hidden = true;
-    Object.assign(state, { feed, digest, macro, prices, card: card || null, flows: flows || null, error: null, loading: false });
+    Object.assign(state, { feed, digest, macro, prices, card: card || null, flows: flows || null, research: research || null, error: null, loading: false });
+    window.radarResearch = { data: research || null, prices };
     state.reasons = computeReasons(feed.items);
     sh.setUpdated("sinyal", feed.generated, { label: "Son tarama", staleMin: 45 });
     sh.setHealth(feed);
@@ -960,6 +961,8 @@
     if (vs) wrap.append(vs);
     const an = analystSection(sym, p);
     if (an) wrap.append(an);
+    const bn = brokerSection(sym, p);
+    if (bn) wrap.append(bn);
     const ss = shortSection(sym);
     if (ss) wrap.append(ss);
     const bb = p?.market === "BIST" && window.radarBB?.forTicker(sym);
@@ -1016,6 +1019,27 @@
       ${v.loss ? `<p class="tp-sub">Son 12 ayda net zarar: F/K hesaplanmaz.</p>` : ""}
       ${rows ? `<table class="tx val-tx"><thead><tr><th>Ölçüt</th><th class="num">${esc(sym)}</th>${peers.length ? `<th class="num" data-tip="İzleme listesinde aynı alt sektördeki (Yahoo sınıflaması) hisselerin medyanı: ${esc(peers.map(([s]) => s).join(", "))}">Liste emsali</th>` : ""}</tr></thead><tbody>${rows}</tbody></table>` : `<p class="tp-empty">Yahoo'da bu hisse için değerleme verisi yok.</p>`}
       <p class="tp-more">Kaynak: <a href="https://finance.yahoo.com/quote/${encodeURIComponent(p.yahoo || sym)}/key-statistics/" target="_blank" rel="noopener">Yahoo Finance</a>${v.updated ? ` · ${fmt.ago(v.updated)} güncellendi` : ""}${p.market === "BIST" ? " · BIST'te enflasyon muhasebesi (TMS 29) nedeniyle çarpanlar sapabilir" : ""}</p>`;
+    return sec;
+  }
+  // Aracı kurum notları (haber başlıklarından çıkarılan: kurum, tavsiye, hedef fiyat) · data/research.json
+  const RAT_CLS = { AL: "up", SAT: "down", TUT: "flat" };
+  const ACT_TR = { up: "▲ yükseltti", down: "▼ düşürdü", init: "kapsama", keep: "korudu", set: "belirledi" };
+  function brokerSection(sym, p) {
+    const R = state.research;
+    const notes = (R?.notes || []).filter(n => n.t === sym && n.src !== "Yahoo").slice(0, 6);
+    const c = R?.consensus?.[sym];
+    if (!notes.length) return null;
+    const sec = document.createElement("div");
+    sec.className = "tp-sec";
+    const cur = p?.currency === "TRY" ? "₺" : p?.currency === "USD" ? "$" : "";
+    const up = c?.median_tp && p?.last ? (c.median_tp / p.last - 1) * 100 : null;
+    sec.innerHTML = `<p class="d-sub">Aracı kurum notları <span class="t3">· son 120 gün</span></p>
+      ${c ? `<p class="tp-sub">${fmt.int(c.n)} kurum · <span class="up">${c.dist.AL} AL</span> · ${c.dist.TUT} TUT · <span class="down">${c.dist.SAT} SAT</span>${c.median_tp ? ` · medyan hedef <b>${fmt.num(c.median_tp, 2)} ${cur}</b>${up != null ? ` (<span class="${dirCls(up > 0 ? 1 : -1)}">${fmt.pct(up)}</span>)` : ""}` : ""}</p>` : ""}
+      <table class="tx an-tx"><thead><tr><th>Tarih</th><th>Kurum</th><th>Tavsiye</th><th class="num">Hedef</th></tr></thead><tbody>${notes.map(n => `
+        <tr><td>${fmt.date(n.ts)}</td><td>${n.url ? `<a href="${esc(n.url)}" target="_blank" rel="noopener" data-tip="${esc(n.title)}">${esc(n.broker)}</a>` : esc(n.broker)}</td>
+        <td><span class="${RAT_CLS[n.rating] || ""}" data-tip="${esc(ACT_TR[n.action] || "")}">${esc(n.rating || "—")}</span></td>
+        <td class="num">${n.tp ? fmt.num(n.tp, 2) : "—"}${n.prev && n.tp && n.prev !== n.tp ? ` <span class="${dirCls(n.tp > n.prev ? 1 : -1)}" data-tip="önceki ${fmt.num(n.prev, 2)}">${n.tp > n.prev ? "▲" : "▼"}</span>` : ""}</td></tr>`).join("")}</tbody></table>
+      <p class="tp-more">Kaynak: kamuya duyurulan not başlıkları (AA, Bloomberg HT, Foreks…), raporların kendisi değil · <a href="#arastirma">Araştırma sekmesi</a></p>`;
     return sec;
   }
   // Analist görüşü: tavsiye dağılımı, hedef fiyat, son not değişiklikleri (Yahoo Finance)

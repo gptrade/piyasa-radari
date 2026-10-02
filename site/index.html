@@ -8,8 +8,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="tokens.css?v=20261002c">
-<link rel="stylesheet" href="style.css?v=20261002c">
+<link rel="stylesheet" href="tokens.css?v=20261002d">
+<link rel="stylesheet" href="style.css?v=20261002d">
 <script>
   // Kayıtlı tema ve kenar çubuğu durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
   (function () {
@@ -45,6 +45,10 @@
         <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="10" cy="10" r="2" fill="currentColor"/><path d="M10 10l4.5-4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
         <span>Sinyal Takip</span>
         <span class="badge" id="sigBadge" hidden></span>
+      </a>
+      <a class="nav-item" href="#arastirma" data-route="arastirma">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3.5h7l3 3v10H5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 9.5h4.5M8 12.5h4.5M12 3.5v3h3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span>Araştırma</span>
       </a>
       <a class="nav-item" href="#portfoy" data-route="portfoy">
         <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="6" width="14" height="10.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7.5 6V4.5h5V6M3 10.5h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -217,6 +221,21 @@
         <div id="calBody"></div>
       </section>
 
+      <!-- ─────────── Araştırma (veri: data/research.json) ─────────── -->
+      <section class="view" id="view-arastirma" aria-labelledby="pageTitle" hidden>
+        <div class="toolbar">
+          <div class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input id="resQ" type="search" placeholder="Hisse ya da kurum ara…" autocomplete="off" aria-label="Notlarda ara">
+          </div>
+          <div class="seg" role="radiogroup" aria-label="Kapsam" id="resScope">
+            <button type="button" role="radio" data-s="watch" aria-checked="true">İzleme listesi</button>
+            <button type="button" role="radio" data-s="all" aria-checked="false">Tüm notlar</button>
+          </div>
+        </div>
+        <div id="resBody"></div>
+      </section>
+
       <!-- ─────────── Portföy (yalnız bu tarayıcıda saklanır) ─────────── -->
       <section class="view" id="view-portfoy" aria-labelledby="pageTitle" hidden>
         <div class="toolbar pf-tools">
@@ -258,11 +277,12 @@
   <div class="sp-body" id="spBody"></div>
 </aside>
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="shell.js?v=20261002c"></script>
-<script src="app.js?v=20261002c"></script>
-<script src="calendar.js?v=20261002c"></script>
-<script src="portfolio.js?v=20261002c"></script>
-<script src="buybacks.js?v=20261002c"
+<script src="shell.js?v=20261002d"></script>
+<script src="app.js?v=20261002d"></script>
+<script src="calendar.js?v=20261002d"></script>
+<script src="portfolio.js?v=20261002d"></script>
+<script src="research.js?v=20261002d"></script>
+<script src="buybacks.js?v=20261002d"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>
