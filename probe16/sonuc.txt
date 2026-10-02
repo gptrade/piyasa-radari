@@ -1,0 +1,141 @@
+== "hedef fiyatını" when:2d → 37
+== "hedef fiyatını" when:7d → 59
+    --  StoneX, Synopsys hissesi için hedef fiyatını korudu - Investing.com Türkiye | None
+    --  Gülermak için hedef fiyat revizyonu: Tavsiye “endeks üstü getiri” - Paratic Haber | None
+    --  TD Cowen, SpaceX için hedef fiyatını belirledi - Foreks.com | None
+    --  Morgan Stanley, Apple hisse hedef fiyatını düşürdü - Investing.com Türkiye | None
+    --  Morgan Stanley, Apple hisseleri için hedef fiyatını düşürdü - Foreks.com | None
+    --  Stifel, Fox Factory hissesi için hedef fiyatını korudu - Investing.com Türkiye | None
+    --  BNP Paribas Exane, Nike’ın hedef fiyatını düşürdü - Investing.com Türkiye | None
+    --  BMO, Zimmer Biomet hissesi için hedef fiyatını korudu - Investing.com Türkiye | None
+    --  Morgan Stanley, McDonald’s hisse hedef fiyatını 297 dolara düşürdü - Investing.com Türkiye | None
+    --  Stifel, geçiş endişeleriyle MongoDB’nin hedef fiyatını düşürdü - Investing.com Türkiye | None
+    --  BTIG, Nike’ın hedef fiyatını zayıf görünüm nedeniyle 50 dolara düşürdü - Investing.com Türkiye | None
+    --  TD Cowen, Dell hisse hedef fiyatını yapay zeka sunucu siparişleriyle 550 dolara yükseltti - Investing.com Türkiye | None
+    --  Telsey, Nike hisse hedef fiyatını düşürdü - Investing.com Türkiye | None
+    --  RBC Capital, uniQure hisse hedef fiyatını düşürdü - Investing.com Türkiye | None
+    --  Morgan Stanley Legrand’ın hedef fiyatını yükseltti, büyüme beklentisiyle - Investing.com Türkiye | None
+    --  Baird, Micron hissesi için hedef fiyatını korudu - Investing.com Türkiye | None
+    --  Stifel, Nike’ın hedef fiyatını düşürdü - Investing.com Türkiye | None
+    --  UBS, Micron hissesi için hedef fiyatını korudu - Investing.com Türkiye | None
+    --  Citizens, Quince Therapeutics hissesi için hedef fiyatını korudu - Investing.com Türkiye | None
+    --  Mizuho, fiyatlandırma değişiklikleri sonrası Fair Isaac hissesi için hedef fiyatını korudu - Investing.com Türkiye | None
+    --  Bernstein, kaldıraç endişeleriyle ConAgra’nın hedef fiyatını düşürdü - Investing.com Türkiye | None
+    --  Scotiabank, CMS Energy hissesi için hedef fiyatını korudu - Investing.com Türkiye | None
+    --  Bernstein, Nike’ın hedef fiyatını kötüleşen görünüm nedeniyle düşürdü - Investing.com Türkiye | None
+    --  Deutsche Bank, Micron hissesi için hedef fiyatını korudu - Investing.com Türkiye | None
+    --  Citizens, Sagimet Biosciences hisse hedef fiyatını düşürdü - Investing.com Türkiye | None
+== site:foreks.com "HİSSE DEĞERLENDİRMESİ" when:2d → 1
+== site:foreks.com "HİSSE DEĞERLENDİRMESİ" when:7d → 2
+    --  HİSSE DEĞERLENDİRMESİ-Ziraat Yatırım, GWIND-Galata Wind… - Foreks.com | None
+    --  HİSSE DEĞERLENDİRMESİ- Gedik Yatırım, yatırım tavsiyesini DOAS için yükseltti, TOASO ve FROTO için sürdürdü - Foreks.com | None
+== "tavsiyesini" Yatırım hisse when:2d → 23
+== "tavsiyesini" Yatırım hisse when:7d → 48
+    --  Stifel, Dyne Therapeutics için hisse tavsiyesini korudu - Investing.com Türkiye | None
+    --  Cantor Fitzgerald, Netstreit hissesi için Overweight tavsiyesini korudu - Investing.com Türkiye | None
+    --  StoneX, Strategy hissesi için Al tavsiyesini yineledi - Investing.com Türkiye | None
+    --  UBS, Dave Inc hissesi için güçlü görünüm nedeniyle tavsiyesini yineledi - Investing.com Türkiye | None
+    --  Bernstein, Adidas hissesi için tavsiyesini ürün gücüne dayanarak korudu - Investing.com Türkiye | None
+    --  Stifel, ON Semiconductor hissesi için Tut tavsiyesini korudu - Investing.com Türkiye | None
+    --  Evercore ISI, MongoDB hissesi için tavsiyesini korudu - Investing.com Türkiye | None
+    --  Stifel, Whirlpool hissesi için Tut tavsiyesini korudu - Investing.com Türkiye | None
+    --  Needham, Meta rekabeti risklerini gerekçe göstererek Apple hissesi için Tut tavsiyesini korudu - Investing.com Türkiye | None
+    --  UBS, Helen of Troy hissesi için tavsiyesini yineledi - Investing.com Türkiye | None
+    --  Citizens, portföy satışı sonrası NHP hisse tavsiyesini yineledi - Investing.com Türkiye | None
+    --  Cantor Fitzgerald, yapay zeka büyümesi nedeniyle MongoDB hisse tavsiyesini yineledi - Investing.com Türkiye | None
+    --  BofA, Royal Caribbean hissesi için tavsiyesini yükseltti - Investing.com Türkiye | None
+    --  Jefferies Nike hissesi için Al tavsiyesini tekrarladı - Investing.com Türkiye | None
+    --  Raymond James, hepatit delta verileri sonrası Vir Biotechnology hisse tavsiyesini korudu - Investing.com Türkiye | None
+    --  StoneX, Microsoft hissesi için Alım tavsiyesini korudu - Investing.com Türkiye | None
+    --  Truist, Oklo hissesi için Tut tavsiyesini korudu - Investing.com Türkiye | None
+    --  Pagaya hissesi StoneX’te al tavsiyesini koruyor - Investing.com Türkiye | None
+    --  B.Riley, Ooma hissesi için Al tavsiyesini yineledi - Investing.com Türkiye | None
+    --  Morgan Stanley, NetEase için hisse tavsiyesini yineledi - Investing.com Türkiye | None
+    --  Stifel, ServiceTitan hissesi için Al tavsiyesini yineledi - Investing.com Türkiye | None
+    --  UBS, Carnival hissesi için Alım tavsiyesini yineledi - Investing.com Türkiye | None
+    --  TD Cowen, Accenture hissesi için Tut tavsiyesini tekrarladı - Investing.com Türkiye | None
+    --  Jefferies, Carvana hissesi için al tavsiyesini yineledi - Investing.com Türkiye | None
+    --  Evercore ISI, üyelik trendleri nedeniyle Costco hisse tavsiyesini korudu - Investing.com Türkiye | None
+== "hedef fiyat" yatırım hisse when:2d → 33
+== "hedef fiyat" yatırım hisse when:7d → 59
+    --  Finansal Sohbet Botları: Yatırım Araştırmasında Yapay Zekâyı Nasıl Kullanmalı? - Investing.com Türkiye | None
+    --  Portföyler için önerilen 30 hisse - Para Dergi | None
+    --  BIST Otomotiv Hisselerinde Hedef Fiyat ve Getiriler - borsagundem.com.tr | None
+    --  TURSG, ANSGR ve AKGRT için hedef fiyatlar açıklandı; Aracı kurum beklentileri güncelledi. - ekonomim.com | None
+    --  ABD Hisseleri Nasıl Değerlendirilir? Eylül 2026 İçin Küresel Bir Seçki ve Analiz Rehberi - Investing.com Türkiye | None
+    --  Model portföy güncellendi: MAVI ve PGSUS çıkarıldı - Paratic Haber | None
+    --  Aselsan (ASELS) Hedef Fiyat: 15 Kurumun Beklentisi Güncellendi - Finans Hattı | None
+    --  HSBC, ABD’li büyük bankalarda hedef fiyatları yükseltti - İstanbul Ticaret Gazetesi | None
+    --  Ahlatcı Yatırım model portföyünü altı hisseye indirdi - ekotürk | None
+    --  MAVI ve PGSUS model portföyden çıkarıldı, ASTOR tavsiyesi TUT’a çekildi - hibya.com | None
+    --  Bulls Yatırım'dan Dev Satış: ISCTR, ASELS, TUPRS Hisseleri Elden Çıktı - Finans Hattı | None
+    --  EREGL Hissesi: Hedef Fiyatlar Ve Teknik Analiz Güncellemesi - Finans Hattı | None
+    --  Tüpraş (TUPRS) Hisselerinde İki Kurumdan Yüklü Alım - Finans Hattı | None
+    --  ASELS ve FROTO dahil 6 hisse için hedef fiyat açıklandı - Rota Borsa | None
+    --  İş Yatırım Aksa Enerji'yi model portföyüne ekledi - borsamatik.com.tr | None
+    --  ASELS, TUPRS, FROTO ve DOAS dahil 6 hisse için hedef fiyat açıklandı - Rota Borsa | None
+    --  Yapı Kredi Yatırım’dan Otokar için 780 TL hedef fiyat - borsamatik.com.tr | None
+    --  Aselsan (ASELS) hisse hedef fiyat 2027! Tam 15 aracı kurum açıkladı - Rota Borsa | None
+    --  AKSEN İş Yatırım’ın Model Portföyüne Girdi: Hedef Fiyat Kaç TL? - paraajansi.com.tr | None
+    --  2 hisse için hedef fiyat açıklandı - Rota Borsa | None
+    --  Tüpraş için hedef fiyat verdi: “Endekse paralel getiri” - borsamatik.com.tr | None
+    --  Deniz Yatırım PETKM için 21 TL'lik Hedef Fiyat Açıkladı - paraajansi.com.tr | None
+    --  Kuveyt Türk Yatırım EKGYO hedef fiyatını değiştirmedi - borsamatik.com.tr | None
+    --  Yapı Kredi Yatırım Otokar İçin Hedef Fiyatını Açıkladı - Paranın Yönü | None
+    --  Ziraat Yatırım üzerinden en fazla alım satım yapılan hisseler (01.10.2026) - Rota Borsa | None
+== hedef fiyat AL tavsiyesi when:2d → 59
+== hedef fiyat AL tavsiyesi when:7d → 55
+    --  HSBC, ABD'nin büyük banka hisselerine ilişkin hedef fiyatlarını yükseltti - Foreks.com | None
+    --  Morgan Stanley, Micron hissesi için hedef fiyatı 1.200 dolar - Investing.com Türkiye | None
+    --  Gülermak için hedef fiyat revizyonu: Tavsiye “endeks üstü getiri” - Paratic Haber | None
+    --  Borsada 6 büyük ABD bankası için yeni hedef fiyatlar haberi - Borsanın Gündemi | None
+    --  HSBC, ABD’li büyük bankalarda hedef fiyatları yükseltti - İstanbul Ticaret Gazetesi | None
+    --  UBS, Liberty Energy hissesi için hedef fiyatı düşürdü - Investing.com Türkiye | None
+    --  BIST Otomotiv Hisselerinde Hedef Fiyat ve Getiriler - borsagundem.com.tr | None
+    --  MAVI ve PGSUS model portföyden çıkarıldı, ASTOR tavsiyesi TUT’a çekildi - hibya.com | None
+    --  Ahlatcı Yatırım model portföyünü altı hisseye indirdi - ekotürk | None
+    --  SpaceX hissesi: Analistler hesaplama kiralamasını bir sonraki büyük gelir sürücüsü olarak görüyor - Invezz | None
+    --  Model portföy güncellendi: MAVI ve PGSUS çıkarıldı - Paratic Haber | None
+    --  Needham, Shattuck Labs için hedef fiyatı yükseltti - Investing.com Türkiye | None
+    --  Truist, Riskified hissesi için hedef fiyatı büyüme görünümüyle 9 dolara yükseltti - Investing.com Türkiye | None
+    --  Micron hissesi için Al tavsiyesi güçlü sonuçlar sonrası yinelendi - Investing.com Türkiye | None
+    --  Hive Digital hissesine yapay zeka dönüşümü ile al tavsiyesi - Investing.com Türkiye | None
+    --  Freedom Capital, CoreWeave için 151 dolar hedefle Al tavsiyesini yineledi - Investing.com Türkiye | None
+    --  HIVE Digital Technologies hissesi bugün neden yükseliyor? - Investing.com Türkiye | None
+    --  Terawulf hissesi bugün neden düşüyor? - Investing.com Türkiye | None
+    --  UBS, Amneal Pharmaceuticals için Al tavsiyesini korudu - Investing.com Türkiye | None
+    --  Goldman Sachs, Adeptus Biotechnologies hissesine al önerisi verdi - Investing.com Türkiye | None
+    --  Rocket Lab hisseleri Synspective sözleşmesiyle yükseldi: Citi neden %50 artış görüyor - Invezz | None
+    --  ASELS ve FROTO dahil 6 hisse için hedef fiyat açıklandı - Rota Borsa | None
+    --  2 hisse için hedef fiyat açıklandı - Rota Borsa | None
+    --  ASELS, TUPRS, FROTO ve DOAS dahil 6 hisse için hedef fiyat açıklandı - Rota Borsa | None
+    --  Yapı Kredi Yatırım’dan Otokar için 780 TL hedef fiyat - borsamatik.com.tr | None
+== "model portföy" when:2d → 20
+== "model portföy" when:7d → 39
+    --  Model portföy güncellendi: MAVI ve PGSUS çıkarıldı - Paratic Haber | None
+    --  KAP *** ZİRAAT PORTFÖY BIST KATILIM 100 ENDEKSİ MODEL PORTFÖY HİSSE SENEDİ YOĞUN BORSA YATIRIM FONU *** ZPY *** Fonun Takip Ettiği - yenisafak.com | None
+    --  SPK’dan fahiş kazançlar için yeni adım: İade hesapları açıldı! - Uzmanpara | None
+    --  KAP *** PARDUS PORTFÖY MODEL PORTFÖY HİSSE SENEDİ SERBEST FON (HİSSE SENEDİ YOĞUN FON) *** PA1 *** Portföy Dağılım Raporu - GZT | None
+    --  MAVI ve PGSUS model portföyden çıkarıldı, ASTOR tavsiyesi TUT’a çekildi - hibya.com | None
+    --  KAP *** AK PORTFÖY BIST 100 ENDEKSİ MODEL PORTFÖY HİSSE SENEDİ YOĞUN BORSA YATIRIM FONU *** AKP *** Özel Durum Açıklaması (Genel) - yenisafak.com | None
+    --  KAP *** OYAK PORTFÖY KAR PAYI ÖDEYEN BİRİNCİ SERBEST (TL) FON *** OPO *** Genel Açıklama - yenisafak.com | None
+    --  KAP *** BERA HOLDİNG A.Ş. *** BERA *** Payların Geri Alınmasına İlişkin Bildirim - yenisafak.com | None
+    --  KAP *** AKFEN GAYRİMENKUL YATIRIM ORTAKLIĞI A.Ş. *** AKFGY *** Payların Geri Alınmasına İlişkin Bildirim - yenisafak.com | None
+    --  KAP *** İSTANBUL TAKAS VE SAKLAMA BANKASI A.Ş. *** KBORU *** Temerrüt İşlemi - yenisafak.com | None
+    --  KAP *** ARMADA GIDA TİCARET SANAYİ A.Ş. *** ARMGD *** Payların Geri Alınmasına İlişkin Bildirim - yenisafak.com | None
+    --  KAP *** PEGASUS HAVA TAŞIMACILIĞI A.Ş. *** PGSUS *** Şirket Genel Bilgi Formu - yenisafak.com | None
+    --  KAP *** VESTEL ELEKTRONİK SANAYİ VE TİCARET A.Ş. *** VESTL *** Kredi Derecelendirmesi - yenisafak.com | None
+    --  KAP *** MNG FAKTORİNG A.Ş. *** MNGFA *** Pay Dışında Sermaye Piyasası Aracı İşlemlerine İlişkin Bildirim (Faiz İçeren) - yenisafak.com | None
+    --  KAP *** KUZUGRUP GAYRİMENKUL YATIRIM ORTAKLIĞI A.Ş. *** KZGYO *** Payların Geri Alınmasına İlişkin Bildirim - yenisafak.com | None
+    --  KAP *** EKOS TEKNOLOJİ VE ELEKTRİK A.Ş. *** EKOS *** Payların Geri Alınmasına İlişkin Bildirim - yenisafak.com | None
+    --  KAP *** REEDER TEKNOLOJİ SANAYİ VE TİCARET A.Ş. *** REEDR *** Payların Geri Alınmasına İlişkin Bildirim - yenisafak.com | None
+    --  KAP *** TATLIPINAR ENERJİ ÜRETİM A.Ş. *** TATEN *** Payların Geri Alınmasına İlişkin Bildirim - yenisafak.com | None
+    --  KAP *** KONYA KAĞIT SANAYİ VE TİCARET A.Ş. *** KONKA *** Payların Geri Alınmasına İlişkin Bildirim - yenisafak.com | None
+    --  KAP *** İNTETRA TEKNOLOJİ VE BİLİŞİM HİZMETLERİ A.Ş. *** INTET *** Özel Durum Açıklaması (Genel) - yenisafak.com | None
+    --  KAP *** ŞEKER YATIRIM MENKUL DEĞERLER A.Ş. *** SKY,SKYMD *** Şirket Genel Bilgi Formu - yenisafak.com | None
+    --  KAP *** MONDİ TURKEY OLUKLU MUKAVVA KAĞIT VE AMBALAJ SANAYİ A.Ş. *** MNDTR *** Birleşme İşlemlerine İlişkin Bildirim - yenisafak.com | None
+    --  FONLARA KAFA TUTAN NK MODEL PORTFÖY HAFTALIK ÇALIŞMASI - youtu.be | None
+    --  Model Portföy / ICBC Yatırım – (30.09.2026) - Para & Borsa | None
+    --  Model Portföy Önerileri / Deniz Yatırım – (30.09.2026) - Para & Borsa | None
+== llms-analysis.txt 30 []
+== llms-news.txt 50 []
