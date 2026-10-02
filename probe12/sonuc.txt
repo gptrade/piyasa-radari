@@ -1,0 +1,111 @@
+######## robots.txt
+== arastirma.isyatirim.com.tr 200 | User-agent: * ; Disallow: /wp-content/uploads/wc-logs/ ; Disallow: /wp-content/uploads/woocommerce_transient_files/ ; Disallow: /wp-content/uploads/woocommerce_uploads/ ; Disallow: /*?add-to-cart= ; Disallow: /*?*add-to-cart= ; Disallow: /wp-admin/ ; Allow: /wp-admin/admin-ajax.php ;  ; # START YOAST BLOCK ; # --------------------------- ; User-agent: * ; Disallow: ;  ; Sitemap: https://arastirma.isyatirim.com.tr/sitemap_index.xml ; # --------------------------- ; # END YOAST BLOCK
+== www.isyatirim.com.tr 200 | User-agent: * ;  ; Disallow: /_layouts/ ; Disallow: /_vti_bin/ ; Disallow: /_catalogs/ ; Disallow: /uyelik-islemleri ; Disallow: /membership-procedures ; Disallow: /arama-sonuclari ; Disallow: /search-results ; Disallow: /_layouts/15/Authenticate.aspx ;  ;  ;  ; Sitemap: https://www.isyatirim.com.tr/sitemap.xml ; 
+== www.garantibbvayatirim.com.tr 200 | # Protocol for Google Crawler ; User-agent: Googlebot ; Allow: / ;  ; # Protocol for other Allowed Crawlers ; User-agent: Bingbot ; User-agent: My Nutch Spider ; User-agent: Slurp ; User-agent: YandexBot ; User-agent: YandexMobileBot ; User-agent: DuckDuckBot ; User-agent: Applebot ; Allow: / ; crawl-delay: 5 ;  ; # Protocol for Huawei Petal Search ; User-agent: PetalBot ; Allow: / ; crawl-delay: 10 ;  ; # Protocols for Unwanted Bots ; User-agent: MJ12bot ; User-agent: Barkrowler ; User-agent: DotBot ; User-agent: tren
+== www.ykyatirim.com.tr 200 | User-agent: * ; Allow: / ; Disallow: /getmedia/*.pdf$ ; Disallow: /media/*.pdf$ ; Sitemap: https://www.ykyatirim.com.tr/sitemap.xml
+== www.foreks.com 200 | User-agent: * ; Allow: / ; Allow: /ai/ ; Allow: /llms.txt ; Allow: /llms-full.txt ; Allow: /llms-news.txt ; Allow: /llms-market.txt ; Allow: /llms-symbol.txt ; Allow: /llms-analysis.txt ; Disallow: /api/ ; Disallow: /token ; Disallow: /definitions ; Disallow: *?sector= ; Disallow: /analizler/teknik-analiz/* ; Disallow: /haberler/ekonomik-takvim/detay/* ;  ; User-agent: Googlebot-News ; Allow: /haber/ ; Allow: /haberler/ ;  ; # ─── AI / LLM crawlers ─────────────────────────────────────────────────────── ; # Access is explicitly granted 
+== am.jpmorgan.com 200 | User-agent: gsa-crawler ; Disallow:  ;  ; User-agent: * ; Allow: /*/*/asset-management/ ; Disallow: /asset-management/ ; Disallow: /*/asset-management/ ; Disallow: /*/*/asset-management/*print.asp* ; Disallow: /*/*/asset-management/*save.asp* ; Disallow: /*/*/asset-management/*?q=* ; Disallow: /*/*/asset-management/*termsofuse.html ; Disallow: /cn/zh/asset-management/ ; Disallow: /ie/en/asset-management/per/ ; Disallow: /us/en/asset-management/per/ ; Disallow: /hk/en/asset-management/npsa/ ; Disallow: */exclud
+== cdn.jpmorganfunds.com 200 | User-agent: * ; Disallow: /content/dam/jpm-am-aem/emea/lu/en/noindex/ ; Disallow: /content/dam/jpm-am-aem/americas/us/en/noindex/ ; Disallow: /content/dam/jpm-am-aem/emea/regional/en/noindex/ ; Disallow: /content/dam/jpm-am-aem/global/en/ipb/noindex/ ; Disallow: /content/dam/jpm-am-aem/global/en/insights/portfolio-insights/ltcma/noindex/
+== www.blackrock.com 200 | User-agent: Brightbot 1.0 ; Disallow: / ;  ; User-agent: * ;  ; Disallow: /au-institutional-iframe* ; Disallow: /pensions-planning-iframe* ; Disallow: /capstone* ;  ; Disallow: /*.dl$ ;  ; Disallow: /*sign-on.oauth ; Disallow: /*sign-on.saml ; Disallow: /*sign-on-popup.saml ; Disallow: /user-platform/ ; Disallow: /userplatform/ ; Disallow: /search/ ; Disallow: /*?truepdf* ; Disallow: /*?norepdf* ;    ; Disallow: /X/ ; Disallow: /compliance/ ;    ; Disallow: /ref/docs ;  ; Disallow: /api-tester/ ;  ; Disallow: /ee$ ; Disallow: /gr$ ; Disallow: /is$ ; Disa
+== corporate.vanguard.com 200 | User-agent: * ;  ; Disallow: /404 ;  ; Sitemap: https://corporate.vanguard.com/content/corporatesite/us/en.sitemap.xml
+== am.gs.com 200 | User-agent: * ;   Disallow: /premium/ ;   Sitemap: https://am.gs.com/sitemap_index.xml
+
+######## İş Yatırım araştırma RSS
+status 200 entries 10
+   Fri, 02 Oct 2026 15:09:55 +0000 | İş Varant Raporu: İş Varant 02/10/2026 | ['Yurtiçi Piyasalar', 'İş Varant Raporu', 'varantgunluk', 'varant bulten'] | https://arastirma.isyatirim.com.tr/2026/10/02/is-varant-raporu-is-varant-02-10-2026/
+   Fri, 02 Oct 2026 14:49:18 +0000 | Market Update – Dizel Marjları Yüksek: Rafineri Hisselerinde Fırsat Sürüyor mu? | ['Yurtdışı Piyasalar', 'Market Update', 'new york stock Exchange', 'Dow Jones'] | https://arastirma.isyatirim.com.tr/2026/10/02/market-update-dizel-marjlari-yuksek-rafineri-hisselerinde-firsat-suruyor-mu/
+   Fri, 02 Oct 2026 13:40:50 +0000 | Eurotahvil Piyasasında Neler Oluyor 2/10/2026 | ['Genel', 'Yurtdışı Piyasalar', 'Son Haberler', 'Eurobond'] | https://arastirma.isyatirim.com.tr/2026/10/02/eurotahvil-piyasasinda-neler-oluyor-2-10-2026-2/
+   Fri, 02 Oct 2026 07:18:13 +0000 | FX Teknik Analiz Raporu 02/10/2026 | ['Yurtdışı Piyasalar'] | https://arastirma.isyatirim.com.tr/2026/10/02/fx-teknik-analiz-raporu-02-10-2026/
+   Fri, 02 Oct 2026 06:55:55 +0000 | ELÜS Günlük Bülteni 02/10/2026 | ['Genel', 'ELÜS Günlük Bülten', 'türib', 'elüs'] | https://arastirma.isyatirim.com.tr/2026/10/02/elus-gunluk-bulteni-02-10-2026/
+   Fri, 02 Oct 2026 06:36:58 +0000 | Piyasalarda Bugün 02/10/2026 | ['Piyasalarda Bugün', 'Genel', 'Yurtiçi Piyasalar', 'Günlük Raporlar'] | https://arastirma.isyatirim.com.tr/2026/10/02/piyasalarda-bugun-02-10-2026/
+   Fri, 02 Oct 2026 06:16:45 +0000 | Teknik Bülten 02/10/2026 | ['Genel', 'Yurtiçi Piyasalar', 'Teknik Bülten', 'Günlük Raporlar'] | https://arastirma.isyatirim.com.tr/2026/10/02/teknik-bulten-02-10-2026/
+   Fri, 02 Oct 2026 06:07:17 +0000 | Pay Geri Alımları 02/10/2026 | ['Genel', 'Pay Geri Alımları', 'BIST100', 'BIST50'] | https://arastirma.isyatirim.com.tr/2026/10/02/pay-geri-alimlari-02-10-2026/
+   Fri, 02 Oct 2026 05:48:22 +0000 | En Çok Önerilenler Listesinde Değişiklikler | ['Genel', 'Yurtiçi Piyasalar', 'Model Portföy Değişiklikleri', 'Son Haberler'] | https://arastirma.isyatirim.com.tr/2026/10/02/en-cok-onerilenler-listesinde-degisiklikler-47/
+   Fri, 02 Oct 2026 05:38:55 +0000 | Günlük Yabancı Oranları 02/10/2026 | ['Genel', 'Yurtiçi Piyasalar', 'Günlük Yabancı Oranları', 'foreign share'] | https://arastirma.isyatirim.com.tr/2026/10/02/gunluk-yabanci-oranlari-02-10-2026/
+  içerik uzunluğu 3462 | pdf linkleri []
+     Raporu Göster  
+ &nbsp; 
+ İyi Akşamlar, 
+ &nbsp; 
+  Varant Raporuna aşağıda yer alan &#8220;Raporu Göster&#8221; butonuna tıklayarak ulaşabilirsiniz.  
+  Raporun canlı haline ulaşmak için    TIKLAYINIZ.   
+  NOT:  Raporda Piyasa Yapıcı Alış fiyatı 0,00 olan varantlarda, rapor hazırlanma esnasında işlem gerçekleşiyor olabilir. 
+ &nbsp; 
+ 18:00 itibarıyla Brent Petrol, Aralık 2026 kontratı 100,08 seviyesindedir. 
+ 18:00 itibarıyla Brent Petrol, Ocak 2026 kontratı 96,67 seviyesindedir. 
+ 18:00 itibarıyla Brent Petrol, Şubat 2027 kontratı 93,95 seviyesindedir. 
+ 18:00 itibarıyla Bakır, Aralık 20
+  sayfa 200 265602 pdf: ['https://www.isyatirim.com.tr/tr-tr/Resmi-Duyurular/Documents/Kullan%C4%B1mKo%C5%9Fullar%C4%B1ileKi%C5%9FiselVerilerinKorunmas%C4%B1veGizlilikPolitikas%C4%B1.pdf']
+  kategori sirket-raporlari 200 10
+  kategori sirket-notlari 404 0
+  kategori hisse-onerileri 200 0
+
+######## Garanti BBVA Yatırım şirket raporları
+== https://www.garantibbvayatirim.com.tr/arastirma-raporlari/sirket-raporlari 200 150032 belge linki 4
+      | {%=item.PdfUrl %}
+      | {%=item.PdfUrl %}
+      | {%=item.PdfUrl %}
+      | {%=item.PdfUrl %}
+   ERR https://www.garantibbvayatirim.com.tr{%=item.PdfUrl %} InvalidURL Failed to parse: Host 'www.garantibbvayatirim.com.tr{%=item.PdfUrl %}' contains invalid character ' '
+== https://www.garantibbvayatirim.com.tr/arastirma-raporlari/sirket-ve-sektor-raporlari 200 150313 belge linki 4
+      | {%=item.PdfUrl %}
+      | {%=item.PdfUrl %}
+      | {%=item.PdfUrl %}
+      | {%=item.PdfUrl %}
+   ERR https://www.garantibbvayatirim.com.tr{%=item.PdfUrl %}invalid pdf header: b'\n'
+EOF marker not found
+EOF marker not found
+ InvalidURL Failed to parse: Host 'www.garantibbvayatirim.com.tr{%=item.PdfUrl %}' contains invalid character ' '
+
+######## Yapı Kredi Yatırım
+== https://www.ykyatirim.com.tr/arastirma 404 0 pdf: 0 []
+== https://www.ykyatirim.com.tr/arastirma-raporlari 404 0 pdf: 0 []
+== https://www.ykyatirim.com.tr/arastirma/sirket-raporlari 404 0 pdf: 0 []
+
+######## Foreks hisse değerlendirmeleri (Google News)
+entries 2
+   Thu, 01 Oct 2026 11:38:14 GMT | HİSSE DEĞERLENDİRMESİ-Ziraat Yatırım, GWIND-Galata Wind… - Foreks.com
+   Thu, 01 Oct 2026 06:15:27 GMT | HİSSE DEĞERLENDİRMESİ- Gedik Yatırım, yatırım tavsiyesini DOAS için yükseltti, TOASO ve FROTO için sürdürdü - Foreks.com
+
+######## J.P. Morgan Guide to the Markets
+== https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/ins 200 application/pdf 7068125 Thu, 01 Oct 2026 16:32:37 GMT
+    (71, 'Market /  Insights / Guide to the  / Markets /  ® / U.S. | 4Q 2026 / As of September 30, 2026')
+== https://cdn.jpmorganfunds.com/content/dam/jpm-am-aem/global/ 200 application/pdf 7068125 Thu, 01 Oct 2026 16:32:37 GMT
+    (71, 'Market /  Insights / Guide to the  / Markets /  ® / U.S. | 4Q 2026 / As of September 30, 2026')
+
+######## BlackRock weekly commentary
+== https://www.blackrock.com/us/individual/insights/blackrock-investment- 200 162097 pdf ['/us/individual/literature/market-commentary/weekly-investment-commentary-en-us-20260928-china-up-the-value-chain.pdf']
+    200 (5, 'Guides / Go to View and check the “Guides” box to see page  / margins and columns. This feature will help align  / items on the page.   / Text / Use only BLACK or WHITE text. Use font size  / and/or the Extrabold, Bold, or Body font weights  / instead of color to differentiate. / Tables / Avoid vertical gridlines whe')
+== https://www.blackrock.com/corporate/insights/blackrock-investment-inst 200 299941 pdf ['/gls-download/literature/market-commentary/weekly-investment-commentary-en-us-20260928-china-up-the-value-chain.pdf']
+   pdf değil Stream has ended unexpectedly
+
+######## Vanguard / GSAM
+== https://corporate.vanguard.com/content/corporatesite/us/en/corp/vemo/vemo-return 200 78654 pdf: []
+== https://corporate.vanguard.com/content/corporatesite/us/en/corp/articles/market- 404 36571 pdf: []
+== https://am.gs.com/en-us/advisors/insights/article/market-outlook 404 233857 pdf: []
+== https://am.gs.com/en-us/advisors/insights 200 607029 pdf: []
+
+######## SEC 10-Q
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/requests/models.py", line 1116, in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/json/decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/json/decoder.py", line 356, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/work/piyasa-radari/piyasa-radari/probe12.py", line 81, in <module>
+    f = r.json()["filings"]["recent"]
+        ^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/requests/models.py", line 1120, in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
