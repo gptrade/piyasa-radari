@@ -8,6 +8,7 @@ import bisect
 import json
 import logging
 from datetime import timedelta
+from zoneinfo import ZoneInfo
 
 from .config import DATA, Stock
 from .models import iso, now_utc, parse_iso
@@ -19,6 +20,7 @@ HORIZONS = {"15m": timedelta(minutes=15), "1h": timedelta(hours=1), "1d": timede
 # Tepkiyi piyasa hareketinden ayırmak için karşılaştırma endeksleri
 INDEXES = {"BIST": Stock("_XU100", "BIST 100", "BIST", []), "US": Stock("_SPX", "S&P 500", "US", [])}
 INDEX_YAHOO = {"_XU100": "XU100.IS", "_SPX": "^GSPC"}
+EX_TZ = {"BIST": ZoneInfo("Europe/Istanbul"), "US": ZoneInfo("America/New_York")}
 
 
 def _series(df) -> list[list[float]]:
@@ -478,7 +480,7 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False, valuati
     if not daily and not intraday:
         return None
     last = (intraday or daily)[-1][1]
-    prev = daily[-2][1] if len(daily) >= 2 else None
+    prev = prev_close(daily, intraday, EX_TZ.get(stock.market))
     keep = 130                                            # panelde ~6 aylık günlük grafik
     closes = [b[1] for b in daily]
     ema_overlay = {str(n): [round(v, 4) if v is not None else None for v in ema_tv(closes, n)[-keep:]]
@@ -497,6 +499,19 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False, valuati
         **({"analyst": an} if an else {}),
         **({"valuation": val} if val else {}),
     }
+
+
+def prev_close(daily: list, intraday: list, tz=None) -> float | None:
+    """Son işlem gününden ÖNCEKİ günün kapanışı. Yahoo bugünün günlük barını seansın ilk saatlerinde henüz
+    eklemeyebiliyor; o durumda daily[-2] iki gün öncesinin kapanışı olur ve günlük değişim şişer
+    (ör. TTKOM: 53,10 / 51,55 → +%3,0, doğrusu 53,10 / 52,45 → +%1,2). Bu yüzden son barın tarihine bakılır."""
+    from datetime import datetime
+    if not daily:
+        return None
+    ref = (intraday or daily)[-1][0]
+    day = datetime.fromtimestamp(ref, tz).date()
+    prev = [b for b in daily if datetime.fromtimestamp(b[0], tz).date() < day]
+    return prev[-1][1] if prev else None
 
 
 def _store(st: Stock, p: dict | None) -> dict | None:
