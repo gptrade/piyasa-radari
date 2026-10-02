@@ -1,0 +1,29 @@
+radar.research Aracı kurum notları: izleme listesinde 0, diğer BIST 0
+radar.research Kurum görünümleri: 2 yeni
+radar.documents Belge: 1 okundu (1 denendi)
+radar.analyze Gemini bu tur devre dışı, sıradaki sağlayıcıya geçiliyor: gemini-3.5-flash-lite HTTP 429: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.
+radar.research Araştırma: 0 yeni not, 0 not, 0 görünüm
+== aracı kurum notları
+  diğer BIST notları: 0
+uyarılar []
+
+== kurum görünümleri
+süre 9.2
+   J.P. Morgan AM: Guide to the Markets – U.S. https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/insights/market-insights/guide-to-the-markets/mi-guide-to-the-markets-us.pdf {'kind': 'Kurum görünümü', 'files': [{'type': 'PDF', 'pages': 71}], 'chars': 60420} | metin başı: Market  Insights Guide to the  Markets  ® U.S. | 4Q 2026 As of September 30, 2026 2 Global Market Insights Strategy team Shogo Maekawa Tokyo Kerry Craig, CFA Melbourne Chaoping Zhu, CFA Shanghai Agnes Lin Taipei Americas Europe Asia Marcella Chow Hong Kong Ian Hui Hong Kong Sahil Gauba Mumbai Tai Hu
+   BlackRock Investment Institute: Haftalık piyasa yorumu https://www.blackrock.com/us/individual/literature/market-commentary/weekly-investment-commentary-en-us-20260928-china-up-the-value-chain.pdf {'kind': 'Kurum görünümü', 'files': [{'type': 'PDF', 'pages': 5}], 'chars': 32839} | metin başı: Guides Go to View and check the “Guides” box to see page  margins and columns. This feature will help align  items on the page.   Text   Tables Avoid vertical gridlines when possible.   Width 4.75 inches CAPITAL AT RISK. INVESTMENTS CAN RISE OR FALL IN VALUE. FOR PUBL IC DISTRIBUTION IN THE U.S., CA
+
+== SEC 10-Q
+attach {'count': 1, 'tried': 1} {'kind': '10-Q çeyreklik rapor', 'files': [{'type': '10-Q', 'name': 'aapl-20260627.htm'}], 'chars': 30157}
+  metin: [YÖNETİMİN DEĞERLENDİRMESİ (MD&A)] / Item 2. Management’s Discussion and Analysis of Financial Condition and Results of Operations / This Item and other sections of this Quarterly Report on Form 10-Q (“Form 10-Q”) contain forward-looking statements, within the meaning of the Private Securities Litigation Reform Act of 1995, that involve risks and uncertainties. Forward-looking statements provide curre ... 30157
+
+== AI J.P. Morgan AM: Guide to the Markets – U.S. 18.2 sn
+null
+
+== AI BlackRock Investment Institute: Haftalık piyasa yorumu 0.0 sn
+null
+
+== AI 10-Q - Quarterly report 0.0 sn
+null
+
+== research.update {'added': 0, 'notes': 0, 'outlooks': 0} AI {'model': 'gemini-3.8-flash', 'enabled': True, 'used': 1, 'errors': ['Gemini devre dışı: gemini-3.5-flash-lite HTTP 429: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.'], 'by_provider': {}, 'providers': ['Gemini'], 'down': {'Gemini': 'gemini-3.5-flash-lite HTTP 429: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.'}}
+sentez: null
