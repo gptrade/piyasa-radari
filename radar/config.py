@@ -20,6 +20,7 @@ class Stock:
     market: str            # BIST | US
     aliases: list[str]
     tv_symbol: str | None = None    # TradingView sembolü, ör. NASDAQ:NVDA (boşsa varsayılan)
+    kap: str | None = None          # KAP şirket sayfası kimliği, ör. 1107-turk-hava-yollari-a-o (isteğe bağlı)
 
     @property
     def yahoo(self) -> str:
@@ -45,6 +46,7 @@ def load_watchlist() -> list[Stock]:
                 market=market,
                 aliases=list(s.get("aliases") or []),
                 tv_symbol=s.get("tv"),
+                kap=s.get("kap"),
             ))
     return out
 

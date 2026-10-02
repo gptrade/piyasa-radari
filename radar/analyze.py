@@ -35,6 +35,10 @@ Kurallar:
   pay satış izni, işlem yasağı, idari para cezası. Bülten metni kesitler hâlinde verilir.
 - TCMB PPK kararı ve duyurularında beklentiye göre sürprizi değerlendir; hangi izleme listesi
   hisselerinin (özellikle bankalar) nasıl etkileneceğini affected_tickers'a yaz.
+- Fed ve ECB kararlarında/konuşmalarında beklentiye göre şahin/güvercin sürprizi değerlendir; küresel faiz ve
+  risk iştahı üzerinden BIST'e (bankalar, dış borçlu şirketler, ihracatçılar) ve ABD hisselerine etkisini yaz.
+- GDELT alarmları dünya basınındaki haber hacmi/ton sıçramasıdır; başlıklardan olayı çıkar, tek başına kanıt
+  değildir — güveni ölçülü tut, etkilenen izleme listesi hisselerini affected_tickers'a yaz.
 - Basın bültenleri şirketin kendi ağzından yazılır; pazarlama dilini ayıkla, rakamlara bak.
 - Yatırım tavsiyesi verme; olasılıksal değerlendirme yap.
 - Yanıt dili: {language}. Metin İngilizce olsa bile özeti {language} yaz."""

@@ -843,3 +843,9 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .val-tx th[scope="row"] { position: static; font-size: var(--fs-sm); text-transform: none; letter-spacing: 0; padding: 5px var(--s-2); border-bottom: 1px solid var(--border); font-weight: 400; text-align: left; color: var(--text-2); }
 .val-tx td.num, .val-tx th.num { font-family: var(--font-mono); text-align: right; }
 .tp-warn { font-size: var(--fs-xs); color: var(--warn, #b45309); background: var(--warn-soft, transparent); padding: 6px 8px; border-radius: 6px; margin-bottom: var(--s-2); }
+
+/* Piyasa geneli kayıt: etkileyebileceği hisseler */
+.aff-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: var(--s-2); font-size: var(--fs-sm); }
+.aff-line .d-sub-in { color: var(--text-3); font-size: var(--fs-xs); margin-right: 2px; }
+.aff-tk { font-family: var(--font-mono); font-size: var(--fs-xs); padding: 1px 6px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); cursor: pointer; }
+.aff-tk:hover { border-color: var(--accent); color: var(--accent-ink); }
