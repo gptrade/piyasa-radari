@@ -1,0 +1,113 @@
+######## İş Yatırım şirket raporları kategorisi
+   Tue, 29 Sep 2026 15:06:06 +0000 | Bankacılık Sektör Raporu – Ağustos 2026 | ['Genel', 'Şirket Raporları', 'Yurtiçi Piyasalar', 'Sektör Raporları', 'Son Haberler']
+   Thu, 17 Sep 2026 05:59:04 +0000 | MAVI.IS: 2Ç26 Mali Tablo Analizi | ['Genel', 'Şirket Raporları', 'Yurtiçi Piyasalar', 'Son Haberler', 'MAVI']
+   Mon, 14 Sep 2026 06:07:59 +0000 | Akçansa-AKCNS.IS: Hedef Fiyat Değişikliği | ['Şirket Raporları', 'Genel', 'Yurtiçi Piyasalar', 'Son Haberler', 'AKCNS']
+   Fri, 11 Sep 2026 12:07:03 +0000 | YEOTK.IS: Yeo Teknoloji Yatırımcı Sunumu Notları | ['Genel', 'Şirket Raporları', 'Yurtiçi Piyasalar', 'Son Haberler', 'enerji']
+   Thu, 10 Sep 2026 12:54:10 +0000 | TAVHL: Ağustos’ta yolcu trafiği yıllık %5 arttı, ancak Antalya’nın zayıf seyri nedeniyle kümülatif büyüme %2 ile sınırlı | ['Genel', 'Şirket Raporları', 'Yurtiçi Piyasalar', 'Son Haberler', 'yolcu verisi']
+   Tue, 08 Sep 2026 14:10:03 +0000 | MAVI.IS: 2Ç26 Kar Tahmini | ['Genel', 'Şirket Raporları', 'Yurtiçi Piyasalar', 'Son Haberler', '2Ç26']
+   Tue, 01 Sep 2026 08:11:19 +0000 | Bankacılık Sektör Raporu – Temmuz 2026 | ['Şirket Raporları', 'Genel', 'Yurtiçi Piyasalar', 'Sektör Raporları', 'Son Haberler']
+   Mon, 31 Aug 2026 05:28:04 +0000 | Rönesans Gayrimenkul-RGYAS.IS: Hedef Fiyat Değişikliği | ['Genel', 'Şirket Raporları', 'Yurtiçi Piyasalar', 'Son Haberler', 'Hedef Fiyat Değişikliği']
+   Thu, 20 Aug 2026 06:35:42 +0000 | Şirket Raporu: Dogus Otomotiv-DOAS.IS: 2Ç26 Sonuçları | ['Genel', 'Şirket Raporları', 'Yurtiçi Piyasalar', 'Son Haberler', 'DOAS']
+   Thu, 20 Aug 2026 06:09:31 +0000 | Şirket Raporu: Alarko Holding (ALARK.IS) 2Ç26 Mali Tablo Analizi | ['Genel', 'Şirket Raporları', 'Yurtiçi Piyasalar', 'Son Haberler', 'açıklanan finansallar']
+== post https://arastirma.isyatirim.com.tr/2026/09/29/bankacilik-sektor-raporu-agustos-2026/ 200 264714
+  buton bağlamı: yok
+  dış/rapor linkleri: ['http://www.facebook.com/sharer.php?u=https%3A%2F%2Farastirma.isyatirim.com.tr%2F2026%2F09%2F29%2Fbankacilik-sektor-raporu-agustos-2026%2F', 'https://arastirma.isyatirim.com.tr/2026/08/03/bankacilik-sektor-raporu-haziran-2026/', 'https://arastirma.isyatirim.com.tr/2026/09/01/bankacilik-sektor-raporu-temmuz-2026-2/', 'https://arastirma.isyatirim.com.tr/2026/09/28/fx-teknik-analiz-raporu-28-09-2026/', 'https://arastirma.isyatirim.com.tr/2026/09/29/bankacilik-sektor-raporu-agustos-2026/', 'https://arastirma.isyatirim.com.tr/2026/09/29/bankacilik-sektor-raporu-agustos-2026/#comments', 'https://arastirma.isyatirim.com.tr/2026/09/29/fx-teknik-analiz-raporu-29-09-2026/', 'https://arastirma.isyatirim.com.tr/2026/09/29/is-varant-raporu-is-varant-29-09-2026/', 'https://arastirma.isyatirim.com.tr/2026/09/30/fx-teknik-analiz-raporu-30-09-2026/', 'https://arastirma.isyatirim.com.tr/2026/10/01/fx-teknik-analiz-raporu-01-10-2026/']
+  RSS içeriği:  Aylık kâr toparlandı; yıllık karşılaştırmayı yüksek Ağustos 2025 bazı sınırladı Türk bankacılık sektörü Ağustos 2026’da 79,9 milyar TL net kâr açıkladı (aylık +%18, yıllık -%5); 8A26 kümülatif net kâr 676,3 milyar TL’ye ulaştı (+%20,0 yıllık). Ağustos’un çeyrek sonu etkisi taşımaması, aylık artışın karşılaştırılabilir bazda toparlanmaya işaret ettiğini gösteriyor. Net faiz gelirleri %4 gerilese de düşük genel karşılıklar, menkul kıymet karşılık çözülmesi ve daralan ticari/kur zararı destekledi. Yıllık düşüş, Ağustos 2025’te net kârın %147 artışla 84,2 milyar TL’ye ulaşmasından kaynaklanan baz etkisini yansıtıyor. Brüt NFM %5,9’a gerilerken TL makası 290 baz puandan 308 baz puana genişledi; spesifik risk maliyeti 311 baz puana yükselirken TGA oranı %3,05’e çıktı. Raporu pdf olarak bilgisayarınıza indirmek için tıklayınız. Burada yer alan bilgiler İş Yatırım Menkul Değerler A.Ş. tarafında
+== post https://arastirma.isyatirim.com.tr/2026/09/17/mavi-is-2c26-mali-tablo-analizi/ 200 272340
+  buton bağlamı: yok
+  dış/rapor linkleri: ['https://arastirma.isyatirim.com.tr/2026/08/14/sirket-raporu-aksen-2c26-sonuclari/', 'https://arastirma.isyatirim.com.tr/2026/08/18/sirket-raporu-entra-2c26-sonuclari/', 'https://arastirma.isyatirim.com.tr/2026/08/20/sirket-raporu-alarko-holding-alark-is-2c26-mali-tablo-analizi/', 'https://arastirma.isyatirim.com.tr/2026/09/28/fx-teknik-analiz-raporu-28-09-2026/', 'https://arastirma.isyatirim.com.tr/2026/09/29/bankacilik-sektor-raporu-agustos-2026/', 'https://arastirma.isyatirim.com.tr/2026/09/29/fx-teknik-analiz-raporu-29-09-2026/', 'https://arastirma.isyatirim.com.tr/2026/09/30/fx-teknik-analiz-raporu-30-09-2026/', 'https://arastirma.isyatirim.com.tr/2026/10/01/fx-teknik-analiz-raporu-01-10-2026/', 'https://arastirma.isyatirim.com.tr/2026/10/01/is-varant-raporu-is-varant-01-10-2026/', 'https://arastirma.isyatirim.com.tr/2026/10/02/fx-teknik-analiz-raporu-02-10-2026/']
+  RSS içeriği:  Mavi 2Ç26’da 263mn TL net kâr açıkladı; bu rakam şirket tarafından derlenen 293mn TL’lik konsensüs tahmininin %10 altında ve geçen yılın aynı dönemindeki 304mn TL’nin altında gerçekleşti. Vergi öncesi kâr yıllık bazda iki kattan fazla artarak 505mn TL’ye ulaştı. Net kârdaki sapma vergi giderinden kaynaklandı: yasal finansal tablolarda enflasyon muhasebesinin kaldırılmasının etkisiyle efektif vergi oranı 2Ç25’teki %6’dan 2Ç26’da %53’e yükseldi. Enflasyon muhasebesi etkisi hariç tutulduğunda net kâr nominal bazda yıllık %40 artışla 941mn TL oldu. Net satışlar beklentilere paralel 12,6mlr TL olarak gerçekleşirken, reel bazda yıllık %0,4 geriledi. Türkiye perakende satışları %0,7 artarken, online satışlar %1,1 geriledi. LFL satışlar reel TL bazında %0,6 düşerken, işlem adedi %3,5 arttı, sepet büyüklüğü ise %3,9 daraldı. LFL satış hacmi yıllık %5,8, yeni satış alanları dahil toplam Türkiye p
+  kategori model-portfoy-degisiklikleri 404 0
+  kategori en-cok-onerilenler 404 0
+  kategori hedef-fiyat 404 0
+== En çok önerilenler içeriği:  | | Model Portföy Değişiklikler | | | | AKSEN&#8217;i 117,5 TL/hisse hedef fiyat %61 artış potansiyeli ile model portföye ekliyoruz. | | | Şirketi; yurtdışındaki alım garantili anlaşmaları ile öngörülebilir nakit akışı, agresif kurulu güç artışı ve FAVÖK büyümesi sebebiyle beğenmeye devam ediyoruz. Son dönemde gerileyen hisse fiyatının, giriş için cazip bir seviye sunduğunu düşünüyoruz. Önümüzdeki çeyreklerde devreye girecek kapasite artışları ve FAVÖK büyümesinin hissede katalist olacağını öngörüyoruz. Bu ivmenin 2026 sonuna kadar devreye girecek 515 MW, 2027 yılında ise 600 MW yeni kapasitelerle desteklenmeye devam etmesini bekliyoruz. Böylece 2026 yıl sonunda FAVÖK&#8217;te %17 reel büyüme, 2027 yılında ise %50 reel büyüme öngörüyoruz. Tahminlerimiz sırasıyla 7,3x 2026T FD/FAVÖK ve 4,9x 2027T FD/FAVÖK çarpanlarına işaret ediyor. | | | Riskler: | yeni kapasitelerin gecikmesi, kur artışı kaynaklı net karın baskılanması, küresel faizlerdeki yukarı yönlü baskı kaynaklı artabilecek borç maliyeti | | | En Çok Önerilenler Listesi&#8217;nin güncel halini görebilmek için tıklayınız. | | | | Raporu pdf olarak bilgisayarınıza indirmek için tıklayınız. | | | | İlgili hisselerde işlem yapabilmek için lütfen tıklayınız. | | | | En Çok Önerilenler Listesinde Değişiklikler | yazısı ilk önce | İş Yatırım | üzerinde ortaya çıktı. | 
+
+######## İş Yatırım hedef fiyat tablosu
+== https://www.isyatirim.com.tr/tr-tr/analiz/hisse/Sayfalar/Temel-Degerler-Ve-Oranlar.aspx 200 1652972
+    Hedef Fiyat -1 
+    Öneri 87943 href="/tr-tr/analiz/hisse/Sayfalar/gelismis-hisse-arama.aspx">Gelişmiş Hisse Arama İş Yatırım'ın Önerileri Hisse Tavsiyeleri Takip Listesi Sektörel Öneri Sayıları <a href="/tr-tr/analiz/his
+    AL 1901 im.min.js" as="script" /> ANALİZ > Hisse Senetleri > Temel Değerler ve Oranlar > Hisse Değerleri ve Oranları" /> { "@context": "https://schema.org/", "@type": "BreadcrumbList", "itemListElement": [{ 
+    TUT 304311 class="SermayeColumn text-right SHHE_TARIH" data-order="20260102000000">02.01.2026 100,00 1.000,00 0,00 0,00 0,00 0,00 0 0,0000</
+== https://www.isyatirim.com.tr/tr-tr/analiz/hisse/Sayfalar/sirket-karti.aspx?hisse=TTKOM 200 1150558
+    Hedef Fiyat 604539 n class="al" title="" id="Oneri_Aciklama">AL Son Öneri Tarihi 24.04.2026 Hedef Fiyat 88,75 Getiri Pot %69 Ezgi Akalan Demirak Yatirim Teması Türk Telekom için yatırım temasını güçlü reel büyüme, fiber altyapının artan monetizasyonu ve orta vadede iyileşmesini bek
+    Öneri 509382 href="/tr-tr/analiz/hisse/Sayfalar/gelismis-hisse-arama.aspx">Gelişmiş Hisse Arama İş Yatırım'ın Önerileri Hisse Tavsiyeleri Takip Listesi Sektörel Öneri Sayıları <a href="/tr-tr/analiz/his
+    AL 16839 u1YZ1Vw88nS935fYd/DcEtxC2qMQKBNzDZatNVLoo56lIEEuqJYe9dQSKu1ExMmnEe19FeNgME1ZZ9ntY0Po1CVYqxT9ZC7vocu7Kg7WLm2H4GI/A2zg/MwgEee/2Fw7SxXt6lbz4SHKcNYJABtUtykBDjfr+kFmOafU6NU5nFLvEcJgGMC2P6IMH5Mtv/odCb0pLu0PALId4YP0Y3rQl4FQm95gcFZhZ8dwT20Ef2dbVH4Tgjo169c7IbbqRPOal7ZoihNV1Uy2dEtKLmCGkfSAzFIuREUDKCknuXV5qEbQN6dw2RoVjuw1fkFfqERv6OyGnyovxxDhzDGWDBhOknFN2TeWzX4m9MnjEGWcEOe9D2+O0wjUTePPdr2cPKEU0xV9dXNcWi2KK50TVxEnc+aBd2YY7IPHXVJqIJYnL8oQftGma/vHy9QI/WCqTpArYf/oTz9u4suCYlkx4CUfbAdFtJoQfWP/o25JGWFwnt5rf6ocWyw6vr5SiYBtybWaFFpXrEXOr5s2y1Gt78jQk71pgSjr9Q9O5J5X4oMv4FoGZvGh4IXWGfXlYOjDN+xsdmZo33c3J+FEkHU7JlCgPYCf
+    TUT 329422 6PVCdwdxyjiF79iA7s+XsAp91aBMPpyYBw422bJlipqVpIFh4rcrpaBd4Voj6tQeD0Z13E9YpUqrJWIn5AWBD6+ZR5rufUMK09kFIeZ9sp7G44IjN6wqAwb5NVJrLBrAjgKoV5eJLmu1AZ12fNVTnFCCljgYoMAs+dbWptwve+XuSQOY+umYKBd04biyOUD6PXnkDQiBTUTMxrjKkjaU8wHKX1E6JxmF33UZN/Dl0Tg4M2xXrTHRPzVQmKx1FOm/O9Xi+pxue6XenumwY7iKsde2kbAnVIpP5Y3ND7nnL9WUHv3ab/VG5d9S2LpnWrk7Fv/sehUeVcLyTcRxPrWy4kDi1S5axDusHWAyMIP+4UJRJUTFn46fOVZk3oC80WoBLA+EtjeYW6cImbSGgkrAmpRulmFXq8h393mn3T5A378W3WNhQQPUs1gNGm5LChe+GBJgRw6ZR1V21B+OdhvJMDyMoCUN6k5id9LkGZJUeMWOJSHq8eAxCFEzx02tF+ZjiSg/LVhBJSK21I5rqnpJDQOBTK8yl2mFHpLK5zJA/qdR/Di/Udv0Ju92iEADjg4I+zbLxLedDO+W8aKE7Fa2wy7k
+
+######## Foreks llms dosyaları
+== llms.txt 200 8789
+# ForInvest - Türkiye'nin Finansal Veri Sağlayıcısı
+
+> ForInvest, Türkiye'nin önde gelen finansal veri sağlayıcısıdır. ForInvest Yazılım ve Teknoloji Hizmetleri A.Ş. tarafından işletilen Foreks.com portalı, bireysel ve kurumsal yatırımcılara anlık piyasa verileri, finansal haberler, derinlemesine analizler ve pratik yatırım araçları sunar. Merkezi İstanbul'da bulunan ForInvest, Türk finans piyasalarında güvenilir bir veri kaynağı olarak hizmet vermektedir.
+
+## Şirket Hakkında
+
+**ForInvest Yazılım ve Teknoloji Hizmetleri A.Ş.**, Türkiye'nin önde gelen finansal veri sağlayıcısıdır. Foreks.com, ForInvest tarafından işletilen finansal portal olarak hizmet vermektedir.
+
+## Site Hakkında
+
+Foreks.com, Borsa İstanbul (BIST) hisse senetleri, döviz kurları, altın fiyatları, kripto para birimleri, emtia fiyatları, VIOP vadeli işlem sözleşmeleri ve yatırım fonları dahil olmak üzere geniş bir yelpazede anlık finansal veri sağlar. Kullanıcılar, canlı fiyat tabloları, interaktif grafikler, şirket bilançoları ve gelir tabloları gibi detaylı bilgilere tek bir platformdan erişebilir. Tüm veriler ForInvest'in tescilli veri altyapısı üzerinden gerçek zamanlı olarak iletilir.
+
+## Piyasa Verileri Kategorileri
+
+- [Borsa İstanbul (BIST)](https://www.foreks.com/borsa/): BIST 100, BIST 30 ve tüm hisse senetleri için anlık fiyatlar, hacim verileri ve endeks bilgileri.
+- [BIST 100](https://www.foreks.com/borsa/bist-100/): BIST 100 endeksindeki hisselerin canlı fiyat tablosu.
+- [BIST Endeksler](https://w
+== llms-news.txt 200 24191
+# ForInvest - Türkiye'nin Finansal Veri Sağlayıcısı
+
+> ForInvest Yazılım ve Teknoloji Hizmetleri A.Ş. tarafından sunulan güncel finansal haberler. Foreks.com, ForInvest tarafından işletilen finansal portal olarak hizmet vermektedir.
+
+## Haberler
+
+### ABD dizel ihracat yasağı İngiltere enflasyonunu yüzde 5'e yaklaştırabilir
+- **Tarih:** 2026-10-02 20:31
+- **Özet:** Ekonomistler, ABD Başkanı Donald Trump'ın dizel ihracatını durdurması halinde İngiltere'de enflasyonun yüzde 5'e yaklaşabileceği uyarısında bulundu. Uzun süreli bir yasak senaryosunda dizel fiyatların...
+- **Detay:** [Haberi oku](https://www.foreks.com/haber/detay/6abfea6824008d7d4373b595/PICNEWS/tr/abd-dizel-ihracat-yasagi-ingiltere-enflasyonunu-yuzde-5-e-yaklastirabilir-02-10-26/)
+
+---
+
+### Wall Street'te 23 saatlik işlem dönemi 6 Aralık'ta başlıyor
+- **Tarih:** 2026-10-02 18:30
+- **Özet:** ABD hisse senedi piyasalarında işlem saatleri 6 Aralık'tan itibaren önemli ölçüde genişleyecek. Nasdaq, NYSE Arca, 24X National Exchange ve Cboe EDGX, mevcut normal seans ile seans öncesi ve sonrası i...
+- **Detay:** [Haberi oku](https://www.foreks.com/haber/detay/6abfce1395016b5817e6447d/PICNEWS/tr/wall-street-te-23-saatlik-islem-donemi-6-aralik-ta-basliyor-02-10-26/)
+
+---
+
+### PİYASAYA BAKIŞ- Borsa günü yükselişle tamamladı
+- **Tarih:** 2026-10-02 18:16
+- **Özet:** BIST 100 endeksi günü 21,14 puan artışla 12270,18 puandan kapattı.ForInvest Haber anketine göre BIST 100 endeksinin günü 125,0 puan artışla kapatması bekleniyordu.
+== llms-analysis.txt 200 13511
+# ForInvest - Tüm Analizler
+
+> ForInvest Yazılım ve Teknoloji Hizmetleri A.Ş. uzman analist ekibinin piyasa analizleri ve raporları. Foreks.com, ForInvest tarafından işletilen finansal portal olarak hizmet vermektedir.
+
+## Analizler
+
+### ANALİZ- Varant Akşam Bülteni (İş Yatırım)
+- **Tarih:** 2026-10-02 19:00
+- **Özet:** ANALİZ- Varant Akşam Bülteni (İş Yatırım)
+- **Detay:** [Analizi oku](https://www.foreks.com/haber/detay/6abfd50d95016b5817e644d1/FRKS/tr/analiz-varant-aksam-bulteni-is-yatirim-02-10-26/)
+
+---
+
+### *UEA Başkanı Fatih Birol: Klima satışları dünya genelinde muazzam şekilde artıyor bu da elektrik talebinin artmasında etkili oluyor
+- **Tarih:** 2026-10-02 18:58
+- **Özet:** *UEA Başkanı Fatih Birol: Klima satışları dünya genelinde muazzam şekilde artıyor bu da elektrik talebinin artmasında etkili oluyor
+- **Detay:** [Analizi oku](https://www.foreks.com/haber/detay/6abfd4c224008d7d4373b3c7/FRKS/tr/uea-baskani-fatih-birol-klima-satislari-dunya-genelinde-muazzam-sekilde-artiyor-bu-da-elektrik-talebinin-artmasinda-etkili-oluyor-02-10-26/)
+
+---
+
+### *UEA Başkanı Fatih Birol: Yapay zeka veveri merkezlerin, elektrik ihtiyacının öne çıkmasında büyük önem taşıyor, elektrikli arabaların hızla büyümesi de katkı yapıyır
+- **Tarih:** 2026-10-02 18:57
+- **Özet:** *UEA Başkanı Fatih Birol: Yapay zeka veveri merkezlerin, elektrik ihtiyacının öne çıkmasında büyük önem taşıyor, elektrikli arabaların hızla büyümesi de katkı yapıyır
+- **Detay:** [Analizi oku](https://www.foreks.com/hab
+== /haber/ 404 114709 []
+
+######## SEC 10-Q (SEC_USER_AGENT) True
+atom 200
+dosyalar [('0000320193-26-000020-index-headers.html', ''), ('0000320193-26-000020-index.html', ''), ('0000320193-26-000020.txt', ''), ('0000320193-26-000020-xbrl.zip', '166630'), ('a10-qexhibit31106272026.htm', '10578'), ('a10-qexhibit31206272026.htm', '10617'), ('a10-qexhibit32106272026.htm', '8462'), ('aapl-20260627.htm', '1018210'), ('aapl-20260627.xsd', '36144'), ('aapl-20260627_cal.xml', '89689'), ('aapl-20260627_def.xml', '148354'), ('aapl-20260627_g1.jpg', '10963'), ('aapl-20260627_htm.xml', '962405'), ('aapl-20260627_lab.xml', '511737'), ('aapl-20260627_pre.xml', '325458')]
+ana belge aapl-20260627.htm 200 metin 103173
+   Item\s*2\.?\s*Management.s Discussion []
+   Item\s*1A\.?\s*Risk Factors [15867]
+   Item\s*3\.?\s*Quantitative [15725]
