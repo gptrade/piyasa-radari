@@ -125,8 +125,13 @@ def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict
         subj_src = rest.split(":", 1)[1].strip()
     sm = SUBJ.search(subj_src)
     subj = sm.group("s") if sm else subj_src[:40]
-    cap = re.search(r"[A-ZÇĞİÖŞÜ].*", subj)
-    subj = (cap.group(0) if cap else subj).strip(" ,-")
+    runs = re.findall(r"[A-ZÇĞİÖŞÜ][\w.&\-]*(?:\s+[A-ZÇĞİÖŞÜ0-9][\w.&\-]*)*", subj)
+    if runs:
+        subj = runs[-1]                                   # "Meta rekabeti … gerekçe göstererek Apple" → "Apple"
+    else:                                                 # "yatırım tavsiyesini DOAS için yükseltti"
+        cc = [c for c in CODE.findall(rest) if c not in NOT_CODE]
+        subj = cc[0] if cc else ""
+    subj = subj.strip(" ,-")
     paren = re.search(r"\(([A-Z]{3,6})\)", rest)
     codes = [c for c in CODE.findall(subj) if c not in NOT_CODE]
     ticker = paren.group(1) if paren else codes[0] if codes else None
@@ -164,9 +169,10 @@ def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict
     cur = "USD" if unit in ("dolar", "$", "usd") else "EUR" if unit in ("avro", "euro", "€") else "TRY" if unit in ("tl", "lira") else None
     if cur is None and ticker and known and ticker in known:
         cur = "TRY"
+    tr_house = bool(re.search(r"Yatırım|Menkul|Portföy", broker))
+    m = "BIST" if cur == "TRY" or (ticker and known and ticker in known) or (tr_house and cur is None) else "US" if cur == "USD" else None
     return {"broker": broker[:40], "t": ticker, "name": name, "rating": rating, "dir": d, "tp": tp, "prev": prev,
-            "action": action, "cur": cur, "m": "BIST" if cur == "TRY" or (ticker and known and ticker in known) else
-            "US" if cur == "USD" else None}
+            "action": action, "cur": cur or ("TRY" if m == "BIST" else None), "m": m}
 
 
 # ------------------------------------------------------------------ toplayıcılar
