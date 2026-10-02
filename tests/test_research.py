@@ -57,3 +57,15 @@ def test_consensus_and_update(tmp_path, monkeypatch):
     c = data["consensus"]["THYAO"]
     assert c["n"] == 2 and c["median_tp"] == 400 and c["dist"]["TUT"] == 1
     assert rs.update(items, {}, None, watch, {})["added"] == 0
+
+
+def test_merge_same_day_sources(tmp_path, monkeypatch):
+    monkeypatch.setattr(rs, "STORE", tmp_path / "r.json")
+    now = iso(datetime.now(UTC))
+    items = [{"id": "a", "source": "X", "source_type": "news", "title": "Yapı Kredi Yatırım Otokar İçin Hedef Fiyatını Açıkladı",
+              "summary": "", "url": "u", "published": now, "extra": {}},
+             {"id": "b", "source": "Y", "source_type": "news", "title": "Yapı Kredi Yatırım’dan Otokar için 780 TL hedef fiyat",
+              "summary": "", "url": "u2", "published": now, "extra": {}}]
+    rs.update(items, {}, None, [Stock("OTKAR", "Otokar", "BIST", [])], {})
+    data = json.loads((tmp_path / "r.json").read_text())
+    assert len(data["notes"]) == 1 and data["notes"][0]["tp"] == 780

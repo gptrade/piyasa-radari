@@ -423,17 +423,25 @@ def synthesize(analyzer, store: dict, items: list[dict], watch: list) -> dict | 
 def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dict:
     """Kurum notlarını ve görünümleri research.json'a yazar; günde bir sentez üretir."""
     store = load()
-    key = lambda n: (n["broker"].lower()[:10], n.get("t") or (n.get("name") or "").lower()[:12], n.get("tp"), n.get("rating"), n["ts"][:10])
+    # Aynı not aynı gün birden çok kaynaktan gelebilir (biri hedefli, biri hedefsiz): kurum + hisse + gün aynıysa
+    # yeni kayıt açılmaz, eksik alanlar (hedef, tavsiye, önceki hedef) mevcut kayda tamamlanır.
+    key = lambda n: (n["broker"].lower()[:10], n.get("t") or (n.get("name") or "").lower()[:12], n["ts"][:10])
     seen = {n["id"] for n in store["notes"]}
-    keys = {key(n) for n in store["notes"]}
+    by_key = {key(n): n for n in store["notes"]}
     added = 0
     known = {s.symbol: [s.name, *s.aliases] for s in watch}
     for n in [*notes_from(items, px, known), *PENDING]:
-        if n["id"] in seen or key(n) in keys:          # aynı not birden çok kaynaktan gelebilir
+        if n["id"] in seen:
+            continue
+        seen.add(n["id"])
+        old = by_key.get(key(n))
+        if old is not None:
+            for f in ("tp", "prev", "rating", "dir", "action", "cur", "m"):
+                if old.get(f) in (None, "", "set", "keep") and n.get(f) not in (None, ""):
+                    old[f] = n[f]
             continue
         store["notes"].append(n)
-        seen.add(n["id"])
-        keys.add(key(n))
+        by_key[key(n)] = n
         added += 1
     PENDING.clear()
     lo = iso(now_utc() - timedelta(days=KEEP_DAYS))

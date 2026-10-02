@@ -26,6 +26,8 @@
   const watch = () => { const wl = window.radar?.state?.feed?.watchlist; return new Set(wl ? wl.map(w => w.symbol) : Object.keys(S.data?.consensus || {})); };
   const inMarket = n => sh.market === "ALL" || n.m === sh.market;
   const CUR = { USD: " $", TRY: " ₺", EUR: " €" };
+  // "Google News" yerine başlıktaki yayın adı (… - Investing.com Türkiye)
+  const srcName = n => { const m = (n.title || "").match(/\s-\s([^-]{2,30})$/); return n.src === "Google News" && m ? m[1].replace(/ Türkiye$/, "") : n.src; };
   const price = t => window.radarResearch?.prices?.[t]?.last;
 
   function synthesisCard(s) {
@@ -87,11 +89,11 @@
     return `<section class="card card-flush" aria-labelledby="resNotT">
       <div class="card-head"><h2 class="card-title" id="resNotT">Aracı kurum notları</h2>
         <span class="card-meta">${fmt.int(xs.length)} not · kamuya duyurulan başlıklardan (AA, Bloomberg HT, Foreks, Yahoo…) çıkarılır, raporların kendisi okunmaz</span></div>
-      ${shown.length ? `<div class="res-tw"><table class="tx res-notes"><thead><tr><th>Tarih</th><th>Hisse</th><th>Kurum</th><th>Tavsiye</th><th>Değişim</th><th class="num">Hedef</th><th class="num">Önceki</th><th>Kaynak</th></tr></thead><tbody>${shown.map(n => `
+      ${shown.length ? `<div class="res-tw"><table class="tx res-notes"><thead><tr><th>Tarih</th><th>Hisse</th><th>Kurum</th><th>Tavsiye</th><th>Değişim</th><th class="num">Hedef</th><th>Kaynak</th></tr></thead><tbody>${shown.map(n => `
         <tr><td>${fmt.date(n.ts)}</td><td>${n.t && w.has(n.t) ? `<button type="button" class="tk-link" data-sym="${esc(n.t)}">${esc(n.t)}</button>` : esc(n.t || n.name || "—")}</td>
         <td>${esc(n.broker)}</td><td><span class="${RAT[n.rating] || ""}">${esc(n.rating || "—")}</span></td><td>${esc(ACT[n.action] || "")}</td>
-        <td class="num">${n.tp ? fmt.num(n.tp, 2) + (CUR[n.cur] || "") : "—"}</td><td class="num">${n.prev ? fmt.num(n.prev, 2) : ""}</td>
-        <td>${n.url ? `<a href="${esc(n.url)}" target="_blank" rel="noopener" data-tip="${esc(n.title)}">${esc(n.src)} ↗</a>` : esc(n.src)}</td></tr>`).join("")}</tbody></table></div>
+        <td class="num">${n.tp ? fmt.num(n.tp, 2) + (CUR[n.cur] || "") : "—"}${n.prev && n.tp && n.prev !== n.tp ? `<span class="t3" data-tip="önceki hedef"> ← ${fmt.num(n.prev, 2)}</span>` : ""}</td>
+        <td>${n.url ? `<a href="${esc(n.url)}" target="_blank" rel="noopener" data-tip="${esc(n.title)}">${esc(srcName(n))} ↗</a>` : esc(srcName(n))}</td></tr>`).join("")}</tbody></table></div>
         ${xs.length > shown.length ? `<p class="res-more"><button type="button" class="link-btn" id="resMore">${Math.min(30, xs.length - shown.length)} not daha göster</button></p>` : ""}`
         : `<p class="tp-empty res-pad">Bu filtrede not yok.</p>`}
     </section>`;
@@ -123,9 +125,9 @@
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" })); a.download = "araci-kurum-notlari.csv"; a.click();
   }
   bindTools();
+  addEventListener("marketchange", () => { S.limit = 30; if (sh.route === "arastirma") render(); });
   sh.register("arastirma", {
     onShow() { S.loaded ? render() : (render(), load()); },
-    onMarket() { render(); },
     async refresh() { S.loaded = false; render(); await load(); },
     exports: () => [{ label: "Aracı kurum notları (CSV)", hint: "tüm notlar, 120 gün", run: exportCSV, disabled: !S.data }],
     exportInfo: () => S.data ? `${(S.data.notes || []).length} not` : "",
