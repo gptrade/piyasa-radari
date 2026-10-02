@@ -1,4 +1,4 @@
-name: probe-bist  # p12
+name: probe-bist  # p12b
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -17,8 +17,9 @@ jobs:
           set +e
           mkdir -p probe12
           pip install -q requests feedparser pypdf
-          python probe12.py > probe12/sonuc.txt 2>&1
+          python probe12.py > probe12/sonuc.txt 2>&1 || true
       - name: kaydet
+        if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
           git add -A probe12; git commit -qm "probe12 sonuçları" || true; git push -q
