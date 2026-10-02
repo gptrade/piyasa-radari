@@ -1,4 +1,4 @@
-name: probe-bist  # p13
+name: probe-bist  # p14
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -17,11 +17,11 @@ jobs:
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
         run: |
           set +e
-          mkdir -p probe13
+          mkdir -p probe14
           pip install -q requests feedparser pypdf
-          python probe13.py > probe13/sonuc.txt 2>&1 || true
+          python probe14.py > probe14/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe13; git commit -qm "probe13 sonuçları" || true; git push -q
+          git add -A probe14; git commit -qm "probe14 sonuçları" || true; git push -q
