@@ -11,6 +11,11 @@ CASES = [
     ("Deniz Yatırım PETKM için 21 TL'lik Hedef Fiyat Açıkladı - paraajansi.com.tr", dict(broker="Deniz Yatırım", t="PETKM", tp=21)),
     ("İş Yatırım Aksa Enerji'yi model portföyüne ekledi - borsamatik.com.tr", dict(broker="İş Yatırım", t="AKSEN", action="add", rating="AL")),
     ("Freedom Capital, CoreWeave için 151 dolar hedefle Al tavsiyesini yineledi", dict(broker="Freedom Capital", name="CoreWeave", tp=151, rating="AL")),
+    ("Yapı Kredi Yatırım Otokar İçin Hedef Fiyatını Açıkladı - Paranın Yönü", dict(broker="Yapı Kredi Yatırım", t="OTKAR")),
+    ("Gedik Yatırım, Tofaş Hedef Fiyatını %55 Yükseltti!!! - Para Ajansı", dict(broker="Gedik Yatırım", name="Tofaş", action="up")),
+    ("Ziraat Yatırım, Galata Wind İçin 'AL' Tavsiyesi Verdi! - Para Ajansı", dict(name="Galata Wind", rating="AL")),
+    ("Ak Yatırım Model Portföyünü Güncelledi: Aselsan İçin Hedef 520 TL - Paranın Yönü", dict(broker="Ak Yatırım", name="Aselsan", tp=520)),
+    ("AKSEN İş Yatırım’ın Model Portföyüne Girdi: Hedef Fiyat Kaç TL? - Para Ajansı", dict(broker="İş Yatırım", t="AKSEN", action="add")),
     ("HİSSE DEĞERLENDİRMESİ-Yapı Kredi Yatırım, OTKAR-Otokar için hedef fiyatını 780 TL, tavsiyesini \"al\" olarak korudu", dict(t="OTKAR", tp=780, rating="AL", action="keep")),
 ]
 NONE = ["Gülermak için hedef fiyat revizyonu: Tavsiye “endeks üstü getiri” - Paratic Haber",

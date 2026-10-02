@@ -96,7 +96,8 @@ TP_ANY = re.compile(rf"(?:hedef(?: fiyat\w*)?|price target|PT)[^.;:]{{0,60}}?(?:
                     re.I)
 HINT = re.compile(r"hedef fiyat|tavsiye|kapsama|model portf|price target|upgrade|downgrade|initiat|overweight|underweight", re.I)
 LEAD = re.compile(r"^(?P<b>[A-ZÇĞİÖŞÜ0-9][^,:]{1,40}?)(?:,\s+|['’](?:dan|den|tan|ten)\s+)")
-SUBJ = re.compile(r"^(?P<s>.+?)(?:['’][a-zçğıöşü]{1,4}\b|\s+(?:hisse\w*|için|model portf\w*)\b)")
+SUBJ = re.compile(r"^(?P<s>.+?)(?:['’][a-zçğıöşü]{1,4}\b|\s+(?:hisse\w*|için|model portf\w*|hedef\w*|tavsiye\w*)\b|\s+[\"'“‘])",
+                  re.I)
 
 
 def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict | None:
@@ -115,9 +116,16 @@ def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict
             return None
         broker, rest = b.group("broker").strip(" ,-"), text[b.end():].lstrip(" ,'’")
     broker = re.sub(r"^(?:ve|ile|and)\s+", "", broker)
-    sm = SUBJ.search(rest)
-    subj = sm.group("s") if sm else rest[:40]
-    cap = re.search(r"[A-ZÇĞİÖŞÜ0-9].*", subj)
+    lead_code = re.match(r"^([A-Z]{4,6})\s+(.+)$", broker)           # "AKSEN İş Yatırım'ın model portföyüne…"
+    subj_src = rest
+    if lead_code and lead_code.group(1) not in NOT_CODE:
+        broker = lead_code.group(2)
+        subj_src = lead_code.group(1)
+    elif ":" in rest[:70]:                                            # "Model Portföyünü Güncelledi: Aselsan İçin…"
+        subj_src = rest.split(":", 1)[1].strip()
+    sm = SUBJ.search(subj_src)
+    subj = sm.group("s") if sm else subj_src[:40]
+    cap = re.search(r"[A-ZÇĞİÖŞÜ].*", subj)
     subj = (cap.group(0) if cap else subj).strip(" ,-")
     paren = re.search(r"\(([A-Z]{3,6})\)", rest)
     codes = [c for c in CODE.findall(subj) if c not in NOT_CODE]
