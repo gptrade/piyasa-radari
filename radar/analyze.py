@@ -39,6 +39,9 @@ Kurallar:
   risk iştahı üzerinden BIST'e (bankalar, dış borçlu şirketler, ihracatçılar) ve ABD hisselerine etkisini yaz.
 - GDELT alarmları dünya basınındaki haber hacmi/ton sıçramasıdır; başlıklardan olayı çıkar, tek başına kanıt
   değildir — güveni ölçülü tut, etkilenen izleme listesi hisselerini affected_tickers'a yaz.
+- Kurum görünümlerinde (J.P. Morgan, BlackRock vb.) kurumun ana tezlerini, değerleme ve faiz görüşünü, gelişen
+  piyasalar/Türkiye ile izleme listesi için çıkarımları özetle; kurumun görüşünü kendi görüşün gibi sunma.
+- 10-Q/10-K yönetim değerlendirmesinde (MD&A) gelir/marj eğilimi, rehberlik ve yeni ya da büyüyen riskleri öne çıkar.
 - Basın bültenleri şirketin kendi ağzından yazılır; pazarlama dilini ayıkla, rakamlara bak.
 - Yatırım tavsiyesi verme; olasılıksal değerlendirme yap.
 - Yanıt dili: {language}. Metin İngilizce olsa bile özeti {language} yaz."""

@@ -50,10 +50,11 @@
     makro: { title: "Makro Veri", sub: "Haftalık makroekonomik göstergeler · ALCO paneli", view: "#view-makro", market: false },
     takvim: { title: "Takvim", sub: "Faiz kararları, enflasyon verileri, bilançolar, temettü ve vade sonları · İstanbul saati", view: "#view-takvim", market: true },
     sinyal: { title: "Sinyal Takip", sub: "BIST ve ABD haber, bildirim ve sosyal medya sinyalleri", view: "#view-sinyal", market: true },
+    arastirma: { title: "Araştırma", sub: "Aracı kurum notları, kurum görünümleri ve AI sentezi · raporların kendisi değil, kamuya duyurulan özetleri", view: "#view-arastirma", market: true },
     portfoy: { title: "Portföy", sub: "Pozisyonlar, kâr/zarar, risk ve pozisyonlarındaki gelişmeler · yalnız bu tarayıcıda", view: "#view-portfoy", market: false },
     "geri-alim": { title: "Şirket Geri Alım", sub: "KAP pay geri alım bildirimleri · Borsa İstanbul", view: "#view-geri-alim", market: true },
   };
-  const ALIAS = { alco: "makro", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy" };
+  const ALIAS = { alco: "makro", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
   const H = {};                                   // route → işleyiciler {refresh, exports, onShow, onHide, onMarket}
   const updatedAt = {};                           // route → {t, label, staleMin}
   const S = { route: null, market: store.get("radar.market", "ALL") };
