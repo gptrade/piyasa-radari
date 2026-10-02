@@ -10,7 +10,7 @@
   const { $, $$, esc, fmt, store } = sh;
   const S = { data: null, loaded: false, error: null, scope: store.get("radar.resScope", "watch"), q: "", limit: 30 };
   const RAT = { AL: "up", SAT: "down", TUT: "flat" };
-  const ACT = { up: "▲ yükseltti", down: "▼ düşürdü", init: "kapsama başladı", keep: "korudu", set: "belirledi" };
+  const ACT = { up: "▲ yükseltti", down: "▼ düşürdü", init: "kapsama başladı", keep: "korudu", set: "belirledi", add: "model portföye ekledi", remove: "model portföyden çıkardı" };
   const STANCE = { olumlu: "up", olumsuz: "down", "nötr": "flat", "karışık": "" };
 
   async function load() {
@@ -24,8 +24,8 @@
     if (sh.route === "arastirma") render();
   }
   const watch = () => { const wl = window.radar?.state?.feed?.watchlist; return new Set(wl ? wl.map(w => w.symbol) : Object.keys(S.data?.consensus || {})); };
-  const mkt = n => n.cur === "USD" ? "US" : "BIST";
-  const inMarket = n => sh.market === "ALL" || mkt(n) === sh.market;
+  const inMarket = n => sh.market === "ALL" || n.m === sh.market;
+  const CUR = { USD: " $", TRY: " ₺", EUR: " €" };
   const price = t => window.radarResearch?.prices?.[t]?.last;
 
   function synthesisCard(s) {
@@ -82,15 +82,15 @@
     const w = watch();
     let xs = (notes || []).filter(inMarket);
     if (S.scope === "watch") xs = xs.filter(n => w.has(n.t));
-    if (S.q) { const q = S.q.toLocaleLowerCase("tr"); xs = xs.filter(n => `${n.t} ${n.broker} ${n.title}`.toLocaleLowerCase("tr").includes(q)); }
+    if (S.q) { const q = S.q.toLocaleLowerCase("tr"); xs = xs.filter(n => `${n.t || ""} ${n.name || ""} ${n.broker} ${n.title}`.toLocaleLowerCase("tr").includes(q)); }
     const shown = xs.slice(0, S.limit);
     return `<section class="card card-flush" aria-labelledby="resNotT">
       <div class="card-head"><h2 class="card-title" id="resNotT">Aracı kurum notları</h2>
         <span class="card-meta">${fmt.int(xs.length)} not · kamuya duyurulan başlıklardan (AA, Bloomberg HT, Foreks, Yahoo…) çıkarılır, raporların kendisi okunmaz</span></div>
       ${shown.length ? `<div class="res-tw"><table class="tx res-notes"><thead><tr><th>Tarih</th><th>Hisse</th><th>Kurum</th><th>Tavsiye</th><th>Değişim</th><th class="num">Hedef</th><th class="num">Önceki</th><th>Kaynak</th></tr></thead><tbody>${shown.map(n => `
-        <tr><td>${fmt.date(n.ts)}</td><td>${w.has(n.t) ? `<button type="button" class="tk-link" data-sym="${esc(n.t)}">${esc(n.t)}</button>` : esc(n.t)}</td>
+        <tr><td>${fmt.date(n.ts)}</td><td>${n.t && w.has(n.t) ? `<button type="button" class="tk-link" data-sym="${esc(n.t)}">${esc(n.t)}</button>` : esc(n.t || n.name || "—")}</td>
         <td>${esc(n.broker)}</td><td><span class="${RAT[n.rating] || ""}">${esc(n.rating || "—")}</span></td><td>${esc(ACT[n.action] || "")}</td>
-        <td class="num">${n.tp ? fmt.num(n.tp, 2) + (n.cur === "USD" ? " $" : " ₺") : "—"}</td><td class="num">${n.prev ? fmt.num(n.prev, 2) : ""}</td>
+        <td class="num">${n.tp ? fmt.num(n.tp, 2) + (CUR[n.cur] || "") : "—"}</td><td class="num">${n.prev ? fmt.num(n.prev, 2) : ""}</td>
         <td>${n.url ? `<a href="${esc(n.url)}" target="_blank" rel="noopener" data-tip="${esc(n.title)}">${esc(n.src)} ↗</a>` : esc(n.src)}</td></tr>`).join("")}</tbody></table></div>
         ${xs.length > shown.length ? `<p class="res-more"><button type="button" class="link-btn" id="resMore">${Math.min(30, xs.length - shown.length)} not daha göster</button></p>` : ""}`
         : `<p class="tp-empty res-pad">Bu filtrede not yok.</p>`}
@@ -118,7 +118,7 @@
   }
   function exportCSV() {
     const rows = [["tarih", "hisse", "kurum", "tavsiye", "degisim", "hedef", "onceki", "para", "kaynak", "baglanti"],
-      ...(S.data?.notes || []).map(n => [n.ts, n.t, n.broker, n.rating || "", n.action || "", n.tp ?? "", n.prev ?? "", n.cur || "", n.src, n.url])];
+      ...(S.data?.notes || []).map(n => [n.ts, n.t || n.name || "", n.broker, n.rating || "", n.action || "", n.tp ?? "", n.prev ?? "", n.cur || "", n.src, n.url])];
     const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" })); a.download = "araci-kurum-notlari.csv"; a.click();
   }

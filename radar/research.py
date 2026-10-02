@@ -80,54 +80,95 @@ def tr_num(s: str | None) -> float | None:
 
 
 def rating_of(text: str) -> tuple[str | None, int | None]:
-    m = re.search(r"(?:tavsiye\w*|öneri\w*|rating|to)\s*[\"'“‘]?([^\"'”’,.;]{2,30})", text, re.I)
-    for chunk in ([m.group(1)] if m else []) + [text]:
+    m = re.search(r"(?:[\"'“‘]([^\"'”’]{2,30})[\"'”’]\s*tavsiye|([A-Za-zÇĞİÖŞÜçğıöşü ]{2,25}?)\s+tavsiye|tavsiye\w*\s*[\"'“‘:]?\s*"
+                  r"([^\"'”’,.;]{2,30})|rating[^,.;]{0,15}?\b(?:to|at)\s+([A-Za-z\- ]{3,20}))", text, re.I)
+    chunks = [g for g in (m.groups() if m else ()) if g] + [text]
+    for chunk in chunks:
         for rx, lab, d in RATING:
             if re.search(rx, chunk, re.I):
                 return lab, d
     return None, None
 
 
+UNIT = r"(?:TL|lira|dolar|\$|USD|avro|euro|€)"
+TP_ANY = re.compile(rf"(?:hedef(?: fiyat\w*)?|price target|PT)[^.;:]{{0,60}}?(?:(?P<prev>{NUM})\s*{UNIT}?['’]?\s*(?:dan|den|tan|ten)\s+)?"
+                    rf"(?P<tp>{NUM})\s*(?P<unit>{UNIT})|\$\s?(?P<tp2>{NUM})|(?P<tp3>{NUM})\s*(?P<unit3>{UNIT})['’]?(?:lık|lik)?\s+hedef",
+                    re.I)
+HINT = re.compile(r"hedef fiyat|tavsiye|kapsama|model portf|price target|upgrade|downgrade|initiat|overweight|underweight", re.I)
+LEAD = re.compile(r"^(?P<b>[A-ZÇĞİÖŞÜ0-9][^,:]{1,40}?)(?:,\s+|['’](?:dan|den|tan|ten)\s+)")
+SUBJ = re.compile(r"^(?P<s>.+?)(?:['’][a-zçğıöşü]{1,4}\b|\s+(?:hisse\w*|için|model portf\w*)\b)")
+
+
 def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict | None:
-    """Başlıktan aracı kurum notu: kurum, hisse kodu, tavsiye, hedef fiyat (önceki), değişim yönü. Not değilse None.
-    known: {sembol: [takma adlar]} — kod geçmiyorsa şirket adından eşleşme için."""
+    """Başlıktan aracı kurum notu: kurum, hisse (kod ya da ad), tavsiye, hedef fiyat (önceki), değişim yönü.
+    Not değilse None. known: {sembol: [takma adlar]} — kod geçmiyorsa şirket adından eşleştirme için."""
     text = re.sub(r"^\s*HİSSE DEĞERLENDİRMESİ\s*-\s*", "", title or "").strip()
     text = re.sub(r"\s+-\s+[^-]{2,40}$", "", text)            # Google News " - Kaynak" eki
-    blob = f"{text} {summary or ''}"
-    m_tp = TP_TR.search(blob) or TP_EN2.search(blob) or TP_EN.search(blob)
-    if not m_tp and not re.search(r"tavsiye|kapsama|price target|upgrade|downgrade|initiat|model portföy", blob, re.I):
+    if not HINT.search(text):
         return None
-    b = BROKER.search(text)
-    if not b:
-        return None
-    broker = re.sub(r"^(?:ve|ile|and)\s+", "", b.group("broker").strip(" ,-"))
-    rest = text[b.end():]
-    codes = [c for c in CODE.findall(rest) if c not in NOT_CODE and not broker.upper().startswith(c)]
-    ticker = codes[0] if codes else None
+    m = LEAD.match(text)
+    if m and len(m.group("b").split()) <= 5 and not re.search(r"hedef|tavsiye|hisse|için|portföy", m.group("b"), re.I):
+        broker, rest = m.group("b").strip(), text[m.end():]
+    else:
+        b = BROKER.search(text)
+        if not b:
+            return None
+        broker, rest = b.group("broker").strip(" ,-"), text[b.end():].lstrip(" ,'’")
+    broker = re.sub(r"^(?:ve|ile|and)\s+", "", broker)
+    sm = SUBJ.search(rest)
+    subj = sm.group("s") if sm else rest[:40]
+    cap = re.search(r"[A-ZÇĞİÖŞÜ0-9].*", subj)
+    subj = (cap.group(0) if cap else subj).strip(" ,-")
+    paren = re.search(r"\(([A-Z]{3,6})\)", rest)
+    codes = [c for c in CODE.findall(subj) if c not in NOT_CODE]
+    ticker = paren.group(1) if paren else codes[0] if codes else None
     if not ticker and known:
-        low = blob.lower()
-        ticker = next((s for s, names in known.items() if any(n.lower() in low for n in names)), None)
-    if not ticker:
+        low = f"{subj} {rest}".lower()
+        ticker = next((sy for sy, names in known.items() if any(n.lower() in low for n in names if len(n) > 2)), None)
+    name = re.sub(r"\s*\([A-Z]{3,6}\)", "", subj)[:40] if not ticker else None
+    if not ticker and (not name or len(name) < 2):
         return None
-    tp = tr_num(m_tp.group("tp")) if m_tp else None
-    prev = tr_num(m_tp.group("prev")) if m_tp and m_tp.groupdict().get("prev") else None
+    blob = f"{rest} {summary or ''}"
+    mt = TP_ANY.search(blob)
+    tp = prev = None
+    unit = ""
+    if mt:
+        tp = tr_num(mt.group("tp") or mt.group("tp2") or mt.group("tp3"))
+        prev = tr_num(mt.group("prev"))
+        unit = (mt.group("unit") or mt.group("unit3") or ("$" if mt.group("tp2") else "")).lower()
+    m2 = TP_EN2.search(blob)                                  # "from $260 to $240"
+    if m2:
+        tp, prev, unit = tr_num(m2.group("tp")), tr_num(m2.group("prev")), "$"
+    elif tp and prev is None:
+        mp = re.search(rf"from \$\s?(?P<p>{NUM})|(?P<q>{NUM})\s*{UNIT}?['’]?\s*(?:dan|den|tan|ten)\b", blob, re.I)
+        if mp and tr_num(mp.group("p") or mp.group("q")) not in (None, tp):
+            prev = tr_num(mp.group("p") or mp.group("q"))
     rating, d = rating_of(rest)
     action = next((a for rx, a in ACTION if re.search(rx, rest, re.I)), None)
+    if re.search(r"model portf\w*\s*(?:ekle|al|gir)|model portföyüne", rest, re.I):
+        action, rating, d = "add", rating or "AL", 1 if d is None else d
+    elif re.search(r"model portf\w*\s*(?:çıkar|den çık)", rest, re.I):
+        action = "remove"
     if action in (None, "set", "keep") and tp and prev and abs(tp / prev - 1) > 0.005:
         action = "up" if tp > prev else "down"
-    if not (tp or rating):
+    if not (tp or rating or action):
         return None
-    cur = "USD" if "$" in blob[:400] and not re.search(r"\bTL\b|lira", blob, re.I) else "TRY"
-    return {"broker": broker[:40], "t": ticker, "rating": rating, "dir": d, "tp": tp, "prev": prev,
-            "action": action, "cur": cur}
+    cur = "USD" if unit in ("dolar", "$", "usd") else "EUR" if unit in ("avro", "euro", "€") else "TRY" if unit in ("tl", "lira") else None
+    if cur is None and ticker and known and ticker in known:
+        cur = "TRY"
+    return {"broker": broker[:40], "t": ticker, "name": name, "rating": rating, "dir": d, "tp": tp, "prev": prev,
+            "action": action, "cur": cur, "m": "BIST" if cur == "TRY" or (ticker and known and ticker in known) else
+            "US" if cur == "USD" else None}
 
 
 # ------------------------------------------------------------------ toplayıcılar
+DEFAULT_QUERIES = ['"hedef fiyatını"', '"hedef fiyat" Yatırım hisse', '"tavsiyesini" hisse', '"model portföy" Yatırım',
+                   'site:foreks.com "HİSSE DEĞERLENDİRMESİ"']
 PENDING: list[dict] = []      # izleme listesi dışı notlar (akışa girmez, update() research.json'a yazar)
 
 
 def note_row(n: dict, id_: str, ts: str, src: str, url: str, title: str, px: dict | None = None) -> dict:
-    p = (px or {}).get(n["t"]) or {}
+    p = (px or {}).get(n.get("t") or "") or {}
     return {**n, "id": id_, "ts": ts, "src": (src or "").split(" · ")[0], "url": url or "", "title": (title or "")[:200],
             "px": p.get("last")}
 
@@ -172,7 +213,7 @@ def collect_broker_notes(ctx: Context) -> list[Item]:
                 continue
             raw.append(Item(id=make_id("foreks", e["url"] or e["title"]), source="Foreks", source_type="news", market="BIST",
                             title=e["title"], summary=e["summary"], url=e["url"], published=e["published"], lang="tr"))
-    for q in cfg.get("queries") or ['"hedef fiyatını"', 'site:foreks.com "HİSSE DEĞERLENDİRMESİ"', '"tavsiyesini" Yatırım hisse']:
+    for q in cfg.get("queries") or DEFAULT_QUERIES:
         url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:2d&hl=tr&gl=TR&ceid=TR:tr"
         for it in entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
                                    market="BIST", since=ctx.since, lang="tr", allow_empty=True):
@@ -182,7 +223,7 @@ def collect_broker_notes(ctx: Context) -> list[Item]:
         n = parse_note(it.title, it.summary, known)
         if not n:
             continue
-        if n["t"] in known:
+        if n.get("t") in known:
             it.extra["broker_note"] = n
             it.extra["analyst"] = True
             it.tickers = [n["t"]]
@@ -279,7 +320,7 @@ def notes_from(items: list[dict], px: dict, known: dict | None = None) -> list[d
                 continue
             lab, d = rating_of(c.get("to") or "")
             act = {"up": "up", "down": "down", "init": "init", "main": "keep", "reit": "keep"}.get(c.get("action"))
-            out.append({"broker": c["firm"][:40], "t": sym, "rating": lab, "dir": d, "tp": c.get("pt"),
+            out.append({"broker": c["firm"][:40], "t": sym, "name": None, "m": p.get("market"), "rating": lab, "dir": d, "tp": c.get("pt"),
                         "prev": c.get("pt_prev"), "action": act, "cur": p.get("currency") or "USD",
                         "id": make_id("yahoo-note", sym, c["firm"], c["date"], str(c.get("pt"))),
                         "ts": f"{c['date']}T12:00:00Z", "src": "Yahoo", "url": f"https://finance.yahoo.com/quote/{p.get('yahoo', sym)}/analysis/",
@@ -291,7 +332,7 @@ def consensus(notes: list[dict], sym: str, days: int = 120) -> dict | None:
     """Hisse için son notlardan: kurum başına en son tavsiye/hedef; medyan hedef, dağılım."""
     lo = iso(now_utc() - timedelta(days=days))
     latest: dict[str, dict] = {}
-    for n in sorted((n for n in notes if n["t"] == sym and n["ts"] >= lo), key=lambda n: n["ts"]):
+    for n in sorted((n for n in notes if n.get("t") == sym and n["ts"] >= lo), key=lambda n: n["ts"]):
         latest[n["broker"]] = {**latest.get(n["broker"], {}), **{k: v for k, v in n.items() if v is not None}}
     if not latest:
         return None
@@ -348,7 +389,7 @@ def synthesize(analyzer, store: dict, items: list[dict], watch: list) -> dict | 
     lines = ["İZLEME LİSTESİ: " + ", ".join(f"{s.symbol} ({s.name})" for s in watch), "", "ARACI KURUM NOTLARI (son 7 gün):"]
     for n in sorted(notes, key=lambda n: n["ts"], reverse=True)[:60]:
         tp = f" hedef {n['tp']:g}{' (önce ' + format(n['prev'], 'g') + ')' if n.get('prev') else ''} {n.get('cur', '')}" if n.get("tp") else ""
-        lines.append(f"- {n['ts'][:10]} {n['broker']} → {n['t']}: {n.get('rating') or '?'} {n.get('action') or ''}{tp}")
+        lines.append(f"- {n['ts'][:10]} {n['broker']} → {n.get('t') or n.get('name')}: {n.get('rating') or '?'} {n.get('action') or ''}{tp}")
     lines += ["", "KURUM GÖRÜNÜMLERİ:"]
     for o in outl:
         lines.append(f"- {o['house']} ({o['ts'][:10]}): {o.get('summary', '')} | " + " | ".join(o.get("key_points") or []))
@@ -368,7 +409,7 @@ def synthesize(analyzer, store: dict, items: list[dict], watch: list) -> dict | 
 def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dict:
     """Kurum notlarını ve görünümleri research.json'a yazar; günde bir sentez üretir."""
     store = load()
-    key = lambda n: (n["broker"].lower()[:10], n["t"], n.get("tp"), n.get("rating"), n["ts"][:10])
+    key = lambda n: (n["broker"].lower()[:10], n.get("t") or (n.get("name") or "").lower()[:12], n.get("tp"), n.get("rating"), n["ts"][:10])
     seen = {n["id"] for n in store["notes"]}
     keys = {key(n) for n in store["notes"]}
     added = 0

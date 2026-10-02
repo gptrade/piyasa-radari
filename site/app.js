@@ -1023,7 +1023,7 @@
   }
   // Aracı kurum notları (haber başlıklarından çıkarılan: kurum, tavsiye, hedef fiyat) · data/research.json
   const RAT_CLS = { AL: "up", SAT: "down", TUT: "flat" };
-  const ACT_TR = { up: "▲ yükseltti", down: "▼ düşürdü", init: "kapsama", keep: "korudu", set: "belirledi" };
+  const ACT_TR = { up: "▲ yükseltti", down: "▼ düşürdü", init: "kapsama", keep: "korudu", set: "belirledi", add: "model portföye ekledi", remove: "model portföyden çıkardı" };
   function brokerSection(sym, p) {
     const R = state.research;
     const notes = (R?.notes || []).filter(n => n.t === sym && n.src !== "Yahoo").slice(0, 6);
