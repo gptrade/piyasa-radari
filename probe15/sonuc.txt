@@ -1,22 +1,62 @@
-radar.research Aracı kurum notları: izleme listesinde 0, diğer BIST 0
+radar.research Aracı kurum notları: izleme listesinde 0, diğer BIST 61
 radar.research Kurum görünümleri: 2 yeni
 radar.documents Belge: 1 okundu (1 denendi)
-radar.analyze Gemini bu tur devre dışı, sıradaki sağlayıcıya geçiliyor: gemini-3.5-flash-lite HTTP 429: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.
-radar.research Araştırma: 0 yeni not, 0 not, 0 görünüm
 == aracı kurum notları
-  diğer BIST notları: 0
+  diğer BIST notları: 61
+    2026-10-02 BNP Paribas Exane Nike None None down None None | BNP Paribas Exane, Nike’ın hedef fiyatını düşürdü - Investing.com Türkiye
+    2026-10-02 Baird Micron None None keep None None | Baird, Micron hissesi için hedef fiyatını korudu - Investing.com Türkiye
+    2026-10-01 Morgan Stanley Apple None None down None None | Morgan Stanley, Apple hisseleri için hedef fiyatını düşürdü - Foreks.com
+    2026-10-02 RBC Capital Qure None None down None None | RBC Capital, uniQure hisse hedef fiyatını düşürdü - Investing.com Türkiye
+    2026-10-02 Morgan Stanley Legrand None None up None None | Morgan Stanley Legrand’ın hedef fiyatını yükseltti, büyüme beklentisiyle - Investing.com Türkiye
+    2026-10-02 BTIG Nike US None down 50.0 None | BTIG, Nike’ın hedef fiyatını zayıf görünüm nedeniyle 50 dolara düşürdü - Investing.com Türkiye
+    2026-10-02 Bernstein Nike None None down None None | Bernstein, Nike’ın hedef fiyatını kötüleşen görünüm nedeniyle düşürdü - Investing.com Türkiye
+    2026-10-02 Telsey Nike None None down None None | Telsey, Nike hisse hedef fiyatını düşürdü - Investing.com Türkiye
+    2026-10-02 Stifel Nike None None down None None | Stifel, Nike’ın hedef fiyatını düşürdü - Investing.com Türkiye
+    2026-10-01 StoneX Synopsys None None keep None None | StoneX, Synopsys hissesi için hedef fiyatını korudu - Investing.com Türkiye
+    2026-10-01 Morgan Stanley Apple None None down None None | Morgan Stanley, Apple hisse hedef fiyatını düşürdü - Investing.com Türkiye
+    2026-10-01 UBS Micron None None keep None None | UBS, Micron hissesi için hedef fiyatını korudu - Investing.com Türkiye
+    2026-10-01 Bernstein ConAgra None None down None None | Bernstein, kaldıraç endişeleriyle ConAgra’nın hedef fiyatını düşürdü - Investing.com Türkiye
+    2026-10-01 Scotiabank CMS Energy None None keep None None | Scotiabank, CMS Energy hissesi için hedef fiyatını korudu - Investing.com Türkiye
+    2026-10-01 Deutsche Bank Micron None None keep None None | Deutsche Bank, Micron hissesi için hedef fiyatını korudu - Investing.com Türkiye
+    2026-10-01 Citizens Sagimet Biosciences None None down None None | Citizens, Sagimet Biosciences hisse hedef fiyatını düşürdü - Investing.com Türkiye
+    2026-10-01 Citizens Paramount Skydance None None keep None None | Citizens, liderlik değişikliği sonrası Paramount Skydance hissesi için hedef fiyatını korudu - Investing.com T
+    2026-10-02 Piper Sandler Cigna None None up None None | Piper Sandler, Cigna hissesi için hedef fiyatı yükseltti - Investing.com Türkiye
+    2026-10-02 Gedik Yatırım Tofaş Hedef Fiyatını %55 Yükseltti!!! None None up None None | Gedik Yatırım, Tofaş Hedef Fiyatını %55 Yükseltti!!! - Para Ajansı
+    2026-10-02 Şeker Yatırım Doğuş Otomotiv BIST None None 302.9 None | Şeker Yatırım’dan Doğuş Otomotiv için 302,90 TL hedef fiyat - Para Ajansı
+    2026-10-02 Yapı Kredi Yatırım Otokar BIST None None 780.0 None | Yapı Kredi Yatırım’dan Otokar için 780 TL hedef fiyat - Borsamatik
+    2026-10-02 Yapı Kredi Yatırım Otokar İçin Hedef Fiyatını Açıkladı None None set None None | Yapı Kredi Yatırım Otokar İçin Hedef Fiyatını Açıkladı - Paranın Yönü
+    2026-10-01 Citi 12 aylık Bitcoin hedef fiyatını 113 bin None None up None None | Citi 12 aylık Bitcoin hedef fiyatını 113 bin dolara yükseltti - borsatek.com
+    2026-10-01 Ziraat Yatırım Galata Wind İçin 'AL' Tavsiyesi Verdi! None AL None None None | Ziraat Yatırım, Galata Wind İçin 'AL' Tavsiyesi Verdi! - Para Ajansı
+    2026-10-02 Ak Yatırım Model Portföyünü Güncelledi: Aselsan İçi BIST None None 520.0 None | Ak Yatırım Model Portföyünü Güncelledi: Aselsan İçin Hedef 520 TL - Paranın Yönü
+    2026-10-02 AKSEN İş Yatırım Model Portföyüne Girdi: Hedef Fiyat K None AL add None None | AKSEN İş Yatırım’ın Model Portföyüne Girdi: Hedef Fiyat Kaç TL? - Para Ajansı
+    2026-10-02 Yapı Kredi Yatırım Otokar BIST None None 780.0 None | Yapı Kredi Yatırım’dan Otokar için 780 TL hedef fiyat - Borsamatik
+    2026-10-02 Yapı Kredi Yatırım Otokar İçin Hedef Fiyatını Açıkladı None None set None None | Yapı Kredi Yatırım Otokar İçin Hedef Fiyatını Açıkladı - Paranın Yönü
+    2026-10-02 Şeker Yatırım Doğuş Otomotiv BIST None None 302.9 None | Şeker Yatırım’dan Doğuş Otomotiv için 302,90 TL hedef fiyat - Para Ajansı
+    2026-10-02 İş Yatırım Aksa Enerji None AL add None None | İş Yatırım Aksa Enerji'yi model portföyüne ekledi - Borsamatik
+    2026-10-02 Şeker Yatırım Tofaş BIST None None 435.0 None | Şeker Yatırım Tofaş için 435 TL Hedef Fiyat Verdi - Para Ajansı
+    2026-10-02 Gedik Yatırım Tofaş Hedef Fiyatını %55 Yükseltti!!! None None up None None | Gedik Yatırım, Tofaş Hedef Fiyatını %55 Yükseltti!!! - Para Ajansı
+    2026-10-01 Ziraat Yatırım Galata Wind İçin 'AL' Tavsiyesi Verdi! None AL None None None | Ziraat Yatırım, Galata Wind İçin 'AL' Tavsiyesi Verdi! - Para Ajansı
+    2026-10-02 Cantor Fitzgerald MongoDB None None keep None None | Cantor Fitzgerald, yapay zeka büyümesi nedeniyle MongoDB hisse tavsiyesini yineledi - Investing.com Türkiye
+    2026-10-02 StoneX Optimum Communication None TUT keep None None | StoneX, Optimum Communication hissesi için Tut tavsiyesini yineledi - Investing.com Türkiye
+    2026-10-02 H.C. Wainwright Nektar Therapeutics None None keep None None | H.C. Wainwright, Nektar Therapeutics hisse tavsiyesini korudu - Investing.com Türkiye
+    2026-10-02 H.C. Wainwright Cullinan Oncology None None keep None None | H.C. Wainwright, Cullinan Oncology hissesi için tavsiyesini korudu - Investing.com Türkiye
+    2026-10-01 Stifel Synopsys None None keep None None | Stifel, Synopsys için hisse tavsiyesini yapay zeka ortaklıkları nedeniyle yineledi - Investing.com Türkiye
+    2026-10-01 Goldman Sachs Micron Technology None None keep None None | Goldman Sachs, Micron Technology için hisse tavsiyesini yineledi - Investing.com Türkiye
+    2026-10-01 TD Cowen Accenture None TUT None None None | TD Cowen, Accenture hissesi için Tut tavsiyesini tekrarladı - Investing.com Türkiye
 uyarılar []
 
 == kurum görünümleri
-süre 9.2
+süre 9.6
    J.P. Morgan AM: Guide to the Markets – U.S. https://am.jpmorgan.com/content/dam/jpm-am-aem/global/en/insights/market-insights/guide-to-the-markets/mi-guide-to-the-markets-us.pdf {'kind': 'Kurum görünümü', 'files': [{'type': 'PDF', 'pages': 71}], 'chars': 60420} | metin başı: Market  Insights Guide to the  Markets  ® U.S. | 4Q 2026 As of September 30, 2026 2 Global Market Insights Strategy team Shogo Maekawa Tokyo Kerry Craig, CFA Melbourne Chaoping Zhu, CFA Shanghai Agnes Lin Taipei Americas Europe Asia Marcella Chow Hong Kong Ian Hui Hong Kong Sahil Gauba Mumbai Tai Hu
    BlackRock Investment Institute: Haftalık piyasa yorumu https://www.blackrock.com/us/individual/literature/market-commentary/weekly-investment-commentary-en-us-20260928-china-up-the-value-chain.pdf {'kind': 'Kurum görünümü', 'files': [{'type': 'PDF', 'pages': 5}], 'chars': 32839} | metin başı: Guides Go to View and check the “Guides” box to see page  margins and columns. This feature will help align  items on the page.   Text   Tables Avoid vertical gridlines when possible.   Width 4.75 inches CAPITAL AT RISK. INVESTMENTS CAN RISE OR FALL IN VALUE. FOR PUBL IC DISTRIBUTION IN THE U.S., CA
 
 == SEC 10-Q
 attach {'count': 1, 'tried': 1} {'kind': '10-Q çeyreklik rapor', 'files': [{'type': '10-Q', 'name': 'aapl-20260627.htm'}], 'chars': 30157}
-  metin: [YÖNETİMİN DEĞERLENDİRMESİ (MD&A)] / Item 2. Management’s Discussion and Analysis of Financial Condition and Results of Operations / This Item and other sections of this Quarterly Report on Form 10-Q (“Form 10-Q”) contain forward-looking statements, within the meaning of the Private Securities Litigation Reform Act of 1995, that involve risks and uncertainties. Forward-looking statements provide curre ... 30157
+  metin: [YÖNETİMİN DEĞERLENDİRMESİ (MD&A)] / Item 2. Management’s Discussion and Analysis of Financial Condition and Results of Operations / This Item and other sections of this Quarterly Report on Form 10-Q (“Form 10-Q”) contain forward-looking statements, within the meaning of the Private Securities Litigation Reform Act of 1995, that involve risks and uncertainties. Forward-looking statements provide curreradar.analyze Gemini bu tur devre dışı, sıradaki sağlayıcıya geçiliyor: gemini-3.5-flash-lite HTTP 429: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.
+radar.research Araştırma: 53 yeni not, 53 not, 0 görünüm
+ ... 30157
 
-== AI J.P. Morgan AM: Guide to the Markets – U.S. 18.2 sn
+== AI J.P. Morgan AM: Guide to the Markets – U.S. 13.6 sn
 null
 
 == AI BlackRock Investment Institute: Haftalık piyasa yorumu 0.0 sn
@@ -25,5 +65,5 @@ null
 == AI 10-Q - Quarterly report 0.0 sn
 null
 
-== research.update {'added': 0, 'notes': 0, 'outlooks': 0} AI {'model': 'gemini-3.8-flash', 'enabled': True, 'used': 1, 'errors': ['Gemini devre dışı: gemini-3.5-flash-lite HTTP 429: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.'], 'by_provider': {}, 'providers': ['Gemini'], 'down': {'Gemini': 'gemini-3.5-flash-lite HTTP 429: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.'}}
+== research.update {'added': 53, 'notes': 53, 'outlooks': 0} AI {'model': 'gemini-3.8-flash', 'enabled': True, 'used': 1, 'errors': ['Gemini devre dışı: gemini-3.5-flash-lite HTTP 429: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.'], 'by_provider': {}, 'providers': ['Gemini'], 'down': {'Gemini': 'gemini-3.5-flash-lite HTTP 429: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.'}}
 sentez: null
