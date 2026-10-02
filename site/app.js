@@ -38,8 +38,13 @@
   const sign = s => s === "bullish" ? 1 : s === "bearish" ? -1 : 0;
   const watchSet = () => new Set((state.feed?.watchlist || []).map(w => w.symbol));
   const watchMarket = sym => (state.feed?.watchlist || []).find(w => w.symbol === sym)?.market;
+  // Piyasa geneli makro kayıt (Fed, ECB, TCMB, GDELT…): kendi hissesi yok; AI'ın "etkilenebilir" dediği hisseler
+  // hissenin kendi haberi sayılmaz (ısı haritası, net yön, hisse sayaçları bozulmasın), panelde ayrı gösterilir.
+  const isMarketWide = it => it.source_type === "macro" && !(it.tickers || []).length;
+  const affTickers = it => { const w = watchSet(); return (it.analysis?.affected_tickers || []).filter(t => w.has(t)); };
   const relTickers = it => {
     const w = watchSet(), own = it.tickers || [];
+    if (isMarketWide(it)) return [];
     return [...own, ...(it.analysis?.affected_tickers || []).filter(t => w.has(t) && !own.includes(t))];
   };
   const isSignal = a => a && a.sentiment !== "neutral" && a.confidence >= 70 && a.materiality !== "low";
@@ -258,7 +263,7 @@
     const a = it.analysis, tks = relTickers(it), reason = state.reasons.get(it.id);
     const more = tks.length > 1 ? `<span class="tk-more" data-tip="Ayrıca: ${esc(tks.slice(1).join(", "))}">+${tks.length - 1}</span>` : "";
     const tk = tks.length ? `<span class="tk"><button type="button" class="tk-sym tk-link" data-sym="${esc(tks[0])}" data-tip="${esc(tks[0])} hisse paneli: teknik görünüm, tüm haberler">${esc(tks[0])}</button>${more}</span>`
-      : `<span class="tk-gen" data-tip="Belirli bir hisse yok: piyasa geneli">${it.market === "BIST" ? "BIST" : "ABD"} geneli</span>`;
+      : `<span class="tk-gen" data-tip="${affTickers(it).length ? `Piyasa geneli · etkileyebileceği: ${esc(affTickers(it).join(", "))}` : "Belirli bir hisse yok: piyasa geneli"}">${it.market === "BIST" ? "BIST" : "ABD"} geneli</span>`;
     const isNew = state.seenBefore && it.published > state.seenBefore && isSignal(a);
     const text = a?.event_label ? `<b>${esc(a.event_label)}</b> · ${esc(a.what || a.headline_tr || it.title)}` : esc(a?.headline_tr || it.title);
     const full = `<b>${esc(it.title)}</b>${a?.what ? `<hr>${esc(a.what)}` : ""}<hr>${esc(it.source)} · ${fmt.dt(it.published)}`;
@@ -350,6 +355,7 @@
       </p>
       ${a ? `<dl class="slots"><dt>Ne oldu</dt><dd>${esc(a.what || a.headline_tr || it.title)}</dd><dt>Neden önemli</dt><dd>${esc(a.why || first(a.summary) || "—")}</dd>
         <dt>Risk</dt><dd class="risk">${esc(a.risk || a.risks?.[0] || "—")}</dd></dl>${a.summary ? `<p class="d-sum">${esc(a.summary)}</p>` : ""}` : ""}
+      ${isMarketWide(it) && affTickers(it).length ? `<p class="aff-line"><span class="d-sub-in">Etkileyebileceği hisseler</span> ${affTickers(it).map(t => `<button type="button" class="tk-link aff-tk" data-sym="${esc(t)}">${esc(t)}</button>`).join("")}</p>` : ""}
       ${docSummary(it)}
       ${gdeltBlock(it)}
       ${secondOpinions(it)}
@@ -365,6 +371,7 @@
         ${tks[0] ? `<button type="button" class="btn" data-a="tk">Yalnız ${esc(tks[0])}</button>` : ""}
         ${it.url ? `<a class="btn" href="${esc(it.url)}" target="_blank" rel="noopener">Kaynağa git ↗</a>` : ""}
       </div>`;
+    $$(".aff-tk", left).forEach(b => b.onclick = e => { e.stopPropagation(); openTicker(b.dataset.sym, b); });
     $$(".d-actions button", left).forEach(b => b.onclick = e => {
       e.stopPropagation();
       if (b.dataset.a === "tk") { state.ticker = tks[0]; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE; render(); return; }
@@ -931,6 +938,11 @@
     };
     if (techs.length) head.insertAdjacentHTML("beforeend", `<p class="d-sub">Teknik olaylar</p><ul class="tp-news">${techs.map(it => { const k = sign(it.analysis?.sentiment); return `
       <li><button type="button" data-id="${it.id}"><span class="dir ${dirCls(k)}">${glyph(k)}</span><span class="tp-t">${esc(it.analysis?.headline_tr || it.title)}</span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>`);
+    // Piyasa geneli gelişmeler: bu hisseyi etkileyebileceği söylenen makro kayıtlar (hissenin kendi haberi sayılmaz)
+    const macro = state.feed.items.filter(it => isMarketWide(it) && ageMin(it.published) <= 2880 && affTickers(it).includes(sym))
+      .sort((x, y) => impact(y) - impact(x) || (y.published > x.published ? 1 : -1)).slice(0, 3);
+    if (macro.length) head.insertAdjacentHTML("beforeend", `<p class="d-sub">Piyasa geneli · bu hisseyi etkileyebilir</p><ul class="tp-news">${macro.map(it => { const k = sign(it.analysis?.sentiment); return `
+      <li><button type="button" data-id="${it.id}"><span class="dir ${dirCls(k)}">${glyph(k)}</span><span class="tp-t">${it.analysis?.event_label ? `<b>${esc(it.analysis.event_label)}</b> · ` : ""}${esc(it.analysis?.what || it.analysis?.headline_tr || it.title)} <span class="t3">· ${esc(it.source.split(" · ")[0])}</span></span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>`);
     $$(".tp-news button", head).forEach(b => b.onclick = () => openItem(b.dataset.id, sym));
     const px = document.createElement("div");
     px.className = "tp-sec";
