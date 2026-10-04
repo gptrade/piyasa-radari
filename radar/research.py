@@ -287,7 +287,13 @@ def collect_outlooks(ctx: Context) -> list[Item]:
         if r is None:
             continue
         ver = f"{url}|{r.headers.get('last-modified') or len(r.content)}"
-        if st.get(f"outlook_{o['key']}") == ver:
+        # Aynı sayı daha önce alındıysa yalnız AI özeti research.json'a yazıldıysa atlanır; özet yoksa (ör. AI kotası
+        # doluydu) günde bir yeniden denenir — kayıt kimliğine gün eklenir ki "görüldü" listesine takılmasın.
+        done = any(x.get("ver") == ver for x in load().get("outlooks", []))
+        if st.get(f"outlook_{o['key']}") == ver and done:
+            continue
+        retry = st.get(f"outlook_{o['key']}") == ver
+        if retry and st.get(f"outlook_{o['key']}_try") == now_utc().date().isoformat():
             continue
         try:
             text, n = _pdf_text(r.content, o["pages"])
@@ -295,10 +301,11 @@ def collect_outlooks(ctx: Context) -> list[Item]:
             log.warning("%s okunamadı: %s", o["key"], e)
             continue
         st[f"outlook_{o['key']}"] = ver
+        st[f"outlook_{o['key']}_try"] = now_utc().date().isoformat()
         out.append(Item(
-            id=make_id("outlook", ver), source=f"{o['house']} · {o['title']}", source_type="macro", market="US",
+            id=make_id("outlook", ver, now_utc().date().isoformat() if retry else ""), source=f"{o['house']} · {o['title']}", source_type="macro", market="US",
             title=f"{o['house']}: {o['title']}", summary="", url=url, published=iso(now_utc()), lang="en",
-            extra={"outlook": {"key": o["key"], "house": o["house"], "title": o["title"]},
+            extra={"outlook": {"key": o["key"], "house": o["house"], "title": o["title"], "ver": ver},
                    "full_text": text[:40000], "doc": {"kind": "Kurum görünümü", "files": [{"type": "PDF", "pages": n}],
                                                      "chars": len(text)}},
         ))
