@@ -31,8 +31,9 @@ HISTORY_START = date(2023, 1, 1)
 CPI_SERIES = "TP.GENENDEKS.T1"
 EVDS_URL = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
 GAP = 2.0          # KAP istekleri arası bekleme (sn)
-PAUSE_MIN = 45     # 429 sonrası ara
+PAUSE_MIN = 30     # 429 sonrası ara
 MAX_PERIODS = 20   # çalıştırma başına işlenecek dönem
+MAX_REQ = 24       # çalıştırma başına KAP isteği (KAP ~50 istek sonra 429 veriyor; radar 15 dk'da bir)
 MAX_TRIES = 3
 
 
@@ -183,6 +184,8 @@ def rebuild_series(force: bool = False) -> int:
 # ---- Ana döngü ----
 
 def _kap_work(state, members, comps, stats, left, budget) -> None:
+    start_req = kapfin.REQUESTS
+    spent = lambda: kapfin.REQUESTS - start_req  # noqa: E731
     if _due(state, "recent", 1):
         for row in kapfin.recent_reports(3):
             for c in kapfin.codes_of(row):
@@ -190,7 +193,7 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
                     stats["queued"] += 1
 
     for code, m in members.items():
-        if left() < budget * 0.6:
+        if left() < budget * 0.6 or spent() >= MAX_REQ // 2:
             break
         if comps.get(code, {}).get("listed"):
             continue
@@ -204,7 +207,7 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
         stats["listed"] += 1
 
     for code, pk in next_jobs(state):
-        if left() < 15 or stats["processed"] + stats["failed"] >= MAX_PERIODS:
+        if left() < 15 or stats["processed"] + stats["failed"] >= MAX_PERIODS or spent() >= MAX_REQ:
             break
         idxs = state["queue"][code][pk]
         rep = process_period(code, pk, idxs)          # RateLimited burada yukarı çıkar, iş kuyrukta kalır

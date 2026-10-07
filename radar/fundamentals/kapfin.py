@@ -45,8 +45,13 @@ class RateLimited(Exception):
     """KAP 429 döndü: bu çalıştırmada KAP'a daha fazla istek atılmaz."""
 
 
+REQUESTS = 0   # bu çalıştırmada KAP'a atılan istek sayısı (store bütçe için okur)
+
+
 def _kap(method: str, url: str, **kw):
     """KAP isteği; 429'da RateLimited fırlatır, diğer hatalarda None döner."""
+    global REQUESTS
+    REQUESTS += 1
     headers = {"User-Agent": http.DEFAULT_UA, "Accept-Language": "tr,en;q=0.8", **kw.pop("headers", {})}
     try:
         r = http._session.request(method, url, headers=headers, timeout=kw.pop("timeout", 90), **kw)
