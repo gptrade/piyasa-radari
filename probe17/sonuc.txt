@@ -1,0 +1,12 @@
+radar.private_reports Rapor okunamadı (sektor): AI yanıtı yok
+radar.private_reports Gizli rapor kutusu: 0 okundu, 4 sırada
+repo çekildi: True
+rapor birimleri: 4 [('sektor', 1, ['.jpeg']), ('sektor', 1, ['.jpeg']), ('sektor', 1, ['.jpeg']), ('strateji', 1, ['.jpeg'])]
+  klasör sirket True dosya sayısı 1
+  klasör sektor True dosya sayısı 4
+  klasör strateji True dosya sayısı 2
+kök içerik: ['sektor', 'sirket', 'strateji']
+durum {'count': 0, 'waiting': 4} AI {} ['Gemini devre dışı: gemini-3.5-flash-lite HTTP 429: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.']
+
+not sayısı 0 []
+akış kayıtları []
