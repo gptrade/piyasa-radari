@@ -178,7 +178,8 @@ def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict
 # ------------------------------------------------------------------ toplayıcılar
 DEFAULT_QUERIES = ['"hedef fiyatını"', '"hedef fiyat" Yatırım hisse', '"tavsiyesini" hisse', '"model portföy" Yatırım',
                    'site:foreks.com "HİSSE DEĞERLENDİRMESİ"']
-PENDING: list[dict] = []      # izleme listesi dışı notlar (akışa girmez, update() research.json'a yazar)
+PENDING: list[dict] = []
+PRIVATE: dict = {"records": [], "notes": []}   # gizli rapor kutusundan bu turda gelenler (private_reports.process)      # izleme listesi dışı notlar (akışa girmez, update() research.json'a yazar)
 
 
 def note_row(n: dict, id_: str, ts: str, src: str, url: str, title: str, px: dict | None = None) -> dict:
@@ -405,12 +406,20 @@ def synthesize(analyzer, store: dict, items: list[dict], watch: list) -> dict | 
     outl = [o for o in store["outlooks"] if o.get("ts", "") >= iso(now_utc() - timedelta(days=100))][:4]
     macro = [d for d in items if d.get("source_type") == "macro" and d.get("analysis") and d["published"] >= lo
              and d["analysis"].get("materiality") in ("medium", "high")][:15]
-    if len(notes) + len(outl) + len(macro) < 3:
+    if len(notes) + len(outl) + len(macro) + len(store.get("reports", [])) < 3:
         return None
     lines = ["İZLEME LİSTESİ: " + ", ".join(f"{s.symbol} ({s.name})" for s in watch), "", "ARACI KURUM NOTLARI (son 7 gün):"]
     for n in sorted(notes, key=lambda n: n["ts"], reverse=True)[:60]:
         tp = f" hedef {n['tp']:g}{' (önce ' + format(n['prev'], 'g') + ')' if n.get('prev') else ''} {n.get('cur', '')}" if n.get("tp") else ""
         lines.append(f"- {n['ts'][:10]} {n['broker']} → {n.get('t') or n.get('name')}: {n.get('rating') or '?'} {n.get('action') or ''}{tp}")
+    reps = [r for r in store.get("reports", []) if (r.get("date") or "") >= (now_utc() - timedelta(days=30)).date().isoformat()][:15]
+    if reps:
+        lines += ["", "KULLANICININ YÜKLEDİĞİ KURUM RAPORLARI (son 30 gün; tam rapordan, notlardan daha güvenilir):"]
+        for r in reps:
+            tp = f" hedef {r['tp']:g} {r.get('cur') or ''}" if r.get("tp") else ""
+            picks = ", ".join(p["t"] for p in r.get("top_picks") or [])
+            lines.append(f"- {r['date']} {r['broker']} ({r['type']}) {', '.join(r['tickers']) or r.get('sector') or ''}: "
+                         f"{r.get('rating') or ''}{tp}. {r.get('thesis', '')}" + (f" Öne çıkanlar: {picks}." if picks else ""))
     lines += ["", "KURUM GÖRÜNÜMLERİ:"]
     for o in outl:
         lines.append(f"- {o['house']} ({o['ts'][:10]}): {o.get('summary', '')} | " + " | ".join(o.get("key_points") or []))
@@ -437,7 +446,7 @@ def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dic
     by_key = {key(n): n for n in store["notes"]}
     added = 0
     known = {s.symbol: [s.name, *s.aliases] for s in watch}
-    for n in [*notes_from(items, px, known), *PENDING]:
+    for n in [*notes_from(items, px, known), *PENDING, *PRIVATE["notes"]]:
         if n["id"] in seen:
             continue
         seen.add(n["id"])
@@ -451,6 +460,11 @@ def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dic
         by_key[key(n)] = n
         added += 1
     PENDING.clear()
+    rids = {r["id"] for r in store.get("reports", [])}
+    store["reports"] = sorted([*store.get("reports", []), *(r for r in PRIVATE["records"] if r["id"] not in rids)],
+                              key=lambda r: r.get("date") or r["ts"], reverse=True)[:200]
+    PRIVATE["records"].clear()
+    PRIVATE["notes"].clear()
     lo = iso(now_utc() - timedelta(days=KEEP_DAYS))
     store["notes"] = sorted((n for n in store["notes"] if n["ts"] >= lo), key=lambda n: n["ts"], reverse=True)[:3000]
     oids = {o["id"] for o in store["outlooks"]}

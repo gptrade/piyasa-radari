@@ -67,6 +67,10 @@ sources:
     per_request: 8
     min_relevance: 0.3         # haber bu hisseyle en az bu kadar ilgiliyse etiketlenir
     lookback_hours: 24
+  private_reports:
+    enabled: true              # gizli rapor kutusu (gptrade/piyasa-radari-raporlar, RAPOR_REPO_TOKEN): sirket/ sektor/ strateji/
+    max_per_run: 2             # turda en fazla okunacak rapor (görsel raporlar daha çok AI kotası harcar)
+    telegram: true             # ayrıntılı özet yalnız Telegram'a; sitede yalnız tavsiye/hedef/tahmin ve kısa tez
   broker_notes:
     enabled: true              # aracı kurum notları: haber başlıklarından (Foreks llms dosyaları + Google News); kurum siteleri okunmaz
     interval_min: 30

@@ -18,6 +18,8 @@ def should_notify(item: Item, cfg: dict) -> bool:
     a = item.analysis
     if not a:
         return False
+    if item.extra.get("private_report"):                  # gizli rapor: ayrıntılı özet ayrıca gönderildi
+        return False
     if item.extra.get("anomaly"):                         # habersiz hareket: kendi ayarı
         return bool(cfg.get("anomaly", True))
     if item.source_type == "technical":                   # teknik olaylar: AI eşikleri yerine kendi ayarı

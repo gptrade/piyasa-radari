@@ -53,6 +53,34 @@
     </section>`;
   }
 
+  // Kullanıcının gizli rapor kutusundan okunan raporlar (yalnız yapılandırılmış alanlar ve kısa tez)
+  const KIND_TR = { sirket: "Şirket", sektor: "Sektör", strateji: "Strateji" };
+  const VIEW = { olumlu: "up", olumsuz: "down", "nötr": "flat" };
+  function reportsCard(rs) {
+    const w = watch();
+    let xs = (rs || []).filter(r => sh.market === "ALL" || (r.cur === "USD" ? "US" : "BIST") === sh.market);
+    if (S.scope === "watch") xs = xs.filter(r => [...(r.tickers || []), ...(r.top_picks || []).map(p => p.t)].some(t => w.has(t)));
+    if (S.q) { const q = S.q.toLocaleLowerCase("tr"); xs = xs.filter(r => `${r.broker} ${(r.tickers || []).join(" ")} ${r.sector} ${r.thesis}`.toLocaleLowerCase("tr").includes(q)); }
+    if (!(rs || []).length) return "";
+    const tk = t => w.has(t) ? `<button type="button" class="tk-link" data-sym="${esc(t)}">${esc(t)}</button>` : esc(t);
+    return `<section class="card" aria-labelledby="resRepT">
+      <div class="card-head"><h2 class="card-title" id="resRepT">Kurum raporları</h2><span class="card-meta">${fmt.int(xs.length)} rapor · rapor kutusundan; ayrıntılı özet yalnız Telegram'da</span></div>
+      ${xs.length ? xs.slice(0, 12).map(r => `<article class="res-out">
+        <p class="res-out-h"><span class="tag">${KIND_TR[r.type] || "Rapor"}</span><b>${esc(r.broker)}</b>
+          ${(r.tickers || []).length ? r.tickers.map(tk).join(" ") : r.sector ? esc(r.sector) : ""}
+          ${r.rating ? `<span class="${r.rating === "AL" ? "up" : r.rating === "SAT" ? "down" : "flat"}">${esc(r.rating)}</span>` : ""}
+          ${r.tp ? `<span class="t3">hedef</span> <b>${fmt.num(r.tp, 2)}${r.cur === "USD" ? " $" : " ₺"}</b>${r.prev && r.prev !== r.tp ? ` <span class="t3">← ${fmt.num(r.prev, 2)}</span>` : ""}` : ""}
+          ${r.view ? `<span class="${VIEW[r.view] || ""}">sektör: ${esc(r.view)}</span>` : ""}
+          <span class="t3">· ${esc(r.date || "")}</span></p>
+        ${r.thesis ? `<p class="d-sum">${esc(r.thesis)}</p>` : ""}
+        ${(r.est || []).length ? `<table class="doc-figs"><tbody>${r.est.map(e => `<tr><th scope="row">${esc(e.metric)}${e.period ? ` (${esc(e.period)})` : ""}</th><td>${[e.old, e.new].filter(Boolean).map(esc).join(" → ")}${e.change ? ` (${esc(e.change)})` : ""}</td></tr>`).join("")}</tbody></table>` : ""}
+        ${(r.top_picks || []).length ? `<p class="tp-sub">Öne çıkanlar: ${r.top_picks.map(p => tk(p.t) + (p.tp ? ` <span class="t3">${fmt.num(p.tp, 2)}</span>` : "")).join(" · ")}</p>` : ""}
+        ${(r.mp?.added || []).length || (r.mp?.removed || []).length ? `<p class="tp-sub">Model portföy: ${(r.mp.added || []).map(t => `<span class="up">+${esc(t)}</span>`).join(" ")} ${(r.mp.removed || []).map(t => `<span class="down">−${esc(t)}</span>`).join(" ")}</p>` : ""}
+        ${(r.catalysts || []).length || (r.risks || []).length ? `<p class="doc-risks">${(r.catalysts || []).length ? `<b>Katalizörler:</b> ${r.catalysts.map(esc).join(" · ")}` : ""}${(r.risks || []).length ? ` <b>Riskler:</b> ${r.risks.map(esc).join(" · ")}` : ""}</p>` : ""}
+      </article>`).join("") : `<p class="tp-empty">Bu filtrede rapor yok.</p>`}
+    </section>`;
+  }
+
   function outlookCard(os) {
     return `<section class="card" aria-labelledby="resOutT">
       <div class="card-head"><h2 class="card-title" id="resOutT">Kurum görünümleri</h2><span class="card-meta">J.P. Morgan Guide to the Markets (çeyreklik) · BlackRock haftalık yorum</span></div>
@@ -105,7 +133,7 @@
     if (!S.loaded) { box.innerHTML = sh.stateHTML ? sh.stateHTML({ kind: "loading", title: "Yükleniyor…" }) : "<p>Yükleniyor…</p>"; return; }
     if (S.error || !S.data) { box.innerHTML = `<section class="card"><p class="tp-empty">Araştırma verisi henüz yok. İlk tarama turundan sonra oluşur.</p></section>`; return; }
     const d = S.data;
-    box.innerHTML = `<div class="res-grid"><div class="res-main">${synthesisCard(d.synthesis)}${notesCard(d.notes)}</div>
+    box.innerHTML = `<div class="res-grid"><div class="res-main">${synthesisCard(d.synthesis)}${reportsCard(d.reports)}${notesCard(d.notes)}</div>
       <div class="res-side">${consensusCard(d.consensus)}${outlookCard(d.outlooks)}</div></div>`;
     $$(".tk-link", box).forEach(b => b.onclick = () => { location.hash = "#sinyal"; setTimeout(() => window.radar?.openTicker(b.dataset.sym, b), 80); });
     const more = $("#resMore"); if (more) more.onclick = () => { S.limit += 30; render(); };
