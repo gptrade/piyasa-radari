@@ -50,13 +50,13 @@ for x in sorted(rows, key=lambda x: x["disclosureIndex"], reverse=True):
     best.setdefault((x["year"], x["period"]), []).append(x["disclosureIndex"])
 print(best)
 for (y, p), idxs in sorted(best.items()):
-    if (y, p) in [(2026, 2), (2025, 4)]:
+    if (y, p) not in [(2025, 2), (2025, 3), (2024, 4), (2026, 1)]:
         continue
     for idx in idxs:
         raw_name = f"trgyo_{y}_{p*3:02d}"
         shrink(idx, raw_name + "_tmp")
         t = open(f"probe28/{raw_name}_tmp.html").read()
-        if "Niteliği Konsolide Finansal" in t.replace("Konsolide Olmayan", "X"):
+        if re.search(r"Niteliği Konsolide(?! Olmayan)", t):
             os.rename(f"probe28/{raw_name}_tmp.html", f"probe28/{raw_name}.html"); print("konsolide", raw_name, idx); break
         os.remove(f"probe28/{raw_name}_tmp.html")
         time.sleep(3)
