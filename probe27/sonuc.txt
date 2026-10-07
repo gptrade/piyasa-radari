@@ -1,0 +1,17 @@
+Temel analiz: KAP 429 — 45 dk ara
+ÖZET {"listed": 12, "queued": 221, "processed": 9, "failed": 0, "rate_limited": true, "pending": 162, "companies": 98, "listed_total": 12, "at": "2026-10-07T22:52:47+00:00"}
+evren 98 [('BINHO', 'HOLDİNGLER VE YATIRIM ŞİRKETLERİ'), ('AGHOL', 'HOLDİNGLER VE YATIRIM ŞİRKETLERİ'), ('AHGAZ', 'ELEKTRİK GAZ VE BUHAR'), ('AKBNK', 'BANKALAR'), ('AKCNS', 'TAŞ VE TOPRAĞA DAYALI'), ('AKFYE', 'ELEKTRİK GAZ VE BUHAR'), ('AKSA', 'KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER'), ('AKSEN', 'ELEKTRİK GAZ VE BUHAR')]
+sektörsüz ['ALBRK', 'ISMEN', 'KRDMD', 'GARAN', 'ISCTR', 'TSKB', 'VAKBN', 'YKBNK']
+TÜFE 141 [('2026-07', 4211.58), ('2026-08', 4289.23), ('2026-09', 4368.35)]
+kuyruk {'BINHO': ['2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03'], 'AGHOL': ['2022/12', '2023/03', '2023/06', '2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03', '2026/06'], 'AHGAZ': ['2022/12', '2023/03', '2023/06', '2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03', '2026/06'], 'AKBNK': ['2022/12', '2023/03', '2023/06', '2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03', '2026/06'], 'AKCNS': ['2022/12', '2023/03', '2023/06', '2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03'], 'AKFYE': ['2023/03', '2023/06', '2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03']}
+rate_limited? True pause 2026-10-07T23:37:47+00:00
+AKCNS  2026/06 kons=False sanayi TRYx1000 bs=73 is=24 cf=57 hasılat=13672003.0 anaort=-96377.0 14KB
+AKFYE  2026/06 kons=True sanayi TRYx1000 bs=68 is=32 cf=57 hasılat=3424273.0 anaort=1404378.0 15KB
+AKSA   2026/06 kons=True sanayi TRYx1000 bs=70 is=38 cf=48 hasılat=22656614.0 anaort=2050357.0 15KB
+AKSEN  2026/06 kons=True sanayi TRYx1 bs=90 is=23 cf=60 hasılat=19987892700.0 anaort=1172577020.0 17KB
+ALARK  2026/06 kons=True sanayi TRYx1000 bs=84 is=37 cf=55 hasılat=5580081.0 anaort=4359232.0 17KB
+ALBRK  2026/06 kons=True finansal TRYx1000000 bs=0 is=64 cf=43 hasılat=None anaort=None 10KB
+ALTNY  2026/06 kons=True sanayi TRYx1 bs=75 is=24 cf=48 hasılat=1403306217.0 anaort=-64229573.0 15KB
+ANSGR  2026/06 kons=True finansal TRYx1 bs=267 is=134 cf=0 hasılat=None anaort=7396626681.0 29KB
+BINHO  2026/06 kons=False sanayi TRYx1 bs=105 is=31 cf=39 hasılat=0.0 anaort=-1605164784.0 16KB
+seri örneği AKCNS ['2026/06'] ttm hasılat [None] net borç [446003000]
