@@ -1,4 +1,4 @@
-name: probe-bist  # p24
+name: probe-bist  # p25
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -17,11 +17,11 @@ jobs:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: |
           set +e
-          mkdir -p probe24
+          mkdir -p probe25
           pip install -q requests lxml
-          python probe24.py > probe24/sonuc.txt 2>&1 || true
+          python probe25.py > probe25/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe24; git commit -qm "probe24 sonuçları" || true; git push -q
+          git add -A probe25; git commit -qm "probe25 sonuçları" || true; git push -q
