@@ -1,0 +1,102 @@
+=== robots.txt ===
+GET https://www.kap.org.tr/robots.txt -> 666 text/html 530B
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-9" />
+</head>
+<body>
+<div style="margin-left:30%;margin-top:10%">
+<a href="https:/www.kap.org.tr"><img src="https://www.kap.org.tr/assets/images/errors/hata_500_transparent.png" style="border:none"/></a>
+<font face=arial />
+<p>Yasadiginiz bu erisim problemini "13555984-PPE3" hata numarasi ile </p>
+<p>kapdestek@mkk.com.tr adresine bildirebilirsiniz.</p>
+</div>
+</body>
+</html>
+
+=== FR bildirimleri (Ağustos sezonu) ===
+2026-07-20 200 1263
+2026-07-27 200 1842
+2026-08-03 200 2000
+2026-08-10 200 2000
+2026-08-17 200 2000
+2026-08-24 200 1101
+2026-08-31 200 1618
+2026-09-07 200 1199
+sınıflar {'DG': 2578, 'ODA': 4955, 'FR': 2613, 'DKB': 2877}
+FR sayısı 2613
+örnek FR anahtarları ['attachmentCount', 'disclosureCategory', 'disclosureClass', 'disclosureIndex', 'disclosureType', 'fundCode', 'hasMultiLanguageSupport', 'isLate', 'isOldKap', 'kapTitle', 'modifyStatus', 'period', 'publishDate', 'relatedStocks', 'ruleType', 'stockCodes', 'subject', 'summary', 'year']
+{"publishDate": "24.07.2026 22:40:04", "fundCode": null, "kapTitle": "DENİZBANK A.Ş.", "isOldKap": false, "disclosureClass": "FR", "disclosureType": "ODA", "disclosureCategory": "ODA", "summary": "2025 Yılı DenizBank TSRS Uyumlu Sürdürülebilirlik Raporu", "subject": "TSRS Uyumlu Sürdürülebilirlik Raporu", "relatedStocks": null, "year": 2025, "ruleType": "Yıllık", "period": 1, "disclosureIndex": 1636730, "isLate": false, "stockCodes": "DENIZ, DNZ", "hasMultiLanguageSupport": false, "attachmentCount": 1, "modifyStatus": null}
+FR konuları {'TSRS Uyumlu Sürdürülebilirlik Raporu': 233, 'Sorumluluk Beyanı (Konsolide)': 433, 'Sorumluluk Beyanı (Konsolide Olmayan)': 387, 'Finansal Rapor': 851, 'Entegre Rapor': 4, 'Faaliyet Raporu (Konsolide)': 391, 'Faaliyet Raporu (Konsolide Olmayan)': 303, 'Faaliyet Raporu Sorumluluk Beyanı': 7, 'Finansal Rapor Bildirimi': 4}
+bulunan {'AKBNK': 1637885, 'EREGL': 1644583, 'KCHOL': 1643802, 'THYAO': 1643238, 'ASELS': 1643141, 'AKSGY': 1649703, 'TRGYO': 1652360, 'BIMAS': 1651656}
+
+=== Bildirim sayfası yapısı ===
+GET https://www.kap.org.tr/tr/Bildirim/1637885 -> 200 text/html; charset=utf-8 2420530B
+AKBNK tablo sayısı 369 tr 739 False True
+   'Dönen Varlıklar': -1 
+   'Hasılat': -1 
+   'Satış Gelirleri': -1 
+   'Toplam Varlıklar': -1 
+   'İşletme Faaliyetlerinden': -1 
+   'Ana Ortaklık': -1 
+   'Faiz Gelirleri': 826474 Faiz Gelirleri\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eFinance Leasing Interest Income\u003c/div\u003e\u003c/td\u003
+   'Net Dönem Karı': -1 
+   ilginç linkler ['/images/excelV2.svg', '/images/pdfV2.svg', 'https://www.kap.org.tr/tr/api/notification/export/excel/1637885', 'https://www.kap.org.tr/tr/api/notification/export/word/1637885', 'https://www.kap.org.tr/tr/api/file/download/4028328c9f52dc40019fa9022fa95dc3', 'https://www.kap.org.tr/tr/api/BildirimPdf/1637885']
+   sayfadaki api yolları ['/tr/api/BildirimPdf/1637885', '/tr/api/file/download/4028328c9f52dc40019fa9022fa95dc3', '/tr/api/member/logo/4028e4a240e8d1830140e905edcd0006', '/tr/api/notification/export/excel/1637885', '/tr/api/notification/export/word/1637885']
+GET https://www.kap.org.tr/tr/Bildirim/1644583 -> 200 text/html; charset=utf-8 4935071B
+EREGL tablo sayısı 736 tr 1476 False True
+   'Dönen Varlıklar': 231979 Dönen Varlıklar\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eOther current assets\u003c/div\u003e\u003c/td\u003e\u003ctd 
+   'Hasılat': 960127 Hasılat\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eRevenue\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=
+   'Satış Gelirleri': -1 
+   'Toplam Varlıklar': -1 
+   'İşletme Faaliyetlerinden': -1 
+   'Ana Ortaklık': 1143981 Ana Ortaklık Payları\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eOwners of Parent\u003c/div\u003e\u003c/td\u003e\u003ctd
+   'Faiz Gelirleri': 978697 Faiz Gelirleri\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eInterest Income\u003c/div\u003e\u003c/td\u003e\u003ctd align=
+   'Net Dönem Karı': 942648 Net Dönem Karı veya Zararı\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eCurrent Period Net Profit Or Loss\u003c/div\u003e
+   ilginç linkler ['https://www.kap.org.tr/tr/api/notification/export/word/1644583', 'https://www.kap.org.tr/tr/api/file/download/4028328c9f52dc3f019fd63300073447', '/images/excelV2.svg', '/images/pdfV2.svg', 'https://www.kap.org.tr/tr/api/notification/export/excel/1644583', 'https://www.kap.org.tr/tr/api/BildirimPdf/1644583']
+   sayfadaki api yolları ['/tr/api/BildirimPdf/1644583', '/tr/api/file/download/4028328c9f52dc3f019fd63300073447', '/tr/api/member/logo/4028e4a240e95dc90140ede4c12a0133', '/tr/api/notification/export/excel/1644583', '/tr/api/notification/export/word/1644583']
+GET https://www.kap.org.tr/tr/Bildirim/1643802 -> 200 text/html; charset=utf-8 5111315B
+KCHOL tablo sayısı 738 tr 1479 False True
+   'Dönen Varlıklar': 232504 Dönen Varlıklar\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eOther current assets\u003c/div\u003e\u003c/td\u003e\u003ctd 
+   'Hasılat': 968035 Hasılat\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eRevenue\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=
+   'Satış Gelirleri': -1 
+   'Toplam Varlıklar': -1 
+   'İşletme Faaliyetlerinden': -1 
+   'Ana Ortaklık': 1159451 Ana Ortaklık Payları\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eOwners of Parent\u003c/div\u003e\u003c/td\u003e\u003ctd
+   'Faiz Gelirleri': 980605 Faiz Gelirleri\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eInterest Income\u003c/div\u003e\u003c/td\u003e\u003ctd align=
+   'Net Dönem Karı': 950583 Net Dönem Karı veya Zararı\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eCurrent Period Net Profit Or Loss\u003c/div\u003e
+   ilginç linkler ['https://www.kap.org.tr/tr/api/notification/export/excel/1643802', '/images/excelV2.svg', 'https://www.kap.org.tr/tr/api/notification/export/word/1643802', '/images/pdfV2.svg', 'https://www.kap.org.tr/tr/api/BildirimPdf/1643802', 'https://www.kap.org.tr/tr/api/file/download/4028328c9f52dc3f019fd233608a78d5']
+   sayfadaki api yolları ['/tr/api/BildirimPdf/1643802', '/tr/api/file/download/4028328c9f52dc3f019fd233608a78d5', '/tr/api/member/logo/4028e4a140f2ed710140f2f4d6c70039', '/tr/api/notification/export/excel/1643802', '/tr/api/notification/export/word/1643802']
+GET https://www.kap.org.tr/tr/Bildirim/1643238 -> 200 text/html; charset=utf-8 5049033B
+THYAO tablo sayısı 732 tr 1467 False True
+   'Dönen Varlıklar': 232311 Dönen Varlıklar\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eOther current assets\u003c/div\u003e\u003c/td\u003e\u003ctd 
+   'Hasılat': 960609 Hasılat\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eRevenue\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=
+   'Satış Gelirleri': -1 
+   'Toplam Varlıklar': -1 
+   'İşletme Faaliyetlerinden': -1 
+   'Ana Ortaklık': 1143624 Ana Ortaklık Payları\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eOwners of Parent\u003c/div\u003e\u003c/td\u003e\u003ctd
+   'Faiz Gelirleri': 979122 Faiz Gelirleri\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eInterest Income\u003c/div\u003e\u003c/td\u003e\u003ctd align=
+   'Net Dönem Karı': 943099 Net Dönem Karı veya Zararı\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eCurrent Period Net Profit Or Loss\u003c/div\u003e
+   ilginç linkler ['https://www.kap.org.tr/tr/api/BildirimPdf/1643238', '/images/excelV2.svg', 'https://www.kap.org.tr/tr/api/notification/export/excel/1643238', '/images/pdfV2.svg', 'https://www.kap.org.tr/tr/api/notification/export/word/1643238', 'https://www.kap.org.tr/tr/api/file/download/4028328d9f52dddd019fcda866075c33', 'https://www.kap.org.tr/tr/api/file/download/4028328d9f52dddd019fcda8660d5c34']
+   sayfadaki api yolları ['/tr/api/BildirimPdf/1643238', '/tr/api/file/download/4028328d9f52dddd019fcda866075c33', '/tr/api/file/download/4028328d9f52dddd019fcda8660d5c34', '/tr/api/member/logo/4028e4a140f2ed720140f376bebb01a7', '/tr/api/notification/export/excel/1643238', '/tr/api/notification/export/word/1643238']
+GET https://www.kap.org.tr/tr/Bildirim/1643141 -> 200 text/html; charset=utf-8 4979642B
+ASELS tablo sayısı 732 tr 1469 False True
+   'Dönen Varlıklar': 231041 Dönen Varlıklar\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eOther current assets\u003c/div\u003e\u003c/td\u003e\u003ctd 
+   'Hasılat': 959132 Hasılat\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eRevenue\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=
+   'Satış Gelirleri': -1 
+   'Toplam Varlıklar': -1 
+   'İşletme Faaliyetlerinden': -1 
+   'Ana Ortaklık': 1142632 Ana Ortaklık Payları\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eOwners of Parent\u003c/div\u003e\u003c/td\u003e\u003ctd
+   'Faiz Gelirleri': 977662 Faiz Gelirleri\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eInterest Income\u003c/div\u003e\u003c/td\u003e\u003ctd align=
+   'Net Dönem Karı': 941573 Net Dönem Karı veya Zararı\u003c/div\u003e\u003c/td\u003e\u003ctd align=\"left\" style=\"vertical-align: top;\"\u003e\u003cdiv class=\"gwt-Label multi-language-content content-en\" style=\"display: none;\"\u003eCurrent Period Net Profit Or Loss\u003c/div\u003e
+   ilginç linkler ['https://www.kap.org.tr/tr/api/notification/export/word/1643141', 'https://www.kap.org.tr/tr/api/file/download/4028328c9f52dc40019fcd5c3b1e7298', '/images/excelV2.svg', '/images/pdfV2.svg', 'https://www.kap.org.tr/tr/api/file/download/4028328c9f52dc40019fcd5c3b0b7297', 'https://www.kap.org.tr/tr/api/BildirimPdf/1643141', 'https://www.kap.org.tr/tr/api/notification/export/excel/1643141']
+   sayfadaki api yolları ['/tr/api/BildirimPdf/1643141', '/tr/api/file/download/4028328c9f52dc40019fcd5c3b0b7297', '/tr/api/file/download/4028328c9f52dc40019fcd5c3b1e7298', '/tr/api/member/logo/4028e4a1413b7ef401413bc2251e0047', '/tr/api/notification/export/excel/1643141', '/tr/api/notification/export/word/1643141']
+
+=== Şirket listesi / endeksler ===
+GET https://www.kap.org.tr/tr/bist-sirketler -> 200 text/html; charset=utf-8 1540724B
+False False 2 <!DOCTYPE html><html lang="tr" class="overflow-x-hidden scroll-smooth show:overflow-y-hidden show:pr-1.5"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/_next/static/chunks/1bajbr1gk54yk.css" data-precedence="next"/><li
+GET https://www.kap.org.tr/tr/Endeksler -> 200 text/html; charset=utf-8 1390667B
+False True 13 <!DOCTYPE html><html lang="tr" class="overflow-x-hidden scroll-smooth show:overflow-y-hidden show:pr-1.5"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/_next/static/chunks/1bajbr1gk54yk.css" data-precedence="next"/><li
+GET https://www.kap.org.tr/tr/api/company/generic/excel/IGS/A -> 200 application/vnd.openxmlformats-officedocument.spreadsheetml.sheet 31659B
+False False 0 PK  �H]               [Content_Types].xml�S�n�0����*6�PU�C ���\{�X�%����]8�R� q�cfgfW�d�q�ZCB|��|�*�*h㻆},^�{Va�^K<4�6�N�XQ�ǆ�9�!P��$��҆�d�c�D�j);��ѝP�g��E�M'O�ʕ����H7L�h���R���G��^�'�{��zސʮB��3 � ˙��h.�h�W�жF�j娄CQՠ똈���}ιL�U:D�����%އ����,�B���[� �� ;˱� �{N��~��X�p� ykO
