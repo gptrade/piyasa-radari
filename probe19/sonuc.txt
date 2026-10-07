@@ -1,0 +1,26 @@
+/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/site-packages/openpyxl/styles/stylesheet.py:237: UserWarning: Workbook contains no default style, apply openpyxl's default
+  warn("Workbook contains no default style, apply openpyxl's default")
+ana sayfa 200 ['/tr/about/mevzuat-duyurular-ve-kilavuzlar/tab-content/duyurular', '/tr/about/mevzuat-duyurular-ve-kilavuzlar/tab-content/mevzuatlar_ve_kilavuzlar', '/about/mevzuat-duyurular-ve-kilavuzlar/tab-content/duyurular', '/tr/api/about/content-file/402881cf91d6efd60191d6f08e900001', '/tr/api/about/content-file/402881cf91d6efd60191d6f04e530000']
+
+##### EREGL 1644583 excel -> 200 application/vnd.ms-excel 1750805B
+açılamadı File is not a zip file b'<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">\n <head>\n  <met'
+
+##### TRGYO 1652360 excel -> 200 application/vnd.ms-excel 1337661B
+açılamadı File is not a zip file b'<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">\n <head>\n  <met'
+
+##### AKBNK 1637885 excel -> 200 application/vnd.ms-excel 879683B
+açılamadı File is not a zip file b'<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">\n <head>\n  <met'
+
+geçmiş 2023-08-14 200 2000 FR 214 [('KUYAS', 2023, 2, '6 Aylık'), ('ATSYH', 2023, 2, '6 Aylık'), ('FADE', 2023, 2, '6 Aylık'), ('PEKGY', 2023, 2, '6 Aylık'), ('TRHOL', 2023, 2, '6 Aylık')]
+
+geçmiş 2021-05-03 200 1179 FR 105 [('DOHOL', 2021, 1, '3 Aylık'), ('EKT', 2021, 1, '3 Aylık'), ('EKT', 2021, 1, '3 Aylık'), ('BIZIM', 2021, 1, '3 Aylık'), ('ISATR, ISBTR, ISCTR, ISKUR, TIB', 2021, 1, '3 Aylık')]
+
+endeks 200 K","title":"YAPI VE KREDİ BANKASI A.Ş.","mkkMemberOid":"4028e4a240f2ef4c01412ae6d6630538"},{"stockCode":"ZOREN","title":"ZORLU ENERJİ ELEKTRİK ÜRETİM A.Ş.","mkkMemberOid":"4028e4a140f2ed7201412c19687407a7"}],"explanation":"Temel endekstir. Ocak 1986 Başlangıç Değeri : 0,01","indicesNo":100,"name":"BIST 100"},{"code":"XU050","content":[{"stockCode":"AKBNK","title":"AKBANK T.A.Ş.","mkkMemberOid":"4028e4a240e8d1830140e905edcd0006"},{"stockCode":"AKSEN","title":"AKSA ENERJİ ÜRETİM A.Ş.","mkkMemberOid":"4028e4a241733d42014179341a147ddb"},{"stockCode":"ALARK","title":"ALARKO HOLDİNG A.Ş.","mkkMemberOid":"4028e4a241462fd80141500c738e36be"},{"stockCode":"AEFES","title":"ANADOLU EFES BİRACILIK VE MALT SANAYİİ A.Ş.","mkkMemberOid":"4028e4a140e95bea0140ed2fde10009d"},{"stockCode":"ASELS","title":"ASELSAN ELEKTRONİK SANAYİ VE TİCARET A.Ş.","mkkMemberOid":"4028e4a1413b7ef401413bc2251e0047"},{"stockCode":"ASTOR","title":"ASTOR ENERJİ A.Ş.","mkkMemberOid":"8acae2c562329bd10164405fe6c17996"},{"stockCode":"BTCIM","title":"BATIÇİM BATI ANADOLU SANAYİ VE TİCARET A.Ş.","mkkMemberOid":"4028e4a140e95be70140ee07044700eb"},{"stockCode":"BIMAS","title":"BİM BİRLEŞİK MAĞAZALAR A.Ş.","mkkMemberOid":"4028e4a140e95be70140ee1b7b030119"},{"stockCode":"BRSAN","title":"BORUSAN BİRLEŞİK BORU FABRİKALARI SANAYİ VE TİCARET A.Ş.","mkkMemberOid":"4028e4a140f2ed7201412ac9ca5d06e6"},{"stockCode":"CCOLA","title":"COCA-COLA İÇECEK A.Ş.","mkkMemberOid":"4028e4a140ee35c00140ee586bdd0034"},{"stockCode":"CVKMD","title":"CVK MADEN İŞLETMELERİ SANAYİ VE TİCARET A.Ş.","mkkMemberOid":"8acae2c586d22c510187381ba299429a"},{"stockCode":"CWENE","title":"CW ENERJİ MÜHENDİSLİK TİCARET VE SANAYİ A.Ş.","mkkMemberOid":"8acae2c56faf888c016fd6c2036e0a5d"},{"stockCode":"CANTE","title":"ÇAN2 TERMİK A.Ş.","mkkMemberOid":"8acae2c5780
+
+şirket listesi Şirketler Listesi 789
+    ('Şirketler Listesi', None, None, None)
+    (None, None, None, None)
+    ('Kod', 'Şirket Ünvanı', 'Şehir', 'Bağımsız Denetim Kuruluşu')
+    ('A', None, None, None)
+    ('ACSEL', 'ACISELSAN ACIPAYAM SELÜLOZ SANAYİ VE TİCARET A.Ş.', 'DENİZLİ', 'DRT BAĞIMSIZ DENETİM VE SERBEST MUHASEBECİ MALİ MÜŞAVİRLİK A.Ş.')
+    ('ADEL', 'ADEL KALEMCİLİK TİCARET VE SANAYİ A.Ş.', 'KOCAELİ', 'PwC BAĞIMSIZ DENETİM VE SERBEST MUHASEBECİ MALİ MÜŞAVİRLİK A.Ş')
