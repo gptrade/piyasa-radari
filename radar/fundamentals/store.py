@@ -1,0 +1,226 @@
+"""Temel analiz veri katmanı: BIST-100 şirketlerinin KAP mali tablolarını ve TÜFE'yi toplar.
+
+Radar iş akışında ayrı bir adım olarak, zaman bütçesiyle çalışır (`python -m radar.fundamentals`):
+  1. Evren (haftalık): KAP endeks sayfasından BIST-100 üyeleri.
+  2. TÜFE (günlük): EVDS TP.GENENDEKS.T1 (2003=100, TMS 29'un da kullandığı seri).
+  3. Yeni raporlar (saatlik): son 3 günün finansal rapor bildirimleri → kuyruk.
+  4. Geçmiş (kademeli): her şirketin 2023'ten bu yana raporları listelenir → kuyruk.
+  5. Kuyruk: en yeni dönemden eskiye; her dönem için konsolide rapor tercih edilir.
+Çıktı: site/data/fin/{KOD}.json, _universe.json, _cpi.json, _state.json
+"""
+from __future__ import annotations
+
+import json
+import logging
+import os
+import time
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
+
+from .. import http
+from ..config import DATA
+from . import kapfin
+
+log = logging.getLogger("radar.fundamentals")
+
+FIN = DATA / "fin"
+STATE = FIN / "_state.json"
+UNIVERSE = FIN / "_universe.json"
+CPI = FIN / "_cpi.json"
+HISTORY_START = date(2023, 1, 1)
+CPI_SERIES = "TP.GENENDEKS.T1"
+EVDS_URL = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
+GAP = 1.0   # KAP istekleri arası bekleme (sn)
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _load(p: Path, default):
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return default
+
+
+def _save(p: Path, obj) -> None:
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
+
+def _due(state: dict, name: str, hours: float) -> bool:
+    last = state.get("last", {}).get(name)
+    if last and _now() - datetime.fromisoformat(last) < timedelta(hours=hours):
+        return False
+    state.setdefault("last", {})[name] = _now().isoformat(timespec="seconds")
+    return True
+
+
+# ---- TÜFE ----
+
+def parse_cpi(payload: dict, code: str = CPI_SERIES) -> dict[str, float]:
+    key = code.replace(".", "_")
+    out = {}
+    for row in payload.get("items", []):
+        v, t = row.get(key), row.get("Tarih")
+        if v in (None, "") or not t:
+            continue
+        y, m = str(t).split("-")[:2]
+        out[f"{int(y):04d}-{int(m):02d}"] = round(float(v), 4)
+    return out
+
+
+def update_cpi() -> bool:
+    key = os.environ.get("EVDS_API_KEY")
+    if not key:
+        return False
+    end = date.today()
+    url = (f"{EVDS_URL}series={CPI_SERIES}&startDate=01-01-2015&endDate={end:%d-%m-%Y}"
+           f"&type=json&frequency=5")
+    r = http.get(url, headers={"key": key}, timeout=60)
+    if r is None:
+        return False
+    try:
+        m = parse_cpi(r.json())
+    except ValueError:
+        return False
+    if m:
+        _save(CPI, {"series": CPI_SERIES, "base": "2003=100", "updated": _now().isoformat(timespec="seconds"), "m": m})
+    return bool(m)
+
+
+# ---- Kuyruk ----
+
+def enqueue(state: dict, code: str, row: dict) -> bool:
+    """Bildirimi kuyruğa ekler. Aynı dönem için daha yeni bildirim (düzeltme) gelirse dönem yeniden işlenir."""
+    try:
+        year, period = int(row["year"]), int(row["period"])
+    except (KeyError, TypeError, ValueError):
+        return False
+    if not 1 <= period <= 4:
+        return False
+    idx = int(row["disclosureIndex"])
+    comp = state.setdefault("companies", {}).setdefault(code, {})
+    if idx in comp.get("seen", []):
+        return False
+    comp.setdefault("seen", []).append(idx)
+    pk = kapfin.period_key(year, period)
+    q = state.setdefault("queue", {}).setdefault(code, {})
+    q.setdefault(pk, [])
+    if idx not in q[pk]:
+        q[pk].append(idx)
+    return True
+
+
+def next_jobs(state: dict) -> list[tuple[str, str]]:
+    """(kod, dönem) çiftleri: önce en yeni dönemler (tüm şirketlerde), sonra geriye doğru."""
+    jobs = [(code, pk) for code, per in state.get("queue", {}).items() for pk in per]
+    return sorted(jobs, key=lambda j: (j[1], j[0]), reverse=True)
+
+
+def choose(reports: list[dict]) -> dict | None:
+    """Aynı dönemin raporlarından: konsolide olanı, yoksa en yenisini seç."""
+    good = [r for r in reports if r and r.get("is")]
+    if not good:
+        return None
+    good.sort(key=lambda r: (bool(r.get("consolidated")), r.get("idx", 0)), reverse=True)
+    return good[0]
+
+
+def process_period(code: str, pk: str, idxs: list[int], fetch=kapfin.fetch_export) -> dict | None:
+    """En yeni bildirimden başlar; konsolide bulunca durur."""
+    got = []
+    for idx in sorted(idxs, reverse=True):
+        rep = fetch(idx)
+        time.sleep(GAP)
+        if rep is None:
+            continue
+        got.append(rep)
+        if rep.get("consolidated"):
+            break
+    return choose(got)
+
+
+def save_report(code: str, title: str, pk: str, rep: dict) -> None:
+    p = FIN / f"{code}.json"
+    doc = _load(p, {"code": code, "title": title, "reports": {}})
+    old = doc["reports"].get(pk)
+    # Konsolide olan konsolide olmayanla ezilmez; aynı türde daha yeni bildirim kazanır.
+    if old and old.get("consolidated") and not rep.get("consolidated"):
+        return
+    doc["title"] = title or doc.get("title")
+    doc["reports"][pk] = rep
+    latest = max(doc["reports"])
+    doc["template"] = doc["reports"][latest].get("template")
+    doc["currency"] = doc["reports"][latest].get("currency")
+    doc["updated"] = _now().isoformat(timespec="seconds")
+    _save(p, doc)
+
+
+# ---- Ana döngü ----
+
+def run(budget: float = 180.0, settings: dict | None = None) -> dict:
+    t0 = time.monotonic()
+    left = lambda: budget - (time.monotonic() - t0)  # noqa: E731
+    state = _load(STATE, {})
+    uni = _load(UNIVERSE, {})
+    stats = {"listed": 0, "queued": 0, "processed": 0, "failed": 0}
+
+    if not uni.get("members") or _due(state, "universe", 24 * 7):
+        idx = kapfin.fetch_indices()
+        if idx.get("XU100"):
+            sectors = kapfin.fetch_sectors()
+            members = [{**m, **sectors.get(m["code"], {})} for m in idx["XU100"]]
+            uni = {"index": "XU100", "updated": _now().isoformat(timespec="seconds"), "members": members}
+            _save(UNIVERSE, uni)
+    members = {m["code"]: m for m in uni.get("members", [])}
+    if not members:
+        log.warning("Temel analiz: evren boş (KAP endeks sayfası okunamadı)")
+        _save(STATE, state)
+        return stats
+
+    if _due(state, "cpi", 24):
+        update_cpi()
+
+    if _due(state, "recent", 1):
+        for row in kapfin.recent_reports(3):
+            for c in kapfin.codes_of(row):
+                if c in members and enqueue(state, c, row):
+                    stats["queued"] += 1
+
+    comps = state.setdefault("companies", {})
+    for code, m in members.items():
+        if left() < budget * 0.6:
+            break
+        if comps.get(code, {}).get("listed"):
+            continue
+        rows = kapfin.list_reports(m["oid"], HISTORY_START, date.today())
+        time.sleep(GAP)
+        for row in rows:
+            if enqueue(state, code, row):
+                stats["queued"] += 1
+        comps.setdefault(code, {})["listed"] = date.today().isoformat()
+        stats["listed"] += 1
+
+    for code, pk in next_jobs(state):
+        if left() < 15:
+            break
+        idxs = state["queue"][code].pop(pk)
+        if not state["queue"][code]:
+            del state["queue"][code]
+        rep = process_period(code, pk, idxs)
+        if rep is None:
+            stats["failed"] += 1
+            comps.setdefault(code, {}).setdefault("failed", []).append(pk)
+            continue
+        save_report(code, members.get(code, {}).get("title", ""), pk, rep)
+        stats["processed"] += 1
+
+    pending = sum(len(v) for v in state.get("queue", {}).values())
+    state["summary"] = {**stats, "pending": pending, "companies": len(members),
+                        "listed_total": sum(1 for c in members if comps.get(c, {}).get("listed")),
+                        "at": _now().isoformat(timespec="seconds")}
+    _save(STATE, state)
+    log.info("Temel analiz: %s", state["summary"])
+    return state["summary"]

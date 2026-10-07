@@ -76,6 +76,14 @@ jobs:
           SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         run: python -m radar
 
+      # Temel analiz: KAP mali tabloları (BIST-100), zaman bütçeli; hata olursa radar etkilenmez
+      - name: Temel analiz verisi
+        continue-on-error: true
+        timeout-minutes: 6
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python -m radar.fundamentals 180
+
       - name: Veriyi data dalına kaydet
         run: |
           cd site/data
