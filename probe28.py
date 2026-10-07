@@ -7,8 +7,8 @@ S = requests.Session()
 S.headers.update({"User-Agent": "Mozilla/5.0 (piyasa-radari arastirma; gptrade@users.noreply.github.com)"})
 H = {"Referer": "https://www.kap.org.tr/tr/bildirim-sorgu", "Accept": "application/json", "Content-Type": "application/json"}
 os.makedirs("probe28", exist_ok=True)
-import shutil
-shutil.rmtree("probe28"); os.makedirs("probe28")
+
+
 
 def shrink(idx, name, keep=60):
     raw = S.get(f"https://www.kap.org.tr/tr/api/notification/export/excel/{idx}", timeout=90).content
