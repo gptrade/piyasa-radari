@@ -103,6 +103,9 @@ def fin_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "UNIVERSE", tmp_path / "_universe.json")
     monkeypatch.setattr(store, "CPI", tmp_path / "_cpi.json")
     monkeypatch.setattr(store, "GAP", 0)
+    monkeypatch.setattr(store, "PRICES", tmp_path / "_prices.json")
+    monkeypatch.setattr(store, "SCREEN", tmp_path / "_screen.json")
+    monkeypatch.setattr(store, "update_prices", lambda codes: False)
     return tmp_path
 
 

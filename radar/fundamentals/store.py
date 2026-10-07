@@ -261,7 +261,13 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
             stats["rate_limited"] = True
             log.warning("Temel analiz: KAP 429 — %d dk ara", PAUSE_MIN)
 
-    rebuild_series(force=bool(cpi_new))
+    rebuilt = rebuild_series(force=bool(cpi_new))
+    prices_new = _due(state, "prices", 1) and update_prices(sorted(members))
+    if rebuilt or prices_new or not SCREEN.exists():
+        try:
+            stats["screened"] = build_metrics()
+        except Exception:
+            log.exception("Temel analiz metrikleri hesaplanamadı")
     pending = sum(len(v) for v in state.get("queue", {}).values())
     state["summary"] = {**stats, "pending": pending, "companies": len(members),
                         "listed_total": sum(1 for c in members if comps.get(c, {}).get("listed")),
@@ -269,3 +275,73 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
     _save(STATE, state)
     log.info("Temel analiz: %s", state["summary"])
     return state["summary"]
+
+
+# ---- Fiyatlar ve metrikler ----
+
+PRICES = FIN / "_prices.json"
+SCREEN = FIN / "_screen.json"
+
+
+def update_prices(codes: list[str]) -> bool:
+    """Evrenin son kapanışları (Yahoo, toplu indirme). Yalnız son fiyat ve tarih saklanır."""
+    try:
+        import yfinance as yf
+        df = yf.download(" ".join(f"{c}.IS" for c in codes), period="5d", interval="1d",
+                         group_by="ticker", auto_adjust=False, threads=False, progress=False)
+    except Exception as e:
+        log.warning("Temel analiz fiyatları alınamadı: %s", e)
+        return False
+    out = {}
+    for c in codes:
+        try:
+            s = df[f"{c}.IS"]["Close"].dropna()
+        except (KeyError, TypeError):
+            continue
+        if len(s):
+            out[c] = {"price": round(float(s.iloc[-1]), 4), "date": str(s.index[-1].date())}
+    if out:
+        _save(PRICES, {"updated": _now().isoformat(timespec="seconds"), "p": out})
+    return bool(out)
+
+
+def build_metrics() -> int:
+    """Tüm şirketlerin oranları/skorları → şirket dosyasına `metrics`, özet tablo → _screen.json."""
+    from . import metrics as M
+    uni = {m["code"]: m for m in _load(UNIVERSE, {}).get("members", [])}
+    prices = _load(PRICES, {}).get("p", {})
+    rows, docs = [], {}
+    for p in sorted(FIN.glob("[A-Z0-9]*.json")):
+        doc = _load(p, None)
+        if not doc:
+            continue
+        code = doc.get("code") or p.stem
+        try:
+            m = M.company(doc, (prices.get(code) or {}).get("price"))
+        except Exception:
+            log.exception("Metrik hesaplanamadı: %s", code)
+            m = None
+        docs[code] = (p, doc)
+        if m:
+            rows.append({"code": code, "sector": uni.get(code, {}).get("sector"), "m": m})
+    M.finalize(rows)
+    screen = []
+    for row in rows:
+        p, doc = docs[row["code"]]
+        doc["metrics"] = row["m"]
+        _save(p, doc)
+        m = row["m"]
+        screen.append({
+            "code": row["code"], "title": doc.get("title"), "sector": row["sector"], "period": m["period"],
+            "price": m["valuation"].get("price"), "mcap": m["valuation"].get("mcap"),
+            "r": m["ratios"], "v": {k: v for k, v in m["valuation"].items() if k not in ("shares",)},
+            "cat": m["categories"], "quality": m["quality"], "valuation_score": m["valuation_score"],
+            "overall": m["overall"], "grade": m["grade"], "z": m["altman_z2"], "f": m["piotroski"],
+            "mscore": m["beneish_m"], "intrinsic": m.get("intrinsic"), "potential": m.get("potential"),
+            "crit": {k: [c["pass"], c["total"], c["known"], [v for _, v in c["items"]]] for k, c in m["criteria"].items()},
+        })
+    out_of_scope = [{"code": c, "title": u.get("title"), "sector": u.get("sector")} for c, u in uni.items()
+                    if c not in {r["code"] for r in rows}]
+    _save(SCREEN, {"updated": _now().isoformat(timespec="seconds"), "rows": screen, "out_of_scope": out_of_scope,
+                   "criteria_labels": {k: [lbl for lbl, _ in c["items"]] for k, c in rows[0]["m"]["criteria"].items()} if rows else {}})
+    return len(screen)
