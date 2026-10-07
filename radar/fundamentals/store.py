@@ -242,6 +242,9 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
             uni = {"index": "XU100", "updated": _now().isoformat(timespec="seconds"), "members": members}
             _save(UNIVERSE, uni)
     members = {m["code"]: m for m in uni.get("members", [])}
+    only = {c.strip().upper() for c in os.environ.get("FIN_CODES", "").split(",") if c.strip()}
+    if only:                                   # deneme/önizleme: yalnız seçili şirketler
+        members = {c: m for c, m in members.items() if c in only}
     if not members:
         log.warning("Temel analiz: evren boş (KAP endeks sayfası okunamadı)")
         _save(STATE, state)
