@@ -69,3 +69,33 @@ def test_merge_same_day_sources(tmp_path, monkeypatch):
     rs.update(items, {}, None, [Stock("OTKAR", "Otokar", "BIST", [])], {})
     data = json.loads((tmp_path / "r.json").read_text())
     assert len(data["notes"]) == 1 and data["notes"][0]["tp"] == 780
+
+
+def test_outlook_retried_until_summarized(tmp_path, monkeypatch):
+    from radar import http
+    from radar.config import TickerMatcher
+    from radar.sources import Context, tr_official
+    monkeypatch.setattr(rs, "STORE", tmp_path / "r.json")
+    monkeypatch.setattr(tr_official, "STATE_FILE", tmp_path / "st.json")
+    monkeypatch.setattr(rs, "OUTLOOKS", [{"key": "x", "house": "H", "title": "T", "url": "https://x/a.pdf", "pages": 2}])
+    monkeypatch.setattr(rs, "_pdf_text", lambda data, pages: ("metin " * 100, 3))
+
+    class R:
+        headers = {"last-modified": "v1"}
+        content = b"%PDF"
+    monkeypatch.setattr(http, "get", lambda *a, **k: R())
+    ctx = Context(settings={"sources": {"outlooks": {"interval_min": 0}}}, stocks=[], matcher=TickerMatcher([]),
+                  since=datetime.now(UTC))
+    first = rs.collect_outlooks(ctx)
+    assert len(first) == 1
+    assert rs.collect_outlooks(ctx) == []                      # aynı gün tekrar denenmez
+    st = json.loads((tmp_path / "st.json").read_text())
+    st["outlook_x_try"] = "2000-01-01"                          # ertesi gün: özet yok → yeniden
+    (tmp_path / "st.json").write_text(json.dumps(st))
+    again = rs.collect_outlooks(ctx)
+    assert len(again) == 1 and again[0].id != first[0].id
+    d = again[0].to_dict(); d["analysis"] = {"summary": "s", "key_points": [], "sentiment": "neutral"}
+    rs.update([d], {}, None, [], {})
+    st = json.loads((tmp_path / "st.json").read_text()); st["outlook_x_try"] = "2000-01-01"
+    (tmp_path / "st.json").write_text(json.dumps(st))
+    assert rs.collect_outlooks(ctx) == []                      # özet yazıldı: artık atlanır
