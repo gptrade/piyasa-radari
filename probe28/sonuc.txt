@@ -1,23 +1,9 @@
 {(2026, 2): [1652360, 1652359], (2026, 1): [1605856, 1605855], (2025, 4): [1571106, 1571102], (2025, 3): [1513290, 1513287], (2025, 2): [1479501, 1479500], (2025, 1): [1438627, 1438625, 1437911, 1437799], (2024, 4): [1404821, 1404820], (2024, 3): [1357327, 1356491, 1356489]}
-trgyo_2024_09_tmp 1357327 yazıldı 44187
-trgyo_2024_09_tmp 1356491 yazıldı 44187
-trgyo_2024_09_tmp 1356489 yazıldı 43881
 trgyo_2024_12_tmp 1404821 yazıldı 43628
-trgyo_2024_12_tmp 1404820 yazıldı 42667
-trgyo_2025_03_tmp 1438627 yazıldı 43329
-trgyo_2025_03_tmp 1438625 yazıldı 41799
-trgyo_2025_03_tmp 1437911 yazıldı 43520
-trgyo_2025_03_tmp 1437799 yazıldı 42121
+konsolide trgyo_2024_12 1404821
 trgyo_2025_06_tmp 1479501 yazıldı 44729
-Traceback (most recent call last):
-  File "/home/runner/work/piyasa-radari/piyasa-radari/probe28.py", line 57, in <module>
-    shrink(idx, raw_name + "_tmp")
-  File "/home/runner/work/piyasa-radari/piyasa-radari/probe28.py", line 15, in shrink
-    doc = LH.fromstring(raw.decode("utf-8", "replace"))
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/lxml/html/__init__.py", line 854, in fromstring
-    doc = document_fromstring(html, parser=parser, base_url=base_url, **kw)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/lxml/html/__init__.py", line 742, in document_fromstring
-    raise etree.ParserError(
-lxml.etree.ParserError: Document is empty
+konsolide trgyo_2025_06 1479501
+trgyo_2025_09_tmp 1513290 yazıldı 45283
+konsolide trgyo_2025_09 1513290
+trgyo_2026_03_tmp 1605856 yazıldı 42889
+konsolide trgyo_2026_03 1605856
