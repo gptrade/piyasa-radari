@@ -1,0 +1,44 @@
+POST https://www.kap.org.tr/tr/api/disclosure/members/byCriteria -> HTTP 429
+POST https://www.kap.org.tr/tr/api/disclosure/members/byCriteria -> HTTP 429
+POST https://www.kap.org.tr/tr/api/disclosure/members/byCriteria -> HTTP 429
+POST https://www.kap.org.tr/tr/api/disclosure/members/byCriteria -> HTTP 429
+POST https://www.kap.org.tr/tr/api/disclosure/members/byCriteria -> HTTP 429
+POST https://www.kap.org.tr/tr/api/disclosure/members/byCriteria -> HTTP 429
+POST https://www.kap.org.tr/tr/api/disclosure/members/byCriteria -> HTTP 429
+POST https://www.kap.org.tr/tr/api/disclosure/members/byCriteria -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1638891 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1638043 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1638040 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1637380 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1637379 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1652196 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1650534 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1644748 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1644744 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1653272 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1649524 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1649686 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1649385 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1643942 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1637885 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1637884 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1649687 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1649531 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1648261 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1600770 -> HTTP 429
+GET https://www.kap.org.tr/tr/api/notification/export/excel/1616506 -> HTTP 429
+ÖZET {"listed": 26, "queued": 419, "processed": 10, "failed": 16, "pending": 325, "companies": 98, "listed_total": 26, "at": "2026-10-07T22:46:24+00:00"}
+evren 98 [('BINHO', 'HOLDİNGLER VE YATIRIM ŞİRKETLERİ'), ('AGHOL', 'HOLDİNGLER VE YATIRIM ŞİRKETLERİ'), ('AHGAZ', 'ELEKTRİK GAZ VE BUHAR'), ('AKBNK', 'BANKALAR'), ('AKCNS', 'TAŞ VE TOPRAĞA DAYALI'), ('AKFYE', 'ELEKTRİK GAZ VE BUHAR'), ('AKSA', 'KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER'), ('AKSEN', 'ELEKTRİK GAZ VE BUHAR')]
+sektörsüz ['ALBRK', 'ISMEN', 'KRDMD', 'GARAN', 'ISCTR', 'TSKB', 'VAKBN', 'YKBNK']
+TÜFE 141 [('2026-07', 4211.58), ('2026-08', 4289.23), ('2026-09', 4368.35)]
+kuyruk {'BINHO': ['2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03'], 'AGHOL': ['2022/12', '2023/03', '2023/06', '2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03'], 'AHGAZ': ['2022/12', '2023/03', '2023/06', '2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03'], 'AKBNK': ['2022/12', '2023/03', '2023/06', '2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03'], 'AKCNS': ['2022/12', '2023/03', '2023/06', '2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03'], 'AKFYE': ['2023/03', '2023/06', '2023/09', '2023/12', '2024/03', '2024/06', '2024/09', '2024/12', '2025/03', '2025/06', '2025/09', '2025/12', '2026/03']}
+ASELS  2026/06 kons=True sanayi TRYx1000 bs=88 is=42 cf=51 hasılat=88494252.0 anaort=14439306.0 15KB
+ASTOR  2026/06 kons=True sanayi TRYx1 bs=61 is=34 cf=51 hasılat=19214635242.0 anaort=4646038622.0 13KB
+AYGAZ  2026/06 kons=True sanayi TRYx1000 bs=67 is=25 cf=49 hasılat=52491758.0 anaort=4423136.0 11KB
+BERA   2026/06 kons=True sanayi TRYx1 bs=77 is=34 cf=45 hasılat=10203218695.0 anaort=206940413.0 13KB
+BIMAS  2026/06 kons=True sanayi TRYx1000 bs=70 is=34 cf=51 hasılat=449695235.0 anaort=14934476.0 12KB
+BINHO  2026/06 kons=False sanayi TRYx1 bs=105 is=31 cf=39 hasılat=0.0 anaort=-1605164784.0 13KB
+BRSAN  2026/06 kons=True sanayi TRYx1000 bs=95 is=35 cf=80 hasılat=43592538.0 anaort=1796800.0 16KB
+BRYAT  2026/06 kons=True sanayi TRYx1 bs=46 is=31 cf=32 hasılat=186411876.0 anaort=418314734.0 9KB
+BTCIM  2026/06 kons=True sanayi TRYx1 bs=74 is=35 cf=37 hasılat=7755320717.0 anaort=-407779990.0 13KB
+CCOLA  2026/06 kons=True sanayi TRYx1000 bs=92 is=27 cf=61 hasılat=123259712.0 anaort=13895278.0 14KB
