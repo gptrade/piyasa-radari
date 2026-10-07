@@ -1,4 +1,4 @@
-name: probe-bist  # p18
+name: probe-bist  # p19
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -15,11 +15,11 @@ jobs:
       - name: KAP mali tablo fizibilitesi
         run: |
           set +e
-          mkdir -p probe18
-          pip install -q requests
-          python probe18.py > probe18/sonuc.txt 2>&1 || true
+          mkdir -p probe19
+          pip install -q requests openpyxl
+          python probe19.py > probe19/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe18; git commit -qm "probe18 sonuçları" || true; git push -q
+          git add -A probe19; git commit -qm "probe19 sonuçları" || true; git push -q
