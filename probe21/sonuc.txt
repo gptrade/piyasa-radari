@@ -1,0 +1,51 @@
+TRGYO tablo 731
+T1 satır=595 iç-tablo=297 :: ['<cs3> Cari Dönem 30.06.2026 Önceki Dönem 31.12.2025', 'Finansal Durum Tablosu (Bilanço)', 'Finansal Durum Tablosu (Bilanço)']
+T300 satır=304 iç-tablo=151 :: ['<cs3> Cari Dönem 01.01.2026 - 30.06.2026 Önceki Dönem 01.01.2025 - 30.06.2025 Cari Dönem 3', 'Kar veya Zarar ve Diğer Kapsamlı Gelir Tablosu', 'Kar veya Zarar ve Diğer Kapsamlı Gelir Tablosu']
+T453 satır=419 iç-tablo=209 :: ['<cs3> Cari Dönem 01.01.2026 - 30.06.2026 Önceki Dönem 01.01.2025 - 30.06.2025', 'Nakit Akış Tablosu (Dolaylı Yöntem)', 'Nakit Akış Tablosu (Dolaylı Yöntem)']
+T664 satır=140 iç-tablo=66 :: ['<cs3>', 'Özkaynaklar<cs16>', 'Ana Ortaklığa Ait Özkaynaklar<cs14> Kontrol Gücü Olmayan Paylar<cs0>']
+[Para Birimi] 0:42:26 Bildirim Tipi:FR Yıl:2026 Periyot:2 Sunum Para Birimi 1.000 TL Finansal Tablo Niteliği Konsolide Cari Dönem 30.06.2026 Önceki Dönem 31.12.2025 Finansal Durum Tablosu (Bilanço) Varlıklar DÖNEN VARLIKLAR Nakit ve Nakit Benzerleri 5 15.888.366 1
+[Yuvarlama] yok
+[Finansal Tablo Niteliği] :FR Yıl:2026 Periyot:2 Sunum Para Birimi 1.000 TL Finansal Tablo Niteliği Konsolide Cari Dönem 30.06.2026 Önceki Dönem 31.12.2025 Finansal Durum Tablosu (Bilanço) Varlıklar DÖNEN VARLIKLAR Nakit ve Nakit Benzerleri 5 15.888.366 18.015.271 Gayrimenkul
+[Konsolide] unum Para Birimi 1.000 TL Finansal Tablo Niteliği Konsolide Cari Dönem 30.06.2026 Önceki Dönem 31.12.2025 Finansal Durum Tablosu (Bilanço) Varlıklar DÖNEN VARLIKLAR Nakit ve Nakit Benzerleri 5 15.888.366 18.015.271 Gayrimenkul Projeleri Kapsamında Aç
+[Bağımsız Denetim] yok
+[Dönem] i 1.000 TL Finansal Tablo Niteliği Konsolide Cari Dönem 30.06.2026 Önceki Dönem 31.12.2025 Finansal Durum Tablosu (Bilanço) Varlıklar DÖNEN VARLIKLAR Nakit ve Nakit Benzerleri 5 15.888.366 18.015.271 Gayrimenkul Projeleri Kapsamında Açılan Nakit Hesa
+[Sunum] 2026 20:42:26 Bildirim Tipi:FR Yıl:2026 Periyot:2 Sunum Para Birimi 1.000 TL Finansal Tablo Niteliği Konsolide Cari Dönem 30.06.2026 Önceki Dönem 31.12.2025 Finansal Durum Tablosu (Bilanço) Varlıklar DÖNEN VARLIKLAR Nakit ve Nakit Benzerleri 5 15.888
+
+--- T300 ham
+    ['<cs3>', 'Cari Dönem 01.01.2026 - 30.06.2026', 'Önceki Dönem 01.01.2025 - 30.06.2025', 'Cari Dönem 3 Aylık 01.04.2026 - 30.06.2026', 'Önceki Dönem 3 Aylık 01.04.2025 - 30.06.2025']
+    ['', 'Kar veya Zarar ve Diğer Kapsamlı Gelir Tablosu']
+    ['', 'KAR VEYA ZARAR KISMI']
+    ['', 'Hasılat', '15', '8.764.874', '5.355.172', '5.172.134', '2.779.954']
+    ['', 'Satışların Maliyeti', '15', '-2.166.563', '-1.403.040', '-1.366.133', '-566.748']
+    ['', 'TİCARİ FAALİYETLERDEN BRÜT KAR (ZARAR)', '', '6.598.311', '3.952.132', '3.806.001', '2.213.206']
+    ['', 'Finans Sektörü Faaliyetleri Hasılatı', '', '', '', '', '']
+    ['', 'Ücret, Prim, Komisyon ve Diğer Hizmet Gelirleri', '', '', '', '', '']
+    ['', 'Kambiyo Gelirleri', '', '', '', '', '']
+    ['', 'Faiz Gelirleri', '', '', '', '', '']
+    ['', 'Kar Payı Gelirleri', '', '', '', '', '']
+    ['', 'Türev Finansal İşlemlerden Kazanç', '', '', '', '', '']
+    ['', 'Portföy İşletmeciliği Faaliyetinden Elde Edilen Gelir', '', '', '', '', '']
+    ['', 'Sigortacılık Hizmetlerinden Elde Edilen Gelir', '', '', '', '', '']
+
+--- T453 ham
+    ['<cs3>', 'Cari Dönem 01.01.2026 - 30.06.2026', 'Önceki Dönem 01.01.2025 - 30.06.2025']
+    ['', 'Nakit Akış Tablosu (Dolaylı Yöntem)']
+    ['', 'İŞLETME FAALİYETLERİNDEN NAKİT AKIŞLARI', '', '9.529.367', '4.539.579']
+    ['', 'Dönem Karı (Zararı)', '', '5.977.426', '5.637.073']
+    ['', 'Sürdürülen Faaliyetlerden Dönem Karı (Zararı)', '', '', '']
+    ['', 'Durdurulan Faaliyetlerden Dönem Karı (Zararı)', '', '', '']
+    ['', 'Dönem Net Karı (Zararı) Mutabakatı İle İlgili Düzeltmeler', '', '2.889.805', '-586.000']
+    ['', 'Amortisman ve İtfa Gideri İle İlgili Düzeltmeler', '', '66.459', '76.696']
+    ['', 'Değer Düşüklüğü (İptali) İle İlgili Düzeltmeler', '', '', '0']
+    ['', 'Alacaklarda Değer Düşüklüğü (İptali) ile İlgili Düzeltmeler', '', '', '']
+    ['', 'Diğer Finansal Varlıklar veya Yatırımlar Değer Düşüklüğü (İptali) ile İlgili Düzeltmeler', '', '', '']
+    ['', 'Stok Değer Düşüklüğü (İptali) ile İlgili Düzeltmeler', '', '', '']
+    ['', 'Canlı Varlıklar Değer Düşüklüğü (İptali) ile İlgili Düzeltmeler', '', '', '']
+    ['', 'Maddi Duran Varlık Değer Düşüklüğü (İptali) ile İlgili Düzeltmeler', '', '', '']
+
+TRGYO oid 4028e4a1413b7ef5014144f83882011f
+2023-01-01 500 'str' object has no attribute 'get' {"success":false,"errorMessage":"HTTP 400 - "}
+2020-01-01 500 'str' object has no attribute 'get' {"success":false,"errorMessage":"HTTP 400 - "}
+EVDS TP.FG.J0 200 37 [('2023-1', '1203.48000000'), ('2023-2', '1241.33000000')] [('2025-11', '3482.96000000'), ('2025-12', '3513.87000000'), ('2026-1', '3683.83000000')]
+EVDS TP.FE.OKTG01 200 36 [('2023-1', '1203.48000000'), ('2023-2', '1241.33000000')] [('2025-10', '3453.09000000'), ('2025-11', '3482.96000000'), ('2025-12', '3513.87000000')]
+EVDS TP.TUFE1YI.T1 200 45 [('2023-1', '2105.17000000'), ('2023-2', '2138.04000000')] [('2026-7', '5637.14000000'), ('2026-8', '5781.74000000'), ('2026-9', '5901.26000000')]
