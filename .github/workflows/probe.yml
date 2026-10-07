@@ -1,4 +1,4 @@
-name: probe-bist  # p15b
+name: probe-bist  # p17
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -13,19 +13,27 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - uses: actions/checkout@v4
-        with: { ref: onizleme-arastirma, path: app }
-      - name: araştırma kuru çalıştırma
+        with: { ref: onizleme-gizli-raporlar, path: app }
+      - name: gizli rapor kutusunu çek
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: gptrade/piyasa-radari-raporlar
+          token: ${{ secrets.RAPOR_REPO_TOKEN }}
+          path: _raporlar
+          persist-credentials: false
+      - name: gizli rapor kuru çalıştırma
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.PIYASA_RADARI }}
-          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
         run: |
           set +e
-          mkdir -p probe15
+          mkdir -p probe17
           pip install -q -r app/requirements.txt
-          python probe15.py > probe15/sonuc.txt 2>&1 || true
+          python probe17.py > probe17/sonuc.txt 2>&1 || true
+          rm -rf _raporlar
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe15; git commit -qm "probe15 sonuçları" || true; git push -q
+          git add -A probe17; git commit -qm "probe17 sonuçları" || true; git push -q
