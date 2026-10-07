@@ -19,7 +19,7 @@ from pathlib import Path
 
 from .. import http
 from ..config import DATA
-from . import kapfin
+from . import kapfin, series
 
 log = logging.getLogger("radar.fundamentals")
 
@@ -30,7 +30,10 @@ CPI = FIN / "_cpi.json"
 HISTORY_START = date(2023, 1, 1)
 CPI_SERIES = "TP.GENENDEKS.T1"
 EVDS_URL = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
-GAP = 1.0   # KAP istekleri arası bekleme (sn)
+GAP = 2.0          # KAP istekleri arası bekleme (sn)
+PAUSE_MIN = 45     # 429 sonrası ara
+MAX_PERIODS = 20   # çalıştırma başına işlenecek dönem
+MAX_TRIES = 3
 
 
 def _now() -> datetime:
@@ -158,7 +161,67 @@ def save_report(code: str, title: str, pk: str, rep: dict) -> None:
     _save(p, doc)
 
 
+def rebuild_series(force: bool = False) -> int:
+    """Yeni rapor gelen (ya da TÜFE güncellenince tüm) şirketlerin standart serilerini yeniden hesaplar."""
+    cpi = _load(CPI, {}).get("m", {})
+    n = 0
+    for p in sorted(FIN.glob("[A-Z0-9]*.json")):
+        doc = _load(p, None)
+        if not doc or (not force and doc.get("series_at") == doc.get("updated")):
+            continue
+        try:
+            doc["series"] = series.build(doc, cpi)
+        except Exception:  # tek şirketin bozuk verisi tüm adımı durdurmasın
+            log.exception("Seri hesaplanamadı: %s", p.name)
+            continue
+        doc["series_at"] = doc.get("updated")
+        _save(p, doc)
+        n += 1
+    return n
+
+
 # ---- Ana döngü ----
+
+def _kap_work(state, members, comps, stats, left, budget) -> None:
+    if _due(state, "recent", 1):
+        for row in kapfin.recent_reports(3):
+            for c in kapfin.codes_of(row):
+                if c in members and enqueue(state, c, row):
+                    stats["queued"] += 1
+
+    for code, m in members.items():
+        if left() < budget * 0.6:
+            break
+        if comps.get(code, {}).get("listed"):
+            continue
+        rows = kapfin.list_reports(m["oid"], HISTORY_START, date.today())
+        if rows is None:
+            continue
+        for row in rows:
+            if enqueue(state, code, row):
+                stats["queued"] += 1
+        comps.setdefault(code, {})["listed"] = date.today().isoformat()
+        stats["listed"] += 1
+
+    for code, pk in next_jobs(state):
+        if left() < 15 or stats["processed"] + stats["failed"] >= MAX_PERIODS:
+            break
+        idxs = state["queue"][code][pk]
+        rep = process_period(code, pk, idxs)          # RateLimited burada yukarı çıkar, iş kuyrukta kalır
+        tries = comps.setdefault(code, {}).setdefault("tries", {})
+        if rep is None:
+            tries[pk] = tries.get(pk, 0) + 1
+            if tries[pk] < MAX_TRIES:
+                continue
+            comps[code].setdefault("failed", []).append(pk)
+            stats["failed"] += 1
+        else:
+            save_report(code, members.get(code, {}).get("title", ""), pk, rep)
+            stats["processed"] += 1
+        tries.pop(pk, None)
+        del state["queue"][code][pk]
+        if not state["queue"][code]:
+            del state["queue"][code]
 
 def run(budget: float = 180.0, settings: dict | None = None) -> dict:
     t0 = time.monotonic()
@@ -166,6 +229,7 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
     state = _load(STATE, {})
     uni = _load(UNIVERSE, {})
     stats = {"listed": 0, "queued": 0, "processed": 0, "failed": 0}
+    comps = state.setdefault("companies", {})
 
     if not uni.get("members") or _due(state, "universe", 24 * 7):
         idx = kapfin.fetch_indices()
@@ -180,43 +244,21 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
         _save(STATE, state)
         return stats
 
-    if _due(state, "cpi", 24):
-        update_cpi()
-
-    if _due(state, "recent", 1):
-        for row in kapfin.recent_reports(3):
-            for c in kapfin.codes_of(row):
-                if c in members and enqueue(state, c, row):
-                    stats["queued"] += 1
+    cpi_new = _due(state, "cpi", 24) and update_cpi()
 
     comps = state.setdefault("companies", {})
-    for code, m in members.items():
-        if left() < budget * 0.6:
-            break
-        if comps.get(code, {}).get("listed"):
-            continue
-        rows = kapfin.list_reports(m["oid"], HISTORY_START, date.today())
-        time.sleep(GAP)
-        for row in rows:
-            if enqueue(state, code, row):
-                stats["queued"] += 1
-        comps.setdefault(code, {})["listed"] = date.today().isoformat()
-        stats["listed"] += 1
+    pause = state.get("kap_pause_until")
+    if pause and _now() < datetime.fromisoformat(pause):
+        log.info("Temel analiz: KAP hız sınırı beklemesi (%s'e kadar)", pause)
+    else:
+        try:
+            _kap_work(state, members, comps, stats, left, budget)
+        except kapfin.RateLimited:
+            state["kap_pause_until"] = (_now() + timedelta(minutes=PAUSE_MIN)).isoformat(timespec="seconds")
+            stats["rate_limited"] = True
+            log.warning("Temel analiz: KAP 429 — %d dk ara", PAUSE_MIN)
 
-    for code, pk in next_jobs(state):
-        if left() < 15:
-            break
-        idxs = state["queue"][code].pop(pk)
-        if not state["queue"][code]:
-            del state["queue"][code]
-        rep = process_period(code, pk, idxs)
-        if rep is None:
-            stats["failed"] += 1
-            comps.setdefault(code, {}).setdefault("failed", []).append(pk)
-            continue
-        save_report(code, members.get(code, {}).get("title", ""), pk, rep)
-        stats["processed"] += 1
-
+    rebuild_series(force=bool(cpi_new))
     pending = sum(len(v) for v in state.get("queue", {}).values())
     state["summary"] = {**stats, "pending": pending, "companies": len(members),
                         "listed_total": sum(1 for c in members if comps.get(c, {}).get("listed")),

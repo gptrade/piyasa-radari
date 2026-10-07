@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 from datetime import date, timedelta
 
 from lxml import html as LH
@@ -35,8 +36,29 @@ HEADERS = {"Referer": "https://www.kap.org.tr/tr/bildirim-sorgu", "Accept": "app
 KINDS = (("bs", re.compile(r"^(Finansal Durum Tablosu|Bilanço|BİLANÇO)")),
          ("is", re.compile(r"^(Kar veya Zarar|Gelir Tablosu|GELİR TABLOSU)")),
          ("cf", re.compile(r"^(Nakit Akış|NAKİT AKIŞ)")))
+LIST_GAP = 1.5
 DATE = re.compile(r"(\d{2})\.(\d{2})\.(\d{4})")
 NUM = re.compile(r"^\(?-?[\d.]+(,\d+)?\)?$")
+
+
+class RateLimited(Exception):
+    """KAP 429 döndü: bu çalıştırmada KAP'a daha fazla istek atılmaz."""
+
+
+def _kap(method: str, url: str, **kw):
+    """KAP isteği; 429'da RateLimited fırlatır, diğer hatalarda None döner."""
+    headers = {"User-Agent": http.DEFAULT_UA, "Accept-Language": "tr,en;q=0.8", **kw.pop("headers", {})}
+    try:
+        r = http._session.request(method, url, headers=headers, timeout=kw.pop("timeout", 90), **kw)
+    except Exception as e:  # ağ hatası
+        log.warning("KAP %s %s -> %s", method, url[-60:], e)
+        return None
+    if r.status_code == 429:
+        raise RateLimited(url)
+    if r.status_code != 200:
+        log.warning("KAP %s %s -> HTTP %s", method, url[-60:], r.status_code)
+        return None
+    return r
 
 
 def _d(m: re.Match) -> str:
@@ -135,7 +157,7 @@ def parse_export(content: bytes | str) -> dict:
 
 
 def fetch_export(idx: int) -> dict | None:
-    r = http.get(EXPORT_URL.format(idx=idx), timeout=120, retries=1)
+    r = _kap("GET", EXPORT_URL.format(idx=idx), timeout=120)
     if r is None:
         return None
     try:
@@ -154,21 +176,24 @@ def is_fr(row: dict) -> bool:
         (row.get("subject") or "").strip() in ("Finansal Rapor", "Finansal Rapor Bildirimi")
 
 
-def list_reports(oid: str, start: date, end: date) -> list[dict]:
+def list_reports(oid: str, start: date, end: date) -> list[dict] | None:
     """Bir şirketin [start, end] arasındaki finansal rapor bildirimleri (KAP bir yıllık pencere kabul ediyor)."""
     out: list[dict] = []
     frm = start
     while frm <= end:
         to = min(end, frm + timedelta(days=364))
-        r = http.post(LIST_URL, json={"fromDate": frm.isoformat(), "toDate": to.isoformat(),
-                                      "mkkMemberOidList": [oid], "subjectList": []},
-                      headers=HEADERS, timeout=90, retries=1)
+        r = _kap("POST", LIST_URL, json={"fromDate": frm.isoformat(), "toDate": to.isoformat(),
+                                         "mkkMemberOidList": [oid], "subjectList": []}, headers=HEADERS)
+        if r is None:
+            return None   # eksik liste kaydedilmesin; sonra yeniden denenir
         if r is not None:
             try:
                 out += [x for x in r.json() if is_fr(x)]
             except ValueError:
                 log.warning("KAP liste JSON dönmedi (%s)", oid)
+                return None
         frm = to + timedelta(days=1)
+        time.sleep(LIST_GAP)
     return out
 
 
@@ -178,9 +203,8 @@ def recent_reports(days: int = 3) -> list[dict]:
     today = date.today()
     for i in range(days, -1, -1):
         d = today - timedelta(days=i)
-        r = http.post(LIST_URL, json={"fromDate": d.isoformat(), "toDate": d.isoformat(),
-                                      "mkkMemberOidList": [], "subjectList": []},
-                      headers=HEADERS, timeout=90, retries=1)
+        r = _kap("POST", LIST_URL, json={"fromDate": d.isoformat(), "toDate": d.isoformat(),
+                                         "mkkMemberOidList": [], "subjectList": []}, headers=HEADERS)
         if r is not None:
             try:
                 out += [x for x in r.json() if is_fr(x)]

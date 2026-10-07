@@ -123,7 +123,7 @@ def test_queue_order_and_dedupe(fin_dir):
     assert jobs[0][1] == "2026/06" and jobs[-1] == ("TRGYO", "2025/12")
 
 
-def test_process_period_stops_at_consolidated():
+def test_process_period_stops_at_consolidated(fin_dir):
     cons, solo = load("trgyo_2026_06"), load("trgyo_2026_06_b")
     calls = []
 
@@ -164,3 +164,80 @@ def test_run_end_to_end_with_fakes(fin_dir, monkeypatch):
     # ikinci çalıştırma: yeni iş yok, liste yeniden çekilmez
     s2 = store.run(budget=60)
     assert s2["processed"] == 0 and s2["listed"] == 0
+
+
+def _fake_env(monkeypatch, fetch):
+    monkeypatch.setattr(store.kapfin, "fetch_indices", lambda: {"XU100": [{"code": "TRGYO", "title": "T", "oid": "o1"}]})
+    monkeypatch.setattr(store.kapfin, "fetch_sectors", lambda: {})
+    monkeypatch.setattr(store.kapfin, "recent_reports", lambda days=3: [])
+    monkeypatch.setattr(store.kapfin, "list_reports", lambda oid, a, b: [row(1652360)])
+    monkeypatch.setattr(store, "update_cpi", lambda: True)
+    real = store.process_period
+    monkeypatch.setattr(store, "process_period", lambda c, p, i: real(c, p, i, fetch=fetch))
+
+
+def test_rate_limit_keeps_job_and_pauses(fin_dir, monkeypatch):
+    def boom(idx):
+        raise store.kapfin.RateLimited("x")
+    _fake_env(monkeypatch, boom)
+    s = store.run(budget=60)
+    assert s["rate_limited"] and s["pending"] == 1
+    st = store._load(fin_dir / "_state.json", {})
+    assert "kap_pause_until" in st
+    s2 = store.run(budget=60)            # bekleme süresinde KAP'a gidilmez
+    assert s2["pending"] == 1 and not s2.get("rate_limited")
+
+
+def test_failed_period_retried_then_given_up(fin_dir, monkeypatch):
+    _fake_env(monkeypatch, lambda idx: None)
+    for _ in range(store.MAX_TRIES - 1):
+        assert store.run(budget=60)["pending"] == 1
+    s = store.run(budget=60)
+    assert s["pending"] == 0 and s["failed"] == 1
+
+
+# ---- Standart seriler (değerler ekran görüntüsündeki TRGYO 2026/06 rakamlarıyla doğrulandı) ----
+
+from radar.fundamentals import series as S  # noqa: E402
+
+CPI_T = {"2025-12": 3513.87, "2026-06": 3513.87 * 1.1773}
+
+
+def trgyo_doc():
+    return {"currency": "TRY", "reports": {"2026/06": load("trgyo_2026_06"), "2025/12": load("trgyo_2025_12")}}
+
+
+def test_series_cumulative_and_quarter():
+    o = S.build(trgyo_doc(), CPI_T)
+    assert o["periods"] == ["2025/12", "2026/06"]
+    assert o["cum"]["revenue"][1] == 8_764_874_000
+    assert o["cum"]["ebitda"][1] == 6_160_912_000          # brüt − GYG − pazarlama + amortisman
+    assert o["q"]["revenue"][1] == 5_172_134_000           # raporun kendi 3 aylık sütunu
+    assert o["cum_prev"]["revenue"][1] == 5_355_172_000
+
+
+def test_series_ttm_matches_reference():
+    o = S.build(trgyo_doc(), CPI_T)
+    assert abs(o["ttm"]["revenue"][1] - 20.90e9) < 0.01e9
+    assert abs(o["ttm"]["ebitda"][1] - 14.34e9) < 0.01e9   # referans: 14,34 mr ₺
+    assert abs(o["ttm"]["net_parent"][1] - 9.44e9) < 0.01e9  # referans: 9,44 mr ₺
+    assert o["ttm"]["revenue"][0] == o["cum"]["revenue"][0]   # yıl sonu = kümülatif
+
+
+def test_series_balance_debt():
+    o = S.build(trgyo_doc(), CPI_T)
+    assert o["bs"]["fin_debt"][1] == 12_458_860_000
+    assert o["bs"]["net_debt"][1] == -3_760_467_000
+    assert o["bs"]["equity_parent"][1] == 154_575_736_000
+    assert o["bs"]["current_assets"][1] == 25_604_208_000
+
+
+def test_q4_derived_from_annual_minus_nine_months():
+    def rep(year, period, rev, end):
+        start = f"{year}-01-01"
+        return {"scale": 1, "is": {"cols": [{"start": start, "end": end, "prior": False}],
+                                   "rows": {"Hasılat": [rev]}}}
+    doc = {"currency": "TRY", "reports": {"2025/09": rep(2025, 3, 90, "2025-09-30"),
+                                          "2025/12": rep(2025, 4, 130, "2025-12-31")}}
+    o = S.build(doc, {"2025-09": 100, "2025-12": 110})
+    assert abs(o["q"]["revenue"][1] - (130 - 90 * 1.1)) < 1e-6
