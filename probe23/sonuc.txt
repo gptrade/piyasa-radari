@@ -1,0 +1,93 @@
+[(1006.0, 'TÜKETİCİ EĞİLİM ANKETİ (TÜİK, TCMB)'), (20.0, 'FİYAT ENDEKSLERİ'), (2001.0, 'YURT DIŞI ÜRETİCİ FİYAT ENDEKSİ (TÜİK)'), (2003.0, 'KONUT FİYAT ENDEKSİ (TCMB)'), (2004.0, 'TİCARİ GAYRİMENKUL FİYAT ENDEKSİ (TCMB)'), (9991003.0, 'TÜKETİCİ EĞİLİM ANKETİ (ARŞİV)'), (99940.0, 'FİYAT ENDEKSLERİ (ARŞİV)'), (2005.0, 'TÜKETİCİ FİYAT ENDEKSİ (TÜİK)'), (2006.0, 'YURT İÇİ ÜRETİCİ FİYAT ENDEKSİ (TÜİK)'), (2007.0, 'HİZMET ÜRETİCİ FİYAT ENDEKSİ (TÜİK)'), (2008.0, 'TARIM ÜRÜNLERİ ÜRETİCİ FİYAT ENDEKSİ (TÜİK)'), (2009.0, 'TARIMSAL GİRDİ FİYAT ENDEKSİ (TÜİK)')]
+ grup 1006 bie_mbgven2 Tüketici Güven Endeksi ve Tüketici Eğilim Endeksleri 01-01-2012 01-09-2026
+    seri TP.TG2.Y01 Tüketici Güven Endeksi 01-01-2012 01-09-2026
+    seri TP.TG2.Y02 Son on iki aydaki hanenin maddi durumunun değişimi 01-01-2012 01-09-2026
+    seri TP.TG2.Y03 Gelecek on iki aydaki hanenin maddi durumunun değişimi beklentisi 01-01-2012 01-09-2026
+ grup 2001 bie_ufeyd Yurt Dışı Üretici Fiyat Endeksi 01-01-2010 01-08-2026
+ grup 2003 bie_kfe Konut Fiyat Endeksi 01-01-2010 01-08-2026
+ grup 2003 bie_yokfend Yeni Olmayan Konutlar Fiyat Endeksi 01-01-2010 01-08-2026
+ grup 2003 bie_ykfe Yeni Konutlar Fiyat Endeksi 01-01-2010 01-08-2026
+ grup 2003 bie_birimfiyat Konut Birim Fiyatları 01-01-2010 01-04-2026
+ grup 2003 bie_ykke Yeni Kiracı Kira Endeksi 01-01-2018 01-08-2026
+ grup 2003 bie_bk Değerlemesi Yapılan Konutların Birim Kiraları 01-01-2018 01-04-2026
+ grup 2004 bie_dfe Dükkan Fiyat Endeksi 01-04-2015 01-04-2026
+ grup 2004 bie_tgfe Ticari Gayrimenkul Fiyat Endeksi 01-04-2015 01-04-2026
+ grup 2004 bie_ofe Ofis Fiyat Endeksi 01-04-2015 01-04-2026
+ grup 2004 bie_dbfy Dükkan Birim Fiyatları 01-01-2015 01-01-2025
+ grup 2004 bie_obfy Ofis Birim Fiyatları 01-01-2015 01-01-2025
+ grup 9991003 bie_mbgven Tüketici Güven Endeksi ve Tüketici Eğilim Anketi Sorularına İlişkin Endeksler (Arşiv) 01-12-2003 01-12-2012
+    seri TP.TG.EN Tuketici Guven Endeksi (Arşiv) 01-12-2003 01-12-2012
+    seri TP.TG.Y01 Satin alma gucu (6 Ay oncesine gore mevcut donem)(Arşiv) 01-12-2003 01-12-2012
+    seri TP.TG.Y02 Satin alma gucu (Gelecek 6 aylik donem)(Arşiv) 01-12-2003 01-12-2012
+ grup 9991003 bie_mbtkeg Tüketici Eğilim Anketi (Arşiv) 01-12-2003 01-12-2012
+    seri TP.TKEG.S01.A 1.(ÇOK DAHA İYİ) 6 Ay öncesine göre, Şu anda satın alma gücünüz nasıldır? (Arşiv) 01-12-2003 01-12-2012
+    seri TP.TKEG.S01.B 1.(BİRAZ DAHA İYİ) 6 Ay öncesine göre, Şu anda satın alma gücünüz nasıldır? (Arşiv) 01-12-2003 01-12-2012
+    seri TP.TKEG.S01.C 1.(AYNI) 6 Ay öncesine göre, Şu anda satın alma gücünüz nasıldır? (Arşiv) 01-12-2003 01-12-2012
+ grup 99940 bie_tukfiy4 Tüketici Fiyat Endeksi (2003=100) (Arşiv) (Arşiv) 01-01-2003 01-01-2026
+    seri TP.FG.J0 GENEL (Tüketici) (Arşiv) (Arşiv) 01-01-2003 01-01-2026
+    seri TP.FG.J01 1.GIDA VE ALKOLSÜZ İÇECEKLER (Arşiv) (Arşiv) 01-01-2003 01-12-2025
+    seri TP.FG.J011 1.1.GIDA (Arşiv) (Arşiv) 01-01-2003 01-12-2025
+ grup 99940 bie_feoktg Özel Kapsamlı TÜFE Göstergeleri (2003=100) (Arşiv) 01-01-2003 01-12-2025
+    seri TP.FE.OKTG01 Tüketici Fiyat Endeksi (Genel) (Arşiv) 01-01-2003 01-12-2025
+    seri TP.FE.OKTG02 A.Mevsimlik ürünler hariç TÜFE (Arşiv) 01-01-2003 01-12-2025
+    seri TP.FE.OKTG03 B.İşlenmemiş gıda ürünleri, enerji, alkollü içkiler ve tütün ile altın hariç TÜFE (Arşiv) 01-01-2003 01-12-2025
+ grup 99940 bie_tuksehir2 Fiyat Endeksi (Tüketici) (İstatistiki Bölgelere Göre) (2003=100) (Arşiv) 01-01-2003 01-01-2023
+    seri TP.FG.TS01 TÜRKİYE (Arşiv) 01-01-2003 01-01-2023
+    seri TP.FG.TS02 1.Bölge İstanbul (Arşiv) 01-01-2003 01-04-2022
+    seri TP.FG.TS03 2.Bölge Tekirdağ, Edirne, Kırklareli (Arşiv) 01-01-2003 01-04-2022
+ grup 99940 bie_topfiy1 Toptan Eşya Fiyat Endeksi  (1981=100) (Arşiv) 01-01-1982 01-12-2004
+ grup 99940 bie_tuufe Tarım Ürünleri Üretici Fiyat Endeksi (2010=100) (Arşiv) 01-01-1982 01-01-2018
+ grup 99940 bie_yokfe Yeni Olmayan Konutlar Fiyat Endeksi (YOKFE) (2010=100) (Arşiv) 01-01-2010 01-01-2019
+ grup 99940 bie_toktg Fiyat Endeksi-Özel Kapsamlı TÜFE Göstergeleri (2003=100) (Arşiv) 01-01-2003 01-12-2016
+    seri TP.FG.TG01 TÜFE (GENEL) (Arşiv) 01-01-2003 01-12-2016
+    seri TP.FG.TG02 A Mevsimlik ürünler hariç TÜFE (Arşiv) 01-01-2003 01-12-2016
+    seri TP.FG.TG03 B.işlenmemiş Gıda ürünleri hariç TÜFE (Arşiv) 01-01-2003 01-12-2016
+ grup 99940 bie_tykfe Yeni Konutlar Fiyat Endeksi (YKFE) (2010=100) (Arşiv) 01-01-2010 01-01-2019
+ grup 99940 bie_fgtukfiy3 Fiyat Endeksi (Tüketici) (1994=100) (Arşiv) 01-01-1994 01-12-2004
+    seri TP.FG.T01 1.GENEL (Arşiv) 01-01-1994 01-12-2004
+    seri TP.FG.T02 2.Gıda, İçki ve Tütün (Arşiv) 01-01-1994 01-12-2004
+    seri TP.FG.T03 2.1.Gıda (Arşiv) 01-01-1994 01-12-2004
+ grup 99940 bie_fgtukfiy2 Fiyat Endeksi (Tüketici) (1987=100) (Arşiv) 01-01-1987 01-12-2004
+    seri TP.FG.A01 Genel Endeks (Arşiv) 01-01-1987 01-12-2004
+    seri TP.FG.A02 Gıdalar Genel Endeksi (Arşiv) 01-01-1987 01-12-2004
+    seri TP.FG.A03 Giyim Eşyasi genel endeksi (Arşiv) 01-01-1987 01-12-2004
+ grup 99940 bie_tkfe Konut Fiyat Endeksi (KFE) (2010=100) (Arşiv) 01-01-2010 01-01-2019
+ grup 99940 bie_tuksehir Fiyat Endeksi (Tüketici) (Bölge ve İllere Göre) (1994=100) (Arşiv) 01-01-1995 01-12-2004
+    seri TP.FG.ADANA ADANA (Arşiv) 01-01-1995 01-12-2004
+    seri TP.FG.AKDENIZ AKDENİZ (Arşiv) 01-01-1995 01-12-2004
+    seri TP.FG.ANKARA ANKARA (Arşiv) 01-01-1995 01-12-2004
+ grup 99940 bie_tukfiy1 Fiyat Endeksi (Tüketici) (1978-1979=100) (Arşiv) 01-01-1982 01-12-2004
+    seri TP.FG.F01 GENEL ENDEKS (Arşiv) 01-01-1982 01-12-2004
+    seri TP.FG.F02 1- GIDALAR GENEL ENDEKSİ (Arşiv) 01-01-1982 01-12-2004
+    seri TP.FG.F03 1.1- EKMEK VE TAHILLAR (Arşiv) 01-01-1985 01-12-1990
+ grup 99940 bie_thedonikykfe Yeni Konutlar Fiyat Endeksi (YKFE) (2017=100) (Arşiv) 01-01-2010 01-05-2024
+ grup 99940 bie_tuufey Tarım Ürünleri Üretici Fiyat Endeksi (2015=100) (Arşiv) 01-01-2016 01-12-2023
+ grup 99940 bie_yohyituk Yerleşik ve Yerleşik Olmayan Hanehalklarının Yurt İçi Tüketimi (Cari ve Sabit (1998) Fiyatlarla) (Yeni Seri) (Arşiv) 01-01-1998 01-04-2016
+ grup 99940 bie_fgtopfiy4 Fiyat Endeksi (Toptan Eşya) (1987=100) (Arşiv) 01-01-1982 01-12-2004
+ grup 99940 bie_fgtopfiy5 Fiyat Endeksi (Toptan Eşya) (1994=100) (Arşiv) 01-01-1994 01-12-2004
+ grup 99940 bie_tufe1 Fiyat Endeksi (Üretici Fiyatları) (2003=100) (Arşiv) 01-01-2003 01-12-2013
+ grup 99940 bie_thedonikyokfe Yeni Olmayan Konutlar Fiyat Endeksi (YOKFE) (2017=100) (Arşiv) 01-01-2010 01-05-2024
+ grup 99940 bie_hkfe Konut Fiyat Endeksi (KFE) (2017=100) (Arşiv) 01-01-2010 01-05-2024
+ grup 99940 bie_tcbf Konut Birim Fiyatları (Arşiv) 01-01-2010 01-05-2024
+ grup 2005 bie_oktug2025 Özel Kapsamlı TÜFE Göstergeleri (2025=100) 01-01-2005 01-09-2026
+    seri TP.FE25.OKTG02 A. Mevsimlik ürünler hariç TÜFE 01-01-2005 01-09-2026
+    seri TP.FE25.OKTG03 B. İşlenmemiş gıda ürünleri, enerji, alkollü içkiler ve tütün ile altın hariç TÜFE 01-01-2005 01-09-2026
+    seri TP.FE25.OKTG04 C. Enerji, gıda ve alkolsüz içecekler, alkollü içkiler ile tütün ürünleri ve altın hariç TÜFE 01-01-2005 01-09-2026
+ grup 2005 bie_tukfiy2025 Tüketici Fiyat Endeksi (2025=100) 01-01-2005 01-09-2026
+    seri TP.TUKFIY2025.GENEL Genel Endeks 01-01-2005 01-09-2026
+    seri TP.TUKFIY2025.01 01. Gıda Ve Alkolsüz İçecekler 01-01-2005 01-09-2026
+    seri TP.TUKFIY2025.011 011. Gıda 01-01-2005 01-09-2026
+ grup 2005 bie_tukfiy2003 Tüketici Fiyat Endeksi (Genel) (2003=100) 01-01-2003 01-09-2026
+    seri TP.GENENDEKS.T1 Genel Endeks (2003=100) 01-01-2003 01-09-2026
+ grup 2005 bie_tukfiyarnd Tüketici Fiyat Endeksi - Mevsim Etkisinden Arındırılmış (2025=100) 01-01-2005 01-08-2026
+    seri TP.TUKFIYARND.OKTG01 Tüketici Fiyat Endeksi - Genel (MA) 01-01-2005 01-08-2026
+    seri TP.TUKFIYARND.OKTG03 B. İşlenmemiş gıda ürünleri, enerji, alkollü içkiler ve tütün ile altın hariç TÜFE (MA) 01-01-2005 01-08-2026
+    seri TP.TUKFIYARND.OKTG04 C. Enerji, gıda ve alkolsüz içecekler, alkollü içkiler ile tütün ürünleri ve altın hariç TÜFE (MA) 01-01-2005 01-08-2026
+ grup 2005 bie_tukfiyagrlk Tüketici Fiyat Endeksi - Ana Grup Ağırlıkları (2025=100) 01-01-2016 01-01-2026
+    seri TP.TUKFIYAGRLK.01 01. Gıda ve Alkolsüz İçecekler (Ana Grup Ağırlıkları) 01-01-2016 01-01-2026
+    seri TP.TUKFIYAGRLK.02 02. Alkollü İçecekler, Tütün ve Tütün Ürünleri (Ana Grup Ağırlıkları) 01-01-2016 01-01-2026
+    seri TP.TUKFIYAGRLK.03 03. Giyim ve Ayakkabı (Ana Grup Ağırlıkları) 01-01-2016 01-01-2026
+ grup 2006 bie_tufe1yi Yurt İçi Üretici Fiyat Endeksi 01-01-1982 01-09-2026
+ grup 2007 bie_hufe Hizmet Üretici Fiyat Endeksi 01-01-2017 01-08-2026
+ grup 2008 bie_tarimufe Tarım Ürünleri Üretici Fiyat Endeksi 01-01-2020 01-08-2026
+ grup 2009 bie_tarimgfe Tarımsal Girdi Fiyat Endeksi 01-01-2015 01-07-2026
