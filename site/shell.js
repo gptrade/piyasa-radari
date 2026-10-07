@@ -53,16 +53,21 @@
     arastirma: { title: "Araştırma", sub: "Aracı kurum notları, kurum görünümleri ve AI sentezi · raporların kendisi değil, kamuya duyurulan özetleri", view: "#view-arastirma", market: true },
     portfoy: { title: "Portföy", sub: "Pozisyonlar, kâr/zarar, risk ve pozisyonlarındaki gelişmeler · yalnız bu tarayıcıda", view: "#view-portfoy", market: false },
     "geri-alim": { title: "Şirket Geri Alım", sub: "KAP pay geri alım bildirimleri · Borsa İstanbul", view: "#view-geri-alim", market: true },
+    temel: { title: "Temel Analiz", sub: "BIST-100 · KAP mali tabloları, reel (TÜFE) düzeltme, oranlar ve skorlar", view: "#view-temel", market: false },
+    hisse: { title: "Şirket", sub: "", view: "#view-hisse", market: false, nav: "temel" },
+    tarama: { title: "Tarama", sub: "Metrik ve kriter taraması · BIST-100, bankalar ve sigortacılar hariç", view: "#view-tarama", market: false },
+    karsilastir: { title: "Karşılaştır", sub: "Seçtiğin şirketlerin kategori puanları, oranları ve eğilimleri", view: "#view-karsilastir", market: false },
   };
-  const ALIAS = { alco: "makro", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
+  const ALIAS = { "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
   const H = {};                                   // route → işleyiciler {refresh, exports, onShow, onHide, onMarket}
   const updatedAt = {};                           // route → {t, label, staleMin}
-  const S = { route: null, market: store.get("radar.market", "ALL") };
+  const S = { route: null, param: "", market: store.get("radar.market", "ALL") };
   if (!["ALL", "BIST", "US"].includes(S.market)) S.market = "ALL";
 
   const shell = {
     $, $$, esc, fmt, store, glyph, dirCls, TZ,
     get route() { return S.route; },
+    get param() { return S.param; },
     get market() { return S.market; },
     register(route, h) { H[route] = h; if (S.route === route) { h.onShow?.(); syncActions(); } },
     setUpdated(route, t, opt = {}) { updatedAt[route] = t ? { t: new Date(t), ...opt } : null; if (route === S.route) syncActions(); },
@@ -101,26 +106,39 @@
   }
 
   // ─────────────────────────────── yönlendirme
+  // #rota ya da #rota/parametre (ör. #hisse/THYAO, #karsilastir/THYAO,PGSUS)
   function parseHash() {
     const h = decodeURIComponent(location.hash.replace(/^#/, ""));
-    const r = ALIAS[h] || h;
-    return ROUTES[r] ? r : null;
+    const [head, ...rest] = h.split("/");
+    const r = ALIAS[head] || head;
+    return ROUTES[r] ? { route: r, param: rest.join("/") } : null;
   }
-  function go(route, { push = true, focus = false } = {}) {
+  function go(route, { push = true, focus = false, param = "" } = {}) {
+    if (typeof route === "object" && route) ({ route, param = "" } = route);
     if (!ROUTES[route]) route = "sinyal";
     const prev = S.route;
-    if (prev === route) return;
+    if (prev === route) {
+      if ((param || "") === S.param) return;
+      S.param = param || "";
+      const h = "#" + route + (S.param ? "/" + S.param : "");
+      if (location.hash !== h) (push ? history.pushState : history.replaceState).call(history, null, "", h);
+      H[route]?.onShow?.();
+      if (focus) $("#main").focus({ preventScroll: true });
+      return;
+    }
+    S.param = param || "";
     if (prev) H[prev]?.onHide?.();
     S.route = route;
-    store.set("radar.route", route);
+    if (route !== "hisse") store.set("radar.route", route);
     Object.entries(ROUTES).forEach(([k, r]) => { $(r.view).hidden = k !== route; });
-    $$(".nav-item").forEach(a => a.dataset.route === route ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+    const navRoute = ROUTES[route].nav || route;
+    $$(".nav-item").forEach(a => a.dataset.route === navRoute ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
     $("#pageTitle").textContent = ROUTES[route].title;
     $("#pageSub").textContent = ROUTES[route].sub;
     $("#pageSub").hidden = !ROUTES[route].sub;
     document.title = `${ROUTES[route].title} · Piyasa Radarı`;
     $("#marketSec").hidden = !ROUTES[route].market;
-    const h = "#" + route;
+    const h = "#" + route + (S.param ? "/" + S.param : "");
     if (location.hash !== h) (push ? history.pushState : history.replaceState).call(history, null, "", h);
     closeMenu();
     if (isNarrow()) setDrawer(false);
@@ -128,7 +146,7 @@
     H[route]?.onShow?.();
     if (focus) $("#main").focus({ preventScroll: true });
   }
-  addEventListener("hashchange", () => go(parseHash() || "sinyal", { push: false }));
+  addEventListener("hashchange", () => { const p = parseHash(); go(p ? p.route : "sinyal", { push: false, param: p?.param || "" }); });
   $$(".nav-item").forEach(a => a.addEventListener("click", e => { e.preventDefault(); go(a.dataset.route, { focus: true }); }));
 
   // ─────────────────────────────── eylem çubuğu
@@ -361,7 +379,8 @@
 
   // ─────────────────────────────── başlangıç: sekmeler kaydolduktan sonra
   addEventListener("DOMContentLoaded", () => {
-    const hashRoute = parseHash();
-    go(hashRoute || store.get("radar.route", "sinyal"), { push: false });
+    const h = parseHash();
+    if (h) go(h.route, { push: false, param: h.param });
+    else go(store.get("radar.route", "sinyal"), { push: false });
   });
 })();
