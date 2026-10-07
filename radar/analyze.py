@@ -163,12 +163,19 @@ class ClaudeProvider:
     def assess(self, system: str, prompt: str, max_tokens: int = 900) -> dict | None:
         return self.ask(system, prompt, TOOL, max_tokens=max_tokens)
 
-    def ask(self, system: str, prompt: str, tool: dict, fmt: str = "", max_tokens: int = 900) -> dict | None:
+    def ask(self, system: str, prompt: str, tool: dict, fmt: str = "", max_tokens: int = 900,
+            media: list | None = None) -> dict | None:
+        content = prompt
+        if media:                                   # [(mime, bytes)]: görseller ve PDF'ler (taranmış rapor)
+            import base64
+            content = [{"type": "document" if mime == "application/pdf" else "image",
+                        "source": {"type": "base64", "media_type": mime, "data": base64.b64encode(data).decode()}}
+                       for mime, data in media] + [{"type": "text", "text": prompt}]
         try:
             msg = self.client.messages.create(
                 model=self.model, max_tokens=max_tokens, system=system,
                 tools=[tool], tool_choice={"type": "tool", "name": tool["name"]},
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": content}],
             )
         except Exception as e:
             name, text = type(e).__name__, str(e)
@@ -260,11 +267,14 @@ class GeminiProvider:
     def assess(self, system: str, prompt: str, max_tokens: int = 1200) -> dict | None:
         return self.ask(system, prompt, TOOL, GEMINI_FORMAT, max_tokens=max_tokens)
 
-    def ask(self, system: str, prompt: str, tool: dict, fmt: str = "", max_tokens: int = 1200) -> dict | None:
+    def ask(self, system: str, prompt: str, tool: dict, fmt: str = "", max_tokens: int = 1200,
+            media: list | None = None) -> dict | None:
+        import base64
         import requests
+        parts = [{"inline_data": {"mime_type": mime, "data": base64.b64encode(data).decode()}} for mime, data in (media or [])]
         body = {
             "systemInstruction": {"parts": [{"text": system + "\n" + fmt}]},
-            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "contents": [{"role": "user", "parts": parts + [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2,
                                  "maxOutputTokens": max_tokens},
         }
@@ -402,13 +412,15 @@ class Analyzer:
             return out
         return None
 
-    def ask_json(self, system: str, prompt: str, tool: dict, fmt: str, max_tokens: int = 1500) -> dict | None:
-        """Genel amaçlı yapılandırılmış istek (ör. dönemsel özet); aynı sağlayıcı sırası ve yedekleme."""
+    def ask_json(self, system: str, prompt: str, tool: dict, fmt: str, max_tokens: int = 1500,
+                 media: list | None = None) -> dict | None:
+        """Genel amaçlı yapılandırılmış istek (ör. dönemsel özet, rapor okuma); aynı sağlayıcı sırası ve yedekleme.
+        media: [(mime, bytes)] görsel/PDF ekleri (sağlayıcı görüntüden okur)."""
         for p in self.providers:
             if p.name in self.down:
                 continue
             try:
-                out = p.ask(system, prompt, tool, fmt, max_tokens)
+                out = p.ask(system, prompt, tool, fmt, max_tokens, media=media) if media else p.ask(system, prompt, tool, fmt, max_tokens)
             except ProviderDown as e:
                 self.down[p.name] = str(e)[:200]
                 self._err(f"{p.name} devre dışı: {e}")

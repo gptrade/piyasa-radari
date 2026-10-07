@@ -13,7 +13,7 @@ from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
-from . import anomaly, bb_quotes, documents, research, bist_data, calendar_events, scorecard
+from . import anomaly, bb_quotes, documents, private_reports, research, bist_data, calendar_events, scorecard
 from .sources import Context, alphavantage, feeds, finnhub, global_macro, kap, marketaux, reports, social, spk, tcmb, tr_official, vendors
 
 log = logging.getLogger("radar")
@@ -114,7 +114,8 @@ def earnings_items(stocks, px: dict, days_ahead: int) -> list[Item]:
 # Anahtarı olmadan çalışmayan kaynaklar: tanımlı değilse "kapalı" gösterilir (hata sayılmaz)
 NEEDS_KEY = {"X": "X_BEARER_TOKEN", "TCMB EVDS": "EVDS_API_KEY", "Matriks": "MATRIKS_API_KEY", "Foreks": "FOREKS_USERNAME",
              "Marketaux": "MARKETAUX_API_TOKEN", "Finnhub": "FINNHUB_API_KEY",
-             "Alpha Vantage": "ALPHAVANTAGE_API_KEY"}
+             "Alpha Vantage": "ALPHAVANTAGE_API_KEY",
+             "Gizli rapor kutusu": "RAPOR_REPO_TOKEN"}
 
 
 def source_health(status: list[dict], prev: dict, now: str | None = None) -> dict:
@@ -461,6 +462,27 @@ def run() -> dict:
     # 4) AI değerlendirme — önce rapor & bildirim, sonra en yeni haberler
     analyzer = Analyzer(settings)
     watch = {s.symbol for s in stocks}
+    # 4') Gizli rapor kutusu (kullanıcının gizli reposu): yapılandırılmış alanlar siteye, ayrıntı Telegram'a
+    pcfg = (settings.get("sources") or {}).get("private_reports") or {}
+    if pcfg.get("enabled", True):
+        try:
+            pr = private_reports.process(analyzer, watch, pcfg)
+            if pr["status"].get("disabled"):
+                status.append({"name": "Gizli rapor kutusu", "ok": True, "count": 0})
+            else:
+                entry = {"name": "Gizli rapor kutusu", "ok": True, "count": pr["status"]["count"]}
+                if pr["status"].get("waiting"):
+                    entry["warnings"] = [f"{pr['status']['waiting']} rapor sırada (turda en fazla {pcfg.get('max_per_run', 2)})"]
+                status.append(entry)
+            research.PRIVATE["records"] += pr["records"]
+            research.PRIVATE["notes"] += pr["notes"]
+            for it in pr["items"]:
+                if it.id not in seen_ids:
+                    seen_ids[it.id] = None
+                    new.append(it)
+        except Exception as e:
+            log.exception("Gizli rapor kutusu hatası")
+            status.append({"name": "Gizli rapor kutusu", "ok": False, "count": 0, "error": str(e)[:200]})
     # 4a) Belge okuma: yatırımcı sunumu, finansal/faaliyet raporu, SEC 8-K EX-99 → AI tam metinle özetler
     dcfg = (settings.get("sources") or {}).get("documents") or {}
     if analyzer.enabled and dcfg.get("enabled", True):
@@ -537,7 +559,7 @@ def run() -> dict:
         # Sadece tanımlı olup olmadıkları (değerler asla yazılmaz)
         "secrets": {k: bool(os.environ.get(k)) for k in (
             "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "SEC_USER_AGENT",
-            "EVDS_API_KEY", "X_BEARER_TOKEN", "MATRIKS_API_KEY", "FOREKS_USERNAME", "MARKETAUX_API_TOKEN", "FINNHUB_API_KEY", "ALPHAVANTAGE_API_KEY")},
+            "EVDS_API_KEY", "X_BEARER_TOKEN", "MATRIKS_API_KEY", "FOREKS_USERNAME", "MARKETAUX_API_TOKEN", "FINNHUB_API_KEY", "ALPHAVANTAGE_API_KEY", "RAPOR_REPO_TOKEN")},
         "items": items,
     }, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 

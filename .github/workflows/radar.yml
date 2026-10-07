@@ -21,6 +21,8 @@ jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      HAS_RAPOR: ${{ secrets.RAPOR_REPO_TOKEN != '' }}
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -46,6 +48,17 @@ jobs:
             git archive FETCH_HEAD | tar -x -C site/data
           fi
 
+      # Gizli rapor kutusu: kullanıcının gizli reposu, site/ DIŞINA çekilir (Pages'e ve data dalına girmez)
+      - name: Gizli rapor kutusunu çek
+        if: ${{ env.HAS_RAPOR == 'true' }}
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: gptrade/piyasa-radari-raporlar
+          token: ${{ secrets.RAPOR_REPO_TOKEN }}
+          path: _raporlar
+          persist-credentials: false
+
       - name: Radarı çalıştır
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -59,6 +72,7 @@ jobs:
           MARKETAUX_API_TOKEN: ${{ secrets.MARKETAUX_API_TOKEN }}
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+          RAPOR_REPO_TOKEN: ${{ secrets.RAPOR_REPO_TOKEN }}
           SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         run: python -m radar
 
