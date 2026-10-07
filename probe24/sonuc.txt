@@ -1,0 +1,40 @@
+20 FİYAT ENDEKSLERİ
+2001 YURT DIŞI ÜRETİCİ FİYAT ENDEKSİ (TÜİK)
+2002 GEÇİNME ENDEKSLERİ (İTO)
+2003 KONUT FİYAT ENDEKSİ (TCMB)
+2004 TİCARİ GAYRİMENKUL FİYAT ENDEKSİ (TCMB)
+2005 TÜKETİCİ FİYAT ENDEKSİ (TÜİK)
+2006 YURT İÇİ ÜRETİCİ FİYAT ENDEKSİ (TÜİK)
+2007 HİZMET ÜRETİCİ FİYAT ENDEKSİ (TÜİK)
+2008 TARIM ÜRÜNLERİ ÜRETİCİ FİYAT ENDEKSİ (TÜİK)
+2009 TARIMSAL GİRDİ FİYAT ENDEKSİ (TÜİK)
+ grup 2002 bie_ito95 Geçinme Endeksi (Ücretliler) 01-01-1996 01-09-2026
+ grup 2002 bie_itotefe Toptan Eşya Fiyat Endeksi 01-01-1968 01-09-2026
+ grup 2002 bie_itoteuc İstanbul Toptan Eşya Fiyat ve Ücretliler Geçinme Endeksleri (Tüm Seriler) 01-01-1963 01-09-2026
+ grup 2002 bie_ito68 Geçinme Endeksi (Ücretliler) (1968=100) 01-01-1978 01-09-2026
+ grup 2002 bie_itouge85 İstanbul Geçinme Endeksi (Ücretliler) 01-01-1987 01-09-2026
+ grup 2002 bie_itouge2023 İstanbul Tüketici Fiyat Endeksi 01-01-2024 01-09-2026
+    seri TP.FG.IST1.23 Genel Endeks (İTO 2023=100) 01-01-2024 01-09-2026
+    seri TP.FG.IST2.23 Gıda Ve Alkolsüz İçecekler (İTO 2023=100) 01-01-2024 01-09-2026
+    seri TP.FG.IST3.23 Alkollü İçecekler Ve Tütün (İTO 2023=100) 01-01-2024 01-09-2026
+ grup 2005 bie_oktug2025 Özel Kapsamlı TÜFE Göstergeleri (2025=100) 01-01-2005 01-09-2026
+    seri TP.FE25.OKTG02 A. Mevsimlik ürünler hariç TÜFE 01-01-2005 01-09-2026
+    seri TP.FE25.OKTG03 B. İşlenmemiş gıda ürünleri, enerji, alkollü içkiler ve tütün ile altın hariç TÜFE 01-01-2005 01-09-2026
+    seri TP.FE25.OKTG04 C. Enerji, gıda ve alkolsüz içecekler, alkollü içkiler ile tütün ürünleri ve altın hariç TÜFE 01-01-2005 01-09-2026
+ grup 2005 bie_tukfiy2025 Tüketici Fiyat Endeksi (2025=100) 01-01-2005 01-09-2026
+    seri TP.TUKFIY2025.GENEL Genel Endeks 01-01-2005 01-09-2026
+    seri TP.TUKFIY2025.01 01. Gıda Ve Alkolsüz İçecekler 01-01-2005 01-09-2026
+    seri TP.TUKFIY2025.011 011. Gıda 01-01-2005 01-09-2026
+ grup 2005 bie_tukfiy2003 Tüketici Fiyat Endeksi (Genel) (2003=100) 01-01-2003 01-09-2026
+    seri TP.GENENDEKS.T1 Genel Endeks (2003=100) 01-01-2003 01-09-2026
+ grup 2005 bie_tukfiyarnd Tüketici Fiyat Endeksi - Mevsim Etkisinden Arındırılmış (2025=100) 01-01-2005 01-08-2026
+    seri TP.TUKFIYARND.OKTG01 Tüketici Fiyat Endeksi - Genel (MA) 01-01-2005 01-08-2026
+    seri TP.TUKFIYARND.OKTG03 B. İşlenmemiş gıda ürünleri, enerji, alkollü içkiler ve tütün ile altın hariç TÜFE (MA) 01-01-2005 01-08-2026
+    seri TP.TUKFIYARND.OKTG04 C. Enerji, gıda ve alkolsüz içecekler, alkollü içkiler ile tütün ürünleri ve altın hariç TÜFE (MA) 01-01-2005 01-08-2026
+ grup 2005 bie_tukfiyagrlk Tüketici Fiyat Endeksi - Ana Grup Ağırlıkları (2025=100) 01-01-2016 01-01-2026
+    seri TP.TUKFIYAGRLK.01 01. Gıda ve Alkolsüz İçecekler (Ana Grup Ağırlıkları) 01-01-2016 01-01-2026
+    seri TP.TUKFIYAGRLK.02 02. Alkollü İçecekler, Tütün ve Tütün Ürünleri (Ana Grup Ağırlıkları) 01-01-2016 01-01-2026
+    seri TP.TUKFIYAGRLK.03 03. Giyim ve Ayakkabı (Ana Grup Ağırlıkları) 01-01-2016 01-01-2026
+ grup 2006 bie_tufe1yi Yurt İçi Üretici Fiyat Endeksi 01-01-1982 01-09-2026
+ grup 2007 bie_hufe Hizmet Üretici Fiyat Endeksi 01-01-2017 01-08-2026
+ grup 2008 bie_tarimufe Tarım Ürünleri Üretici Fiyat Endeksi 01-01-2020 01-08-2026
