@@ -980,3 +980,5 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .fa-method li { margin: 3px 0; }
 .fa-mkv td { text-align: left; font-family: var(--font-sans); font-weight: var(--fw-regular); white-space: normal; color: var(--text-2); padding-left: var(--s-3); }
 .fa-mkv th { vertical-align: top; white-space: nowrap; font-weight: var(--fw-semibold); }
+.fa-scope { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
+.fa-tools .seg { flex: none; }

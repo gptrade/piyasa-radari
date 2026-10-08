@@ -53,9 +53,9 @@
     arastirma: { title: "Araştırma", sub: "Aracı kurum notları, kurum görünümleri ve AI sentezi · raporların kendisi değil, kamuya duyurulan özetleri", view: "#view-arastirma", market: true },
     portfoy: { title: "Portföy", sub: "Pozisyonlar, kâr/zarar, risk ve pozisyonlarındaki gelişmeler · yalnız bu tarayıcıda", view: "#view-portfoy", market: false },
     "geri-alim": { title: "Şirket Geri Alım", sub: "KAP pay geri alım bildirimleri · Borsa İstanbul", view: "#view-geri-alim", market: true },
-    temel: { title: "Temel Analiz", sub: "BIST-100 · KAP mali tabloları, reel (TÜFE) düzeltme, oranlar ve skorlar", view: "#view-temel", market: false },
+    temel: { title: "Temel Analiz", sub: "BIST Tüm · KAP mali tabloları, reel (TÜFE) düzeltme, oranlar ve skorlar", view: "#view-temel", market: false },
     hisse: { title: "Şirket", sub: "", view: "#view-hisse", market: false, nav: "temel" },
-    tarama: { title: "Tarama", sub: "Metrik ve kriter taraması · BIST-100, bankalar ve sigortacılar hariç", view: "#view-tarama", market: false },
+    tarama: { title: "Tarama", sub: "Metrik ve kriter taraması · BIST Tüm, endeks ve sektöre göre", view: "#view-tarama", market: false },
     metodoloji: { title: "Metodoloji", sub: "Temel analiz verileri, hesaplar ve puanlar nasıl üretiliyor", view: "#view-metodoloji", market: false },
     karsilastir: { title: "Karşılaştır", sub: "Seçtiğin şirketlerin kategori puanları, oranları ve eğilimleri", view: "#view-karsilastir", market: false },
   };

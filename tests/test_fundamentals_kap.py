@@ -259,3 +259,26 @@ def test_nominal_reports_skip_cpi_ratio():
     doc = {"currency": "TRY", "reports": {"2025/09": rep(90, "2025-09-30"), "2025/12": rep(130, "2025-12-31")}}
     o = S.build(doc, {"2025-09": 100, "2025-12": 110})
     assert o["q"]["revenue"][1] == 40 and o["nominal"] == [True, True]
+
+
+def test_priority_jobs_bist100_first():
+    st = {}
+    store.enqueue(st, "AAAA", row(1, 2026, 2))
+    store.enqueue(st, "THYAO", row(2, 2025, 4))
+    jobs = store.next_jobs(st, {"THYAO"})
+    assert jobs[0] == ("THYAO", "2025/12") and jobs[1] == ("AAAA", "2026/06")
+
+
+def test_universe_from_xutum_with_index_tags(fin_dir, monkeypatch):
+    monkeypatch.setattr(store.kapfin, "fetch_indices", lambda: {
+        "XUTUM": [{"code": "TRGYO", "title": "T", "oid": "o1"}, {"code": "KUCUK", "title": "K", "oid": "o2"}],
+        "XU100": [{"code": "TRGYO", "title": "T", "oid": "o1"}], "XU030": []})
+    monkeypatch.setattr(store.kapfin, "fetch_sectors", lambda: {})
+    monkeypatch.setattr(store.kapfin, "recent_reports", lambda days=3: [])
+    seen = []
+    monkeypatch.setattr(store.kapfin, "list_reports", lambda oid, a, b: seen.append((oid, a)) or [])
+    monkeypatch.setattr(store, "update_cpi", lambda: True)
+    store.run(budget=60)
+    uni = store._load(fin_dir / "_universe.json", {})
+    assert uni["index"] == "XUTUM" and {m["code"]: m["idx"] for m in uni["members"]} == {"TRGYO": ["XU100"], "KUCUK": []}
+    assert seen[0] == ("o1", store.HISTORY_START) and seen[1] == ("o2", store.HISTORY_START_EXT)
