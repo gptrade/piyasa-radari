@@ -458,7 +458,8 @@
       ["TradingView", `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tvSymbol(sym, m))}`],
       ["Yahoo", `https://finance.yahoo.com/quote/${encodeURIComponent(p?.yahoo || sym)}/`],
     ];
-    return `<div class="ext-links">${links.map(([n, u]) => `<a href="${u}" target="_blank" rel="noopener">${n} ↗</a>`).join("")}</div>`;
+    const fa = m === "BIST" && window.radarFundamentals?.has(sym) ? `<a href="#hisse/${q}" class="fa-int">Temel analiz →</a>` : "";
+    return `<div class="ext-links">${fa}${links.map(([n, u]) => `<a href="${u}" target="_blank" rel="noopener">${n} ↗</a>`).join("")}</div>`;
   }
   function tvWidget(box, sym, m) {
     box.dataset.tv = JSON.stringify([sym, m]);

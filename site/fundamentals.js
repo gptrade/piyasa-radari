@@ -71,6 +71,7 @@
     try { S.screen = await getJSON("data/fin/_screen.json"); S.err = null; }
     catch (e) { S.err = e; }
     S.loaded = true;
+    dispatchEvent(new Event("fundamentalsloaded"));
     if (S.screen) ["temel", "hisse", "tarama", "karsilastir"].forEach(r => sh.setUpdated(r, S.screen.updated, { label: "Temel analiz güncellendi", staleMin: 26 * 60 }));
     rerender();
   }
@@ -157,6 +158,7 @@
         ${pend.length ? `<p class="card-foot fa-oos">Tabloları yükleniyor (KAP istek sınırı nedeniyle kademeli): ${pend.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}</p>` : ""}
         ${oos.length ? `<p class="card-foot fa-oos">Kapsam dışı: ${oos.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}. Bankalar, sigorta ve finansal kiralama şirketlerinin tablo yapısı farklı; ayrı modelle eklenecek.</p>` : ""}
       </section>
+      ${sectorTable(all)}
       <p class="fa-disc">Bu panel yatırım tavsiyesi vermez. Mali tablolar KAP bildirimlerinden, fiyatlar Yahoo Finance'ten; reel düzeltmede TÜİK TÜFE (TCMB EVDS) kullanılır.</p>`;
     $("#faQ").oninput = e => { S.q = e.target.value; const pos = e.target.selectionStart; renderOverview(); const i = $("#faQ"); i.focus(); i.setSelectionRange(pos, pos); };
     $("#faSector").onchange = e => { S.sector = e.target.value; renderOverview(); };
@@ -166,7 +168,19 @@
     });
     bindRows(el);
   }
+  const med = xs => { const v = xs.filter(x => x != null && isFinite(x)).sort((a, b) => a - b); if (!v.length) return null; const m = v.length >> 1; return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2; };
+  function sectorTable(all) {
+    const by = {};
+    all.forEach(r => (by[r.sector || "Diğer"] ||= []).push(r));
+    const rows_ = Object.entries(by).map(([sec, xs]) => ({ sec, n: xs.length, pe: med(xs.map(r => r.v?.pe)), pb: med(xs.map(r => r.v?.pb)),
+      ev: med(xs.map(r => r.v?.ev_ebitda)), roe: med(xs.map(r => r.r?.roe)), ov: med(xs.map(r => r.overall)) })).sort((a, b) => b.n - a.n || a.sec.localeCompare(b.sec, "tr"));
+    return `<section class="card card-flush"><div class="card-head"><h2 class="card-title">Sektörler</h2><span class="card-meta">medyan değerler · satıra tıkla, tabloyu süz</span></div>
+      <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Sektör</th><th class="num">Şirket</th><th class="num">F/K</th><th class="num">PD/DD</th><th class="num">FD/FAVÖK</th><th class="num">ROE</th><th class="num">Genel skor</th></tr></thead>
+      <tbody>${rows_.map(r => `<tr class="row" tabindex="0" data-sec="${esc(r.sec)}"><td>${esc(r.sec)}</td><td class="num">${r.n}</td><td class="num">${x(r.pe)}</td><td class="num">${x(r.pb)}</td><td class="num">${x(r.ev)}</td><td class="num">${pct(r.roe)}</td><td class="num">${r.ov == null ? "—" : Math.round(r.ov)}</td></tr>`).join("")}</tbody></table></div></section>`;
+  }
   function bindRows(el) {
+    $$("tr.row[data-sec]", el).forEach(tr => { const f = () => { S.sector = tr.dataset.sec; renderOverview(); $("#view-temel").scrollIntoView?.({ block: "start" }); };
+      tr.onclick = f; tr.onkeydown = e => { if (e.key === "Enter") f(); }; });
     $$("tr.row[data-code]", el).forEach(tr => {
       const open = () => sh.go("hisse", { param: tr.dataset.code, focus: true });
       tr.onclick = open; tr.onkeydown = e => { if (e.key === "Enter") open(); };
@@ -465,7 +479,7 @@
       <section class="card"><div class="card-head"><h2 class="card-title">Kriter setleri</h2></div>
         ${Object.entries(m.criteria).map(([k, c]) => `<details class="fa-crit"><summary><b>${esc(k)}</b> <span class="mono">${c.pass}/${c.total}</span></summary>
           <ul class="fa-list">${c.items.map(([l, ok]) => `<li class="${ok == null ? "na" : ok ? "ok" : "no"}">${esc(l)}</li>`).join("")}</ul></details>`).join("")}
-        <p class="card-foot">✓ sağlandı · ✗ sağlanmadı · — veri yok. Eşikler Metodoloji notunda; uzun geçmiş gerektiren kriterler mevcut yıllık dönemlerle sınanır.</p></section></div>`;
+        <p class="card-foot">✓ sağlandı · ✗ sağlanmadı · — veri yok. Eşikler <a href="#metodoloji">Metodoloji</a> sayfasında; uzun geçmiş gerektiren kriterler mevcut yıllık dönemlerle sınanır.</p></section></div>`;
   }
 
   // ───────────── tarama
@@ -591,6 +605,63 @@
     $("#faCmpPick") && ($("#faCmpPick").onchange = e => { if (!e.target.value) return; S.cmp = [...S.cmp.filter(c => rowOf(c)), e.target.value].slice(0, 5); store.set("radar.finCmp", S.cmp); sh.go("karsilastir", { param: S.cmp.join(","), push: false }); renderCompare(); });
   }
 
+
+  // ───────────── metodoloji
+  function renderMethod() {
+    const el = $("#view-metodoloji");
+    const cat = [
+      ["Karlılık", "ROE %0→%30, ROA %0→%12, net marj %0→%20, FAVÖK marjı %0→%30, brüt marj %5→%45"],
+      ["Reel Büyüme", "12A satış −%10→+%20, FAVÖK −%20→+%25, net kar −%30→+%30 (bir yıl önceye göre, TÜFE ile)"],
+      ["Finansal Yapı", "Net borç/FAVÖK 4→0 (net nakit = en iyi), finansal borç/özkaynak 1,5→0,2, FAVÖK/finansman gideri 1→8, yükümlülük/varlık %80→%30"],
+      ["Likidite", "Cari oran 0,8→2, asit-test 0,5→1,5, nakit oranı 0,1→0,8"],
+      ["Nakit Akışı & Kar Kalitesi", "İşletme nakdi/net kar 0→1,2, serbest nakit akışı marjı −%5→+%12, tahakkuk oranı %10→−%5"],
+      ["Verimlilik", "Aktif devir hızı 0,2→1,5, nakit dönüşüm süresi 180→30 gün, ROIC %0→%25"],
+    ];
+    el.innerHTML = `<div class="fa-two">
+      <section class="card fa-method"><h2 class="card-title">Veri</h2>
+        <ul>
+          <li><b>Mali tablolar:</b> KAP'taki "Finansal Rapor" bildirimleri (bilanço, kar/zarar, nakit akış). Aynı dönemde konsolide ve solo rapor varsa konsolide kullanılır; düzeltme bildirimi gelirse dönem yeniden okunur.</li>
+          <li><b>Kapsam:</b> BIST-100. Bankalar, sigorta ve finansal kiralama şirketlerinin tablo şablonu farklı olduğu için şimdilik kapsam dışı.</li>
+          <li><b>Enflasyon:</b> TCMB EVDS, TÜİK TÜFE genel endeksi (2003=100, <span class="mono">TP.GENENDEKS.T1</span>) — TMS 29 düzeltmesinde kullanılan seri.</li>
+          <li><b>Fiyat ve sektör:</b> Son kapanış Yahoo Finance'ten (saatlik); sektör KAP sınıflamasından. Pay sayısı = ödenmiş sermaye (pay başına 1 TL nominal).</li>
+          <li><b>Güncelleme:</b> Yeni bildirimler saatlik taranır. KAP'ın istek sınırı nedeniyle 15 dakikada en fazla 9 rapor indirilir.</li>
+        </ul>
+        <h2 class="card-title">Birimler ve reel düzeltme</h2>
+        <ul>
+          <li>TMS 29 raporları her dönemi kendi dönem sonunun alım gücüyle verir. Farklı dönemleri birleştirirken tutarlar TÜFE oranıyla aynı birime taşınır.</li>
+          <li><b>Çeyrek:</b> Gelir tablosunda raporun 3 aylık sütunu; 4. çeyrek = yıllık − 9 aylık × TÜFE(Ara)/TÜFE(Eyl). Nakit akışında kümülatif farkı.</li>
+          <li><b>Son 12 ay (12A):</b> bu yılın kümülatifi + geçen yılın tamamı × TÜFE oranı − raporun karşılaştırmalı (geçen yıl aynı dönem) sütunu.</li>
+          <li><b>Reel görünüm:</b> her dönem TÜFE(son dönem) / TÜFE(dönem sonu) ile çarpılır. Büyüme oranları her zaman reeldir.</li>
+          <li><b>Ortalama bilanço:</b> ROE ve ROA'da dönem sonu ile bir yıl önceki (TÜFE ile taşınmış) bakiyenin ortalaması.</li>
+        </ul>
+        <h2 class="card-title">Tanımlar</h2>
+        <ul>
+          <li><b>FAVÖK</b> = brüt kar − genel yönetim − pazarlama − Ar-Ge giderleri + amortisman (esas faaliyetlerden diğer gelir/giderler hariç). <b>Çekirdek faaliyet karı</b> = FAVÖK − amortisman.</li>
+          <li><b>Finansal borç</b> = KV borçlanmalar + UV borçlanmaların KV kısmı + UV borçlanmalar (kiralama yükümlülükleri dahil). <b>Net borç</b> = finansal borç − nakit − KV finansal yatırımlar.</li>
+          <li><b>Serbest nakit akışı</b> = işletme faaliyetlerinden nakit + maddi/maddi olmayan duran varlık ve yatırım amaçlı gayrimenkul alımları.</li>
+          <li><b>Firma değeri</b> = piyasa değeri + net borç + kontrol gücü olmayan paylar. Çarpanlar piyasa değeri / 12A.</li>
+          <li><b>ROIC</b> = esas faaliyet karı × (1 − %25) / (özkaynak + finansal borç − nakit ve KV yatırımlar).</li>
+        </ul>
+      </section>
+      <section class="card fa-method"><h2 class="card-title">Puanlar</h2>
+        <ul>
+          <li><b>Kategori puanı (0–100):</b> her oran "kötü" ile "iyi" eşiği arasında doğrusal puanlanır, kategori içinde ortalanır.</li>
+        </ul>
+        <table class="fa-kv fa-mkv"><tbody>${cat.map(([c, t]) => `<tr><th scope="row">${c}</th><td>${t}</td></tr>`).join("")}</tbody></table>
+        <ul>
+          <li><b>Bilanço (kalite) puanı:</b> altı kategorinin ortalaması.</li>
+          <li><b>Değerleme puanı:</b> F/K, PD/DD, FD/FAVÖK ve FD/Satış'ın sektör medyanına oranı (yarısı = 100, eşit ≈ 67, iki katı = 0) ve içsel değer potansiyeli (−%40→+%60). Sektörde 3'ten az şirket varsa tüm evrenin medyanı.</li>
+          <li><b>İçsel değer:</b> sektör medyan F/K × hisse başı kar, medyan PD/DD × hisse başı defter değeri ve medyan FD/FAVÖK'ten türetilen özkaynak değerinin ortalaması.</li>
+          <li><b>Genel skor</b> = %60 kalite + %40 değerleme. Not: A ≥ 80, B ≥ 65, C ≥ 50, D ≥ 35, E altı.</li>
+          <li><b>Piotroski F (0–9):</b> ROA > 0, işletme nakdi > 0, ROA arttı, nakit > net kar, UV borç/varlık azaldı, cari oran arttı, sermaye artırımı yok, brüt marj arttı, aktif devir hızı arttı (bir yıl öncesine göre).</li>
+          <li><b>Altman Z'':</b> 6,56·(net işletme sermayesi/varlık) + 3,26·(birikmiş karlar/varlık) + 6,72·(esas faaliyet karı/varlık) + 1,05·(özkaynak/yükümlülük). > 2,6 güvenli, 1,1–2,6 gri, < 1,1 riskli.</li>
+          <li><b>Beneish M:</b> 8 değişkenli model; −1,78 üstü kazanç manipülasyonu riski işaretidir.</li>
+          <li><b>Kriter setleri:</b> Graham, Buffett, Lynch ve Greenblatt kurallarının BIST'e ve enflasyon muhasebesine uyarlanmış hâlleri; eşikler her kriterin adında yazar. Uzun geçmiş gerektirenler mevcut yıllık dönemlerle sınanır.</li>
+        </ul>
+        <p class="card-foot">Bu panel bilgi amaçlıdır, yatırım tavsiyesi değildir. Kural tabanlı puanlar şirketin iş modelini, yönetimini veya geleceğe dönük beklentileri bilmez.</p>
+      </section></div>`;
+  }
+
   // ───────────── kayıt
   const csv = (name, head, data) => () => {
     const blob = new Blob(["﻿" + [head, ...data].map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(";")).join("\n")], { type: "text/csv" });
@@ -608,6 +679,7 @@
   reg("hisse", renderCompany);
   reg("tarama", renderScreen);
   reg("karsilastir", renderCompare);
+  sh.register("metodoloji", { onShow: renderMethod, exports: () => [], exportNote: "Metodoloji metni" });
   addEventListener("themechange", () => { if (["hisse", "karsilastir"].includes(sh.route)) rerender(); });
   window.radarFundamentals = { open: code => sh.go("hisse", { param: code }), has: code => !!rowOf(code), get rows() { return rows(); } };
   load();

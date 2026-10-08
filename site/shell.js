@@ -56,6 +56,7 @@
     temel: { title: "Temel Analiz", sub: "BIST-100 · KAP mali tabloları, reel (TÜFE) düzeltme, oranlar ve skorlar", view: "#view-temel", market: false },
     hisse: { title: "Şirket", sub: "", view: "#view-hisse", market: false, nav: "temel" },
     tarama: { title: "Tarama", sub: "Metrik ve kriter taraması · BIST-100, bankalar ve sigortacılar hariç", view: "#view-tarama", market: false },
+    metodoloji: { title: "Metodoloji", sub: "Temel analiz verileri, hesaplar ve puanlar nasıl üretiliyor", view: "#view-metodoloji", market: false },
     karsilastir: { title: "Karşılaştır", sub: "Seçtiğin şirketlerin kategori puanları, oranları ve eğilimleri", view: "#view-karsilastir", market: false },
   };
   const ALIAS = { "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
