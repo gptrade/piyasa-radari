@@ -1,0 +1,22 @@
+Temel analiz: KAP 429 — 30 dk ara
+1 1.4 dk istek 11 {"listed": 0, "queued": 0, "processed": 10, "failed": 0, "rate_limited": true, "screened": 15, "pending": 155, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:19:41+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+2 3.4 dk istek 1 {"listed": 0, "queued": 0, "processed": 0, "failed": 0, "rate_limited": true, "pending": 155, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:21:42+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+3 6.8 dk istek 11 {"listed": 0, "queued": 0, "processed": 10, "failed": 0, "rate_limited": true, "screened": 15, "pending": 145, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:25:06+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+4 8.8 dk istek 1 {"listed": 0, "queued": 0, "processed": 0, "failed": 0, "rate_limited": true, "pending": 145, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:27:07+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+5 12.3 dk istek 11 {"listed": 0, "queued": 0, "processed": 10, "failed": 0, "rate_limited": true, "screened": 15, "pending": 135, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:30:33+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+6 14.3 dk istek 1 {"listed": 0, "queued": 0, "processed": 0, "failed": 0, "rate_limited": true, "pending": 135, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:32:34+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+7 17.7 dk istek 11 {"listed": 0, "queued": 0, "processed": 10, "failed": 0, "rate_limited": true, "screened": 15, "pending": 125, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:36:02+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+8 19.8 dk istek 1 {"listed": 0, "queued": 0, "processed": 0, "failed": 0, "rate_limited": true, "pending": 125, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:38:03+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+9 23.2 dk istek 11 {"listed": 0, "queued": 0, "processed": 10, "failed": 0, "rate_limited": true, "screened": 15, "pending": 115, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:41:28+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+10 25.2 dk istek 1 {"listed": 0, "queued": 0, "processed": 0, "failed": 0, "rate_limited": true, "pending": 115, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:43:29+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+11 28.8 dk istek 11 {"listed": 0, "queued": 0, "processed": 10, "failed": 0, "rate_limited": true, "screened": 15, "pending": 105, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:47:06+00:00"}
