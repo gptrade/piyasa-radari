@@ -1,4 +1,4 @@
-name: probe-bist  # p34
+name: probe-bist  # p35
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -14,18 +14,18 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - uses: actions/checkout@v4
-        with: { ref: onizleme-temel-analiz-2, path: app }
+        with: { ref: main, path: app }
       - name: KAP mali tablo fizibilitesi
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
           FIN_CODES: TRGYO,AKSGY,THYAO,ASELS,BIMAS,EREGL,TUPRS,FROTO,KCHOL,SISE,TCELL,ENKAI,MGROS,TOASO,ARCLK,PGSUS
         run: |
           set +e
-          mkdir -p probe34
+          mkdir -p probe35
           pip install -q -r app/requirements.txt
-          python probe34.py > probe34/sonuc.txt 2>&1 || true
+          python probe35.py > probe35/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe34; git commit -qm "probe34 sonuçları" || true; git push -q
+          git add -A probe35; git commit -qm "probe35 sonuçları" || true; git push -q
