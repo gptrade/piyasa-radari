@@ -35,7 +35,8 @@ HEADERS = {"Referer": "https://www.kap.org.tr/tr/bildirim-sorgu", "Accept": "app
 
 KINDS = (("bs", re.compile(r"^(Finansal Durum Tablosu|Bilanço|BİLANÇO)")),
          ("is", re.compile(r"^(Kar veya Zarar|Gelir Tablosu|GELİR TABLOSU)")),
-         ("cf", re.compile(r"^(Nakit Akış|NAKİT AKIŞ)")))
+         ("cf", re.compile(r"^(Nakit Akış|NAKİT AKIŞ|Nakit Akım|NAKİT AKIM)")))
+SUBHEAD = {"TP", "YP", "Toplam", "TOPLAM"}
 LIST_GAP = 2.0
 DATE = re.compile(r"(\d{2})\.(\d{2})\.(\d{4})")
 NUM = re.compile(r"^\(?-?[\d.]+(,\d+)?\)?$")
@@ -116,8 +117,33 @@ def _cols(header: list[str], kind: str) -> list[dict]:
     return out
 
 
+def _subhead(row: list[str]) -> list[str] | None:
+    """Banka bilançosunun 'TP | YP | Toplam' alt başlığı."""
+    xs = [c for c in row if c]
+    return xs if xs and set(xs) <= SUBHEAD and ("Toplam" in xs or "TOPLAM" in xs) else None
+
+
 def parse_table(rows: list[list[str]], kind: str) -> dict:
     cols = _cols(rows[0], kind)
+    sub = _subhead(rows[1]) if len(rows) > 1 else None
+    if sub:                                   # her dönem TP/YP/Toplam; yalnız Toplam sütunları alınır
+        n_sub = len(sub)
+        keep = [i for i, c in enumerate(sub) if c.lower() == "toplam"]
+        seen: dict[str, int] = {}
+        out: dict[str, list] = {}
+        for cells in rows[2:]:
+            if len(cells) < n_sub + 1:
+                continue
+            label = next((c for c in cells[:2] if c), "")
+            if not label or NUM.match(label):
+                continue
+            tail = cells[-n_sub:]
+            vals = [parse_num(tail[i]) for i in keep]
+            seen[label] = seen.get(label, 0) + 1
+            key = label if seen[label] == 1 else f"{label}#{seen[label]}"
+            if any(v is not None for v in vals):
+                out[key] = vals
+        return {"cols": cols[:len(keep)], "rows": out}
     n = len(cols)
     seen: dict[str, int] = {}
     out: dict[str, list] = {}
@@ -152,14 +178,32 @@ def parse_export(content: bytes | str) -> dict:
             continue
         rows = [_cells(tr) for tr in trs]
         title = next((c for c in rows[1] if c), "") if len(rows) > 1 else ""
+        if len(rows) > 1 and _subhead(rows[1]):
+            # Banka: başlıksız TP/YP tablosu; varlık+yükümlülük olan bilançodur (bilanço dışı tablo atlanır)
+            body = " ".join(r[1] if len(r) > 1 else "" for r in rows[2:])
+            if "bs" not in rep and "VARLIKLAR TOPLAMI" in body:
+                rep["bs"] = parse_table(rows, "bs")
+                rep["bs"]["title"] = "Bilanço (Finansal Durum Tablosu)"
+            continue
         for kind, rx in KINDS:
             if kind not in rep and rx.match(title):
                 rep[kind] = parse_table(rows, kind)
                 rep[kind]["title"] = title
+    rep["template"] = template_of(rep)
+    return rep
+
+
+def template_of(rep: dict) -> str:
     is_rows = rep.get("is", {}).get("rows", {})
     title = rep.get("is", {}).get("title", "")
-    rep["template"] = "sanayi" if ("Hasılat" in is_rows and "TFRS 9" not in title) else "finansal"
-    return rep
+    labels = {k.split("#")[0].strip().upper() for k in is_rows}
+    if "NET FAİZ GELİRİ VEYA GİDERİ" in labels or "NET FAİZ GELİRİ/GİDERİ" in labels:
+        return "banka"
+    if any("TEKNİK BÖLÜM DENGESİ" in l for l in labels):
+        return "sigorta"
+    if "Hasılat" in is_rows and "TFRS 9" not in title:
+        return "sanayi"
+    return "finansal"
 
 
 def fetch_export(idx: int) -> dict | None:
@@ -266,12 +310,15 @@ def parse_sectors(text: str) -> dict[str, dict]:
     """KAP Sektörler sayfasından {kod: {'sector': alt sektör, 'main': ana sektör}}. İlk görülen alt sektör esas alınır."""
     t = text.replace('\\"', '"')
     out: dict[str, dict] = {}
-    for name, code in re.findall(r'"sectorName":"([^"]+)","sectorOid":"[^"]*","sectorNo":"[^"]*",'
-                                 r'"mkkMemberOid":"[^"]*","stockCode":"([A-Z0-9]+)"', t):
-        out.setdefault(code, {})["sector"] = out.get(code, {}).get("sector") or name
-    for name, code in re.findall(r'"mainSectorName":"([^"]+)","mainSectorOid":"[^"]*","mainSectorNo":"[^"]*",'
-                                 r'"mkkMemberOid":"[^"]*","stockCode":"([A-Z0-9]+)"', t):
-        out.setdefault(code, {})["main"] = out.get(code, {}).get("main") or name
+    # Birden çok kodu olan şirketler "GARAN, TGB" biçiminde gelir
+    for name, codes in re.findall(r'"sectorName":"([^"]+)","sectorOid":"[^"]*","sectorNo":"[^"]*",'
+                                  r'"mkkMemberOid":"[^"]*","stockCode":"([A-Z0-9, ]+)"', t):
+        for code in (c.strip() for c in codes.split(",") if c.strip()):
+            out.setdefault(code, {})["sector"] = out.get(code, {}).get("sector") or name
+    for name, codes in re.findall(r'"mainSectorName":"([^"]+)","mainSectorOid":"[^"]*","mainSectorNo":"[^"]*",'
+                                  r'"mkkMemberOid":"[^"]*","stockCode":"([A-Z0-9, ]+)"', t):
+        for code in (c.strip() for c in codes.split(",") if c.strip()):
+            out.setdefault(code, {})["main"] = out.get(code, {}).get("main") or name
     return out
 
 

@@ -54,9 +54,33 @@
     ccc: ["Nakit dönüşüm süresi", days, -1, "Verimlilik"],
     pe: ["F/K", x, -1, "Değerleme"], pb: ["PD/DD", x, -1, "Değerleme"], ev_ebitda: ["FD/FAVÖK", x, -1, "Değerleme"],
     ev_sales: ["FD/Satış", x, -1, "Değerleme"], ps: ["F/Satış", x, -1, "Değerleme"], peg: ["PEG", x, -1, "Değerleme"],
-    earnings_yield: ["Kazanç getirisi (FVÖK/FD)", pct, 1, "Değerleme"], fcf_yield: ["Serbest nakit getirisi", pct, 1, "Değerleme"],
+    earnings_yield: ["Kazanç getirisi", pct, 1, "Değerleme"], fcf_yield: ["Serbest nakit getirisi", pct, 1, "Değerleme"],
     div_yield: ["Temettü verimi (12A)", pct, 1, "Değerleme"],
+    // banka
+    real_roe: ["Reel ROE (TÜFE'den arındırılmış)", pctS, 1, "Karlılık"], inflation: ["Yıllık TÜFE (dönem sonu)", pct, -1, "Karlılık"],
+    nim: ["Net faiz marjı (aktife göre)", pct, 1, "Faiz marjı & gelir"], fee_share: ["Ücret-komisyonun gelirdeki payı", pct, 1, "Faiz marjı & gelir"],
+    cost_income: ["Maliyet / gelir", pct, -1, "Verimlilik"], fee_cover: ["Ücret-komisyon / faaliyet giderleri", x, 1, "Verimlilik"],
+    cost_of_risk: ["Risk maliyeti (beklenen zarar / krediler)", pct, -1, "Aktif kalitesi"],
+    ldr: ["Kredi / mevduat", pct, -1, "Sermaye & fonlama"], equity_assets: ["Özkaynak / aktif", pct, 1, "Sermaye & fonlama"],
+    loan_growth: ["Reel kredi büyümesi", pctS, 1, "Reel büyüme"], deposit_growth: ["Reel mevduat büyümesi", pctS, 1, "Reel büyüme"],
+    tax_rate: ["Efektif vergi oranı", pct, -1, "Karlılık"],
+    // sigorta
+    loss_ratio: ["Hasar oranı (net)", pct, -1, "Teknik karlılık"], expense_ratio: ["Gider oranı", pct, -1, "Teknik karlılık"],
+    combined: ["Birleşik oran", pct, -1, "Teknik karlılık"], tech_margin: ["Teknik denge / kazanılmış prim", pct, 1, "Teknik karlılık"],
+    retention: ["Saklama oranı (net / brüt prim)", pct, 1, "Verimlilik"], reserves_cover: ["Nakit+finansal varlık / teknik karşılık", x, 1, "Likidite"],
+    premium_growth: ["Reel brüt prim büyümesi", pctS, 1, "Reel büyüme"],
   };
+  const MET_T = {
+    sanayi: ["gross_margin", "ebitda_margin", "op_margin", "core_margin", "net_margin", "roe", "roa", "roic", "rev_growth", "ebitda_growth", "net_growth", "asset_growth",
+      "net_debt_ebitda", "debt_equity", "fin_debt_equity", "liab_assets", "interest_cov", "current", "quick", "cash_ratio", "cfo_ni", "fcf_margin", "accruals",
+      "asset_turnover", "inv_days", "rec_days", "pay_days", "ccc", "pe", "pb", "ev_ebitda", "ev_sales", "ps", "peg", "earnings_yield", "fcf_yield", "div_yield"],
+    banka: ["roe", "real_roe", "roa", "inflation", "tax_rate", "nim", "fee_share", "cost_income", "fee_cover", "cost_of_risk", "ldr", "equity_assets",
+      "loan_growth", "deposit_growth", "net_growth", "rev_growth", "pe", "pb", "peg", "earnings_yield", "div_yield"],
+    sigorta: ["roe", "real_roe", "roa", "inflation", "loss_ratio", "expense_ratio", "combined", "tech_margin", "retention", "equity_assets", "reserves_cover",
+      "premium_growth", "net_growth", "pe", "pb", "peg", "earnings_yield", "div_yield"],
+  };
+  const TPL = { sanayi: "Sanayi/hizmet", banka: "Banka", sigorta: "Sigorta" };
+  const tplOf = x => x?.metrics?.template || x?.template || x?.t || "sanayi";
   const VALK = new Set(["pe", "pb", "ev_ebitda", "ev_sales", "ps", "peg", "earnings_yield", "fcf_yield", "div_yield"]);
   const mval = (row, k) => VALK.has(k) ? row.v?.[k] : row.r?.[k];
   const mOf = (m, k) => VALK.has(k) ? m.valuation?.[k] : m.ratios?.[k];
@@ -133,7 +157,7 @@
     const scoreCell = (v, g) => `<td class="num"><span class="sc">${v ?? "—"}</span>${g !== undefined ? " " + gradeTag(g) : ""}</td>`;
     el.innerHTML = `
       <div class="kpi-grid fa-kpis">
-        <div class="kpi"><span class="kpi-label">Analiz edilen</span><span class="kpi-value">${all.length}</span><span class="kpi-sub">${pend.length ? `${pend.length} şirket yükleniyor · ` : ""}${oos.length} kapsam dışı (banka, sigorta)</span></div>
+        <div class="kpi"><span class="kpi-label">Analiz edilen</span><span class="kpi-value">${all.length}</span><span class="kpi-sub">${pend.length ? `${pend.length} şirket yükleniyor · ` : ""}${oos.length} kapsam dışı</span></div>
         <div class="kpi"><span class="kpi-label">Not dağılımı</span><span class="kpi-value fa-dist">${Object.entries(dist).map(([g, n]) => `${gradeTag(g)}<small>${n}</small>`).join(" ")}</span><span class="kpi-sub">A ≥ 80 · B ≥ 65 · C ≥ 50 · D ≥ 35</span></div>
         <div class="kpi"><span class="kpi-label">Sektör</span><span class="kpi-value">${sectors.length}</span><span class="kpi-sub">KAP sektör sınıflaması</span></div>
         <div class="kpi"><span class="kpi-label">Son veri</span><span class="kpi-value fa-small">${fmt.date(S.screen.updated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span><span class="kpi-sub">Fiyatlar saatlik, tablolar KAP'ta yayımlandıkça</span></div>
@@ -148,7 +172,7 @@
         <div class="tbl-scroll"><table class="tbl fa-tbl">
           <thead><tr>${COLS.map(([k, l]) => `<th scope="col" class="${k === "code" || k === "sector" ? "" : "num"}"><button type="button" class="th-sort" data-k="${k}" aria-sort="${S.sort[0] === k ? (S.sort[1] > 0 ? "ascending" : "descending") : "none"}">${l}${S.sort[0] === k ? (S.sort[1] > 0 ? " ▲" : " ▼") : ""}</button></th>`).join("")}</tr></thead>
           <tbody>${sorted(xs).map(r => `<tr class="row" tabindex="0" data-code="${r.code}">
-            <td><b class="mono">${r.code}</b> <span class="muted fa-name">${esc(trTitle(r.title))}</span></td>
+            <td><b class="mono">${r.code}</b>${r.t && r.t !== "sanayi" ? ` <span class="tag na">${TPL[r.t]}</span>` : ""} <span class="muted fa-name">${esc(trTitle(r.title))}</span></td>
             <td class="muted"><span class="fa-sec-name" title="${esc(r.sector || "")}">${esc(r.sector || "—")}</span></td>
             <td class="num">${fmt.num(r.price, 2)}</td><td class="num">${tl(r.mcap)}</td>
             <td class="num">${x(r.v?.pe)}</td><td class="num">${x(r.v?.pb)}</td><td class="num">${x(r.v?.ev_ebitda)}</td>
@@ -156,7 +180,7 @@
             ${scoreCell(r.quality)}${scoreCell(r.valuation_score)}${scoreCell(r.overall, r.grade)}</tr>`).join("") || `<tr><td colspan="12">${sh.stateHTML({ title: "Eşleşen şirket yok", compact: true })}</td></tr>`}</tbody>
         </table></div>
         ${pend.length ? `<p class="card-foot fa-oos">Tabloları yükleniyor (KAP istek sınırı nedeniyle kademeli): ${pend.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}</p>` : ""}
-        ${oos.length ? `<p class="card-foot fa-oos">Kapsam dışı: ${oos.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}. Bankalar, sigorta ve finansal kiralama şirketlerinin tablo yapısı farklı; ayrı modelle eklenecek.</p>` : ""}
+        ${oos.length ? `<p class="card-foot fa-oos">Kapsam dışı: ${oos.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}. Faktoring, finansal kiralama gibi tablo yapısı farklı şirketler şimdilik kapsam dışı.</p>` : ""}
       </section>
       ${divCard(all)}
       ${sectorTable(all)}
@@ -203,7 +227,12 @@
   const H = 200, PAD = { l: 52, r: 10, t: 12, b: 26 };
   const cw = el => Math.max(260, Math.round(el?.clientWidth || 560));
   function niceMax(v) { if (v <= 0) return 1; const p = 10 ** Math.floor(Math.log10(v)); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
-  function axisFmt(v, kind) { return kind === "pct" ? (v < 0 ? MINUS : "") + "%" + fmt.num(Math.abs(v * 100), 0) : kind === "x" ? fmt.num(v, 1) : tl(v).replace(" ₺", ""); }
+  function axisFmt(v, kind) {
+    if (kind === "pct") return (v < 0 ? MINUS : "") + "%" + fmt.num(Math.abs(v * 100), 0);
+    if (kind === "x") return fmt.num(v, 1);
+    const a = Math.abs(v);
+    return a >= 1e12 ? fmt.num(v / 1e12, a >= 1e13 ? 0 : 1) + " tn" : a >= 1e9 ? fmt.num(v / 1e9, a >= 1e10 ? 0 : 1) + " mr" : a >= 1e6 ? fmt.num(v / 1e6, 0) + " mn" : fmt.num(v, 0);
+  }
   function barChart(labels, vals, { kind = "tl", tipFmt = tl, color = "var(--series-1)", w: W = 560 } = {}) {
     const ok = vals.filter(v => v != null);
     if (!ok.length) return `<p class="tp-empty">Veri yok</p>`;
@@ -322,7 +351,47 @@
     $$(".tk-cmp", body).forEach(b => b.onclick = () => sh.go("hisse", { param: b.dataset.code }));
   }
 
+  function summaryFin(d, row, tmpl) {
+    const m = d.metrics, r = m.ratios, se = d.series, i = se.periods.length - 1;
+    const ttm = k => se.ttm[k]?.[i];
+    const strong = [], weak = [];
+    const add = (cond, arr, txt) => { if (cond) arr.push(txt); };
+    add(r.real_roe != null && r.real_roe > 0, strong, `Enflasyonun üzerinde özkaynak getirisi (reel ROE ${pctS(r.real_roe)})`);
+    add(r.real_roe != null && r.real_roe < 0, weak, `Özkaynak getirisi enflasyonun altında (reel ROE ${pctS(r.real_roe)})`);
+    add(r.net_growth != null && r.net_growth > 0.1, strong, `Reel net kar büyümesi (${pctS(r.net_growth)})`);
+    add(r.net_growth != null && r.net_growth < -0.2, weak, `Reel net kar düşüşü (${pctS(r.net_growth)})`);
+    if (tmpl === "banka") {
+      add(r.cost_income != null && r.cost_income < 0.4, strong, `Düşük maliyet/gelir (${pct(r.cost_income)})`);
+      add(r.cost_income != null && r.cost_income > 0.6, weak, `Yüksek maliyet/gelir (${pct(r.cost_income)})`);
+      add(r.cost_of_risk != null && r.cost_of_risk < 0.015, strong, `Düşük risk maliyeti (${pct(r.cost_of_risk, 2)})`);
+      add(r.cost_of_risk != null && r.cost_of_risk > 0.03, weak, `Yüksek risk maliyeti (${pct(r.cost_of_risk, 2)})`);
+      add(r.fee_cover != null && r.fee_cover >= 0.8, strong, `Ücret-komisyon gelirleri giderlerin ${pct(r.fee_cover, 0)}'ini karşılıyor`);
+      add(r.ldr != null && r.ldr > 1.05, weak, `Kredi/mevduat %100'ün üzerinde (${pct(r.ldr)}) — piyasa fonlamasına bağımlılık`);
+      add(r.ldr != null && r.ldr < 0.85, strong, `Mevduatla rahat fonlanan bilanço (kredi/mevduat ${pct(r.ldr)})`);
+      add(r.equity_assets != null && r.equity_assets < 0.07, weak, `İnce özkaynak tamponu (özkaynak/aktif ${pct(r.equity_assets)})`);
+      add(r.nim != null && r.nim < 0.02, weak, `Düşük net faiz marjı (${pct(r.nim, 2)})`);
+    } else {
+      add(r.combined != null && r.combined < 0.95, strong, `Teknik kârlı sigortacılık (birleşik oran ${pct(r.combined)})`);
+      add(r.combined != null && r.combined > 1.05, weak, `Birleşik oran %100'ün üzerinde (${pct(r.combined)}) — kâr yatırım gelirine dayanıyor`);
+      add(r.loss_ratio != null && r.loss_ratio > 0.8, weak, `Yüksek hasar oranı (${pct(r.loss_ratio)})`);
+      add(r.premium_growth != null && r.premium_growth > 0.1, strong, `Reel prim büyümesi (${pctS(r.premium_growth)})`);
+      add(r.premium_growth != null && r.premium_growth < 0, weak, `Reel prim daralması (${pctS(r.premium_growth)})`);
+      add(r.reserves_cover != null && r.reserves_cover >= 1.2, strong, `Teknik karşılıkları rahat karşılayan likit varlıklar (${x(r.reserves_cover)})`);
+    }
+    const view = m.overall == null ? "—" : m.overall >= 65 ? "Olumlu" : m.overall >= 50 ? "Nötr / Karışık" : "Zayıf";
+    const viewCls = m.overall == null ? "" : m.overall >= 65 ? "up" : m.overall >= 50 ? "warn-t" : "down";
+    const cats = (f) => Object.entries(m.categories).filter(([, s]) => s != null && f(s)).map(([c, s]) => `${c.toLocaleLowerCase("tr")} (${s})`).join(", ") || "—";
+    const lead = tmpl === "banka"
+      ? `son 12 ayda faaliyet geliri <b>${tl(ttm("revenue"))}</b> (net faiz geliri ${tl(ttm("nii"))}, net ücret-komisyon ${tl(ttm("fees"))}), ana ortaklık net karı <b>${tl(ttm("net_parent"))}</b>; ROE ${pct(r.roe)}, maliyet/gelir ${pct(r.cost_income)}, risk maliyeti ${pct(r.cost_of_risk, 2)}`
+      : `son 12 ayda brüt prim <b>${tl(ttm("revenue"))}</b>, birleşik oran ${pct(r.combined)}, ana ortaklık net karı <b>${tl(ttm("net_parent"))}</b>; ROE ${pct(r.roe)}`;
+    const text = `<b>${esc(trTitle(d.title))}</b> (${d.code}) ${TPL[tmpl].toLocaleLowerCase("tr")}. ${m.period} itibarıyla ${lead}.
+      Tablolar enflasyon muhasebesi (TMS 29) uygulanmadan, nominal yayımlanır; büyümeler TÜFE ile reelleştirildi (yıllık TÜFE ${pct(r.inflation)}).
+      Kalite puanı <b>${m.quality ?? "—"}/100</b>; güçlü alanlar: ${cats(s => s >= 75)}; zayıf alanlar: ${cats(s => s < 50)}. Değerleme puanı <b>${m.valuation_score ?? "—"}/100</b>, genel skor <b>${m.overall ?? "—"}/100 (${m.grade || "—"})</b>.`;
+    return { strong, weak, view, viewCls, text };
+  }
   function summaryText(d, row) {
+    const tmpl = tplOf(d);
+    if (tmpl !== "sanayi") return summaryFin(d, row, tmpl);
     const m = d.metrics, r = m.ratios, v = m.valuation, se = d.series, i = se.periods.length - 1;
     const ttm = k => se.ttm[k]?.[i];
     const strong = [], weak = [];
@@ -356,6 +425,7 @@
   const zZone = z => z == null ? "—" : z > 2.6 ? "güvenli bölge" : z > 1.1 ? "gri bölge" : "riskli bölge";
 
   function tabSummary(d, row) {
+    const tmpl = tplOf(d);
     const m = d.metrics, r = m.ratios, v = m.valuation, se = d.series, i = se.periods.length - 1;
     const ttm = k => se.ttm[k]?.[i];
     const q = (k, delta) => delta == null ? "" : `<span class="${delta >= 0 ? "up" : "down"}">${delta >= 0 ? "↑" : "↓"} ${k}</span>`;
@@ -369,16 +439,27 @@
     return `
       <div class="fa-rings">
         ${ring(m.overall, "Genel skor", m.grade, "Kalite %60 + değerleme %40")}
-        ${ring(m.quality, "Bilanço (kalite) puanı", m.quality_grade, "6 kategori ortalaması")}
+        ${ring(m.quality, "Bilanço (kalite) puanı", m.quality_grade, tmpl === "sanayi" ? "6 kategori ortalaması" : `${TPL[tmpl]} modeli · ${Object.keys(m.categories).length} kategori`)}
         ${ring(m.valuation_score, "Değerleme puanı", m.valuation_grade, m.intrinsic ? `İçsel değer ${fmt.num(m.intrinsic, 2)} ₺ · potansiyel ${pctS(m.potential, 0)}` : "Sektör çarpanlarına göre")}
       </div>
-      <div class="card-head fa-sec"><h2 class="card-title">Kısaca</h2><span class="card-meta">${m.period} · reel · akışlar son 12 ay</span></div>
+      <div class="card-head fa-sec"><h2 class="card-title">Kısaca</h2><span class="card-meta">${m.period} · ${tmpl === "sanayi" ? "reel" : "nominal tablolar, büyümeler reel"} · akışlar son 12 ay</span></div>
       <div class="fa-minis">
-        ${mini("Karlılık", "son 12 ay", [["ROE", pct(r.roe), q(fmt.num(dpt("roe"), 1) + " puan", dpt("roe"))], ["FAVÖK marjı", pct(r.ebitda_margin), q(fmt.num(dpt("ebitda_margin"), 1) + " puan", dpt("ebitda_margin"))], ["Net kar marjı", pct(r.net_margin), q(fmt.num(dpt("net_margin"), 1) + " puan", dpt("net_margin"))]])}
-        ${mini("Büyüme", "reel, yıllık", [["Hasılat", pctS(r.rev_growth)], ["FAVÖK", pctS(r.ebitda_growth)], ["Net kar", pctS(r.net_growth)]])}
-        ${mini("Borçluluk", "", [["Net borç / FAVÖK", (se.bs.net_debt?.[i] ?? 0) < 0 ? "Net nakit" : x(r.net_debt_ebitda)], ["Borç / özkaynak", x(r.debt_equity)], ["Cari oran", x(r.current)]])}
-        ${mini("Nakit akışı", "son 12 ay", [["Serbest nakit akışı", tl(ttm("fcf"))], ["İşletme nakdi / kar", x(r.cfo_ni)], ["SNA marjı", pct(r.fcf_margin)]])}
-        ${mini("Değerleme", "", [["F/K · PD/DD", `${x(v.pe)} · ${x(v.pb)}`], ["FD/FAVÖK", x(v.ev_ebitda)], ["İçsel değer", m.intrinsic ? fmt.num(m.intrinsic, 2) + " ₺" : "—", m.potential != null ? q(pctS(m.potential, 1), m.potential) : ""]])}
+        ${tmpl === "banka" ? [
+          mini("Karlılık", "son 12 ay", [["ROE", pct(r.roe), q(fmt.num(dpt("roe"), 1) + " puan", dpt("roe"))], ["Reel ROE", pctS(r.real_roe)], ["ROA", pct(r.roa, 2)]]),
+          mini("Gelir yapısı", "son 12 ay", [["Net faiz marjı", pct(r.nim, 2)], ["Ücret-komisyon payı", pct(r.fee_share)], ["Maliyet / gelir", pct(r.cost_income)]]),
+          mini("Risk ve fonlama", "", [["Risk maliyeti", pct(r.cost_of_risk, 2)], ["Kredi / mevduat", pct(r.ldr)], ["Özkaynak / aktif", pct(r.equity_assets)]]),
+          mini("Büyüme", "reel, yıllık", [["Krediler", pctS(r.loan_growth)], ["Mevduat", pctS(r.deposit_growth)], ["Net kar", pctS(r.net_growth)]])].join("")
+        : tmpl === "sigorta" ? [
+          mini("Karlılık", "son 12 ay", [["ROE", pct(r.roe), q(fmt.num(dpt("roe"), 1) + " puan", dpt("roe"))], ["Reel ROE", pctS(r.real_roe)], ["ROA", pct(r.roa, 2)]]),
+          mini("Teknik sonuç", "son 12 ay", [["Birleşik oran", pct(r.combined)], ["Hasar oranı", pct(r.loss_ratio)], ["Gider oranı", pct(r.expense_ratio)]]),
+          mini("Sermaye ve likidite", "", [["Özsermaye / aktif", pct(r.equity_assets)], ["Likit varlık / teknik karşılık", x(r.reserves_cover)], ["Saklama oranı", pct(r.retention)]]),
+          mini("Büyüme", "reel, yıllık", [["Brüt prim", pctS(r.premium_growth)], ["Net kar", pctS(r.net_growth)], ["Yıllık TÜFE", pct(r.inflation)]])].join("")
+        : [
+        mini("Karlılık", "son 12 ay", [["ROE", pct(r.roe), q(fmt.num(dpt("roe"), 1) + " puan", dpt("roe"))], ["FAVÖK marjı", pct(r.ebitda_margin), q(fmt.num(dpt("ebitda_margin"), 1) + " puan", dpt("ebitda_margin"))], ["Net kar marjı", pct(r.net_margin), q(fmt.num(dpt("net_margin"), 1) + " puan", dpt("net_margin"))]]),
+        mini("Büyüme", "reel, yıllık", [["Hasılat", pctS(r.rev_growth)], ["FAVÖK", pctS(r.ebitda_growth)], ["Net kar", pctS(r.net_growth)]]),
+        mini("Borçluluk", "", [["Net borç / FAVÖK", (se.bs.net_debt?.[i] ?? 0) < 0 ? "Net nakit" : x(r.net_debt_ebitda)], ["Borç / özkaynak", x(r.debt_equity)], ["Cari oran", x(r.current)]]),
+        mini("Nakit akışı", "son 12 ay", [["Serbest nakit akışı", tl(ttm("fcf"))], ["İşletme nakdi / kar", x(r.cfo_ni)], ["SNA marjı", pct(r.fcf_margin)]])].join("")}
+        ${mini("Değerleme", "", [["F/K · PD/DD", `${x(v.pe)} · ${x(v.pb)}`], tmpl === "sanayi" ? ["FD/FAVÖK", x(v.ev_ebitda)] : ["Kazanç getirisi", pct(v.earnings_yield)], ["İçsel değer", m.intrinsic ? fmt.num(m.intrinsic, 2) + " ₺" : "—", m.potential != null ? q(pctS(m.potential, 1), m.potential) : ""]])}
         ${(() => { const dv = row?.div;
           if (dv && dv.status !== "yok") return mini("Temettü", dv.status === "kesin" ? "KAP · kesin" : "KAP · öneri", [["Brüt / net (pay başı)", `${fmt.num(dv.gross, 2)} · ${fmt.num(dv.net, 2)} ₺`], ["Verim (brüt)", pct(dv.yield)], [dv.next_ex ? "Hak kullanım" : "Son hak kullanım", dv.next_ex || dv.ex?.[dv.ex.length - 1] || "genel kurul bekleniyor"]]);
           if (dv?.status === "yok") return mini("Temettü", "KAP", [["Son karar", "Dağıtım yok"], ["Karar tarihi", dv.decision || "—"], ["Ödenen (12A)", tl(Math.abs(ttm("dividends_paid") || 0))]]);
@@ -394,7 +475,8 @@
           <p class="card-foot">Kural tabanlı özet; oranlardan otomatik üretilir, yatırım tavsiyesi değildir.</p></section>
         <section class="card"><div class="card-head"><h2 class="card-title">Puan dağılımı</h2></div>
           ${Object.entries(m.categories).map(([c, sc]) => `<div class="fa-bar"><span>${esc(c)}</span><span class="fa-track"><i style="width:${sc ?? 0}%;background:${sc == null ? "var(--surface-3)" : sc >= 65 ? "var(--up)" : sc >= 50 ? "var(--warn-line)" : "var(--down)"}"></i></span><b class="mono">${sc ?? "—"}</b></div>`).join("")}
-          <div class="fa-scores">
+          ${tmpl !== "sanayi" ? `<p class="card-foot">Piotroski, Altman Z'' ve Beneish M sanayi şirketleri için tasarlandı; ${TPL[tmpl].toLocaleLowerCase("tr")} modelinde kullanılmaz.</p>` : ""}
+          <div class="fa-scores" ${tmpl !== "sanayi" ? "hidden" : ""}>
             <div><span class="kpi-label">Piotroski F</span><b class="mono">${m.piotroski ?? "—"}/9</b><small>${m.piotroski == null ? "" : m.piotroski >= 7 ? "✓ Güçlü" : m.piotroski >= 4 ? "● Orta" : "✗ Zayıf"}</small></div>
             <div><span class="kpi-label">Altman Z''</span><b class="mono">${fmt.num(m.altman_z2, 2)}</b><small>${m.altman_z2 == null ? "" : (m.altman_z2 > 2.6 ? "✓ " : m.altman_z2 > 1.1 ? "● " : "✗ ") + zZone(m.altman_z2)}</small></div>
             <div><span class="kpi-label">Beneish M</span><b class="mono">${fmt.num(m.beneish_m, 2)}</b><small>${m.beneish_m == null ? "" : m.beneish_m < -1.78 ? "✓ Düşük risk" : "! Dikkat"}</small></div>
@@ -410,20 +492,39 @@
   // Finansallar
   const IS_ROWS = [["revenue", "Satışlar"], ["gross", "Brüt kar"], ["op_profit", "Esas faaliyet karı"], ["ebitda", "FAVÖK"], ["monetary", "Net parasal pozisyon K/Z"], ["net_parent", "Net dönem karı (ana ortaklık)"]];
   const BS_ROWS = [["current_assets", "Dönen varlıklar"], ["noncurrent_assets", "Duran varlıklar"], ["total_assets", "Toplam varlıklar"], ["fin_debt", "Finansal borçlar"], ["net_debt", "Net borç"], ["equity_parent", "Özkaynaklar (ana ortaklık)"]];
+  const FIN_ROWS = {
+    banka: {
+      is: [["int_inc", "Faiz gelirleri"], ["int_exp", "Faiz giderleri"], ["nii", "Net faiz geliri"], ["fees", "Net ücret ve komisyon"], ["revenue", "Faaliyet brüt karı"], ["ecl", "Beklenen zarar karşılıkları"], ["opex", "Faaliyet giderleri (personel + diğer)"], ["net_parent", "Net dönem karı (ana ortaklık)"]],
+      bs: [["loans", "Krediler"], ["total_assets", "Toplam varlıklar"], ["deposits", "Mevduat"], ["borrowings", "Alınan krediler"], ["securities_issued", "İhraç edilen menkul kıymetler"], ["equity_parent", "Özkaynaklar (ana ortaklık)"]],
+      charts: [["revenue", "Faaliyet geliri"], ["nii", "Net faiz geliri"], ["net_parent", "Net kar"]],
+      g: [["loans", "Krediler", "bs"], ["deposits", "Mevduat", "bs"], ["equity_parent", "Özkaynaklar", "bs"]],
+      src: [["Mevduat", "deposits"], ["Alınan krediler + ihraçlar", ["borrowings", "securities_issued", "money_market", "subordinated"]], ["Özkaynaklar", "equity_total"]],
+    },
+    sigorta: {
+      is: [["revenue", "Brüt yazılan primler"], ["ceded", "Reasüröre devredilen"], ["net_earned", "Kazanılmış primler (net)"], ["claims", "Gerçekleşen tazminatlar (net)"], ["opex", "Faaliyet giderleri"], ["tech_balance", "Genel teknik bölüm dengesi"], ["inv_inc", "Yatırım gelirleri"], ["net_parent", "Net dönem karı (ana ortaklık)"]],
+      bs: [["cash", "Nakit ve benzerleri"], ["fin_assets", "Finansal varlıklar"], ["total_assets", "Toplam varlıklar"], ["tech_reserves", "Teknik karşılıklar"], ["equity_parent", "Özsermaye (ana ortaklık)"]],
+      charts: [["revenue", "Brüt prim"], ["tech_balance", "Teknik denge"], ["net_parent", "Net kar"]],
+      g: [["total_assets", "Toplam varlıklar", "bs"], ["tech_reserves", "Teknik karşılıklar", "bs"], ["equity_parent", "Özsermaye", "bs"]],
+      src: [["Teknik karşılıklar", "tech_reserves"], ["Özsermaye", "equity_total"]],
+    },
+  };
   function tabFin(d) {
+    const tmpl = tplOf(d), FR = FIN_ROWS[tmpl];
     const se = d.series, m = d.metrics, n = se.periods.length, i = n - 1;
     const ya = se.periods.indexOf(`${+se.periods[i].slice(0, 4) - 1}/${se.periods[i].slice(5)}`);
     const pq = i - 1;
     const fr = j => j >= 0 ? realF(se, j) : 1;
     const chg = (a, b) => a == null || b == null || b === 0 ? "—" : `<span class="${a / b - 1 >= 0 ? "up" : "down"}">${pctS(a / b - 1, 0)}</span>`;
     // Kümülatif gelir tablosu: cari ve önceki yıl aynı dönem (raporun kendi karşılaştırmalı sütunu, aynı birim)
-    const isRows = IS_ROWS.map(([k, l]) => { const a = se.cum[k]?.[i], b = se.cum_prev[k]?.[i];
+    const isRows = (FR?.is || IS_ROWS).map(([k, l]) => { const a = se.cum[k]?.[i], b = se.cum_prev[k]?.[i];
       return `<tr><th scope="row">${l}</th><td class="num">${bin(a == null ? null : a * fr(i))}</td><td class="num">${bin(b == null ? null : b * fr(i))}</td><td class="num">${chg(a, b != null && b < 0 && a != null && a > 0 ? null : b)}</td></tr>`; }).join("");
-    const bsRows = BS_ROWS.map(([k, l]) => { const a = se.bs[k]?.[i], b = pq >= 0 ? se.bs[k]?.[pq] : null, c = ya >= 0 ? se.bs[k]?.[ya] : null;
+    const bsRows = (FR?.bs || BS_ROWS).map(([k, l]) => { const a = se.bs[k]?.[i], b = pq >= 0 ? se.bs[k]?.[pq] : null, c = ya >= 0 ? se.bs[k]?.[ya] : null;
       const ar = a == null ? null : a * fr(i), br = b == null ? null : b * fr(pq), cr = c == null ? null : c * fr(ya);
       return `<tr><th scope="row">${l}</th><td class="num">${bin(ar)}</td><td class="num">${bin(br)}</td><td class="num">${chg(ar, br)}</td><td class="num">${bin(cr)}</td><td class="num">${chg(ar, cr)}</td></tr>`; }).join("");
     const v = m.valuation, sm = m.sector_median || {};
-    const mult = [["F/K", v.pe, sm.pe], ["FD/FAVÖK", v.ev_ebitda, sm.ev_ebitda], ["PD/DD", v.pb, sm.pb], ["FD/Satış", v.ev_sales, sm.ev_sales], ["PEG", v.peg, null], ["Net borç/FAVÖK", m.ratios.net_debt_ebitda, null]];
+    const mult = tmpl === "sanayi"
+      ? [["F/K", v.pe, sm.pe], ["FD/FAVÖK", v.ev_ebitda, sm.ev_ebitda], ["PD/DD", v.pb, sm.pb], ["FD/Satış", v.ev_sales, sm.ev_sales], ["PEG", v.peg, null], ["Net borç/FAVÖK", m.ratios.net_debt_ebitda, null]]
+      : [["F/K", v.pe, sm.pe], ["PD/DD", v.pb, sm.pb], ["PEG", v.peg, null], ["Kazanç getirisi", v.earnings_yield, null, pct], ["Temettü verimi (12A)", v.div_yield, null, pct]];
     return `
       <div class="toolbar fa-sec"><div class="seg" role="radiogroup" aria-label="Çeyrek sayısı">${[4, 5, 8, 12].map(k => `<button type="button" role="radio" data-nq="${k}" aria-checked="${S.nq === k}">${k} çeyrek</button>`).join("")}</div>
         <span class="grow"></span><span class="card-meta">bin ₺ · ${amountsLabel(se)}</span></div>
@@ -434,22 +535,25 @@
           <div class="tbl-scroll"><table class="tx fa-tx"><thead><tr><th>Kalem</th><th class="num">${se.periods[i]}</th><th class="num">${pq >= 0 ? se.periods[pq] : "—"}</th><th class="num">%</th><th class="num">${ya >= 0 ? se.periods[ya] : "—"}</th><th class="num">% Y/Y</th></tr></thead><tbody>${bsRows}</tbody></table></div></section>
       </div>
       <div class="fa-three">
-        ${[["revenue", "Satışlar"], ["ebitda", "FAVÖK"], ["net_parent", "Net kar"]].map(([k, l]) => `<section class="card"><div class="card-head"><h2 class="card-title">${S.chartMode === "q" ? "Çeyreklik" : "Son 12 ay"} ${l.toLocaleLowerCase("tr")}</h2>
+        ${(FR?.charts || [["revenue", "Satışlar"], ["ebitda", "FAVÖK"], ["net_parent", "Net kar"]]).map(([k, l]) => `<section class="card"><div class="card-head"><h2 class="card-title">${S.chartMode === "q" ? "Çeyreklik" : "Son 12 ay"} ${l.toLocaleLowerCase("tr")}</h2>
           <div class="seg" role="radiogroup">${[["q", "Çeyreklik"], ["ttm", "12A"]].map(([mk, ml]) => `<button type="button" role="radio" data-cm="${mk}" aria-checked="${S.chartMode === mk}">${ml}</button>`).join("")}</div></div>
           <div class="fa-q" data-k="${k}"></div></section>`).join("")}
       </div>
       <div class="fa-two">
         <section class="card"><div class="card-head"><h2 class="card-title">Çarpanlar</h2><span class="card-meta">sektör medyanı: ${esc(rowOf(d.code)?.sector || "—")}</span></div>
           <table class="tx fa-tx"><thead><tr><th>Çarpan</th><th class="num">${d.code}</th><th class="num">Sektör med.</th></tr></thead>
-          <tbody>${mult.map(([l, a, b]) => `<tr><th scope="row">${l}</th><td class="num"><b>${x(a)}</b></td><td class="num muted">${x(b)}</td></tr>`).join("")}</tbody></table></section>
-        <section class="card"><div class="card-head"><h2 class="card-title">Kaynak dağılımı</h2><span class="card-meta">${se.periods[i]}</span></div>${sourceBar(se, i)}
-          <p class="card-foot">Kaynak: KAP finansal rapor bildirimleri (${d.reports?.[m.period]?.consolidated ? "konsolide" : "solo"}). Son 4. çeyrek = yıllık − 9 aylık (TÜFE ile aynı birime taşınarak).</p></section>
+          <tbody>${mult.map(([l, a, b, f = x]) => `<tr><th scope="row">${l}</th><td class="num"><b>${f(a)}</b></td><td class="num muted">${b == null ? "—" : f(b)}</td></tr>`).join("")}</tbody></table></section>
+        <section class="card"><div class="card-head"><h2 class="card-title">Kaynak dağılımı</h2><span class="card-meta">${se.periods[i]}</span></div>${sourceBar(se, i, FR?.src)}
+          <p class="card-foot">Kaynak: KAP finansal rapor bildirimleri (${d.reports?.[m.period]?.consolidated ? "konsolide" : "solo"}). ${tmpl === "sanayi" ? "Son 4. çeyrek = yıllık − 9 aylık (TÜFE ile aynı birime taşınarak)." : "Banka ve sigorta tabloları TMS 29 uygulanmadan, nominal yayımlanır; 4. çeyrek = yıllık − 9 aylık."}</p></section>
       </div>`;
   }
-  function sourceBar(se, i) {
+  function sourceBar(se, i, spec) {
     const ta = se.bs.total_assets?.[i], eq = se.bs.equity_total?.[i], cl = se.bs.current_liab?.[i], nl = se.bs.noncurrent_liab?.[i];
     if (!ta) return "<p class='tp-empty'>Veri yok</p>";
-    const parts = [["Özkaynaklar", eq, "var(--series-1)"], ["KV yükümlülükler", cl, "var(--series-2)"], ["UV yükümlülükler", nl, "var(--series-3)"]];
+    const COLS = ["var(--series-1)", "var(--series-2)", "var(--series-3)", "var(--series-4)"];
+    const val = k => Array.isArray(k) ? k.reduce((a, kk) => a + (se.bs[kk]?.[i] || 0), 0) : se.bs[k]?.[i];
+    let parts = spec ? spec.map(([l, k], j) => [l, val(k), COLS[j]]) : [["Özkaynaklar", eq, "var(--series-1)"], ["KV yükümlülükler", cl, "var(--series-2)"], ["UV yükümlülükler", nl, "var(--series-3)"]];
+    if (spec) { const rest = ta - parts.reduce((a, p) => a + (p[1] || 0), 0); if (rest > 0) parts.push(["Diğer yükümlülükler", rest, "var(--series-other)"]); }
     return `<div class="fa-stack">${parts.map(([l, v, c]) => v > 0 ? `<i style="width:${v / ta * 100}%;background:${c}" data-tip="${l}: ${pct(v / ta)}"></i>` : "").join("")}</div>
       <div class="chart-legend">${parts.map(([l, v, c]) => `<span><i style="background:${c}"></i>${l} ${pct(v / ta, 0)}</span>`).join("")}</div>`;
   }
@@ -466,12 +570,14 @@
 
   // Grafikler: oran eğilimleri
   const TREND = ["roe", "roa", "net_margin", "ebitda_margin", "gross_margin", "current", "net_debt_ebitda", "debt_equity", "rev_growth", "net_growth", "asset_growth", "cfo_ni", "asset_turnover"];
+  const trendKeys = d => { const t = tplOf(d); return t === "sanayi" ? TREND : Object.keys(d.metrics.history).filter(k => k !== "periods"); };
   function tabCharts(d) {
-    const h = d.metrics.history;
+    const h = d.metrics.history, FR = FIN_ROWS[tplOf(d)], TK = trendKeys(d);
+    if (!TK.includes(S.trend)) S.trend = TK[0];
     return `<section class="card"><div class="card-head"><h2 class="card-title">Oran eğilimi</h2>
-        <select id="faTrend" class="fa-select" aria-label="Oran">${TREND.map(k => `<option value="${k}" ${S.trend === k ? "selected" : ""}>${MET[k][0]}</option>`).join("")}</select></div>
+        <select id="faTrend" class="fa-select" aria-label="Oran">${TK.map(k => `<option value="${k}" ${S.trend === k ? "selected" : ""}>${MET[k][0]}</option>`).join("")}</select></div>
         <div id="faTrendC"></div><p class="card-foot">Her dönem son 12 ay akışları ve dönem sonu bilançosuyla hesaplanır; büyüme oranları reeldir.</p></section>
-      <div class="fa-three">${[["total_assets", "Toplam varlıklar", "bs"], ["equity_parent", "Özkaynaklar", "bs"], ["cfo", "İşletme nakit akışı (12A)", "ttm"]].map(([k, l, g]) =>
+      <div class="fa-three">${(FR?.g || [["total_assets", "Toplam varlıklar", "bs"], ["equity_parent", "Özkaynaklar", "bs"], ["cfo", "İşletme nakit akışı (12A)", "ttm"]]).map(([k, l, g]) =>
         `<section class="card"><div class="card-head"><h2 class="card-title">${l}</h2><span class="card-meta">${amountsLabel(d.series)}</span></div><div class="fa-g" data-k="${k}" data-g="${g}"></div></section>`).join("")}</div>`;
   }
   function bindCharts(body, d) {
@@ -487,7 +593,7 @@
   // Detaylı analiz: tüm oranlar + kriter ayrıntısı
   function tabDetail(d) {
     const m = d.metrics, groups = {};
-    Object.entries(MET).forEach(([k, [l, f, , g]]) => (groups[g] ||= []).push([l, f(mOf(m, k))]));
+    (MET_T[tplOf(d)] || MET_T.sanayi).forEach(k => { const [l, f, , g] = MET[k]; (groups[g] ||= []).push([l, f(mOf(m, k))]); });
     return `<div class="fa-two">
       <section class="card"><div class="card-head"><h2 class="card-title">Tüm oranlar</h2><span class="card-meta">${m.period} · son 12 ay</span></div>
         ${Object.entries(groups).map(([g, xs]) => `<p class="d-sub">${g}</p><table class="fa-kv"><tbody>${xs.map(([l, v]) => `<tr><th scope="row">${l}</th><td class="num">${v}</td></tr>`).join("")}</tbody></table>`).join("")}</section>
@@ -590,8 +696,18 @@
     const docs = await Promise.all(codes.map(c => doc(c).catch(() => null)));
     if (sh.route !== "karsilastir") return;
     const ok = codes.map((c, i) => ({ c, d: docs[i], r: rowOf(c) })).filter(o => o.d?.metrics);
+    const tpls = [...new Set(ok.map(o => tplOf(o.d)))], mixed = tpls.length > 1;
+    const radarSet = ok.filter(o => tplOf(o.d) === tplOf(ok[0].d));
     const cats = Object.keys(ok[0].d.metrics.categories);
-    const KEYS = [["Bilanço kalitesi", o => o.d.metrics.quality, 1, v => `${v}/100`], ["Karlılık (ROE)", o => o.d.metrics.ratios.roe, 1, pct],
+    const R = o => o.d.metrics.ratios;
+    const KEYS = tpls.length === 1 && tpls[0] === "banka" ? [["Kalite puanı", o => o.d.metrics.quality, 1, v => `${v}/100`], ["Karlılık (ROE)", o => R(o).roe, 1, pct],
+      ["Net faiz marjı", o => R(o).nim, 1, v => pct(v, 2)], ["Maliyet / gelir", o => R(o).cost_income, -1, pct], ["Risk maliyeti", o => R(o).cost_of_risk, -1, v => pct(v, 2)],
+      ["Kredi / mevduat", o => R(o).ldr, -1, pct], ["Özkaynak / aktif", o => R(o).equity_assets, 1, pct], ["Reel kredi büyümesi", o => R(o).loan_growth, 1, pctS],
+      ["Ucuzluk (F/K)", o => o.d.metrics.valuation.pe, -1, x], ["Ucuzluk (PD/DD)", o => o.d.metrics.valuation.pb, -1, x]]
+    : tpls.length === 1 && tpls[0] === "sigorta" ? [["Kalite puanı", o => o.d.metrics.quality, 1, v => `${v}/100`], ["Karlılık (ROE)", o => R(o).roe, 1, pct],
+      ["Birleşik oran", o => R(o).combined, -1, pct], ["Hasar oranı", o => R(o).loss_ratio, -1, pct], ["Reel prim büyümesi", o => R(o).premium_growth, 1, pctS],
+      ["Özsermaye / aktif", o => R(o).equity_assets, 1, pct], ["Ucuzluk (F/K)", o => o.d.metrics.valuation.pe, -1, x], ["Ucuzluk (PD/DD)", o => o.d.metrics.valuation.pb, -1, x]]
+    : [["Bilanço kalitesi", o => o.d.metrics.quality, 1, v => `${v}/100`], ["Karlılık (ROE)", o => o.d.metrics.ratios.roe, 1, pct],
       ["Reel büyüme", o => o.d.metrics.ratios.rev_growth, 1, pctS], ["Borçluluk (net borç / FAVÖK)", o => o.d.metrics.ratios.net_debt_ebitda, -1, x],
       ["Kar kalitesi (işletme nakdi / kar)", o => o.d.metrics.ratios.cfo_ni, 1, x], ["Likidite (cari oran)", o => o.d.metrics.ratios.current, 1, x],
       ["Ucuzluk (F/K)", o => o.d.metrics.valuation.pe, -1, x], ["Ucuzluk (FD/FAVÖK)", o => o.d.metrics.valuation.ev_ebitda, -1, x]];
@@ -600,7 +716,8 @@
       return `<li><b>${l}:</b> en iyi ${vs[0][0]} (${fm(vs[0][1])}), en zayıf ${vs[vs.length - 1][0]} (${fm(vs[vs.length - 1][1])}).</li>`; }).join("");
     const rank = [...ok].sort((a, b) => (b.d.metrics.overall ?? 0) - (a.d.metrics.overall ?? 0)).map(o => `${o.c} (${o.d.metrics.overall ?? "—"} · ${o.d.metrics.grade || "—"})`).join(" › ");
     const allP = [...new Set(ok.flatMap(o => o.d.metrics.history.periods))].sort();
-    const tbl = Object.entries(MET).map(([k, [l, f, dir, g]]) => {
+    const metKeys = [...new Set(tpls.flatMap(t => MET_T[t] || []))];
+    const tbl = metKeys.map(k => [k, MET[k]]).map(([k, [l, f, dir, g]]) => {
       const vs = ok.map(o => mOf(o.d.metrics, k));
       const valid = vs.filter(v => v != null);
       const best = valid.length > 1 && new Set(valid).size > 1 ? (dir > 0 ? Math.max(...valid) : Math.min(...valid)) : null;
@@ -609,20 +726,23 @@
     let lastG = "";
     el.innerHTML = pick + `
       <div class="fa-two">
-        <section class="card"><div class="card-head"><h2 class="card-title">Kategori puanları</h2><span class="card-meta">bilanço puanının 6 kategorisi (0–100)</span></div>
-          ${radarChart(cats, ok.map(o => ({ name: o.c, vals: cats.map(c => o.d.metrics.categories[c]) })))}
-          <details class="fa-crit"><summary>Tablo görünümü</summary><table class="tx fa-tx"><thead><tr><th>Kategori</th>${ok.map(o => `<th class="num">${o.c}</th>`).join("")}</tr></thead>
-          <tbody>${cats.map(c => `<tr><th scope="row">${c}</th>${ok.map(o => `<td class="num">${o.d.metrics.categories[c] ?? "—"}</td>`).join("")}</tr>`).join("")}</tbody></table></details></section>
+        <section class="card"><div class="card-head"><h2 class="card-title">Kategori puanları</h2><span class="card-meta">${TPL[tplOf(ok[0].d)]} modeli kategorileri (0–100)</span></div>
+          ${mixed ? `<p class="tp-warn">Farklı modeller karşılaştırılıyor (${tpls.map(t => TPL[t]).join(", ")}); kategori grafiği yalnız ${TPL[tplOf(ok[0].d)].toLocaleLowerCase("tr")} şirketlerini gösterir, oran tablosunda boş hücreler o modelde olmayan oranlardır.</p>` : ""}
+          ${radarChart(cats, radarSet.map(o => ({ name: o.c, vals: cats.map(c => o.d.metrics.categories[c]) })))}
+          <details class="fa-crit"><summary>Tablo görünümü</summary><table class="tx fa-tx"><thead><tr><th>Kategori</th>${radarSet.map(o => `<th class="num">${o.c}</th>`).join("")}</tr></thead>
+          <tbody>${cats.map(c => `<tr><th scope="row">${c}</th>${radarSet.map(o => `<td class="num">${o.d.metrics.categories[c] ?? "—"}</td>`).join("")}</tr>`).join("")}</tbody></table></details></section>
         <section class="card"><div class="card-head"><h2 class="card-title">Karşılaştırmalı değerlendirme</h2></div>
           <ul class="fa-assess">${assess}<li>Genel skora göre sıralama: ${rank}.</li></ul></section>
       </div>
       <section class="card"><div class="card-head"><h2 class="card-title">Metrik eğilimi</h2>
-        <select id="faCmpM" class="fa-select" aria-label="Metrik">${TREND.map(k => `<option value="${k}" ${S.cmpMetric === k ? "selected" : ""}>${MET[k][0]}</option>`).join("")}</select></div>
+        <select id="faCmpM" class="fa-select" aria-label="Metrik">${[...new Set(ok.flatMap(o => trendKeys(o.d)))].map(k => `<option value="${k}" ${S.cmpMetric === k ? "selected" : ""}>${MET[k][0]}</option>`).join("")}</select></div>
         <div id="faCmpChart"></div></section>
-      <section class="card card-flush"><div class="card-head"><h2 class="card-title">Tüm oranlar</h2><span class="card-meta">${Object.keys(MET).length} oran · ● satırdaki en iyi değer</span></div>
+      <section class="card card-flush"><div class="card-head"><h2 class="card-title">Tüm oranlar</h2><span class="card-meta">${metKeys.length} oran · ● satırdaki en iyi değer</span></div>
         <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Oran</th>${ok.map(o => `<th class="num"><button type="button" class="tk-cmp link-btn" data-code="${o.c}">${o.c}</button></th>`).join("")}</tr></thead>
         <tbody>${tbl.map(([g, h]) => { const head = g !== lastG ? `<tr class="fa-grp"><td colspan="${ok.length + 1}">${g}</td></tr>` : ""; lastG = g; return head + h; }).join("")}</tbody></table></div></section>`;
     bindCmp(el);
+    const cmpKeys = [...new Set(ok.flatMap(o => trendKeys(o.d)))];
+    if (!cmpKeys.includes(S.cmpMetric)) { S.cmpMetric = cmpKeys[0]; $("#faCmpM").value = S.cmpMetric; }
     const draw = () => { const k = S.cmpMetric, f = MET[k][1];
       $("#faCmpChart").innerHTML = lineChart(allP.map(qlabel), ok.map(o => ({ name: o.c, vals: allP.map(p => { const j = o.d.metrics.history.periods.indexOf(p); return j >= 0 ? o.d.metrics.history[k]?.[j] : null; }) })), { kind: f === pct || f === pctS ? "pct" : "x", tipFmt: f, w: cw($("#faCmpChart")) }); };
     $("#faCmpM").onchange = e => { S.cmpMetric = e.target.value; draw(); };
@@ -686,6 +806,13 @@
           <li><b>Altman Z'':</b> 6,56·(net işletme sermayesi/varlık) + 3,26·(birikmiş karlar/varlık) + 6,72·(esas faaliyet karı/varlık) + 1,05·(özkaynak/yükümlülük). > 2,6 güvenli, 1,1–2,6 gri, < 1,1 riskli.</li>
           <li><b>Beneish M:</b> 8 değişkenli model; −1,78 üstü kazanç manipülasyonu riski işaretidir.</li>
           <li><b>Kriter setleri:</b> Graham, Buffett, Lynch ve Greenblatt kurallarının BIST'e ve enflasyon muhasebesine uyarlanmış hâlleri; eşikler her kriterin adında yazar. Uzun geçmiş gerektirenler mevcut yıllık dönemlerle sınanır.</li>
+        </ul>
+        <h2 class="card-title">Bankalar ve sigorta şirketleri</h2>
+        <ul>
+          <li><b>Tablolar:</b> BDDK ve SEDDK tek düzen hesap planları; bankalarda bilanço TP/YP/Toplam sütunlarıyla gelir, toplam kullanılır. Bu tablolar TMS 29 uygulanmadan, <b>nominal</b> yayımlanır: 12A ve 4. çeyrek hesabında TÜFE oranı uygulanmaz, büyümeler ve reel ROE ise TÜFE ile hesaplanır.</li>
+          <li><b>Banka oranları:</b> net faiz marjı = net faiz geliri / ortalama aktif; maliyet/gelir = (personel + diğer faaliyet giderleri) / faaliyet brüt karı; risk maliyeti = beklenen zarar karşılık giderleri / ortalama krediler; kredi/mevduat; özkaynak/aktif; reel ROE = (1 + ROE) / (1 + yıllık TÜFE) − 1. Sermaye yeterlilik oranı mali tablolarda yer almadığı için kullanılmaz.</li>
+          <li><b>Sigorta oranları:</b> hasar oranı = gerçekleşen tazminatlar (net) / kazanılmış primler (net); gider oranı = (faaliyet + diğer teknik giderler) / kazanılmış primler; birleşik oran = hasar + gider; saklama oranı = net / brüt yazılan prim; likit varlık / teknik karşılıklar.</li>
+          <li><b>Kategoriler:</b> banka — karlılık, faiz marjı ve gelir yapısı, verimlilik, aktif kalitesi, sermaye ve fonlama, reel büyüme; sigorta — karlılık, teknik karlılık, verimlilik, sermaye, likidite, reel büyüme. Değerleme yalnız aynı modeldeki şirketlerin F/K ve PD/DD medyanlarıyla karşılaştırılır. Piotroski, Altman ve Beneish bu modellerde kullanılmaz.</li>
         </ul>
         <p class="card-foot">Bu panel bilgi amaçlıdır, yatırım tavsiyesi değildir. Kural tabanlı puanlar şirketin iş modelini, yönetimini veya geleceğe dönük beklentileri bilmez.</p>
       </section></div>`;
