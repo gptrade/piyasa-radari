@@ -882,7 +882,7 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .fa-select { height: 34px; padding: 0 var(--s-2); border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); color: var(--text); font-size: var(--fs-md); max-width: 100%; }
 .fa-num { width: 90px; height: 34px; padding: 0 var(--s-2); border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); color: var(--text); font: var(--fs-md) var(--font-mono); }
 .fa-tbl td, .fa-tbl th { white-space: nowrap; }
-.fa-tbl .fa-name { font-size: var(--fs-sm); max-width: 220px; display: inline-block; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+.fa-tbl .fa-name { font-size: var(--fs-sm); max-width: 150px; display: inline-block; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
 .th-sort { font: inherit; color: inherit; padding: 0; }
 .th-sort:hover { color: var(--text); }
 .sc { font-family: var(--font-mono); }
@@ -973,4 +973,4 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
   .fa-h-px { align-items: flex-start; }
   .fa-scores { grid-template-columns: 1fr; }
 }
-.fa-sec-name { display: inline-block; max-width: 190px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+.fa-sec-name { display: inline-block; max-width: 140px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }

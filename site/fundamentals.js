@@ -560,8 +560,8 @@
     const tbl = Object.entries(MET).map(([k, [l, f, dir, g]]) => {
       const vs = ok.map(o => mOf(o.d.metrics, k));
       const valid = vs.filter(v => v != null);
-      const best = valid.length > 1 ? (dir > 0 ? Math.max(...valid) : Math.min(...valid)) : null;
-      return [g, `<tr><th scope="row">${l}</th>${vs.map(v => `<td class="num ${v === best ? "fa-best" : ""}">${f(v)}${v === best ? " <span class='up' aria-label='en iyi'>●</span>" : ""}</td>`).join("")}</tr>`];
+      const best = valid.length > 1 && new Set(valid).size > 1 ? (dir > 0 ? Math.max(...valid) : Math.min(...valid)) : null;
+      return [g, `<tr><th scope="row">${l}</th>${vs.map(v => { const b = best != null && v === best; return `<td class="num ${b ? "fa-best" : ""}">${f(v)}${b ? " <span class='up' aria-label='en iyi'>●</span>" : ""}</td>`; }).join("")}</tr>`];
     });
     let lastG = "";
     el.innerHTML = pick + `
