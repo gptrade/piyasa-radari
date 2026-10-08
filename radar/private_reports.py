@@ -178,6 +178,20 @@ def _remember(shas: set, done_path: Path = DONE) -> None:
     done_path.write_text(json.dumps(sorted(shas)), encoding="utf-8")
 
 
+MAX_TRIES = 3   # AI bu kadar denemede okuyamazsa rapor bırakılır (kotayı her turda harcamasın)
+
+
+def _tries(done_path: Path) -> dict:
+    try:
+        return json.loads(done_path.with_name("private_reports_tries.json").read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        return {}
+
+
+def _save_tries(t: dict, done_path: Path) -> None:
+    done_path.with_name("private_reports_tries.json").write_text(json.dumps(t), encoding="utf-8")
+
+
 RATING_MAP = [(r"güçlü al|strong buy|endeks üstü|endeksin üzerinde|outperform|overweight|\bal\b|buy|ekle|biriktir", "AL"),
               (r"endeks altı|underperform|underweight|\bsat\b|sell|azalt", "SAT"),
               (r"endekse paralel|nötr|neutral|equal|hold|\btut\b|market perform", "TUT")]
@@ -301,6 +315,7 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
         res["status"] = {"disabled": True}
         return res
     done = _known(done_path)
+    tries = _tries(done_path)
     todo = [u for u in units(root) if u["sha"] not in done]
     res["status"]["waiting"] = len(todo)
     limit = int(cfg.get("max_per_run", 2))
@@ -316,8 +331,17 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
                   f"kurum={hints['broker'] or '?'}\nİzleme listesi: {', '.join(sorted(watch))}\n\n"
                   + (f"RAPOR METNİ:\n{text}" if text else "RAPOR: ekteki sayfa görüntülerinde."))
         x = analyzer.ask_json(REPORT_SYSTEM, prompt, REPORT_TOOL, REPORT_FMT, max_tokens=3000, media=media or None)
+        if isinstance(x, dict) and not x.get("broker") and (x.get("thesis") or x.get("tickers") or x.get("sector")):
+            x["broker"] = hints.get("broker") or "Kurum belirtilmemiş"     # içerik var, kurum adı okunamadı
         if not isinstance(x, dict) or not x.get("broker"):
-            log.warning("Rapor okunamadı (%s): AI yanıtı yok", u["kind"])
+            if analyzer.enabled:                                  # sağlayıcı ayakta ama rapor çıkmadı (kota değil)
+                tries[u["sha"]] = tries.get(u["sha"], 0) + 1      # AI yanıt verdi ama rapor çıkaramadı
+            if tries.get(u["sha"], 0) >= MAX_TRIES:
+                log.warning("Rapor %d denemede okunamadı, bırakıldı (%s)", MAX_TRIES, u["kind"])
+                done.add(u["sha"])
+                res["status"]["failed"] = res["status"].get("failed", 0) + 1
+            else:
+                log.warning("Rapor okunamadı (%s): AI yanıtı yok", u["kind"])
             continue                                  # AI yok/kota: sonraki turda yeniden denenir
         r = public_record(x, u["sha"], u["kind"], hints, iso(now_utc()))
         res["records"].append(r)
@@ -330,6 +354,7 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
         done.add(u["sha"])
         res["status"]["count"] += 1
     _remember(done, done_path)
+    _save_tries({k: v for k, v in tries.items() if k not in done}, done_path)
     res["status"]["waiting"] = len([u for u in todo if u["sha"] not in done])
     log.info("Gizli rapor kutusu: %d okundu, %d sırada", res["status"]["count"], res["status"]["waiting"])
     return res
