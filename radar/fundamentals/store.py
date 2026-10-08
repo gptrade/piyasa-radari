@@ -28,7 +28,10 @@ STATE = FIN / "_state.json"
 UNIVERSE = FIN / "_universe.json"
 CPI = FIN / "_cpi.json"
 DIVS = FIN / "_dividends.json"
-HISTORY_START = date(2023, 1, 1)
+HISTORY_START = date(2023, 1, 1)        # BIST-100: 2022 yıl sonundan bu yana
+HISTORY_START_EXT = date(2024, 7, 1)    # diğer şirketler: 12A ve yıllık büyüme için yeterli en kısa geçmiş (2024/06'dan)
+INDEX_TAGS = ("XU030", "XU050", "XU100", "XKTUM")   # arayüzde süzgeç olarak kullanılan endeksler
+UNIVERSE_INDEX = os.environ.get("FIN_UNIVERSE", "XUTUM")  # BIST Tüm
 CPI_SERIES = "TP.GENENDEKS.T1"
 EVDS_URL = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
 GAP = float(os.environ.get("FIN_GAP", 3.0))   # KAP istekleri arası bekleme (sn)
@@ -37,7 +40,7 @@ MAX_PERIODS = 20   # çalıştırma başına işlenecek dönem
 MAX_REQ = 40       # çalıştırma başına liste isteği
 MAX_EXPORTS = 9    # çalıştırma başına rapor indirme (KAP ~5 dakikada 10 indirmeden sonra 429 veriyor; radar 15 dk'da bir)
 MAX_TRIES = 3
-MAX_DIV = 6        # çalıştırma başına kar payı bildirim sayfası
+MAX_DIV = 10       # çalıştırma başına kar payı bildirim sayfası
 LIST_VERSION = 2   # 2: liste kar payı bildirimlerini de içerir (eski listeler bir kez yeniden çekilir)
 
 
@@ -129,10 +132,11 @@ def enqueue(state: dict, code: str, row: dict) -> bool:
     return True
 
 
-def next_jobs(state: dict) -> list[tuple[str, str]]:
-    """(kod, dönem) çiftleri: önce en yeni dönemler (tüm şirketlerde), sonra geriye doğru."""
+def next_jobs(state: dict, priority: set[str] | None = None) -> list[tuple[str, str]]:
+    """(kod, dönem) çiftleri: önce öncelikli şirketler (BIST-100), her grupta en yeni dönemden geriye."""
     jobs = [(code, pk) for code, per in state.get("queue", {}).items() for pk in per]
-    return sorted(jobs, key=lambda j: (j[1], j[0]), reverse=True)
+    pr = priority or set()
+    return sorted(jobs, key=lambda j: (j[0] in pr, j[1], j[0]), reverse=True)
 
 
 def choose(reports: list[dict]) -> dict | None:
@@ -205,12 +209,14 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
                 if c in members and enqueue(state, c, row):
                     stats["queued"] += 1
 
-    for code, m in members.items():
+    order = sorted(members.items(), key=lambda kv: "XU100" not in kv[1].get("idx", ["XU100"]))
+    for code, m in order:
         if left() < budget * 0.6 or spent() >= MAX_REQ:
             break
         if comps.get(code, {}).get("listed") and comps[code].get("lv", 1) >= LIST_VERSION:
             continue
-        rows = kapfin.list_reports(m["oid"], HISTORY_START, date.today())
+        start = HISTORY_START if "XU100" in m.get("idx", ["XU100"]) else HISTORY_START_EXT
+        rows = kapfin.list_reports(m["oid"], start, date.today())
         if rows is None:
             continue
         for row in rows:
@@ -220,7 +226,8 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
         comps[code]["lv"] = LIST_VERSION
         stats["listed"] += 1
 
-    for code, pk in next_jobs(state):
+    prio = {c for c, m in members.items() if "XU100" in m.get("idx", ["XU100"])}
+    for code, pk in next_jobs(state, prio):
         if left() < 15 or stats["processed"] + stats["failed"] >= MAX_PERIODS or exported() >= MAX_EXPORTS - 1:
             break
         idxs = state["queue"][code][pk]
@@ -242,7 +249,9 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
 
     # Kar payı bildirimleri (ayrı uç: bildirim sayfası); en yeniden eskiye
     dq = state.get("div_queue", {})
-    jobs = sorted(((idx, code) for code, xs in dq.items() for idx in xs), reverse=True)
+    prio = {c for c, m in members.items() if "XU100" in m.get("idx", ["XU100"])}
+    jobs = sorted(((code in prio, idx, code) for code, xs in dq.items() for idx in xs), reverse=True)
+    jobs = [(idx, code) for _, idx, code in jobs]
     divs = None
     for idx, code in jobs[:MAX_DIV]:
         if left() < 10:
@@ -274,12 +283,15 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
     stats = {"listed": 0, "queued": 0, "processed": 0, "failed": 0}
     comps = state.setdefault("companies", {})
 
-    if not uni.get("members") or uni.get("v", 1) < 2 or _due(state, "universe", 24 * 7):
+    if not uni.get("members") or uni.get("v", 1) < 3 or _due(state, "universe", 24 * 7):
         idx = kapfin.fetch_indices()
-        if idx.get("XU100"):
+        base = idx.get(UNIVERSE_INDEX) or idx.get("XU100")
+        if base:
             sectors = kapfin.fetch_sectors()
-            members = [{**m, **sectors.get(m["code"], {})} for m in idx["XU100"]]
-            uni = {"v": 2, "index": "XU100", "updated": _now().isoformat(timespec="seconds"), "members": members}
+            members = [{**m, **sectors.get(m["code"], {}),
+                        "idx": [t for t in INDEX_TAGS if any(x["code"] == m["code"] for x in idx.get(t, []))]} for m in base]
+            uni = {"v": 3, "index": UNIVERSE_INDEX if idx.get(UNIVERSE_INDEX) else "XU100",
+                   "updated": _now().isoformat(timespec="seconds"), "members": members}
             _save(UNIVERSE, uni)
     members = {m["code"]: m for m in uni.get("members", [])}
     only = {c.strip().upper() for c in os.environ.get("FIN_CODES", "").split(",") if c.strip()}
@@ -340,21 +352,26 @@ SCREEN = FIN / "_screen.json"
 
 def update_prices(codes: list[str]) -> bool:
     """Evrenin son kapanışları (Yahoo, toplu indirme). Yalnız son fiyat ve tarih saklanır."""
+    out = {}
     try:
         import yfinance as yf
-        df = yf.download(" ".join(f"{c}.IS" for c in codes), period="5d", interval="1d",
-                         group_by="ticker", auto_adjust=False, threads=False, progress=False)
-    except Exception as e:
-        log.warning("Temel analiz fiyatları alınamadı: %s", e)
+    except ImportError:
         return False
-    out = {}
-    for c in codes:
+    for i in range(0, len(codes), 100):                    # 100'erli parçalar
+        part = codes[i:i + 100]
         try:
-            s = df[f"{c}.IS"]["Close"].dropna()
-        except (KeyError, TypeError):
+            df = yf.download(" ".join(f"{c}.IS" for c in part), period="5d", interval="1d",
+                             group_by="ticker", auto_adjust=False, threads=True, progress=False)
+        except Exception as e:
+            log.warning("Temel analiz fiyatları alınamadı: %s", e)
             continue
-        if len(s):
-            out[c] = {"price": round(float(s.iloc[-1]), 4), "date": str(s.index[-1].date())}
+        for c in part:
+            try:
+                ser = df[f"{c}.IS"]["Close"].dropna() if len(part) > 1 else df["Close"].dropna()
+            except (KeyError, TypeError):
+                continue
+            if len(ser):
+                out[c] = {"price": round(float(ser.iloc[-1]), 4), "date": str(ser.index[-1].date())}
     if out:
         _save(PRICES, {"updated": _now().isoformat(timespec="seconds"), "p": out})
     return bool(out)
@@ -416,7 +433,7 @@ def build_metrics() -> int:
         screen.append({
             "code": row["code"], "title": doc.get("title"), "sector": row["sector"], "period": m["period"],
             "price": m["valuation"].get("price"), "mcap": m["valuation"].get("mcap"),
-            "t": m.get("template", "sanayi"),
+            "t": m.get("template", "sanayi"), "idx": uni.get(row["code"], {}).get("idx") or [],
             "r": m["ratios"], "v": {k: v for k, v in m["valuation"].items() if k not in ("shares",)},
             "cat": m["categories"], "quality": m["quality"], "valuation_score": m["valuation_score"],
             "overall": m["overall"], "grade": m["grade"], "z": m["altman_z2"], "f": m["piotroski"],

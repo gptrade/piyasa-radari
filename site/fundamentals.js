@@ -9,7 +9,7 @@
   const MINUS = "−";
   const S = {
     screen: null, err: null, loaded: false, docs: {}, real: store.get("radar.finReal", true),
-    sort: store.get("radar.finSort", ["overall", -1]), sector: "", q: "",
+    sort: store.get("radar.finSort", ["overall", -1]), sector: "", q: "", ix: store.get("radar.finIx", ""),
     tab: "ozet", nq: 5, chartMode: "q", trend: "roe",
     scrTab: "kriter", crit: "Benjamin Graham — Savunmacı Yatırımcı", allPass: true, scrSector: "",
     filters: store.get("radar.finFilters", [["pe", "<=", 15], ["roe", ">=", 0.1]]),
@@ -119,7 +119,7 @@
     if (S.err || !rows().length) {
       el.innerHTML = `<div class="card">${sh.stateHTML({ kind: S.err ? "info" : "empty",
         title: "Temel analiz verisi hazırlanıyor",
-        msg: "BIST-100 şirketlerinin KAP mali tabloları kademeli olarak yükleniyor (KAP'ın istek sınırı nedeniyle tamamlanması yaklaşık bir gün sürer). Sayfa veri geldikçe dolar." })}</div>`;
+        msg: "Şirketlerin KAP mali tabloları kademeli olarak yükleniyor (KAP'ın istek sınırı nedeniyle önce BIST-100, ardından diğerleri). Sayfa veri geldikçe dolar." })}</div>`;
       return true;
     }
     return false;
@@ -150,7 +150,7 @@
     if (notReady(el)) return;
     const all = rows();
     const sectors = [...new Set(all.map(r => r.sector || "Diğer"))].sort((a, b) => a.localeCompare(b, "tr"));
-    let xs = all.filter(r => !S.sector || (r.sector || "Diğer") === S.sector);
+    let xs = all.filter(r => (!S.sector || (r.sector || "Diğer") === S.sector) && inIx(r));
     if (S.q) { const q = S.q.toLocaleLowerCase("tr"); xs = xs.filter(r => `${r.code} ${r.title}`.toLocaleLowerCase("tr").includes(q)); }
     const dist = { A: 0, B: 0, C: 0, D: 0, E: 0 }; all.forEach(r => r.grade && dist[r.grade]++);
     const oos = S.screen.out_of_scope || [], pend = S.screen.pending || [];
@@ -167,6 +167,7 @@
         <div class="toolbar fa-tools">
           <label class="search"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m13.5 13.5 3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
             <input type="search" id="faQ" placeholder="Kod ya da şirket adı" value="${esc(S.q)}" aria-label="Şirket ara"></label>
+          ${ixSeg()}
           <select id="faSector" class="fa-select" aria-label="Sektör"><option value="">Tüm sektörler (${all.length})</option>${sectors.map(s => `<option ${s === S.sector ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>
         </div>
         <div class="tbl-scroll"><table class="tbl fa-tbl">
@@ -179,7 +180,7 @@
             <td class="num">${pct(r.r?.roe)}</td><td class="num ${(r.r?.rev_growth ?? 0) >= 0 ? "" : "down"}">${pctS(r.r?.rev_growth)}</td>
             ${scoreCell(r.quality)}${scoreCell(r.valuation_score)}${scoreCell(r.overall, r.grade)}</tr>`).join("") || `<tr><td colspan="12">${sh.stateHTML({ title: "Eşleşen şirket yok", compact: true })}</td></tr>`}</tbody>
         </table></div>
-        ${pend.length ? `<p class="card-foot fa-oos">Tabloları yükleniyor (KAP istek sınırı nedeniyle kademeli): ${pend.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}</p>` : ""}
+        ${pend.length ? `<p class="card-foot fa-oos">${pend.length} şirketin tabloları yükleniyor (KAP istek sınırı nedeniyle kademeli; önce BIST-100): ${pend.slice(0, 40).map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}${pend.length > 40 ? " …" : ""}</p>` : ""}
         ${oos.length ? `<p class="card-foot fa-oos">Kapsam dışı: ${oos.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}. Faktoring, finansal kiralama gibi tablo yapısı farklı şirketler şimdilik kapsam dışı.</p>` : ""}
       </section>
       ${divCard(all)}
@@ -187,6 +188,7 @@
       <p class="fa-disc">Bu panel yatırım tavsiyesi vermez. Mali tablolar KAP bildirimlerinden, fiyatlar Yahoo Finance'ten; reel düzeltmede TÜİK TÜFE (TCMB EVDS) kullanılır.</p>`;
     $("#faQ").oninput = e => { S.q = e.target.value; const pos = e.target.selectionStart; renderOverview(); const i = $("#faQ"); i.focus(); i.setSelectionRange(pos, pos); };
     $("#faSector").onchange = e => { S.sector = e.target.value; renderOverview(); };
+    bindIx(el, renderOverview);
     $$(".tk-cmp", el).forEach(b => b.onclick = () => sh.go("hisse", { param: b.dataset.code }));
     $$(".th-sort", el).forEach(b => b.onclick = () => {
       const k = b.dataset.k; S.sort = [k, S.sort[0] === k ? -S.sort[1] : (k === "code" || k === "sector" ? 1 : -1)];
@@ -214,6 +216,11 @@
       <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Sektör</th><th class="num">Şirket</th><th class="num">F/K</th><th class="num">PD/DD</th><th class="num">FD/FAVÖK</th><th class="num">ROE</th><th class="num">Genel skor</th></tr></thead>
       <tbody>${rows_.map(r => `<tr class="row" tabindex="0" data-sec="${esc(r.sec)}"><td>${esc(r.sec)}</td><td class="num">${r.n}</td><td class="num">${x(r.pe)}</td><td class="num">${x(r.pb)}</td><td class="num">${x(r.ev)}</td><td class="num">${pct(r.roe)}</td><td class="num">${r.ov == null ? "—" : Math.round(r.ov)}</td></tr>`).join("")}</tbody></table></div></section>`;
   }
+  // Endeks süzgeci (Tümü · BIST-30 · BIST-50 · BIST-100 · Katılım)
+  const IXS = [["", "Tümü"], ["XU030", "BIST-30"], ["XU050", "BIST-50"], ["XU100", "BIST-100"], ["XKTUM", "Katılım"]];
+  const inIx = r => !S.ix || (r.idx || []).includes(S.ix);
+  const ixSeg = () => `<div class="seg" role="radiogroup" aria-label="Endeks">${IXS.map(([k, l]) => `<button type="button" role="radio" data-ix="${k}" aria-checked="${S.ix === k}">${l}</button>`).join("")}</div>`;
+  function bindIx(el, cb) { $$("[data-ix]", el).forEach(b => b.onclick = () => { S.ix = b.dataset.ix; store.set("radar.finIx", S.ix); cb(); }); }
   function bindRows(el) {
     $$("tr.row[data-sec]", el).forEach(tr => { const f = () => { S.sector = tr.dataset.sec; renderOverview(); $("#view-temel").scrollIntoView?.({ block: "start" }); };
       tr.onclick = f; tr.onkeydown = e => { if (e.key === "Enter") f(); }; });
@@ -626,7 +633,7 @@
     const labels = S.screen.criteria_labels || {};
     const sets = Object.keys(labels);
     if (!sets.includes(S.crit)) S.crit = sets[0];
-    const all = rows().filter(r => !S.scrSector || (r.sector || "Diğer") === S.scrSector);
+    const all = rows().filter(r => (!S.scrSector || (r.sector || "Diğer") === S.scrSector) && inIx(r));
     const sectors = [...new Set(rows().map(r => r.sector || "Diğer"))].sort((a, b) => a.localeCompare(b, "tr"));
     const tabsH = `<div class="seg fa-tabs" role="tablist"><button type="button" role="tab" data-st="metrik" aria-checked="${S.scrTab === "metrik"}">Metrik taraması</button><button type="button" role="tab" data-st="kriter" aria-checked="${S.scrTab === "kriter"}">Kriter taraması (sağlandı / sağlanmadı)</button></div>`;
     const secSel = `<select id="faScrSec" class="fa-select" aria-label="Sektör"><option value="">Tüm sektörler</option>${sectors.map(s => `<option ${s === S.scrSector ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>`;
@@ -639,7 +646,7 @@
       body = `<section class="card"><div class="fa-two fa-crit-head"><div><h2 class="card-title">Kriter seti</h2>
           <div class="chips">${sets.map(s => `<button type="button" class="chip" data-set="${esc(s)}" aria-pressed="${s === S.crit}">${esc(s)} <span class="n">${labels[s].length}</span></button>`).join("")}</div>
           <label class="fa-check"><input type="checkbox" id="faAllPass" ${S.allPass ? "checked" : ""}> Yalnızca tüm kriterleri sağlayanlar</label></div>
-          <div><h2 class="card-title">Kapsam</h2>${secSel}<p class="card-meta">${all.length} hisse taranır</p></div></div></section>
+          <div><h2 class="card-title">Kapsam</h2><div class="fa-scope">${ixSeg()}${secSel}</div><p class="card-meta">${all.length} hisse taranır</p></div></div></section>
         <section class="card card-flush"><div class="card-head"><h2 class="card-title">${xs.length} hisse · uyum oranına göre sıralı</h2><span class="card-meta">✓ sağlandı · ✗ sağlanmadı · — veri yok</span></div>
           <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Hisse</th><th class="num">Uyum</th>${lbl.map((l, i) => `<th class="num" data-tip="${esc(l)}">${i + 1}</th>`).join("")}</tr></thead>
           <tbody>${xs.map(({ r, c }) => `<tr class="row" tabindex="0" data-code="${r.code}"><td><b class="mono">${r.code}</b> <span class="muted fa-name">${esc(r.sector || "")}</span></td>
@@ -649,7 +656,7 @@
     } else {
       const xs = all.filter(r => S.filters.every(([k, op, v]) => { const a = mval(r, k); return a != null && OPS[op](a, v); }));
       const keys = [...new Set(S.filters.map(f => f[0]))];
-      body = `<section class="card"><div class="card-head"><h2 class="card-title">Filtreler</h2>${secSel}</div>
+      body = `<section class="card"><div class="card-head"><h2 class="card-title">Filtreler</h2><div class="fa-scope">${ixSeg()}${secSel}</div></div>
           <div class="fa-filters">${S.filters.map(([k, op, v], i) => `<div class="fa-f" data-i="${i}">
             <select class="fa-select" data-f="k">${Object.entries(MET).map(([mk, [l]]) => `<option value="${mk}" ${mk === k ? "selected" : ""}>${l}</option>`).join("")}</select>
             <select class="fa-select" data-f="op"><option ${op === ">=" ? "selected" : ""}>&gt;=</option><option ${op === "<=" ? "selected" : ""}>&lt;=</option></select>
@@ -666,6 +673,7 @@
     $$("[data-set]", el).forEach(b => b.onclick = () => { S.crit = b.dataset.set; renderScreen(); });
     $("#faAllPass") && ($("#faAllPass").onchange = e => { S.allPass = e.target.checked; renderScreen(); });
     $("#faScrSec").onchange = e => { S.scrSector = e.target.value; renderScreen(); };
+    bindIx(el, renderScreen);
     const saveF = () => { store.set("radar.finFilters", S.filters); renderScreen(); };
     $$(".fa-f", el).forEach(f => {
       const i = +f.dataset.i;
@@ -770,10 +778,10 @@
       <section class="card fa-method"><h2 class="card-title">Veri</h2>
         <ul>
           <li><b>Mali tablolar:</b> KAP'taki "Finansal Rapor" bildirimleri (bilanço, kar/zarar, nakit akış). Aynı dönemde konsolide ve solo rapor varsa konsolide kullanılır; düzeltme bildirimi gelirse dönem yeniden okunur.</li>
-          <li><b>Kapsam:</b> BIST-100. Bankalar, sigorta ve finansal kiralama şirketlerinin tablo şablonu farklı olduğu için şimdilik kapsam dışı.</li>
+          <li><b>Kapsam:</b> BIST Tüm endeksi (~570 şirket). Geçmiş: BIST-100 için 2022 yıl sonundan, diğerleri için 2024/06'dan bu yana. Faktoring ve finansal kiralama gibi tablo şablonu farklı şirketler kapsam dışı.</li>
           <li><b>Enflasyon:</b> TCMB EVDS, TÜİK TÜFE genel endeksi (2003=100, <span class="mono">TP.GENENDEKS.T1</span>) — TMS 29 düzeltmesinde kullanılan seri.</li>
           <li><b>Fiyat ve sektör:</b> Son kapanış Yahoo Finance'ten (saatlik); sektör KAP sınıflamasından. Pay sayısı = ödenmiş sermaye (pay başına 1 TL nominal).</li>
-          <li><b>Güncelleme:</b> Yeni bildirimler saatlik taranır. KAP'ın istek sınırı nedeniyle 15 dakikada en fazla 9 rapor indirilir.</li>
+          <li><b>Güncelleme:</b> Yeni bildirimler saatlik taranır. KAP'ın istek sınırı nedeniyle 10 dakikada en fazla 9 rapor indirilir; önce BIST-100.</li>
         </ul>
         <h2 class="card-title">Birimler ve reel düzeltme</h2>
         <ul>

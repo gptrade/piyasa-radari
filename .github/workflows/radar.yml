@@ -48,6 +48,19 @@ jobs:
             git archive FETCH_HEAD | tar -x -C site/data
           fi
 
+      # Temel analiz verisi ayrı iş akışında (temel.yml) üretilir, fin dalından okunur
+      - name: Temel analiz verisini geri yükle
+        run: |
+          rm -rf site/data/fin && mkdir -p site/data/fin
+          if git ls-remote --exit-code --heads origin fin >/dev/null 2>&1; then
+            echo "HAS_FIN=1" >> "$GITHUB_ENV"
+            git fetch --depth 1 origin fin
+            git archive FETCH_HEAD | tar -x -C site/data/fin
+          elif git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
+            git fetch --depth 1 origin data
+            git archive FETCH_HEAD fin | tar -x -C site/data || true
+          fi
+
       # Gizli rapor kutusu: kullanıcının gizli reposu, site/ DIŞINA çekilir (Pages'e ve data dalına girmez)
       - name: Gizli rapor kutusunu çek
         if: ${{ env.HAS_RAPOR == 'true' }}
@@ -76,21 +89,14 @@ jobs:
           SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         run: python -m radar
 
-      # Temel analiz: KAP mali tabloları (BIST-100), zaman bütçeli; hata olursa radar etkilenmez
-      - name: Temel analiz verisi
-        continue-on-error: true
-        timeout-minutes: 6
-        env:
-          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
-        run: python -m radar.fundamentals 180
-
       - name: Veriyi data dalına kaydet
         run: |
           cd site/data
           git init -q -b data
           git config user.name "radar-bot"
           git config user.email "radar-bot@users.noreply.github.com"
-          git add -A
+          # temel analiz verisi kendi (fin) dalında; o dal oluşana dek (geçiş) data dalında kalır
+          if [ "${HAS_FIN:-}" = "1" ]; then git add -A -- . ':!fin'; else git add -A; fi
           git commit -qm "data $(date -u +%FT%TZ)"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
           rm -rf .git
