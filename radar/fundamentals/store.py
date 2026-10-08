@@ -343,8 +343,14 @@ def build_metrics() -> int:
             "mscore": m["beneish_m"], "intrinsic": m.get("intrinsic"), "potential": m.get("potential"),
             "crit": {k: [c["pass"], c["total"], c["known"], [v for _, v in c["items"]]] for k, c in m["criteria"].items()},
         })
-    out_of_scope = [{"code": c, "title": u.get("title"), "sector": u.get("sector")} for c, u in uni.items()
-                    if c not in {r["code"] for r in rows}]
-    _save(SCREEN, {"updated": _now().isoformat(timespec="seconds"), "rows": screen, "out_of_scope": out_of_scope,
+    done = {r["code"] for r in rows}
+    out_of_scope, pending = [], []
+    for c, u in uni.items():
+        if c in done:
+            continue
+        d = docs.get(c, (None, None))[1]
+        item = {"code": c, "title": u.get("title"), "sector": u.get("sector")}
+        (out_of_scope if d and d.get("template") == "finansal" else pending).append(item)
+    _save(SCREEN, {"updated": _now().isoformat(timespec="seconds"), "rows": screen, "out_of_scope": out_of_scope, "pending": pending,
                    "criteria_labels": {k: [lbl for lbl, _ in c["items"]] for k, c in rows[0]["m"]["criteria"].items()} if rows else {}})
     return len(screen)

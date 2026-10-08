@@ -128,11 +128,11 @@
     let xs = all.filter(r => !S.sector || (r.sector || "Diğer") === S.sector);
     if (S.q) { const q = S.q.toLocaleLowerCase("tr"); xs = xs.filter(r => `${r.code} ${r.title}`.toLocaleLowerCase("tr").includes(q)); }
     const dist = { A: 0, B: 0, C: 0, D: 0, E: 0 }; all.forEach(r => r.grade && dist[r.grade]++);
-    const oos = S.screen.out_of_scope || [];
+    const oos = S.screen.out_of_scope || [], pend = S.screen.pending || [];
     const scoreCell = (v, g) => `<td class="num"><span class="sc">${v ?? "—"}</span>${g !== undefined ? " " + gradeTag(g) : ""}</td>`;
     el.innerHTML = `
       <div class="kpi-grid fa-kpis">
-        <div class="kpi"><span class="kpi-label">Analiz edilen</span><span class="kpi-value">${all.length}</span><span class="kpi-sub">${oos.length} şirket kapsam dışı (banka, sigorta, veri eksik)</span></div>
+        <div class="kpi"><span class="kpi-label">Analiz edilen</span><span class="kpi-value">${all.length}</span><span class="kpi-sub">${pend.length ? `${pend.length} şirket yükleniyor · ` : ""}${oos.length} kapsam dışı (banka, sigorta)</span></div>
         <div class="kpi"><span class="kpi-label">Not dağılımı</span><span class="kpi-value fa-dist">${Object.entries(dist).map(([g, n]) => `${gradeTag(g)}<small>${n}</small>`).join(" ")}</span><span class="kpi-sub">A ≥ 80 · B ≥ 65 · C ≥ 50 · D ≥ 35</span></div>
         <div class="kpi"><span class="kpi-label">Sektör</span><span class="kpi-value">${sectors.length}</span><span class="kpi-sub">KAP sektör sınıflaması</span></div>
         <div class="kpi"><span class="kpi-label">Son veri</span><span class="kpi-value fa-small">${fmt.date(S.screen.updated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span><span class="kpi-sub">Fiyatlar saatlik, tablolar KAP'ta yayımlandıkça</span></div>
@@ -148,12 +148,13 @@
           <thead><tr>${COLS.map(([k, l]) => `<th scope="col" class="${k === "code" || k === "sector" ? "" : "num"}"><button type="button" class="th-sort" data-k="${k}" aria-sort="${S.sort[0] === k ? (S.sort[1] > 0 ? "ascending" : "descending") : "none"}">${l}${S.sort[0] === k ? (S.sort[1] > 0 ? " ▲" : " ▼") : ""}</button></th>`).join("")}</tr></thead>
           <tbody>${sorted(xs).map(r => `<tr class="row" tabindex="0" data-code="${r.code}">
             <td><b class="mono">${r.code}</b> <span class="muted fa-name">${esc(trTitle(r.title))}</span></td>
-            <td class="muted">${esc(r.sector || "—")}</td>
+            <td class="muted"><span class="fa-sec-name" title="${esc(r.sector || "")}">${esc(r.sector || "—")}</span></td>
             <td class="num">${fmt.num(r.price, 2)}</td><td class="num">${tl(r.mcap)}</td>
             <td class="num">${x(r.v?.pe)}</td><td class="num">${x(r.v?.pb)}</td><td class="num">${x(r.v?.ev_ebitda)}</td>
             <td class="num">${pct(r.r?.roe)}</td><td class="num ${(r.r?.rev_growth ?? 0) >= 0 ? "" : "down"}">${pctS(r.r?.rev_growth)}</td>
             ${scoreCell(r.quality)}${scoreCell(r.valuation_score)}${scoreCell(r.overall, r.grade)}</tr>`).join("") || `<tr><td colspan="12">${sh.stateHTML({ title: "Eşleşen şirket yok", compact: true })}</td></tr>`}</tbody>
         </table></div>
+        ${pend.length ? `<p class="card-foot fa-oos">Tabloları yükleniyor (KAP istek sınırı nedeniyle kademeli): ${pend.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}</p>` : ""}
         ${oos.length ? `<p class="card-foot fa-oos">Kapsam dışı: ${oos.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}. Bankalar, sigorta ve finansal kiralama şirketlerinin tablo yapısı farklı; ayrı modelle eklenecek.</p>` : ""}
       </section>
       <p class="fa-disc">Bu panel yatırım tavsiyesi vermez. Mali tablolar KAP bildirimlerinden, fiyatlar Yahoo Finance'ten; reel düzeltmede TÜİK TÜFE (TCMB EVDS) kullanılır.</p>`;
@@ -370,8 +371,9 @@
             <div><span class="kpi-label">Beneish M</span><b class="mono">${fmt.num(m.beneish_m, 2)}</b><small>${m.beneish_m == null ? "" : m.beneish_m < -1.78 ? "✓ Düşük risk" : "! Dikkat"}</small></div>
           </div>
           <div class="card-head fa-sec"><h3 class="card-title">Kriter uyumu</h3><a class="link-btn" href="#tarama">Listeler</a></div>
-          <table class="fa-kv"><tbody>${crit.map(([k, c]) => { const r0 = c.known ? c.pass / c.total : 0;
-            return `<tr><th scope="row">${esc(k)}</th><td class="num"><b>${c.pass}/${c.total}</b> <span class="tag ${r0 >= 0.75 ? "fa-ok" : r0 >= 0.5 ? "fa-mid" : "fa-no"}">${r0 >= 0.75 ? "✓" : r0 >= 0.5 ? "!" : "✗"} %${Math.round(r0 * 100)}</span></td></tr>`; }).join("")}</tbody></table>
+          <table class="fa-kv"><tbody>${crit.map(([k, c]) => { const r0 = c.total ? c.pass / c.total : 0;
+            if (!c.known || !c.total) return `<tr><th scope="row">${esc(k)}</th><td class="num muted" data-tip="Bir yıl önceki dönem yüklenince hesaplanır">veri bekleniyor</td></tr>`;
+            return `<tr><th scope="row">${esc(k)}</th><td class="num"><b>${c.pass}/${c.total}</b>${c.known < c.total ? ` <small class="muted" data-tip="${c.total - c.known} kriter için veri yok">(${c.total - c.known} —)</small>` : ""} <span class="tag ${r0 >= 0.75 ? "fa-ok" : r0 >= 0.5 ? "fa-mid" : "fa-no"}">${r0 >= 0.75 ? "✓" : r0 >= 0.5 ? "!" : "✗"} %${Math.round(r0 * 100)}</span></td></tr>`; }).join("")}</tbody></table>
         </section>
       </div>`;
   }

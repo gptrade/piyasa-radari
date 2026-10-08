@@ -973,3 +973,4 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
   .fa-h-px { align-items: flex-start; }
   .fa-scores { grid-template-columns: 1fr; }
 }
+.fa-sec-name { display: inline-block; max-width: 190px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
