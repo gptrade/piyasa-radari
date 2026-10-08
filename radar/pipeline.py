@@ -480,6 +480,8 @@ def run() -> dict:
                 entry = {"name": "Gizli rapor kutusu", "ok": True, "count": pr["status"]["count"]}
                 if pr["status"].get("waiting"):
                     entry["warnings"] = [f"{pr['status']['waiting']} rapor sırada (turda en fazla {pcfg.get('max_per_run', 2)})"]
+                if pr["status"].get("failed"):
+                    entry.setdefault("warnings", []).append(f"{pr['status']['failed']} rapor {private_reports.MAX_TRIES} denemede okunamadı ve bırakıldı (dosya adı/görüntü kalitesini kontrol et)")
                 status.append(entry)
             research.PRIVATE["records"] += pr["records"]
             research.PRIVATE["notes"] += pr["notes"]

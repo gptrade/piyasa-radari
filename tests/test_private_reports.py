@@ -100,3 +100,33 @@ def test_process_limits_and_remembers(tmp_path, monkeypatch):
 
 def test_disabled_without_folder(tmp_path):
     assert pr.process(FakeAI(), set(), {}, root=tmp_path / "yok")["status"] == {"disabled": True}
+
+
+def test_unreadable_report_given_up_after_tries(tmp_path, monkeypatch):
+    root = make_root(tmp_path)
+    done = tmp_path / "done.json"
+    monkeypatch.setattr(pr, "telegram", lambda r, x: True)
+
+    class Empty(FakeAI):
+        def ask_json(self, *a, **k):
+            self.calls.append(1)
+            return {}                       # sağlayıcı çalışıyor ama rapor çıkmıyor
+    ai = Empty()
+    total = len(pr.units(root))
+    for _ in range(pr.MAX_TRIES):
+        res = pr.process(ai, set(), {"max_per_run": 99}, root=root, done_path=done)
+    assert res["status"]["failed"] == total and res["status"]["waiting"] == 0
+    n = len(ai.calls)
+    pr.process(ai, set(), {"max_per_run": 99}, root=root, done_path=done)
+    assert len(ai.calls) == n               # bırakılanlar için AI yeniden çağrılmaz
+
+
+def test_missing_broker_falls_back(tmp_path, monkeypatch):
+    root = make_root(tmp_path)
+    monkeypatch.setattr(pr, "telegram", lambda r, x: True)
+
+    class NoBroker(FakeAI):
+        def ask_json(self, *a, **k):
+            return {**X, "broker": None}
+    res = pr.process(NoBroker(), set(), {"max_per_run": 1}, root=root, done_path=tmp_path / "d.json")
+    assert res["status"]["count"] == 1 and res["records"][0]["broker"]
