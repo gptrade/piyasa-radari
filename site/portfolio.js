@@ -193,11 +193,17 @@
     box.innerHTML = html;
     bindForm(); bindTable(); badge();
   }
+  // Temel analiz notu (BIST-100 kapsamındaysa): tıklayınca şirket sayfası
+  function faTag(sym) {
+    const f = window.radarFundamentals?.rows?.find(x => x.code === sym);
+    if (!f || !f.grade) return "";
+    return ` <button type="button" class="grade g-${f.grade.toLowerCase()} fa-go" data-fa="${esc(sym)}" data-tip="Temel analiz: genel ${f.overall}/100 · kalite ${f.quality ?? "—"} · değerleme ${f.valuation_score ?? "—"} — şirket sayfasını aç">${f.grade}</button>`;
+  }
   function rowHTML(r) {
     const p = r.pos, s = sig(p.sym), ev = nextEvent(p.sym), inW = watch().some(w => w.symbol === p.sym);
     const sd = r.last != null && p.stop ? (p.stop / r.last - 1) * 100 : null, td = r.last != null && p.target ? (p.target / r.last - 1) * 100 : null;
     return `<tr class="${r.alert ? "pf-" + r.alert.k : ""}" data-id="${p.id}">
-      <th scope="row"><button type="button" class="tk-link" data-sym="${esc(p.sym)}">${esc(p.sym)}</button><span class="tag mk">${p.market === "US" ? "ABD" : "BIST"}</span>
+      <th scope="row"><button type="button" class="tk-link" data-sym="${esc(p.sym)}">${esc(p.sym)}</button><span class="tag mk">${p.market === "US" ? "ABD" : "BIST"}</span>${faTag(p.sym)}
         ${p.note ? `<span class="pf-note">${esc(p.note)}</span>` : ""}</th>
       <td class="num">${fmt.num(p.qty, p.qty % 1 ? 2 : 0)}</td>
       <td class="num">${p.cost != null ? fmt.num(p.cost, 2) : "—"}</td>
@@ -284,6 +290,8 @@
   function bindTable() {
     $$("#pfBody .th-sort").forEach(b => b.onclick = () => { const k = b.dataset.k; S.sort = { k, d: S.sort.k === k ? -S.sort.d : k === "sym" ? 1 : -1 }; render(); $(`#pfBody .th-sort[data-k="${k}"]`)?.focus(); });
     $("#pfBody").onclick = e => {
+      const fa = e.target.closest("[data-fa]");
+      if (fa) { sh.go("hisse", { param: fa.dataset.fa }); return; }
       const tk = e.target.closest(".tk-link");
       if (tk) { window.radar?.openTicker?.(tk.dataset.sym, tk); return; }
       const nb = e.target.closest(".pf-news button");
@@ -334,6 +342,7 @@
     };
   }
   bindTools();
+  addEventListener("fundamentalsloaded", () => { if (sh.route === "portfoy") render(); });
   addEventListener("storage", e => { if (e.key && e.key.endsWith(KEY)) { S.pf = loadPF(); if (sh.route === "portfoy") render(); } });
   sh.register("portfoy", {
     onShow() { if (!S.loaded) { $("#pfBody").innerHTML = `<div class="card"><div class="skeleton sk-line w40"></div><div class="skeleton sk-line"></div></div>`; load(); } else render(); },
