@@ -1,0 +1,27 @@
+Temel analiz: KAP 429 — 30 dk ara
+1 1.0 dk {"listed": 2, "queued": 30, "processed": 10, "failed": 0, "rate_limited": true, "screened": 2, "pending": 20, "companies": 15, "listed_total": 2, "at": "2026-10-07T23:06:12+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+2 13.1 dk {"listed": 3, "queued": 45, "processed": 10, "failed": 0, "rate_limited": true, "screened": 5, "pending": 55, "companies": 15, "listed_total": 5, "at": "2026-10-07T23:18:17+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+3 25.1 dk {"listed": 3, "queued": 47, "processed": 10, "failed": 0, "rate_limited": true, "screened": 8, "pending": 90, "companies": 15, "listed_total": 8, "at": "2026-10-07T23:30:19+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+4 37.1 dk {"listed": 3, "queued": 64, "processed": 10, "failed": 0, "rate_limited": true, "screened": 11, "pending": 125, "companies": 15, "listed_total": 11, "at": "2026-10-07T23:42:20+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+5 49.2 dk {"listed": 3, "queued": 45, "processed": 10, "failed": 0, "rate_limited": true, "screened": 14, "pending": 160, "companies": 15, "listed_total": 14, "at": "2026-10-07T23:54:23+00:00"}
+Temel analiz: KAP 429 — 30 dk ara
+6 61.0 dk {"listed": 1, "queued": 16, "processed": 10, "failed": 0, "rate_limited": true, "screened": 15, "pending": 165, "companies": 15, "listed_total": 15, "at": "2026-10-08T00:06:14+00:00"}
+ARCLK ['2025/06', '2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 52 C
+ASELS ['2025/06', '2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 33 E
+BIMAS ['2025/12', '2026/03', '2026/06'] 2026/06 47 D
+ENKAI ['2025/12', '2026/03', '2026/06'] 2026/06 59 C
+EREGL ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 47 D
+FROTO ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 58 C
+KCHOL ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 37 D
+MGROS ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 59 C
+PGSUS ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 42 D
+SISE ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 49 D
+TCELL ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 69 B
+THYAO ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 63 C
+TOASO ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 34 E
+TRGYO ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 68 B
+TUPRS ['2025/09', '2025/12', '2026/03', '2026/06'] 2026/06 67 B
