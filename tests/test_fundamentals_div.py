@@ -51,3 +51,12 @@ def test_enqueue_dividend_row():
     row = {"disclosureClass": "ODA", "subject": "Kar Payı Dağıtım İşlemlerine İlişkin Bildirim", "disclosureIndex": 5, "stockCodes": "TUPRS"}
     assert store.enqueue(st, "TUPRS", row) and not store.enqueue(st, "TUPRS", row)
     assert st["div_queue"]["TUPRS"] == [5] and "queue" not in st
+
+
+def test_merge_keeps_latest_per_decision():
+    a = {"decision": "2026-05-21", "status": "öneri", "idx": 10}
+    b = {"decision": "2026-05-21", "status": "kesin", "idx": 12}
+    c = {"decision": "2025-04-01", "status": "kesin", "idx": 5}
+    out = store.merge_divs([a, c], b)
+    assert [x["idx"] for x in out] == [12, 5]
+    assert store.merge_divs(out, a) == out          # eski bildirim yenisini ezmez

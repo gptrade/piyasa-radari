@@ -256,10 +256,14 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
             continue
         if divs is None:
             divs = _load(DIVS, {})
-        lst = [x for x in divs.get(code, []) if x.get("idx") != idx] + [d]
-        divs[code] = sorted(lst, key=lambda x: (x.get("decision") or "", x.get("idx", 0)), reverse=True)
+        divs[code] = merge_divs(divs.get(code, []), d)
         stats["dividends"] = stats.get("dividends", 0) + 1
     if divs is not None:
+        for c, xs in divs.items():             # eski kayıtlardaki tekrarları da temizle
+            out: list[dict] = []
+            for x in xs:
+                out = merge_divs(out, x)
+            divs[c] = out
         _save(DIVS, divs)
 
 def run(budget: float = 180.0, settings: dict | None = None) -> dict:
@@ -343,6 +347,16 @@ def update_prices(codes: list[str]) -> bool:
     if out:
         _save(PRICES, {"updated": _now().isoformat(timespec="seconds"), "p": out})
     return bool(out)
+
+
+def merge_divs(lst: list[dict], d: dict) -> list[dict]:
+    """Aynı karar tarihli bildirimlerden (YK önerisi → GK sonucu, güncellemeler) yalnız en yenisi kalır."""
+    by: dict[str, dict] = {}
+    for x in lst + [d]:
+        k = x.get("decision") or f"idx{x.get('idx')}"
+        if k not in by or x.get("idx", 0) > by[k].get("idx", 0):
+            by[k] = x
+    return sorted(by.values(), key=lambda x: (x.get("decision") or "", x.get("idx", 0)), reverse=True)
 
 
 def div_summary(evs: list[dict], price: float | None) -> dict | None:
