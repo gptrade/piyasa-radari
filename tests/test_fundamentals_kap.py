@@ -61,7 +61,7 @@ def test_solo_report_and_choose_prefers_consolidated():
 
 def test_bank_template():
     r = load("akbnk_2026_06")
-    assert r["template"] == "finansal"
+    assert r["template"] == "banka"
     assert r["scale"] == 1000000
 
 
@@ -239,8 +239,23 @@ def test_q4_derived_from_annual_minus_nine_months():
     def rep(year, period, rev, end):
         start = f"{year}-01-01"
         return {"scale": 1, "is": {"cols": [{"start": start, "end": end, "prior": False}],
-                                   "rows": {"Hasılat": [rev]}}}
+                                   "rows": {"Hasılat": [rev], "Net Parasal Pozisyon Kazançları (Kayıpları)": [1]}}}
     doc = {"currency": "TRY", "reports": {"2025/09": rep(2025, 3, 90, "2025-09-30"),
                                           "2025/12": rep(2025, 4, 130, "2025-12-31")}}
     o = S.build(doc, {"2025-09": 100, "2025-12": 110})
     assert abs(o["q"]["revenue"][1] - (130 - 90 * 1.1)) < 1e-6
+
+
+def test_parse_sectors_multi_code():
+    page = ('{"sectorName":"BANKALAR","sectorOid":"1","sectorNo":"008000.001000.",'
+            '"mkkMemberOid":"x","stockCode":"GARAN, TGB","title":"GARANTİ"}')
+    out = kapfin.parse_sectors(page)
+    assert out["GARAN"]["sector"] == "BANKALAR" and out["TGB"]["sector"] == "BANKALAR"
+
+
+def test_nominal_reports_skip_cpi_ratio():
+    def rep(rev, end):
+        return {"scale": 1, "is": {"cols": [{"start": end[:4] + "-01-01", "end": end, "prior": False}], "rows": {"Hasılat": [rev]}}}
+    doc = {"currency": "TRY", "reports": {"2025/09": rep(90, "2025-09-30"), "2025/12": rep(130, "2025-12-31")}}
+    o = S.build(doc, {"2025-09": 100, "2025-12": 110})
+    assert o["q"]["revenue"][1] == 40 and o["nominal"] == [True, True]

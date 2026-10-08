@@ -274,12 +274,12 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
     stats = {"listed": 0, "queued": 0, "processed": 0, "failed": 0}
     comps = state.setdefault("companies", {})
 
-    if not uni.get("members") or _due(state, "universe", 24 * 7):
+    if not uni.get("members") or uni.get("v", 1) < 2 or _due(state, "universe", 24 * 7):
         idx = kapfin.fetch_indices()
         if idx.get("XU100"):
             sectors = kapfin.fetch_sectors()
             members = [{**m, **sectors.get(m["code"], {})} for m in idx["XU100"]]
-            uni = {"index": "XU100", "updated": _now().isoformat(timespec="seconds"), "members": members}
+            uni = {"v": 2, "index": "XU100", "updated": _now().isoformat(timespec="seconds"), "members": members}
             _save(UNIVERSE, uni)
     members = {m["code"]: m for m in uni.get("members", [])}
     only = {c.strip().upper() for c in os.environ.get("FIN_CODES", "").split(",") if c.strip()}
@@ -289,6 +289,17 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
         log.warning("Temel analiz: evren boş (KAP endeks sayfası okunamadı)")
         _save(STATE, state)
         return stats
+
+    if not state.get("mig_fin"):
+        # Banka/sigorta şablonu eklendi: eski ayrıştırmayla (bilançosuz) kaydedilenler yeniden indirilir
+        for p in FIN.glob("[A-Z0-9]*.json"):
+            doc = _load(p, None)
+            if doc and doc.get("template") == "finansal":
+                code = doc.get("code") or p.stem
+                p.unlink()
+                comps.pop(code, None)
+                state.get("queue", {}).pop(code, None)
+        state["mig_fin"] = True
 
     cpi_new = _due(state, "cpi", 24) and update_cpi()
 
@@ -405,6 +416,7 @@ def build_metrics() -> int:
         screen.append({
             "code": row["code"], "title": doc.get("title"), "sector": row["sector"], "period": m["period"],
             "price": m["valuation"].get("price"), "mcap": m["valuation"].get("mcap"),
+            "t": m.get("template", "sanayi"),
             "r": m["ratios"], "v": {k: v for k, v in m["valuation"].items() if k not in ("shares",)},
             "cat": m["categories"], "quality": m["quality"], "valuation_score": m["valuation_score"],
             "overall": m["overall"], "grade": m["grade"], "z": m["altman_z2"], "f": m["piotroski"],
@@ -421,5 +433,5 @@ def build_metrics() -> int:
         item = {"code": c, "title": u.get("title"), "sector": u.get("sector")}
         (out_of_scope if d and d.get("template") == "finansal" else pending).append(item)
     _save(SCREEN, {"updated": _now().isoformat(timespec="seconds"), "rows": screen, "out_of_scope": out_of_scope, "pending": pending,
-                   "criteria_labels": {k: [lbl for lbl, _ in c["items"]] for k, c in rows[0]["m"]["criteria"].items()} if rows else {}})
+                   "criteria_labels": {k: [lbl for lbl, _ in c["items"]] for row in rows for k, c in row["m"]["criteria"].items()}})
     return len(screen)

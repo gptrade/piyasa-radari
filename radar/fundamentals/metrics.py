@@ -35,6 +35,7 @@ class View:
         self.p = ser.get("periods", [])
         self.pos = {pk: i for i, pk in enumerate(self.p)}
         self.cpi = dict(zip(self.p, ser.get("cpi", [])))
+        self.cpi_ya = dict(zip(self.p, ser.get("cpi_ya", [])))
         self.cur = currency
 
     def v(self, grp: str, item: str, pk: str):
@@ -392,6 +393,8 @@ HISTORY_KEYS = ["roe", "roa", "net_margin", "ebitda_margin", "gross_margin", "cu
 
 def company(doc: dict, price: float | None) -> dict | None:
     ser = doc.get("series")
+    if doc.get("template") in ("banka", "sigorta"):
+        return company_fin(doc, price)
     if not ser or not ser.get("periods") or doc.get("template") != "sanayi":
         return None
     view = View(ser, doc.get("currency") or "TRY")
@@ -410,6 +413,7 @@ def company(doc: dict, price: float | None) -> dict | None:
             v = rp.get(k)
             hist[k].append(round(v, 4) if isinstance(v, float) else v)
     return {
+        "template": "sanayi",
         "period": pk, "ratios": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in r.items()},
         "valuation": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in val.items()},
         "altman_z2": round(z, 2) if z is not None else None,
@@ -434,6 +438,7 @@ def sector_medians(rows: list[dict], min_peers: int = 3) -> dict:
             v = (row["m"]["valuation"].get(k) if k in VAL_KEYS else row["m"]["ratios"].get(k))
             if v is not None and v > 0 or (v is not None and k not in VAL_KEYS):
                 by_sector.setdefault(sec, {}).setdefault(k, []).append(v)
+                by_sector.setdefault("_t:" + row["m"].get("template", "sanayi"), {}).setdefault(k, []).append(v)
                 by_sector.setdefault("_tümü", {}).setdefault(k, []).append(v)
     out = {}
     for sec, d in by_sector.items():
@@ -448,7 +453,8 @@ def finalize(rows: list[dict]) -> None:
     for row in rows:
         m = row["m"]
         sec = med.get(row.get("sector") or "Diğer", {})
-        ref = {k: (sec.get(k) or allm.get(k)) for k in VAL_KEYS}
+        tmed = med.get("_t:" + m.get("template", "sanayi"), {})
+        ref = {k: (sec.get(k) or tmed.get(k) or (allm.get(k) if m.get("template", "sanayi") == "sanayi" else None)) for k in VAL_KEYS}
         m["sector_median"] = {k: (round(v, 3) if v else None) for k, v in ref.items()}
         val = m["valuation"]
         parts = []
@@ -484,3 +490,171 @@ def finalize(rows: list[dict]) -> None:
         m["grade"], m["grade_label"] = grade(overall)
         m["quality_grade"], _ = grade(q)
         m["valuation_grade"], _ = grade(vs)
+
+
+# =====================================================================
+# Bankalar ve sigorta şirketleri (ayrı tek düzen hesap planları)
+# Tablolar TMS 29'suz (nominal) yayımlanır; büyümeler TÜFE ile reelleştirilir,
+# karlılık eşikleri nominal ROE'ye göre ve "reel ROE" (ROE − yıllık TÜFE) ayrıca verilir.
+# =====================================================================
+
+FIN_CATEGORIES = {
+    "banka": {
+        "Karlılık": [("roe", 0.05, 0.40), ("roa", 0.0, 0.035), ("real_roe", -0.15, 0.10)],
+        "Faiz Marjı & Gelir Yapısı": [("nim", 0.01, 0.06), ("fee_share", 0.10, 0.45)],
+        "Verimlilik": [("cost_income", 0.70, 0.30), ("fee_cover", 0.30, 1.00)],
+        "Aktif Kalitesi": [("cost_of_risk", 0.04, 0.005)],
+        "Sermaye & Fonlama": [("equity_assets", 0.05, 0.13), ("ldr", 1.20, 0.70)],
+        "Reel Büyüme": [("loan_growth", -0.10, 0.15), ("net_growth", -0.30, 0.30)],
+    },
+    "sigorta": {
+        "Karlılık": [("roe", 0.05, 0.45), ("roa", 0.0, 0.08), ("real_roe", -0.15, 0.15)],
+        "Teknik Karlılık": [("combined", 1.10, 0.85), ("loss_ratio", 0.85, 0.55)],
+        "Verimlilik": [("expense_ratio", 0.40, 0.18), ("retention", 0.50, 0.90)],
+        "Sermaye": [("equity_assets", 0.10, 0.35)],
+        "Likidite": [("reserves_cover", 0.80, 1.50)],
+        "Reel Büyüme": [("premium_growth", -0.10, 0.20), ("net_growth", -0.30, 0.30)],
+    },
+}
+FIN_HISTORY = {
+    "banka": ["roe", "real_roe", "roa", "nim", "cost_income", "cost_of_risk", "ldr", "equity_assets", "loan_growth", "net_growth"],
+    "sigorta": ["roe", "real_roe", "roa", "combined", "loss_ratio", "expense_ratio", "premium_growth", "net_growth"],
+}
+
+
+def _real_growth(view: View, grp: str, item: str, pk: str):
+    now, old = view.v(grp, item, pk), view.ya(grp, item, pk)
+    return (now / old - 1) if now is not None and old and old > 0 else None
+
+
+def fin_ratios(view: View, pk: str, tmpl: str) -> dict:
+    t = lambda k: view.v("ttm", k, pk)  # noqa: E731
+    b = lambda k: view.v("bs", k, pk)   # noqa: E731
+    r: dict = {}
+    ni = t("net_parent")
+    r["roe"] = _div(ni, view.avg_bs("equity_parent", pk))
+    r["roa"] = _div(ni, view.avg_bs("total_assets", pk))
+    a, c = view.cpi.get(pk), view.cpi_ya.get(pk)
+    infl = (a / c - 1) if a and c else None
+    r["inflation"] = infl
+    r["real_roe"] = ((1 + r["roe"]) / (1 + infl) - 1) if r["roe"] is not None and infl else None
+    r["equity_assets"] = _div(b("equity_parent"), b("total_assets"))
+    r["net_growth"] = _real_growth(view, "ttm", "net_parent", pk)
+    tax, pre = t("tax"), t("pretax")
+    if tmpl == "banka":
+        rev, opex = t("revenue"), t("opex")
+        r["nim"] = _div(t("nii"), view.avg_bs("total_assets", pk))
+        r["cost_income"] = _div(-opex, rev) if opex is not None and (rev or 0) > 0 else None
+        r["fee_share"] = _div(t("fees"), rev) if (rev or 0) > 0 else None
+        r["fee_cover"] = _div(t("fees"), -opex) if opex else None
+        r["cost_of_risk"] = _div(-(t("ecl") or 0), view.avg_bs("loans", pk)) if t("ecl") is not None else None
+        r["ldr"] = _div(b("loans"), b("deposits"))
+        r["loan_growth"] = _real_growth(view, "bs", "loans", pk)
+        r["deposit_growth"] = _real_growth(view, "bs", "deposits", pk)
+        r["rev_growth"] = _real_growth(view, "ttm", "revenue", pk)
+        r["tax_rate"] = _div(-tax, pre) if tax is not None and (pre or 0) > 0 else None
+    else:
+        ne = t("net_earned")
+        r["loss_ratio"] = _div(-(t("claims") or 0), ne) if t("claims") is not None and (ne or 0) > 0 else None
+        exp = -((t("opex") or 0) + (t("other_tech_exp") or 0))
+        r["expense_ratio"] = _div(exp, ne) if (ne or 0) > 0 else None
+        r["combined"] = (r["loss_ratio"] + r["expense_ratio"]) if None not in (r["loss_ratio"], r["expense_ratio"]) else None
+        r["retention"] = (1 + t("ceded") / t("revenue")) if t("ceded") is not None and (t("revenue") or 0) > 0 else None
+        r["tech_margin"] = _div(t("tech_balance"), ne) if (ne or 0) > 0 else None
+        r["reserves_cover"] = _div((b("cash") or 0) + (b("fin_assets") or 0), b("tech_reserves")) if b("tech_reserves") else None
+        r["premium_growth"] = _real_growth(view, "ttm", "revenue", pk)
+        r["rev_growth"] = r["premium_growth"]
+        r["tax_rate"] = _div(pre - ni, pre) if pre and ni is not None and pre > 0 else None
+    return r
+
+
+def fin_valuation(view: View, pk: str, price: float | None) -> dict:
+    shares = view.v("bs", "paid_capital", pk)
+    out: dict = {"shares": shares}
+    if not price or not shares:
+        return out
+    mcap = price * shares
+    ni, eq = view.v("ttm", "net_parent", pk), view.v("bs", "equity_parent", pk)
+    dp = view.v("ttm", "dividends_paid", pk)
+    out.update({"price": price, "mcap": mcap, "ev": None,
+                "eps": _div(ni, shares), "bvps": _div(eq, shares),
+                "pe": _div(mcap, ni) if (ni or 0) > 0 else None,
+                "pb": _div(mcap, eq) if (eq or 0) > 0 else None,
+                "earnings_yield": _div(ni, mcap) if (ni or 0) > 0 else None,
+                "div_yield": _div(abs(dp), mcap) if dp else 0.0})
+    return out
+
+
+def fin_categories(r: dict, tmpl: str) -> dict:
+    out = {}
+    for cat, specs in FIN_CATEGORIES[tmpl].items():
+        vals = [s for s in (_lin(r.get(k), bad, good) for k, bad, good in specs) if s is not None]
+        out[cat] = round(sum(vals) / len(vals)) if vals else None
+    return out
+
+
+def fin_criteria(view: View, pk: str, r: dict, val: dict, tmpl: str) -> dict:
+    pe, pb = val.get("pe"), val.get("pb")
+    annual = _annual_pks(view)
+    ann_div = [view.v("cum", "dividends_paid", p) for p in annual]
+
+    def chk(cond):
+        try:
+            return bool(cond())
+        except TypeError:
+            return None
+    if tmpl == "banka":
+        items = [
+            ("Reel ROE pozitif (ROE > yıllık TÜFE)", chk(lambda: r["real_roe"] > 0)),
+            ("Maliyet / gelir < %50", chk(lambda: r["cost_income"] < 0.50)),
+            ("Risk maliyeti < %2,5", chk(lambda: r["cost_of_risk"] < 0.025)),
+            ("Kredi / mevduat < %100", chk(lambda: r["ldr"] < 1.0)),
+            ("Özkaynak / aktif > %8", chk(lambda: r["equity_assets"] > 0.08)),
+            ("Ücret-komisyon giderlerin ≥ %60'ını karşılıyor", chk(lambda: r["fee_cover"] >= 0.60)),
+            ("Reel net kar büyümesi pozitif", chk(lambda: r["net_growth"] > 0)),
+            ("PD/DD ≤ 1,5 veya F/K × PD/DD ≤ 22,5", chk(lambda: pb <= 1.5 or pe * pb <= 22.5)),
+        ]
+        name = "Banka Sağlık Kontrolü"
+    else:
+        items = [
+            ("Reel ROE pozitif (ROE > yıllık TÜFE)", chk(lambda: r["real_roe"] > 0)),
+            ("Birleşik oran < %100", chk(lambda: r["combined"] < 1.0)),
+            ("Hasar oranı < %75", chk(lambda: r["loss_ratio"] < 0.75)),
+            ("Özsermaye / aktif > %15", chk(lambda: r["equity_assets"] > 0.15)),
+            ("Reel prim büyümesi pozitif", chk(lambda: r["premium_growth"] > 0)),
+            ("Reel net kar büyümesi pozitif", chk(lambda: r["net_growth"] > 0)),
+            ("Temettü sürekliliği: her yıl nakit temettü ödendi",
+             chk(lambda: bool(ann_div) and all(x is not None and x < 0 for x in ann_div))),
+            ("PD/DD ≤ 1,5 veya F/K × PD/DD ≤ 22,5", chk(lambda: pb <= 1.5 or pe * pb <= 22.5)),
+        ]
+        name = "Sigorta Sağlık Kontrolü"
+    known = [v for _, v in items if v is not None]
+    return {name: {"items": [[l, v] for l, v in items], "pass": sum(1 for v in known if v), "total": len(items), "known": len(known)}}
+
+
+def company_fin(doc: dict, price: float | None) -> dict | None:
+    ser = doc.get("series")
+    tmpl = doc.get("template")
+    if not ser or not ser.get("periods") or tmpl not in FIN_CATEGORIES:
+        return None
+    view = View(ser, doc.get("currency") or "TRY")
+    pk = next((p for p in reversed(view.p) if view.v("ttm", "net_parent", p) is not None), None)
+    if pk is None:
+        return None
+    r = fin_ratios(view, pk, tmpl)
+    val = fin_valuation(view, pk, price)
+    if val.get("pe") and r.get("net_growth") and r["net_growth"] > 0:
+        val["peg"] = val["pe"] / (r["net_growth"] * 100)
+    hist = {k: [] for k in FIN_HISTORY[tmpl]}
+    for p in view.p:
+        rp = fin_ratios(view, p, tmpl) if view.v("ttm", "net_parent", p) is not None else {}
+        for k in hist:
+            v = rp.get(k)
+            hist[k].append(round(v, 4) if isinstance(v, float) else v)
+    rnd = lambda d: {k: (round(v, 4) if isinstance(v, float) else v) for k, v in d.items()}  # noqa: E731
+    return {
+        "template": tmpl, "period": pk, "ratios": rnd(r), "valuation": rnd(val),
+        "altman_z2": None, "piotroski": None, "piotroski_items": [], "beneish_m": None,
+        "categories": fin_categories(r, tmpl), "criteria": fin_criteria(view, pk, r, val, tmpl),
+        "history": {"periods": view.p, **hist},
+    }
