@@ -30,10 +30,11 @@ CPI = FIN / "_cpi.json"
 HISTORY_START = date(2023, 1, 1)
 CPI_SERIES = "TP.GENENDEKS.T1"
 EVDS_URL = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
-GAP = float(os.environ.get("FIN_GAP", 6.0))   # KAP istekleri arası bekleme (sn); KAP dakikada ~15 isteği aşınca 429 veriyor
-PAUSE_MIN = 30     # 429 sonrası ara
+GAP = float(os.environ.get("FIN_GAP", 3.0))   # KAP istekleri arası bekleme (sn)
+PAUSE_MIN = 10     # 429 sonrası ara
 MAX_PERIODS = 20   # çalıştırma başına işlenecek dönem
-MAX_REQ = 24       # çalıştırma başına KAP isteği (KAP ~50 istek sonra 429 veriyor; radar 15 dk'da bir)
+MAX_REQ = 40       # çalıştırma başına liste isteği
+MAX_EXPORTS = 9    # çalıştırma başına rapor indirme (KAP ~5 dakikada 10 indirmeden sonra 429 veriyor; radar 15 dk'da bir)
 MAX_TRIES = 3
 
 
@@ -184,8 +185,9 @@ def rebuild_series(force: bool = False) -> int:
 # ---- Ana döngü ----
 
 def _kap_work(state, members, comps, stats, left, budget) -> None:
-    start_req = kapfin.REQUESTS
+    start_req, start_exp = kapfin.REQUESTS, kapfin.EXPORTS
     spent = lambda: kapfin.REQUESTS - start_req  # noqa: E731
+    exported = lambda: kapfin.EXPORTS - start_exp  # noqa: E731
     if _due(state, "recent", 1):
         for row in kapfin.recent_reports(3):
             for c in kapfin.codes_of(row):
@@ -193,7 +195,7 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
                     stats["queued"] += 1
 
     for code, m in members.items():
-        if left() < budget * 0.6 or spent() >= MAX_REQ // 2:
+        if left() < budget * 0.6 or spent() >= MAX_REQ:
             break
         if comps.get(code, {}).get("listed"):
             continue
@@ -207,7 +209,7 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
         stats["listed"] += 1
 
     for code, pk in next_jobs(state):
-        if left() < 15 or stats["processed"] + stats["failed"] >= MAX_PERIODS or spent() >= MAX_REQ:
+        if left() < 15 or stats["processed"] + stats["failed"] >= MAX_PERIODS or exported() >= MAX_EXPORTS - 1:
             break
         idxs = state["queue"][code][pk]
         rep = process_period(code, pk, idxs)          # RateLimited burada yukarı çıkar, iş kuyrukta kalır

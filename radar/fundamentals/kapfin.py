@@ -36,7 +36,7 @@ HEADERS = {"Referer": "https://www.kap.org.tr/tr/bildirim-sorgu", "Accept": "app
 KINDS = (("bs", re.compile(r"^(Finansal Durum Tablosu|Bilanço|BİLANÇO)")),
          ("is", re.compile(r"^(Kar veya Zarar|Gelir Tablosu|GELİR TABLOSU)")),
          ("cf", re.compile(r"^(Nakit Akış|NAKİT AKIŞ)")))
-LIST_GAP = 6.0
+LIST_GAP = 2.0
 DATE = re.compile(r"(\d{2})\.(\d{2})\.(\d{4})")
 NUM = re.compile(r"^\(?-?[\d.]+(,\d+)?\)?$")
 
@@ -46,6 +46,7 @@ class RateLimited(Exception):
 
 
 REQUESTS = 0   # bu çalıştırmada KAP'a atılan istek sayısı (store bütçe için okur)
+EXPORTS = 0    # dışa aktarım (excel) indirmeleri: KAP ~5 dakikada 10'dan fazlasına 429 veriyor
 
 
 def _kap(method: str, url: str, **kw):
@@ -162,6 +163,8 @@ def parse_export(content: bytes | str) -> dict:
 
 
 def fetch_export(idx: int) -> dict | None:
+    global EXPORTS
+    EXPORTS += 1
     r = _kap("GET", EXPORT_URL.format(idx=idx), timeout=120)
     if r is None:
         return None
