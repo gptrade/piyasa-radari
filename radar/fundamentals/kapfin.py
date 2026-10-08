@@ -36,7 +36,7 @@ HEADERS = {"Referer": "https://www.kap.org.tr/tr/bildirim-sorgu", "Accept": "app
 KINDS = (("bs", re.compile(r"^(Finansal Durum Tablosu|Bilanço|BİLANÇO)")),
          ("is", re.compile(r"^(Kar veya Zarar|Gelir Tablosu|GELİR TABLOSU)")),
          ("cf", re.compile(r"^(Nakit Akış|NAKİT AKIŞ)")))
-LIST_GAP = 1.5
+LIST_GAP = 6.0
 DATE = re.compile(r"(\d{2})\.(\d{2})\.(\d{4})")
 NUM = re.compile(r"^\(?-?[\d.]+(,\d+)?\)?$")
 
