@@ -737,7 +737,7 @@
       <section class="card"><div class="card-head"><h2 class="card-title">Metrik eğilimi</h2>
         <select id="faCmpM" class="fa-select" aria-label="Metrik">${[...new Set(ok.flatMap(o => trendKeys(o.d)))].map(k => `<option value="${k}" ${S.cmpMetric === k ? "selected" : ""}>${MET[k][0]}</option>`).join("")}</select></div>
         <div id="faCmpChart"></div></section>
-      <section class="card card-flush"><div class="card-head"><h2 class="card-title">Tüm oranlar</h2><span class="card-meta">${Object.keys(MET).length} oran · ● satırdaki en iyi değer</span></div>
+      <section class="card card-flush"><div class="card-head"><h2 class="card-title">Tüm oranlar</h2><span class="card-meta">${metKeys.length} oran · ● satırdaki en iyi değer</span></div>
         <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Oran</th>${ok.map(o => `<th class="num"><button type="button" class="tk-cmp link-btn" data-code="${o.c}">${o.c}</button></th>`).join("")}</tr></thead>
         <tbody>${tbl.map(([g, h]) => { const head = g !== lastG ? `<tr class="fa-grp"><td colspan="${ok.length + 1}">${g}</td></tr>` : ""; lastG = g; return head + h; }).join("")}</tbody></table></div></section>`;
     bindCmp(el);

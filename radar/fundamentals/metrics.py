@@ -562,6 +562,11 @@ def fin_ratios(view: View, pk: str, tmpl: str) -> dict:
         r["retention"] = (1 + t("ceded") / t("revenue")) if t("ceded") is not None and (t("revenue") or 0) > 0 else None
         r["tech_margin"] = _div(t("tech_balance"), ne) if (ne or 0) > 0 else None
         r["reserves_cover"] = _div((b("cash") or 0) + (b("fin_assets") or 0), b("tech_reserves")) if b("tech_reserves") else None
+        # Hayat/emeklilik ağırlıklı şirket: katılımcı fonları bilançoyu şişirir, özsermaye/aktif anlamını yitirir
+        nl, tb = t("nonlife_balance"), t("tech_balance")
+        r["life_pension"] = bool(tb and abs(nl or 0) < 0.25 * abs(tb))
+        if r["life_pension"]:
+            r["equity_assets"] = None
         r["premium_growth"] = _real_growth(view, "ttm", "revenue", pk)
         r["rev_growth"] = r["premium_growth"]
         r["tax_rate"] = _div(pre - ni, pre) if pre and ni is not None and pre > 0 else None
