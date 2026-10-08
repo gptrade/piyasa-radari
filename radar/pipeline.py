@@ -396,6 +396,13 @@ def run() -> dict:
             agm = bist_data.agm_events(stocks, bist_data.agm_list())
         except Exception as e:
             log.warning("Genel kurul listesi alınamadı: %s", e)
+    try:                                                    # KAP kar payı kararları (temel analiz modülünün topladığı)
+        from .fundamentals import dividends as fdiv, store as fstore
+        lo = (now_utc() - timedelta(days=3)).date().isoformat()
+        hi = (now_utc() + timedelta(days=60)).date().isoformat()
+        agm = agm + fdiv.calendar_events(fstore._load(fstore.DIVS, {}), lo, hi)
+    except Exception as e:
+        log.warning("KAP kar payı takvimi okunamadı: %s", e)
     try:                                                    # Takvim: makro, vade sonu, bilanço, temettü, genel kurul
         calendar_events.update(stocks, px, extra=agm)
     except Exception as e:

@@ -158,10 +158,12 @@
         ${pend.length ? `<p class="card-foot fa-oos">Tabloları yükleniyor (KAP istek sınırı nedeniyle kademeli): ${pend.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}</p>` : ""}
         ${oos.length ? `<p class="card-foot fa-oos">Kapsam dışı: ${oos.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}. Bankalar, sigorta ve finansal kiralama şirketlerinin tablo yapısı farklı; ayrı modelle eklenecek.</p>` : ""}
       </section>
+      ${divCard(all)}
       ${sectorTable(all)}
       <p class="fa-disc">Bu panel yatırım tavsiyesi vermez. Mali tablolar KAP bildirimlerinden, fiyatlar Yahoo Finance'ten; reel düzeltmede TÜİK TÜFE (TCMB EVDS) kullanılır.</p>`;
     $("#faQ").oninput = e => { S.q = e.target.value; const pos = e.target.selectionStart; renderOverview(); const i = $("#faQ"); i.focus(); i.setSelectionRange(pos, pos); };
     $("#faSector").onchange = e => { S.sector = e.target.value; renderOverview(); };
+    $$(".tk-cmp", el).forEach(b => b.onclick = () => sh.go("hisse", { param: b.dataset.code }));
     $$(".th-sort", el).forEach(b => b.onclick = () => {
       const k = b.dataset.k; S.sort = [k, S.sort[0] === k ? -S.sort[1] : (k === "code" || k === "sector" ? 1 : -1)];
       store.set("radar.finSort", S.sort); renderOverview();
@@ -169,6 +171,16 @@
     bindRows(el);
   }
   const med = xs => { const v = xs.filter(x => x != null && isFinite(x)).sort((a, b) => a - b); if (!v.length) return null; const m = v.length >> 1; return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2; };
+  function divCard(all) {
+    const today = new Date().toISOString().slice(0, 10);
+    const up = all.flatMap(r => (r.div?.ex || []).filter(d => d >= today).map(d => ({ r, d }))).sort((a, b) => a.d.localeCompare(b.d));
+    const recent = all.filter(r => r.div && r.div.status !== "yok" && r.div.yield).sort((a, b) => b.div.yield - a.div.yield).slice(0, 8);
+    if (!up.length && !recent.length) return "";
+    return `<section class="card"><div class="card-head"><h2 class="card-title">Temettü</h2><span class="card-meta">KAP kar payı kararları · brüt, pay başına</span></div>
+      <div class="res-cols"><div><p class="d-sub">Yaklaşan hak kullanımlar</p>${up.length ? `<table class="fa-kv"><tbody>${up.slice(0, 10).map(({ r, d }) => `<tr><th scope="row"><button type="button" class="tk-cmp link-btn" data-code="${r.code}">${r.code}</button> <span class="muted">${fmt.date(d + "T12:00:00Z", { day: "numeric", month: "short" })}</span></th><td class="num">${fmt.num(r.div.gross, 2)} ₺ <small class="muted">${pct(r.div.yield)}</small>${r.div.status !== "kesin" ? ` <small class="warn-t" data-tip="Genel kurul onayı bekleniyor">öneri</small>` : ""}</td></tr>`).join("")}</tbody></table>` : `<p class="tp-empty">Önümüzdeki günlerde hak kullanım yok.</p>`}</div>
+      <div><p class="d-sub">En yüksek temettü verimi (son karar)</p><table class="fa-kv"><tbody>${recent.map(r => `<tr><th scope="row"><button type="button" class="tk-cmp link-btn" data-code="${r.code}">${r.code}</button></th><td class="num">${pct(r.div.yield)} <small class="muted">${fmt.num(r.div.gross, 2)} ₺</small></td></tr>`).join("")}</tbody></table></div></div>
+      <p class="card-foot">Takvim sekmesinde de görünür. Verim = son karardaki brüt kar payı / güncel fiyat.</p></section>`;
+  }
   function sectorTable(all) {
     const by = {};
     all.forEach(r => (by[r.sector || "Diğer"] ||= []).push(r));
@@ -306,7 +318,7 @@
     if (S.tab === "ozet") body.innerHTML = tabSummary(d, row);
     else if (S.tab === "fin") { body.innerHTML = tabFin(d); bindFin(body, d); }
     else if (S.tab === "graf") { body.innerHTML = tabCharts(d); bindCharts(body, d); }
-    else body.innerHTML = tabDetail(d);
+    else { body.innerHTML = tabDetail(d); divHistory(code); }
     $$(".tk-cmp", body).forEach(b => b.onclick = () => sh.go("hisse", { param: b.dataset.code }));
   }
 
@@ -367,15 +379,18 @@
         ${mini("Borçluluk", "", [["Net borç / FAVÖK", (se.bs.net_debt?.[i] ?? 0) < 0 ? "Net nakit" : x(r.net_debt_ebitda)], ["Borç / özkaynak", x(r.debt_equity)], ["Cari oran", x(r.current)]])}
         ${mini("Nakit akışı", "son 12 ay", [["Serbest nakit akışı", tl(ttm("fcf"))], ["İşletme nakdi / kar", x(r.cfo_ni)], ["SNA marjı", pct(r.fcf_margin)]])}
         ${mini("Değerleme", "", [["F/K · PD/DD", `${x(v.pe)} · ${x(v.pb)}`], ["FD/FAVÖK", x(v.ev_ebitda)], ["İçsel değer", m.intrinsic ? fmt.num(m.intrinsic, 2) + " ₺" : "—", m.potential != null ? q(pctS(m.potential, 1), m.potential) : ""]])}
-        ${mini("Temettü", "nakit akışından", [["Ödenen (12A)", tl(Math.abs(ttm("dividends_paid") || 0))], ["Verim (12A)", pct(v.div_yield)], ["Dağıtım oranı", ttm("net_parent") > 0 ? pct(Math.abs(ttm("dividends_paid") || 0) / ttm("net_parent")) : "—"]])}
+        ${(() => { const dv = row?.div;
+          if (dv && dv.status !== "yok") return mini("Temettü", dv.status === "kesin" ? "KAP · kesin" : "KAP · öneri", [["Brüt / net (pay başı)", `${fmt.num(dv.gross, 2)} · ${fmt.num(dv.net, 2)} ₺`], ["Verim (brüt)", pct(dv.yield)], [dv.next_ex ? "Hak kullanım" : "Son hak kullanım", dv.next_ex || dv.ex?.[dv.ex.length - 1] || "genel kurul bekleniyor"]]);
+          if (dv?.status === "yok") return mini("Temettü", "KAP", [["Son karar", "Dağıtım yok"], ["Karar tarihi", dv.decision || "—"], ["Ödenen (12A)", tl(Math.abs(ttm("dividends_paid") || 0))]]);
+          return mini("Temettü", "nakit akışından", [["Ödenen (12A)", tl(Math.abs(ttm("dividends_paid") || 0))], ["Verim (12A)", pct(v.div_yield)], ["Dağıtım oranı", ttm("net_parent") > 0 ? pct(Math.abs(ttm("dividends_paid") || 0) / ttm("net_parent")) : "—"]]); })()}
         ${mini("Beklentiler", "aracı kurumlar", res ? [["Medyan hedef", res.median_tp ? fmt.num(res.median_tp, 2) + " ₺" : "—", res.median_tp && v.price ? q(pctS(res.median_tp / v.price - 1, 1), res.median_tp / v.price - 1) : ""], ["Hedef veren kurum", fmt.int(res.n || 0)], ["Dağılım", `${res.dist?.AL || 0} AL · ${res.dist?.TUT || 0} TUT · ${res.dist?.SAT || 0} SAT`]] : [["Kurum notu", "Yok"], ["Kapsam", "İzleme listesi"]])}
         ${mini("Şirket", "", [["Ödenmiş sermaye", tl(se.bs.paid_capital?.[i])], ["Özkaynak (ana ort.)", tl(se.bs.equity_parent?.[i])], ["Toplam varlık", tl(se.bs.total_assets?.[i])]])}
       </div>
       <div class="fa-two">
         <section class="card"><div class="card-head"><h2 class="card-title">Yönetici özeti</h2><span class="fa-outlook ${s.viewCls}">Temel görünüm: ${s.view}</span></div>
           <p class="d-sum">${s.text}</p>
-          <div class="res-cols"><div><p class="d-sub">Güçlü yönler</p><ul class="fa-list ok">${s.strong.map(t => `<li>${esc(t)}</li>`).join("") || "<li class='muted'>—</li>"}</ul></div>
-          <div><p class="d-sub">Zayıf yönler</p><ul class="fa-list no">${s.weak.map(t => `<li>${esc(t)}</li>`).join("") || "<li class='muted'>—</li>"}</ul></div></div>
+          <div class="res-cols"><div><p class="d-sub">Güçlü yönler</p><ul class="fa-list ok">${s.strong.map(t => `<li>${esc(t)}</li>`).join("") || "<li class='na'>Öne çıkan yok</li>"}</ul></div>
+          <div><p class="d-sub">Zayıf yönler</p><ul class="fa-list no">${s.weak.map(t => `<li>${esc(t)}</li>`).join("") || "<li class='na'>Öne çıkan yok</li>"}</ul></div></div>
           <p class="card-foot">Kural tabanlı özet; oranlardan otomatik üretilir, yatırım tavsiyesi değildir.</p></section>
         <section class="card"><div class="card-head"><h2 class="card-title">Puan dağılımı</h2></div>
           ${Object.entries(m.categories).map(([c, sc]) => `<div class="fa-bar"><span>${esc(c)}</span><span class="fa-track"><i style="width:${sc ?? 0}%;background:${sc == null ? "var(--surface-3)" : sc >= 65 ? "var(--up)" : sc >= 50 ? "var(--warn-line)" : "var(--down)"}"></i></span><b class="mono">${sc ?? "—"}</b></div>`).join("")}
@@ -479,7 +494,21 @@
       <section class="card"><div class="card-head"><h2 class="card-title">Kriter setleri</h2></div>
         ${Object.entries(m.criteria).map(([k, c]) => `<details class="fa-crit"><summary><b>${esc(k)}</b> <span class="mono">${c.pass}/${c.total}</span></summary>
           <ul class="fa-list">${c.items.map(([l, ok]) => `<li class="${ok == null ? "na" : ok ? "ok" : "no"}">${esc(l)}</li>`).join("")}</ul></details>`).join("")}
+        <div id="faDivHist"></div>
         <p class="card-foot">✓ sağlandı · ✗ sağlanmadı · — veri yok. Eşikler <a href="#metodoloji">Metodoloji</a> sayfasında; uzun geçmiş gerektiren kriterler mevcut yıllık dönemlerle sınanır.</p></section></div>`;
+  }
+
+  async function divHistory(code) {
+    let all;
+    try { all = S.divs ||= await getJSON("data/fin/_dividends.json"); } catch { return; }
+    const xs = all[code] || [], box = $("#faDivHist");
+    if (!box || !xs.length) return;
+    const ST = { kesin: "kesin", "öneri": "öneri", yok: "dağıtım yok" };
+    box.innerHTML = `<div class="card-head fa-sec"><h3 class="card-title">Kar payı kararları (KAP)</h3></div>
+      <table class="tx fa-tx"><thead><tr><th>Karar</th><th>Durum</th><th class="num">Brüt</th><th class="num">Net</th><th class="num">Dağıtım %</th><th>Hak kullanım</th></tr></thead>
+      <tbody>${xs.slice(0, 10).map(x => `<tr><td><a href="https://www.kap.org.tr/tr/Bildirim/${x.idx}" target="_blank" rel="noopener">${esc(x.decision || "—")}</a></td><td>${esc(ST[x.status] || x.status || "")}</td>
+        <td class="num">${x.gross ? fmt.num(x.gross, 4) : "—"}</td><td class="num">${x.net ? fmt.num(x.net, 4) : "—"}</td><td class="num">${x.payout != null ? fmt.num(x.payout, 1) : "—"}</td>
+        <td>${(x.installments || []).map(i => esc(i.ex || "")).join(", ") || "—"}</td></tr>`).join("")}</tbody></table>`;
   }
 
   // ───────────── tarama
@@ -669,7 +698,7 @@
   };
   const reg = (route, render) => sh.register(route, {
     onShow() { if (!S.loaded) load(); render(); },
-    refresh: async () => { S.docs = {}; await load(); },
+    refresh: async () => { S.docs = {}; S.divs = null; await load(); },
     exports: () => route === "temel" && rows().length ? [{ label: "Şirket tablosu (CSV)", hint: "görünen sütunlar", run: csv("temel-analiz.csv",
       ["Kod", "Şirket", "Sektör", "Dönem", "Fiyat", "Piyasa değeri", "F/K", "PD/DD", "FD/FAVÖK", "ROE", "Reel satış büyümesi", "Kalite", "Değerleme", "Genel", "Not"],
       rows().map(r => [r.code, r.title, r.sector, r.period, r.price, r.mcap, r.v?.pe, r.v?.pb, r.v?.ev_ebitda, r.r?.roe, r.r?.rev_growth, r.quality, r.valuation_score, r.overall, r.grade])) }] : [],

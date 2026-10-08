@@ -19,7 +19,7 @@ from pathlib import Path
 
 from .. import http
 from ..config import DATA
-from . import kapfin, series
+from . import dividends, kapfin, series
 
 log = logging.getLogger("radar.fundamentals")
 
@@ -27,6 +27,7 @@ FIN = DATA / "fin"
 STATE = FIN / "_state.json"
 UNIVERSE = FIN / "_universe.json"
 CPI = FIN / "_cpi.json"
+DIVS = FIN / "_dividends.json"
 HISTORY_START = date(2023, 1, 1)
 CPI_SERIES = "TP.GENENDEKS.T1"
 EVDS_URL = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
@@ -36,6 +37,8 @@ MAX_PERIODS = 20   # çalıştırma başına işlenecek dönem
 MAX_REQ = 40       # çalıştırma başına liste isteği
 MAX_EXPORTS = 9    # çalıştırma başına rapor indirme (KAP ~5 dakikada 10 indirmeden sonra 429 veriyor; radar 15 dk'da bir)
 MAX_TRIES = 3
+MAX_DIV = 6        # çalıştırma başına kar payı bildirim sayfası
+LIST_VERSION = 2   # 2: liste kar payı bildirimlerini de içerir (eski listeler bir kez yeniden çekilir)
 
 
 def _now() -> datetime:
@@ -99,6 +102,14 @@ def update_cpi() -> bool:
 
 def enqueue(state: dict, code: str, row: dict) -> bool:
     """Bildirimi kuyruğa ekler. Aynı dönem için daha yeni bildirim (düzeltme) gelirse dönem yeniden işlenir."""
+    if kapfin.is_div(row):
+        idx = int(row["disclosureIndex"])
+        comp = state.setdefault("companies", {}).setdefault(code, {})
+        if idx in comp.get("seen", []):
+            return False
+        comp.setdefault("seen", []).append(idx)
+        state.setdefault("div_queue", {}).setdefault(code, []).append(idx)
+        return True
     try:
         year, period = int(row["year"]), int(row["period"])
     except (KeyError, TypeError, ValueError):
@@ -197,7 +208,7 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
     for code, m in members.items():
         if left() < budget * 0.6 or spent() >= MAX_REQ:
             break
-        if comps.get(code, {}).get("listed"):
+        if comps.get(code, {}).get("listed") and comps[code].get("lv", 1) >= LIST_VERSION:
             continue
         rows = kapfin.list_reports(m["oid"], HISTORY_START, date.today())
         if rows is None:
@@ -206,6 +217,7 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
             if enqueue(state, code, row):
                 stats["queued"] += 1
         comps.setdefault(code, {})["listed"] = date.today().isoformat()
+        comps[code]["lv"] = LIST_VERSION
         stats["listed"] += 1
 
     for code, pk in next_jobs(state):
@@ -227,6 +239,28 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
         del state["queue"][code][pk]
         if not state["queue"][code]:
             del state["queue"][code]
+
+    # Kar payı bildirimleri (ayrı uç: bildirim sayfası); en yeniden eskiye
+    dq = state.get("div_queue", {})
+    jobs = sorted(((idx, code) for code, xs in dq.items() for idx in xs), reverse=True)
+    divs = None
+    for idx, code in jobs[:MAX_DIV]:
+        if left() < 10:
+            break
+        d = dividends.fetch(idx, code)
+        time.sleep(GAP)
+        dq[code].remove(idx)
+        if not dq[code]:
+            del dq[code]
+        if d is None:
+            continue
+        if divs is None:
+            divs = _load(DIVS, {})
+        lst = [x for x in divs.get(code, []) if x.get("idx") != idx] + [d]
+        divs[code] = sorted(lst, key=lambda x: (x.get("decision") or "", x.get("idx", 0)), reverse=True)
+        stats["dividends"] = stats.get("dividends", 0) + 1
+    if divs is not None:
+        _save(DIVS, divs)
 
 def run(budget: float = 180.0, settings: dict | None = None) -> dict:
     t0 = time.monotonic()
@@ -274,6 +308,7 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
         except Exception:
             log.exception("Temel analiz metrikleri hesaplanamadı")
     pending = sum(len(v) for v in state.get("queue", {}).values())
+    stats["div_pending"] = sum(len(v) for v in state.get("div_queue", {}).values())
     state["summary"] = {**stats, "pending": pending, "companies": len(members),
                         "listed_total": sum(1 for c in members if comps.get(c, {}).get("listed")),
                         "at": _now().isoformat(timespec="seconds")}
@@ -310,11 +345,28 @@ def update_prices(codes: list[str]) -> bool:
     return bool(out)
 
 
+def div_summary(evs: list[dict], price: float | None) -> dict | None:
+    """Son 13 ayın en yeni kar payı kararı: brüt/net, hak kullanım günleri, verim."""
+    cutoff = (date.today() - timedelta(days=400)).isoformat()
+    cur = next((d for d in evs if (d.get("decision") or "") >= cutoff), None)
+    if not cur:
+        return None
+    if cur.get("status") == "yok":
+        return {"status": "yok", "decision": cur.get("decision")}
+    today = date.today().isoformat()
+    exs = [i["ex"] for i in cur.get("installments") or [] if i.get("ex")]
+    nxt = next((x for x in sorted(exs) if x >= today), None)
+    return {"status": cur.get("status"), "decision": cur.get("decision"), "gross": cur.get("gross"), "net": cur.get("net"),
+            "payout": cur.get("payout"), "ex": exs, "next_ex": nxt, "idx": cur.get("idx"),
+            "yield": round(cur["gross"] / price, 4) if cur.get("gross") and price else None}
+
+
 def build_metrics() -> int:
     """Tüm şirketlerin oranları/skorları → şirket dosyasına `metrics`, özet tablo → _screen.json."""
     from . import metrics as M
     uni = {m["code"]: m for m in _load(UNIVERSE, {}).get("members", [])}
     prices = _load(PRICES, {}).get("p", {})
+    divs = _load(DIVS, {})
     rows, docs = [], {}
     for p in sorted(FIN.glob("[A-Z0-9]*.json")):
         doc = _load(p, None)
@@ -344,6 +396,7 @@ def build_metrics() -> int:
             "overall": m["overall"], "grade": m["grade"], "z": m["altman_z2"], "f": m["piotroski"],
             "mscore": m["beneish_m"], "intrinsic": m.get("intrinsic"), "potential": m.get("potential"),
             "crit": {k: [c["pass"], c["total"], c["known"], [v for _, v in c["items"]]] for k, c in m["criteria"].items()},
+            "div": div_summary(divs.get(row["code"], []), m["valuation"].get("price")),
         })
     done = {r["code"] for r in rows}
     out_of_scope, pending = [], []

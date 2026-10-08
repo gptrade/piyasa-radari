@@ -134,7 +134,7 @@ def build(stocks: list, px: dict, days_ahead: int = 60, days_back: int = 3, conf
         conf = yaml.safe_load(CONF.read_text(encoding="utf-8")) if CONF.exists() else {}
     today = now_utc().astimezone(IST).date()
     lo, hi = today - timedelta(days=days_back), today + timedelta(days=days_ahead)
-    evs = [e for e in macro_events(conf) + expiry_events(lo, hi) + company_events(stocks, px) + extra_events(extra)
+    evs = [e for e in macro_events(conf) + expiry_events(lo, hi) + extra_events(extra) + company_events(stocks, px)
            if lo.isoformat() <= e["date"] <= hi.isoformat()]
     seen, uniq = set(), []
     for e in sorted(evs, key=lambda e: (e["when"], -e["importance"], e["title"])):

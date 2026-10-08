@@ -184,6 +184,17 @@ def is_fr(row: dict) -> bool:
         (row.get("subject") or "").strip() in ("Finansal Rapor", "Finansal Rapor Bildirimi")
 
 
+DIV_SUBJECTS = ("Kar Payı Dağıtım İşlemlerine İlişkin Bildirim", "Kar Payı Bildirimi")
+
+
+def is_div(row: dict) -> bool:
+    return (row.get("subject") or "").strip() in DIV_SUBJECTS
+
+
+def wanted(row: dict) -> bool:
+    return is_fr(row) or is_div(row)
+
+
 def list_reports(oid: str, start: date, end: date) -> list[dict] | None:
     """Bir şirketin [start, end] arasındaki finansal rapor bildirimleri (KAP bir yıllık pencere kabul ediyor)."""
     out: list[dict] = []
@@ -196,7 +207,7 @@ def list_reports(oid: str, start: date, end: date) -> list[dict] | None:
             return None   # eksik liste kaydedilmesin; sonra yeniden denenir
         if r is not None:
             try:
-                out += [x for x in r.json() if is_fr(x)]
+                out += [x for x in r.json() if wanted(x)]
             except ValueError:
                 log.warning("KAP liste JSON dönmedi (%s)", oid)
                 return None
@@ -215,7 +226,7 @@ def recent_reports(days: int = 3) -> list[dict]:
                                          "mkkMemberOidList": [], "subjectList": []}, headers=HEADERS)
         if r is not None:
             try:
-                out += [x for x in r.json() if is_fr(x)]
+                out += [x for x in r.json() if wanted(x)]
             except ValueError:
                 pass
     return out
