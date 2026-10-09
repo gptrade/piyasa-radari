@@ -103,6 +103,7 @@ def fin_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(store, "UNIVERSE", tmp_path / "_universe.json")
     monkeypatch.setattr(store, "CPI", tmp_path / "_cpi.json")
     monkeypatch.setattr(store, "GAP", 0)
+    monkeypatch.setattr(store, "KAP_SLOT_H", 0)
     monkeypatch.setattr(store, "PRICES", tmp_path / "_prices.json")
     monkeypatch.setattr(store, "SCREEN", tmp_path / "_screen.json")
     monkeypatch.setattr(store, "update_prices", lambda codes: False)
@@ -282,3 +283,17 @@ def test_universe_from_xutum_with_index_tags(fin_dir, monkeypatch):
     uni = store._load(fin_dir / "_universe.json", {})
     assert uni["index"] == "XUTUM" and {m["code"]: m["idx"] for m in uni["members"]} == {"TRGYO": ["XU100"], "KUCUK": []}
     assert seen[0] == ("o1", store.HISTORY_START) and seen[1] == ("o2", store.HISTORY_START_EXT)
+
+
+def test_tiers_open_scores_fastest():
+    st = {}
+    for i, (y, p) in enumerate([(2026, 2), (2026, 1), (2025, 4), (2025, 3), (2025, 2), (2024, 4), (2024, 3)]):
+        store.enqueue(st, "AAAA", row(100 + i, y, p))
+    order = [pk for _, pk in store.next_jobs(st)]
+    assert order[:2] == ["2026/06", "2025/12"]          # 12A için gereken ikili önce
+    assert order[2:4] == ["2025/06", "2024/12"]          # sonra bir yıl önceki 12A (reel büyüme)
+    # şirketin son dönemi zaten varsa sıradaki yıl sonu önce gelir
+    st2 = {}
+    store.enqueue(st2, "BBBB", row(1, 2026, 1))
+    store.enqueue(st2, "BBBB", row(2, 2025, 4))
+    assert store.next_jobs(st2, have={"BBBB": ["2026/06"]})[0] == ("BBBB", "2025/12")

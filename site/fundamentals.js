@@ -157,7 +157,7 @@
     const scoreCell = (v, g) => `<td class="num"><span class="sc">${v ?? "—"}</span>${g !== undefined ? " " + gradeTag(g) : ""}</td>`;
     el.innerHTML = `
       <div class="kpi-grid fa-kpis">
-        <div class="kpi"><span class="kpi-label">Analiz edilen</span><span class="kpi-value">${all.length}</span><span class="kpi-sub">${pend.length ? `${pend.length} şirket yükleniyor · ` : ""}${oos.length} kapsam dışı</span></div>
+        <div class="kpi"><span class="kpi-label">Skoru hesaplanan</span><span class="kpi-value">${all.filter(r => !r.partial).length}<small class="muted"> / ${all.length}</small></span><span class="kpi-sub">${pend.length ? `${pend.length} şirket yükleniyor · ` : ""}${oos.length} kapsam dışı</span></div>
         <div class="kpi"><span class="kpi-label">Not dağılımı</span><span class="kpi-value fa-dist">${Object.entries(dist).map(([g, n]) => `${gradeTag(g)}<small>${n}</small>`).join(" ")}</span><span class="kpi-sub">A ≥ 80 · B ≥ 65 · C ≥ 50 · D ≥ 35</span></div>
         <div class="kpi"><span class="kpi-label">Sektör</span><span class="kpi-value">${sectors.length}</span><span class="kpi-sub">KAP sektör sınıflaması</span></div>
         <div class="kpi"><span class="kpi-label">Son veri</span><span class="kpi-value fa-small">${fmt.date(S.screen.updated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span><span class="kpi-sub">Fiyatlar saatlik, tablolar KAP'ta yayımlandıkça</span></div>
@@ -178,7 +178,7 @@
             <td class="num">${fmt.num(r.price, 2)}</td><td class="num">${tl(r.mcap)}</td>
             <td class="num">${x(r.v?.pe)}</td><td class="num">${x(r.v?.pb)}</td><td class="num">${x(r.v?.ev_ebitda)}</td>
             <td class="num">${pct(r.r?.roe)}</td><td class="num ${(r.r?.rev_growth ?? 0) >= 0 ? "" : "down"}">${pctS(r.r?.rev_growth)}</td>
-            ${scoreCell(r.quality)}${scoreCell(r.valuation_score)}${scoreCell(r.overall, r.grade)}</tr>`).join("") || `<tr><td colspan="12">${sh.stateHTML({ title: "Eşleşen şirket yok", compact: true })}</td></tr>`}</tbody>
+            ${r.partial ? `<td colspan="3" class="num muted" data-tip="${r.n_periods || 0} dönem yüklendi; skor için son dönem ve önceki yıl sonu gerekiyor">skor bekleniyor</td>` : scoreCell(r.quality) + scoreCell(r.valuation_score) + scoreCell(r.overall, r.grade)}</tr>`).join("") || `<tr><td colspan="12">${sh.stateHTML({ title: "Eşleşen şirket yok", compact: true })}</td></tr>`}</tbody>
         </table></div>
         ${pend.length ? `<p class="card-foot fa-oos">${pend.length} şirketin tabloları yükleniyor (KAP istek sınırı nedeniyle kademeli; önce BIST-100): ${pend.slice(0, 40).map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}${pend.length > 40 ? " …" : ""}</p>` : ""}
         ${oos.length ? `<p class="card-foot fa-oos">Kapsam dışı: ${oos.map(o => `<span class="mono">${esc(o.code)}</span>`).join(" ")}. Faktoring, finansal kiralama gibi tablo yapısı farklı şirketler şimdilik kapsam dışı.</p>` : ""}
