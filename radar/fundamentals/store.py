@@ -40,6 +40,7 @@ MAX_PERIODS = 20   # çalıştırma başına işlenecek dönem
 MAX_REQ = 40       # çalıştırma başına liste isteği
 MAX_EXPORTS = 9    # çalıştırma başına rapor indirme (KAP ~5 dakikada 10 indirmeden sonra 429 veriyor; radar 15 dk'da bir)
 MAX_TRIES = 3
+KAP_SLOT_H = 0.1   # iki KAP turu arası en az 6 dk (radar ve zamanlayıcı tetiklemeleri üst üste gelirse)
 MAX_DIV = 10       # çalıştırma başına kar payı bildirim sayfası
 LIST_VERSION = 2   # 2: liste kar payı bildirimlerini de içerir (eski listeler bir kez yeniden çekilir)
 
@@ -132,11 +133,32 @@ def enqueue(state: dict, code: str, row: dict) -> bool:
     return True
 
 
-def next_jobs(state: dict, priority: set[str] | None = None) -> list[tuple[str, str]]:
-    """(kod, dönem) çiftleri: önce öncelikli şirketler (BIST-100), her grupta en yeni dönemden geriye."""
-    jobs = [(code, pk) for code, per in state.get("queue", {}).items() for pk in per]
+def _tier(pk: str, latest: str) -> int:
+    """0: son dönem ve onun 12A'sı için gereken yıl sonu; 1: bir yıl öncekiler (reel büyüme); 2: geri kalan geçmiş."""
+    def fy_before(p):
+        y, m = p.split("/")
+        return p if m == "12" else f"{int(y) - 1}/12"
+    ya = f"{int(latest[:4]) - 1}/{latest[5:]}"
+    if pk in (latest, fy_before(latest)):
+        return 0
+    if pk in (ya, fy_before(ya)):
+        return 1
+    return 2
+
+
+def next_jobs(state: dict, priority: set[str] | None = None, have: dict | None = None) -> list[tuple[str, str]]:
+    """(kod, dönem) çiftleri. Sıra: her şirketin skorunu en kısa yoldan açan dönemler önce
+    (son dönem + yıl sonu), BIST-100 önce; sonra bir yıl öncekiler; en son kalan geçmiş."""
     pr = priority or set()
-    return sorted(jobs, key=lambda j: (j[0] in pr, j[1], j[0]), reverse=True)
+    have = have or {}
+    jobs = []
+    for code, per in state.get("queue", {}).items():
+        latest = max(list(per) + list(have.get(code, [])))
+        for pk in per:
+            t = _tier(pk, latest)
+            group = (0 if code in pr else 1) if t < 2 else 2 + (0 if code in pr else 1)
+            jobs.append(((group, t, -int(pk[:4]) * 100 - int(pk[5:]), code), (code, pk)))
+    return [j for _, j in sorted(jobs)]
 
 
 def choose(reports: list[dict]) -> dict | None:
@@ -227,7 +249,12 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
         stats["listed"] += 1
 
     prio = {c for c, m in members.items() if "XU100" in m.get("idx", ["XU100"])}
-    for code, pk in next_jobs(state, prio):
+    have = {}
+    for p in FIN.glob("[A-Z0-9]*.json"):
+        d = _load(p, None)
+        if d:
+            have[d.get("code") or p.stem] = list(d.get("reports", {}))
+    for code, pk in next_jobs(state, prio, have):
         if left() < 15 or stats["processed"] + stats["failed"] >= MAX_PERIODS or exported() >= MAX_EXPORTS - 1:
             break
         idxs = state["queue"][code][pk]
@@ -317,7 +344,9 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
 
     comps = state.setdefault("companies", {})
     pause = state.get("kap_pause_until")
-    if pause and _now() < datetime.fromisoformat(pause):
+    if not _due(state, "kap_slot", KAP_SLOT_H):
+        log.info("Temel analiz: son KAP turu 6 dakikadan yeni, bu tur atlanıyor (KAP sınırı)")
+    elif pause and _now() < datetime.fromisoformat(pause):
         log.info("Temel analiz: KAP hız sınırı beklemesi (%s'e kadar)", pause)
     else:
         try:
@@ -442,6 +471,20 @@ def build_metrics() -> int:
             "div": div_summary(divs.get(row["code"], []), m["valuation"].get("price")),
         })
     done = {r["code"] for r in rows}
+    for code, (p, doc) in docs.items():                   # skoru henüz çıkmayanlar: temel bilgilerle listelenir
+        if code in done or doc.get("template") == "finansal" or not doc.get("reports"):
+            continue
+        last = max(doc["reports"])
+        ser = doc.get("series") or {}
+        bs = ser.get("bs", {})
+        paid = (bs.get("paid_capital") or [None])[-1]
+        px = (prices.get(code) or {}).get("price")
+        screen.append({"code": code, "title": doc.get("title"), "sector": uni.get(code, {}).get("sector"), "period": last,
+                       "t": doc.get("template") or "sanayi", "idx": uni.get(code, {}).get("idx") or [], "partial": True,
+                       "price": px, "mcap": px * paid if px and paid else None, "r": {}, "v": {}, "cat": {},
+                       "quality": None, "valuation_score": None, "overall": None, "grade": None,
+                       "n_periods": len(doc["reports"]), "div": div_summary(divs.get(code, []), px)})
+        done.add(code)
     out_of_scope, pending = [], []
     for c, u in uni.items():
         if c in done:
