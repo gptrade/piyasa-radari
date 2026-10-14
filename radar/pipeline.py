@@ -403,8 +403,13 @@ def run() -> dict:
         agm = agm + fdiv.calendar_events(fstore._load(fstore.DIVS, {}), lo, hi)
     except Exception as e:
         log.warning("KAP kar payı takvimi okunamadı: %s", e)
-    try:                                                    # Takvim: makro, vade sonu, bilanço, temettü, genel kurul
-        calendar_events.update(stocks, px, extra=agm)
+    try:                                                    # Takvim: makro, resmi veri takvimi, vade sonu, bilanço, temettü, genel kurul
+        cal = calendar_events.update(stocks, px, extra=agm)
+        trs = cal.get("tr_status") or {}
+        entry = {"name": "TÜİK veri takvimi", "ok": bool(trs.get("ok")), "count": trs.get("events", 0)}
+        if trs.get("error"):
+            entry["error" if not trs.get("ok") else "warnings"] = trs["error"] if not trs.get("ok") else [trs["error"]]
+        status.append(entry)
     except Exception as e:
         log.warning("Takvim oluşturulamadı: %s", e)
     try:                                                    # Şirket Geri Alım: güncel / ortalama fiyat için

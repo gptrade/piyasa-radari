@@ -1,6 +1,7 @@
 """Takvim / Katalizörler: önümüzdeki haftaların fiyatı oynatabilecek olayları (data/calendar.json).
 
-- Makro ve merkez bankası: config/calendar.yml (TCMB PPK ve raporları, TÜİK TÜFE/GSYH, FOMC, ABD TÜFE)
+- Makro ve merkez bankası: config/calendar.yml (TCMB PPK ve raporları, FOMC, ABD TÜFE; TÜİK TÜFE/GSYH yedek)
+- Türkiye resmi veri takvimi: TÜİK Ulusal Veri Yayımlama Takvimi (radar/tr_calendar.py) — TÜİK, TCMB, BDDK, HMB…
 - Vade sonları (hesaplanır): VİOP endeks vadeli (çift ayların son iş günü), ABD aylık opsiyon vadesi (3. cuma)
 - Genel kurullar: Borsa İstanbul genel kurul listesi (izleme listesi BIST hisseleri)
 - Şirket: izleme listesindeki hisselerin bilanço ve temettü (hak kullanım / ödeme) tarihleri (Yahoo, fiyat dosyası)
@@ -10,6 +11,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
@@ -52,9 +54,11 @@ def macro_events(conf: dict) -> list[dict]:
             d = date.fromisoformat(s.rstrip("*"))
             when, timed = _when(d, e.get("time"), e.get("tz", "Europe/Istanbul"))
             detail = "Ekonomik projeksiyonlu toplantı (nokta grafiği)" if star else e.get("detail", "")
-            out.append(_ev(kind=e.get("kind", "macro"), date=d.isoformat(), when=when, timed=timed, market=e.get("market", "ALL"),
-                           title=e["name"], detail=detail, importance=int(e.get("importance", 2)),
-                           url=e.get("url", "")))
+            ev = _ev(kind=e.get("kind", "macro"), date=d.isoformat(), when=when, timed=timed, market=e.get("market", "ALL"),
+                     title=e["name"], detail=detail, importance=int(e.get("importance", 2)), url=e.get("url", ""))
+            if e.get("uvyt"):
+                ev["key"] = e["uvyt"]                        # resmi takvimde aynı yayın varsa o tercih edilir
+            out.append(ev)
     return out
 
 
@@ -128,13 +132,16 @@ def extra_events(raw: list[dict]) -> list[dict]:
     return out
 
 
-def build(stocks: list, px: dict, days_ahead: int = 60, days_back: int = 3, conf: dict | None = None,
-          extra: list[dict] | None = None) -> dict:
+def build(stocks: list, px: dict, days_ahead: int = 60, days_back: int = 14, conf: dict | None = None,
+          extra: list[dict] | None = None, tr: tuple[list[dict], list[dict], dict] | None = None) -> dict:
     if conf is None:
         conf = yaml.safe_load(CONF.read_text(encoding="utf-8")) if CONF.exists() else {}
     today = now_utc().astimezone(IST).date()
     lo, hi = today - timedelta(days=days_back), today + timedelta(days=days_ahead)
-    evs = [e for e in macro_events(conf) + expiry_events(lo, hi) + extra_events(extra) + company_events(stocks, px)
+    tr_evs, tr_daily, tr_status = tr or ([], [], None)
+    official_keys = {(e.get("key"), e["date"]) for e in tr_evs}
+    macro = [e for e in macro_events(conf) if not e.get("key") or (e["key"], e["date"]) not in official_keys]
+    evs = [e for e in macro + tr_evs + expiry_events(lo, hi) + extra_events(extra) + company_events(stocks, px)
            if lo.isoformat() <= e["date"] <= hi.isoformat()]
     seen, uniq = set(), []
     for e in sorted(evs, key=lambda e: (e["when"], -e["importance"], e["title"])):
@@ -142,12 +149,36 @@ def build(stocks: list, px: dict, days_ahead: int = 60, days_back: int = 3, conf
             seen.add(e["id"])
             uniq.append(e)
     last = max((str(d).rstrip("*") for e in conf.get("events") or [] for d in e.get("dates") or []), default="")
+    tr_until = max((e["date"] for e in tr_evs), default="")
     return {"generated": iso(now_utc()), "today": today.isoformat(), "range": [lo.isoformat(), hi.isoformat()],
-            "macro_until": last, "events": uniq}
+            "macro_until": last, "tr_until": tr_until, "daily": tr_daily, "tr_status": tr_status, "events": uniq}
+
+
+def official(days_ahead: int = 60, days_back: int = 14) -> tuple[list[dict], list[dict], dict]:
+    """TÜİK Ulusal Veri Yayımlama Takvimi → (olaylar, her iş günü yayımlanan seriler, durum)."""
+    from . import tr_calendar
+    try:
+        rows, status = tr_calendar.load_rows()
+    except Exception as e:                                   # takvimin geri kalanı yine üretilsin
+        log.warning("TÜİK veri takvimi okunamadı: %s", e)
+        return [], [], {"ok": False, "error": str(e)[:200], "rows": 0}
+    today = now_utc().astimezone(IST).date()
+    lo, hi = (today - timedelta(days=days_back)).isoformat(), (today + timedelta(days=days_ahead)).isoformat()
+    evs, daily = tr_calendar.events(rows, lo, hi)
+    try:                                                     # son açıklanan değer (EVDS; anahtar yoksa önbellek)
+        last = tr_calendar.last_values(os.environ.get("EVDS_API_KEY"))
+    except Exception as e:
+        log.warning("EVDS son değerler alınamadı: %s", e)
+        last = {}
+    for e in evs:
+        if e["key"] in last:
+            e["last"] = last[e["key"]]
+    status["events"] = len(evs)
+    return evs, daily, status
 
 
 def update(stocks: list, px: dict, extra: list[dict] | None = None) -> dict:
-    cal = build(stocks, px, extra=extra)
+    cal = build(stocks, px, extra=extra, tr=official())
     CAL_FILE.write_text(json.dumps(cal, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("Takvim: %d olay", len(cal["events"]))
     return cal

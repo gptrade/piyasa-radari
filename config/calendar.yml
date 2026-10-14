@@ -3,7 +3,7 @@
 #   TCMB PPK ve raporlar: TCMB 2026–2027 toplantı takvimi
 #   FOMC: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
 #   ABD TÜFE: https://www.bls.gov/schedule/news_release/cpi.htm
-#   TÜİK TÜFE ve GSYH: TÜİK 2026 veri yayın takvimi
+#   TÜİK TÜFE ve GSYH: TÜİK 2026 veri yayın takvimi (yedek; asıl kaynak TÜİK Ulusal Veri Yayımlama Takvimi, otomatik)
 # time: yerel saat (tz alanındaki saat diliminde); panel İstanbul saatine çevirir. importance: 1 düşük · 2 orta · 3 yüksek
 # Hesaplanan olaylar (burada yazmaz): VİOP endeks vadeli vade sonu (çift ayların son iş günü), ABD aylık opsiyon
 # vadesi (ayın 3. cuması; Mart/Haziran/Eylül/Aralık "dörtlü vade"), izleme listesindeki şirketlerin bilanço ve
@@ -34,6 +34,7 @@ events:
     url: https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Yayinlar/Raporlar/Finansal+Istikrar+Raporu
     dates: [2026-05-22, 2026-11-27, 2027-05-28]
   - name: Türkiye TÜFE (enflasyon)
+    uvyt: tufe          # TÜİK veri takviminde aynı gün varsa onun yerine o gösterilir
     market: BIST
     kind: macro
     importance: 3
@@ -43,6 +44,7 @@ events:
     dates: [2026-02-03, 2026-03-03, 2026-04-03, 2026-05-04, 2026-06-05, 2026-07-03, 2026-08-03,
             2026-09-03, 2026-10-05, 2026-11-03, 2026-12-03]
   - name: Türkiye GSYH (büyüme)
+    uvyt: gsyh          # TÜİK veri takviminde aynı gün varsa onun yerine o gösterilir
     market: BIST
     kind: macro
     importance: 2
