@@ -1,4 +1,4 @@
-name: probe-bist  # p48
+name: probe-bist  # p48b
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -21,6 +21,7 @@ jobs:
         run: |
           set +e
           pip install -q requests lxml
+          mkdir -p probe48
           python probe48.py > probe48_sonuc.txt 2>&1 || true
           mv probe48_sonuc.txt probe48/sonuc.txt
       - name: kaydet
