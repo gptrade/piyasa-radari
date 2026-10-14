@@ -1,0 +1,37 @@
+/home/runner/work/piyasa-radari/piyasa-radari/probe48.py:10: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  end=datetime.utcnow(); start=end-timedelta(days=500)
+key True
+TÜFE TP.TUKFIY2025.GENEL 200 16 [('2026-8', '134.75000000'), ('2026-9', '137.23000000')]
+YIUFE TP.TUFE1YI.T1 200 16 [('2026-8', '5781.74000000'), ('2026-9', '5901.26000000')]
+YIUFE TP.URETFIY2025.GENEL 400 0 []
+YIUFE TP.YIUFE2025.GENEL 400 0 []
+YIUFE TP.UFE2025.GENEL 400 0 []
+CARI TP.ODEANA6.Q1 400 0 []
+CARI TP.ODEMGZS.CARI 400 0 []
+ISSIZ TP.YISGUCU2.G8 200 15 [('2026-7', '8.30000000'), ('2026-8', '7.70000000')]
+ISSIZ TP.TIG08 200 15 [('2026-7', '8.10000000'), ('2026-8', '7.80000000')]
+SANAYI TP.SANAYREV4.Y1 200 0 []
+SANAYI TP.SANAYREV4.Y2 200 0 []
+KKO TP.KKO2.IMA.TOP 400 0 []
+KKO TP.KKO.MA 200 16 [('2026-8', '73.50000000'), ('2026-9', '74.10000000')]
+RKGE TP.GY1.N2.MA 200 16 [('2026-8', '102.40000000'), ('2026-9', '102.50000000')]
+RKGE TP.GY1.N2 200 16 [('2026-8', '102.80000000'), ('2026-9', '102.00000000')]
+TGE TP.TG2.Y01 200 16 [('2026-8', '90.76532875'), ('2026-9', '91.92256544')]
+KFE TP.KFE.TR 200 15 [('2026-7', '234.55000000'), ('2026-8', '236.76000000')]
+KFE TP.HKFE01 200 0 []
+REZ TP.AB.TOPLAM 200 70 [('25-09-2026', '171203.84179090'), ('02-10-2026', '167387.74670760')]
+REZ TP.REZVARLIK.K1 400 0 []
+REZ TP.AB.C2 200 70 [('25-09-2026', '61563.40893760'), ('02-10-2026', '60325.72989750')]
+YABHISSE TP.MKNETHAR.M7 200 70 [('25-09-2026', '358.63000000'), ('02-10-2026', '-189.90000000')]
+YABHISSE TP.MKNETHAR.M1 200 70 [('25-09-2026', '38871.40000000'), ('02-10-2026', '36791.62000000')]
+KONUT TP.AKONUTSAT1.TOPLAM 400 0 []
+DISTIC TP.IHRACATBEC.9999 200 15 [('2026-7', '25620124.96700000'), ('2026-8', '23466658.84800000')]
+DISTIC TP.ITHALATBEC.9999 200 15 [('2026-7', '32965326.22900000'), ('2026-8', '28705922.96500000')]
+BUTCE TP.KB.GEL001 200 15 [('2026-7', '1412397484.53000000'), ('2026-8', '1654910035.90000000')]
+BUTCE TP.KB.A01 200 15 [('2026-7', '8977064559.00000000'), ('2026-8', '9184853578.00000000')]
+MEVFAIZ TP.TRY.MT06 200 70 [('25-09-2026', '43.35000000'), ('02-10-2026', '43.30000000')]
+KREDIFAIZ TP.KTF101 200 70 [('25-09-2026', '62.69000000'), ('02-10-2026', '62.80000000')]
+SERIELIST https://evds3.tcmb.gov.tr/igmevdsms-dis/serieList/type=json&code=bie_tukfiy2025 200 [{"SERIE_CODE":"TP.TUKFIY2025.GENEL","DATAGROUP_CODE":"bie_tukfiy2025","SERIE_NAME":"Genel Endeks","SERIE_NAME_ENG":"General Index","FREQUENCY_STR":"AYLIK","DEFAULT_AGG_METHOD_STR":"ORTALAMA","DEFAULT_AGG_METHOD":"avg","TAG":"Tüketici, Fiyat, Endeksi, TÜFE","TAG_ENG":"Consumer, Price, Index, CPI,","DATASOURCE":"TÜİK","DATASOURCE_ENG":"TURKSTAT","METADATA_LINK":"https://data.tuik.gov.tr/Kategori/Ge
+SERIELIST https://evds3.tcmb.gov.tr/igmevdsms-dis/serieList/code=bie_tukfiy2025&type=json 200 [{"SERIE_CODE":"TP.TUKFIY2025.GENEL","DATAGROUP_CODE":"bie_tukfiy2025","SERIE_NAME":"Genel Endeks","SERIE_NAME_ENG":"General Index","FREQUENCY_STR":"AYLIK","DEFAULT_AGG_METHOD_STR":"ORTALAMA","DEFAULT_AGG_METHOD":"avg","TAG":"Tüketici, Fiyat, Endeksi, TÜFE","TAG_ENG":"Consumer, Price, Index, CPI,","DATASOURCE":"TÜİK","DATASOURCE_ENG":"TURKSTAT","METADATA_LINK":"https://data.tuik.gov.tr/Kategori/Ge
+SERIELIST https://evds3.tcmb.gov.tr/igmevdsms-dis/serieList/type=json&code=bie_pyintbnk 200 [{"SERIE_CODE":"TP.PY.P01.1A","DATAGROUP_CODE":"bie_pyintbnk","SERIE_NAME":"(1A) TCMB Kotasyonları ALIŞ (%) (1 Aylık İşlem)","SERIE_NAME_ENG":"(1A) Central Bank (Interbank) Quotations BID (%) (1 Month)","FREQUENCY_STR":"İŞ GÜNÜ","DEFAULT_AGG_METHOD_STR":"BİTİŞ","DEFAULT_AGG_METHOD":"last","TAG":"kotaston, işlem, ihale, likidite","TAG_ENG":"Quotations, BID, auction, Liquidity","DATASOURCE":"TCMB","
+SERIELIST https://evds3.tcmb.gov.tr/igmevdsms-dis/serieList/code=bie_pyintbnk&type=json 200 [{"SERIE_CODE":"TP.PY.P01.1A","DATAGROUP_CODE":"bie_pyintbnk","SERIE_NAME":"(1A) TCMB Kotasyonları ALIŞ (%) (1 Aylık İşlem)","SERIE_NAME_ENG":"(1A) Central Bank (Interbank) Quotations BID (%) (1 Month)","FREQUENCY_STR":"İŞ GÜNÜ","DEFAULT_AGG_METHOD_STR":"BİTİŞ","DEFAULT_AGG_METHOD":"last","TAG":"kotaston, işlem, ihale, likidite","TAG_ENG":"Quotations, BID, auction, Liquidity","DATASOURCE":"TCMB","
