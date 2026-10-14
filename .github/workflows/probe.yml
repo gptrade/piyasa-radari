@@ -1,4 +1,4 @@
-name: probe-bist  # p48b
+name: probe-bist  # p49
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -14,18 +14,18 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - uses: actions/checkout@v4
-        with: { ref: main, path: app }
+        with: { ref: onizleme-veri-takvimi, path: app }
       - name: Takvim kaynakları
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: |
           set +e
-          pip install -q requests lxml
-          mkdir -p probe48
-          python probe48.py > probe48_sonuc.txt 2>&1 || true
-          mv probe48_sonuc.txt probe48/sonuc.txt
+          pip install -q -r app/requirements.txt
+          mkdir -p probe49
+          python probe49.py > probe49_sonuc.txt 2>&1 || true
+          mv probe49_sonuc.txt probe49/sonuc.txt
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe48; git commit -qm "probe48 sonuçları" || true; git push -q
+          git add -A probe49; git commit -qm "probe49 sonuçları" || true; git push -q
