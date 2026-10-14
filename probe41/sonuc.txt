@@ -1,0 +1,7 @@
+== vp_index.html https://veriportali.tuik.gov.tr/Kurumsal/UlusalVeriYayimlamaTakvimi -> 200 text/html 3692B final=https://veriportali.tuik.gov.tr/Kurumsal/UlusalVeriYayimlamaTakvimi
+== vp_robots.txt https://veriportali.tuik.gov.tr/robots.txt -> 200 text/plain 502B final=https://veriportali.tuik.gov.tr/robots.txt
+== vp_bundle.js https://veriportali.tuik.gov.tr/assets/index-DHVaePSb.js -> 200 application/javascript 31036B final=https://veriportali.tuik.gov.tr/assets/index-DHVaePSb.js
+chunks 5
+[]
+URLS:
+   https://github.com/keycloakify/oidc-spa
