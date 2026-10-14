@@ -1,0 +1,8 @@
+== vt.html https://www.tuik.gov.tr/Kurumsal/Veri_Takvimi -> 200 text/html; charset=utf-8 2897B final=https://www.tuik.gov.tr/Kurumsal/Veri_Takvimi
+forms []
+tables 0 tr 0
+ajax/api: []
+scripts: ['../ulusaltakvim/index.js']
+TEXT: Takvimi 
+== ri.html https://www.resmiistatistik.gov.tr/ -> 200 text/html; charset=utf-8 3760B final=https://www.resmiistatistik.gov.tr/
+== None https://analytics.tuik.gov.tr/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js -> 403 text/html 153B final=https://analytics.tuik.gov.tr/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js
