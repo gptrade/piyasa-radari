@@ -1,0 +1,14 @@
+== ri_robots.txt https://www.resmiistatistik.gov.tr/robots.txt -> 200 text/plain 57B final=https://www.resmiistatistik.gov.tr/robots.txt
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+
+== ri_home.html https://www.resmiistatistik.gov.tr/ -> 200 text/html; charset=utf-8 3760B final=https://www.resmiistatistik.gov.tr/
+== None https://www.resmiistatistik.gov.tr/takvim -> 200 text/html; charset=utf-8 3760B final=https://www.resmiistatistik.gov.tr/takvim
+== None https://www.resmiistatistik.gov.tr/veri-yayimlama-takvimi -> 200 text/html; charset=utf-8 3760B final=https://www.resmiistatistik.gov.tr/veri-yayimlama-takvimi
+== None https://www.resmiistatistik.gov.tr/Takvim -> 200 text/html; charset=utf-8 3760B final=https://www.resmiistatistik.gov.tr/Takvim
+== None https://www.resmiistatistik.gov.tr/tr/takvim -> 200 text/html; charset=utf-8 3760B final=https://www.resmiistatistik.gov.tr/tr/takvim
+== tuik_robots.txt https://www.tuik.gov.tr/robots.txt -> 404 None 0B final=https://www.tuik.gov.tr/robots.txt
+
+== tuik_home.html https://www.tuik.gov.tr/ -> 200 text/html; charset=utf-8 431579B final=https://www.tuik.gov.tr/
+  takvim links: ['/Kurumsal/Veri_Takvimi']
+== tuik_uvyt.html https://www.tuik.gov.tr/Kurumsal/Ulusal_Veri_Yayimlama_Takvimi -> 404 None 0B final=https://www.tuik.gov.tr/Kurumsal/Ulusal_Veri_Yayimlama_Takvimi
