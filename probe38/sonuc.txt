@@ -1,0 +1,130 @@
+== robots_www.turkiye.gov.tr.txt https://www.turkiye.gov.tr/robots.txt -> 200 text/plain 70B final=https://www.turkiye.gov.tr/robots.txt
+User-agent: *
+Allow: /
+Sitemap: https://www.turkiye.gov.tr/sitemap.xml
+== robots_www.tuik.gov.tr.txt https://www.tuik.gov.tr/robots.txt -> 404 None 0B final=https://www.tuik.gov.tr/robots.txt
+== robots_data.tuik.gov.tr.txt https://data.tuik.gov.tr/robots.txt -> ERR HTTPSConnectionPool(host='data.tuik.gov.tr', port=443): Read timed out. (read timeout=40)
+== robots_www.tcmb.gov.tr.txt https://www.tcmb.gov.tr/robots.txt -> 200 text/plain 41B final=https://www.tcmb.gov.tr/robots.txt
+User-agent: *
+Disallow: */search+results
+
+== robots_evds3.tcmb.gov.tr.txt https://evds3.tcmb.gov.tr/robots.txt -> 200 text/html; charset=utf-8 1355B final=https://evds3.tcmb.gov.tr/robots.txt
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/assets/images/favicon-BIeG2SoQ.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!--      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />-->
+      <title>EVDS</title>
+    <script type="module" crossorigin src="/assets/index-DsYSds65.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/react-vendor-oJ9U2YUK.js">
+    <link rel="modulepreload" crossorigin href="/assets/semantic-ui-vendor-DvbcPwbN.js">
+    <link rel="modulepreload" crossorigin href="/assets/tcmb-ui-vendor-CLb453uN.js">
+    <link rel="modulepreload" crossorigin href="/assets/utils-vendor-C91ez9Vp.js">
+    <link rel="modulepreload" crossorigin href="/assets/date-vendor-B3MxfCH0.js">
+    <link rel="modulepreload" crossorigin href="/assets/redux-vendor-suI1nlIx.js">
+    <link rel="modulepreload" crossorigin href="/assets/i18n-vendor-Xs3k-ARc.js">
+    <link rel="modulepreload" crossorigin href="/assets/file-vendor-CPfkGAkk.js">
+    <link rel="modulepreload" crossorigin href="/assets/charts-vendor-CjfLd3I7.js">
+    <link rel="stylesheet" crossorigin href="/assets/css/index-D0t96Fdb.css">
+  </head>
+  <body>
+    <div id="root" class="wrapper"></div>
+  </body>
+</html>
+
+== robots_www.bddk.org.tr.txt https://www.bddk.org.tr/robots.txt -> ERR HTTPSConnectionPool(host='www.bddk.org.tr', port=443): Max retries exceeded with url: /robots.txt (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+== robots_www.hmb.gov.tr.txt https://www.hmb.gov.tr/robots.txt -> 200 text/plain 67B final=https://www.hmb.gov.tr/robots.txt
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow:
+
+== robots_www.spk.gov.tr.txt https://www.spk.gov.tr/robots.txt -> 200 text/html 1396B final=https://www.spk.gov.tr/robots.txt
+ï»¿<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Sermaye PiyasasÄ± Kurulu - 404 Ä°Ã§erik BulunamadÄ±</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        html {
+            color: #888;
+            display: table;
+            font-family: sans-serif;
+            height: 100%;
+            text-align: center;
+            width: 100%;
+        }
+
+        body {
+            display: table-cell;
+            vertical-align: middle;
+            margin: 2em auto;
+        }
+
+        h1 {
+            color: #555;
+            font-size: 2em;
+            font-weight: 400;
+        }
+
+        p {
+            margin: 0 auto;
+            width: 280px;
+        }
+
+        img {
+            width: 200px;
+            height: 200px;
+
+        }
+
+        @media only screen and (max-width: 280px) {
+
+            body,
+            p {
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                margin: 0 0 0.3em;
+            }
+
+            img {
+                width: 120px;
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <img src="/assets/img/spk_logo.svg">
+    <h1>Sayfa BulunamadÄ±</h1>
+    <p>ÃzgÃ¼nÃ¼z, aradÄ±ÄÄ±nÄ±z sayfa bulumadÄ±.</p>
+</body>
+
+</html>
+== tg.html https://www.turkiye.gov.tr/tuik-ulusal-veri-yayimlama-takvimi -> 200 text/html; charset=UTF-8 22653B final=https://www.turkiye.gov.tr/tuik-ulusal-veri-yayimlama-takvimi
+forms: ['<form id="searchForm" name="searchForm" method="get" action="/arama">', '<form name="listForm2" method="GET">']
+selects: []
+options sample: []
+pagination: ['//cdn.e-devlet.gov.tr/themes/izmir/css/common-pages.1.9.5.css', '#pageContentBlock', 'https://www.dhmi.gov.tr/Sayfalar/Istatistikler.aspx']
+rows: 12
+== tuik_home.html https://www.tuik.gov.tr/ -> ERR HTTPSConnectionPool(host='www.tuik.gov.tr', port=443): Read timed out. (read timeout=40)
+== dtuik_home.html https://data.tuik.gov.tr/ -> 200 text/html 3692B final=https://veriportali.tuik.gov.tr/
+  takvim links: []
+== dtuik_takvim.html https://data.tuik.gov.tr/Kurumsal/UlusalVeriYayimlamaTakvimi -> 200 text/html 1947B final=https://veriportali.tuik.gov.tr/Kurumsal/UlusalVeriYayimlamaTakvimi
+  takvim links: []
+== dtuik_takvim2.html https://data.tuik.gov.tr/Bulten/Takvim -> 200 text/html 1947B final=https://veriportali.tuik.gov.tr/Bulten/Takvim
+  takvim links: []
+== tcmb_takvim.html https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Istatistikler/Veri+Yayimlama+Takvimi -> 200 text/html; charset=UTF-8 82050B final=https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Istatistikler/Veri+Yayimlama+Takvimi
+  takvim links: ['/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Duyurular/Takvim']

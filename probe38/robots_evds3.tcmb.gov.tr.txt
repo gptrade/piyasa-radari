@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/assets/images/favicon-BIeG2SoQ.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!--      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />-->
+      <title>EVDS</title>
+    <script type="module" crossorigin src="/assets/index-DsYSds65.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/react-vendor-oJ9U2YUK.js">
+    <link rel="modulepreload" crossorigin href="/assets/semantic-ui-vendor-DvbcPwbN.js">
+    <link rel="modulepreload" crossorigin href="/assets/tcmb-ui-vendor-CLb453uN.js">
+    <link rel="modulepreload" crossorigin href="/assets/utils-vendor-C91ez9Vp.js">
+    <link rel="modulepreload" crossorigin href="/assets/date-vendor-B3MxfCH0.js">
+    <link rel="modulepreload" crossorigin href="/assets/redux-vendor-suI1nlIx.js">
+    <link rel="modulepreload" crossorigin href="/assets/i18n-vendor-Xs3k-ARc.js">
+    <link rel="modulepreload" crossorigin href="/assets/file-vendor-CPfkGAkk.js">
+    <link rel="modulepreload" crossorigin href="/assets/charts-vendor-CjfLd3I7.js">
+    <link rel="stylesheet" crossorigin href="/assets/css/index-D0t96Fdb.css">
+  </head>
+  <body>
+    <div id="root" class="wrapper"></div>
+  </body>
+</html>
