@@ -1,5 +1,5 @@
 import requests, re, os, json
-UA={"User-Agent":"Mozilla/5.0 (piyasa-radari takvim yoklaması; github.com/gptrade/piyasa-radari)","Accept-Language":"tr-TR,tr;q=0.9"}
+UA={"User-Agent":"Mozilla/5.0 (piyasa-radari takvim yoklamasi; github.com/gptrade/piyasa-radari)","Accept-Language":"tr-TR,tr;q=0.9"}
 O="probe38"; os.makedirs(O,exist_ok=True)
 s=requests.Session(); s.headers.update(UA)
 def get(name,url,**kw):
