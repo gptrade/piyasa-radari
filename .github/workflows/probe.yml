@@ -1,4 +1,4 @@
-name: probe-bist  # p43
+name: probe-bist  # p44
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -19,10 +19,10 @@ jobs:
         run: |
           set +e
           pip install -q requests lxml
-          python probe43.py > probe43_sonuc.txt 2>&1 || true
-          mv probe43_sonuc.txt probe43/sonuc.txt
+          python probe44.py > probe44_sonuc.txt 2>&1 || true
+          mv probe44_sonuc.txt probe44/sonuc.txt
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe43; git commit -qm "probe43 sonuçları" || true; git push -q
+          git add -A probe44; git commit -qm "probe44 sonuçları" || true; git push -q
