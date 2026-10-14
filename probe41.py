@@ -1,6 +1,6 @@
 import requests, re, os, json, time
 UA={"User-Agent":"Mozilla/5.0 (piyasa-radari takvim yoklamasi; github.com/gptrade/piyasa-radari)","Accept-Language":"tr-TR,tr;q=0.9"}
-O="probe40"; os.makedirs(O,exist_ok=True)
+O="probe41"; os.makedirs(O,exist_ok=True)
 s=requests.Session(); s.headers.update(UA)
 def get(name,url,**kw):
     for a in range(3):
@@ -11,7 +11,7 @@ def get(name,url,**kw):
             return r
         except Exception as e:
             print(f"== {name} {url} -> ERR {e}"); time.sleep(5)
-r=get("vp_index.html","https://data.tuik.gov.tr/Kurumsal/UlusalVeriYayimlamaTakvimi")
+r=get("vp_index.html","https://veriportali.tuik.gov.tr/Kurumsal/UlusalVeriYayimlamaTakvimi")
 base="https://veriportali.tuik.gov.tr"
 get("vp_robots.txt",base+"/robots.txt")
 urls=set()
@@ -33,13 +33,13 @@ if r is not None and r.ok:
                 urls|=set(re.findall(r'["`\'](https?://[^"`\'\s]{5,150})["`\']',cr.text))
 print("URLS:"); [print("  ",u) for u in sorted(urls)]
 # IMF DSBB
-r=get("imf.html","https://dsbb.imf.org/sdds/advance-release-calendar/country/TUR")
+r=None
 if r is not None:
     for j in re.findall(r'src="([^"]+\.js)"',r.text)[:6]:
         u=j if j.startswith("http") else "https://dsbb.imf.org/"+j.lstrip("/")
         jr=get(None,u)
         if jr is not None and jr.ok:
             for m in set(re.findall(r'["\'](/?api/[^"\'\s]{0,120}|https?://[^"\'\s]*api[^"\'\s]{0,120})["\']',jr.text)): print("  IMF api:",m)
-for u in ["https://dsbb.imf.org/api/sdds/arc/TUR","https://dsbb.imf.org/api/arc/country/TUR","https://dsbb.imf.org/api/v1/arc/TUR"]:
+for u in []:
     r=get(None,u); 
     if r is not None: print("   ",r.text[:300])
