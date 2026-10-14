@@ -1,0 +1,29 @@
+== vp_index.html https://data.tuik.gov.tr/Kurumsal/UlusalVeriYayimlamaTakvimi -> ERR HTTPSConnectionPool(host='data.tuik.gov.tr', port=443): Max retries exceeded with url: /Kurumsal/UlusalVeriYayimlamaTakvimi (Caused by NameResolutionError("HTTPSConnection(host='data.tuik.gov.tr', port=443): Failed to resolve 'data.tuik.gov.tr' ([Errno -3] Temporary failure in name resolution)"))
+== vp_index.html https://data.tuik.gov.tr/Kurumsal/UlusalVeriYayimlamaTakvimi -> ERR HTTPSConnectionPool(host='data.tuik.gov.tr', port=443): Max retries exceeded with url: /Kurumsal/UlusalVeriYayimlamaTakvimi (Caused by NameResolutionError("HTTPSConnection(host='data.tuik.gov.tr', port=443): Failed to resolve 'data.tuik.gov.tr' ([Errno -3] Temporary failure in name resolution)"))
+== vp_index.html https://data.tuik.gov.tr/Kurumsal/UlusalVeriYayimlamaTakvimi -> ERR HTTPSConnectionPool(host='data.tuik.gov.tr', port=443): Max retries exceeded with url: /Kurumsal/UlusalVeriYayimlamaTakvimi (Caused by NameResolutionError("HTTPSConnection(host='data.tuik.gov.tr', port=443): Failed to resolve 'data.tuik.gov.tr' ([Errno -3] Temporary failure in name resolution)"))
+== vp_robots.txt https://veriportali.tuik.gov.tr/robots.txt -> 200 text/plain 502B final=https://veriportali.tuik.gov.tr/robots.txt
+URLS:
+== imf.html https://dsbb.imf.org/sdds/advance-release-calendar/country/TUR -> 200 text/html; charset=utf-8 44059B final=https://dsbb.imf.org/sdds/advance-release-calendar/country/TUR
+== None https://dsbb.imf.org/scripts/jquery-3.2.1.min.js -> 200 application/javascript 86659B final=https://dsbb.imf.org/scripts/jquery-3.2.1.min.js
+== None https://dsbb.imf.org/scripts/jquery-ui.min.js -> 200 application/javascript 18745B final=https://dsbb.imf.org/scripts/jquery-ui.min.js
+== None https://dsbb.imf.org/scripts/require.js -> 200 application/javascript 17831B final=https://dsbb.imf.org/scripts/require.js
+== None https://www.gstatic.com/charts/loader.js -> 200 text/javascript 62428B final=https://www.gstatic.com/charts/loader.js
+  IMF api: https://www.gstatic.cn/charts/debug/%{version}/i18n/jsapi_debug_i18n_%{package}_module__%{language}.js
+  IMF api: https://ajax.googleapis.com/ajax/libs/%{module}/%{version}/%{file}
+  IMF api: https://maps.googleapis.com/maps/api/js?jsapiRedirect=true
+  IMF api: https://www.gstatic.cn/charts/%{version}/i18n/jsapi_compiled_i18n_%{package}_module__%{language}.js
+  IMF api: https://www.gstatic.com/charts/%{version}/i18n/jsapi_compiled_i18n_%{package}_module__%{language}.js
+  IMF api: https://www.gstatic.com/charts/%{version}/js/jsapi_compiled_%{package}_module.js
+  IMF api: https://maps-api-ssl.google.com/maps?jsapiRedirect=true&file=googleapi
+  IMF api: https://www.gstatic.com/charts/debug/%{version}/js/jsapi_debug_%{package}_module.js
+  IMF api: https://www.gstatic.com/charts/debug/%{version}/i18n/jsapi_debug_i18n_%{package}_module__%{language}.js
+  IMF api: https://www.gstatic.cn/charts/debug/%{version}/js/jsapi_debug_%{package}_module.js
+  IMF api: https://www.gstatic.cn/charts/%{version}/js/jsapi_compiled_%{package}_module.js
+== None https://dsbb.imf.org/scripts/modernizr.js -> 200 application/javascript 15243B final=https://dsbb.imf.org/scripts/modernizr.js
+== None https://dsbb.imf.org/scripts/autotrack.js -> 200 application/javascript 12972B final=https://dsbb.imf.org/scripts/autotrack.js
+== None https://dsbb.imf.org/api/sdds/arc/TUR -> 404 None 0B final=https://dsbb.imf.org/api/sdds/arc/TUR
+    
+== None https://dsbb.imf.org/api/arc/country/TUR -> 404 None 0B final=https://dsbb.imf.org/api/arc/country/TUR
+    
+== None https://dsbb.imf.org/api/v1/arc/TUR -> 404 None 0B final=https://dsbb.imf.org/api/v1/arc/TUR
+    
