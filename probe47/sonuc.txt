@@ -1,0 +1,105 @@
+2026 200 application/json; charset=utf-8 1362572
+ keys ['yayindaOlanlarList', 'yayindaOlmayanlarList']
+  yayindaOlanlarList 3193
+   sample {"sorumluKisaAd": "HMB", "sorumluKurum": "Hazine ve Maliye Bakanlığı", "link": "https://www.hmb.gov.tr/kamu-finansmani-istatistikleri", "dilId": 1, "gTarih": "2026-10-14T17:30:00", "donemi": "Eylül 2026", "birimi": null, "adi": "Kamu Haznedarlığı İstatistikleri (Kamu Haznedarlığı Yönetmeliği Kapsamındaki Kurumların Mevduat ve Menkul Kıymet İstatistikleri)", "id": 59224}
+   kurum [('TCMB', 1336), ('BDDK', 429), ('SPK', 405), ('TÜİK', 307), ('HMB', 189), ('İB', 134), ('UAB', 81), ('STB', 51), ('EPDK', 40), ('ÇŞİDB', 34), ('ETKB', 33), ('KTB', 32), ('ÇSGB/İŞKUR', 24), ('TSB', 19), ('TOB', 16), ('ÇSGB/SGK', 12), ('TOBB', 10), ('SB', 8), ('SBB', 6), ('TB', 4), ('BTK', 4), ('TMSF', 4), ('ÇSGB', 3), ('KİK', 2), ('AB', 2), ('MEB', 1), ('AFAD', 1), ('SEDDK', 1), ('TBB', 1), ('DİB', 1)]
+     2026-10-12T10:00:00 TÜİK | Ticaret Satış Hacim Endeksi
+     2026-10-12T10:00:00 TÜİK | Ciro Endeksleri
+     2026-10-12T10:30:00 TCMB | Perakende Ödeme Sistemi (PÖS) İşlemleri
+     2026-10-12T10:30:00 TCMB | Elektronik Fon Transfer (EFT) Sistemi ve Elektronik Menkul Kıymet Transfer (EMKT) Sistemi İşlemleri 
+     2026-10-12T11:00:00 UAB | Deniz Yolu Ro-Ro İstatistikleri
+     2026-10-12T11:00:00 UAB | Deniz Yolu Yük Elleçleme İstatistikleri
+     2026-10-12T11:00:00 UAB | Limanlarımıza Uğrayan Gemi İstatistikleri
+     2026-10-12T11:00:00 UAB | Deniz Yolu Konteyner Elleçleme İstatistikleri
+     2026-10-12T11:00:00 UAB | Deniz Yolu Kruvaziyer İstatistikleri
+     2026-10-12T14:00:00 BDDK | Faktoring Şirketlerine Ait Bilanço Tabloları
+     2026-10-12T14:00:00 BDDK | Faktoring Şirketlerine Ait Kar-Zarar Tabloları
+     2026-10-12T14:00:00 BDDK | Finansal Kiralama Şirketlerine Ait Bilanço Tabloları
+     2026-10-12T14:00:00 BDDK | Finansal Kiralama Şirketlerine Ait Kar-Zarar Tabloları
+     2026-10-12T14:00:00 BDDK | Finansman Şirketlerine Ait Bilanço Tabloları
+     2026-10-12T14:00:00 BDDK | Finansman Şirketlerine Ait Kar-Zarar Tabloları
+     2026-10-12T14:00:00 İB | İkamet İzinleri İstatistikleri
+     2026-10-12T14:00:00 İB | Düzensiz Göç İstatistikleri
+     2026-10-12T14:00:00 İB | Geçici Koruma İstatistikleri
+     2026-10-12T14:30:00 TCMB | TCMB Analitik Bilanço
+     2026-10-12T15:30:00 TCMB | Gösterge Niteliğindeki Merkez Bankası Kurları
+     2026-10-12T18:00:00 TCMB | Merkez Bankası Bünyesindeki Bankalararası Para Piyasası İstatistikleri
+     2026-10-12T19:00:00 SPK | Menkul Kıymet Yatırım Fonlarına/Emeklilik Yatırım Fonlarına/Yatırım Ortaklıklarına İlişkin Günlük İstatistikler
+     2026-10-13T10:00:00 TÜİK | Dış Ticaret Endeksleri
+     2026-10-13T10:00:00 TÜİK | Kümes Hayvancılığı Üretimi
+     2026-10-13T10:00:00 TÜİK | Süt ve Süt Ürünleri Üretimi
+     2026-10-13T10:00:00 TCMB | Ödemeler Dengesi İstatistikleri   
+     2026-10-13T10:30:00 TCMB | Perakende Ödeme Sistemi (PÖS) İşlemleri
+     2026-10-13T10:30:00 TCMB | Elektronik Fon Transfer (EFT) Sistemi ve Elektronik Menkul Kıymet Transfer (EMKT) Sistemi İşlemleri 
+     2026-10-13T14:30:00 TCMB | TCMB Analitik Bilanço
+     2026-10-13T15:30:00 TCMB | Gösterge Niteliğindeki Merkez Bankası Kurları
+     2026-10-13T18:00:00 TCMB | Merkez Bankası Bünyesindeki Bankalararası Para Piyasası İstatistikleri
+     2026-10-13T18:00:00 ÇŞİDB | Hava Kalitesi İstatistikleri
+     2026-10-13T19:00:00 SPK | Menkul Kıymet Yatırım Fonlarına/Emeklilik Yatırım Fonlarına/Yatırım Ortaklıklarına İlişkin Günlük İstatistikler
+     2026-10-14T10:00:00 TÜİK | Tarım Ürünleri Üretici Fiyat Endeksi
+     2026-10-14T10:00:00 ÇSGB/İŞKUR | İŞKUR'a Kayıtlı İş Arayan İstatistikleri
+     2026-10-14T10:00:00 ÇSGB/İŞKUR | Açık İş İdari Kayıtları
+     2026-10-14T10:30:00 TCMB | Perakende Ödeme Sistemi (PÖS) İşlemleri
+     2026-10-14T10:30:00 TCMB | Elektronik Fon Transfer (EFT) Sistemi ve Elektronik Menkul Kıymet Transfer (EMKT) Sistemi İşlemleri 
+     2026-10-14T14:30:00 TCMB | TCMB Analitik Bilanço
+     2026-10-14T15:30:00 TCMB | Gösterge Niteliğindeki Merkez Bankası Kurları
+     2026-10-14T17:00:00 UAB | Havalimanı İstatistikleri
+     2026-10-14T17:30:00 HMB | Kamu Haznedarlığı İstatistikleri (Kamu Haznedarlığı Yönetmeliği Kapsamındaki Kurumların Mevduat ve Menkul Kıymet İstatistikleri)
+  yayindaOlmayanlarList 893
+   sample {"sorumluKisaAd": "TCMB", "sorumluKurum": "Türkiye Cumhuriyet Merkez Bankası", "link": "https://evds3.tcmb.gov.tr/tumSeriler/3002/bie_pyintbnk", "dilId": 1, "gTarih": "2026-10-14T18:00:00", "donemi": "14-10-2026", "birimi": null, "adi": "Merkez Bankası Bünyesindeki Bankalararası Para Piyasası İstatistikleri", "id": 61345}
+   kurum [('TCMB', 380), ('BDDK', 125), ('SPK', 110), ('TÜİK', 88), ('HMB', 54), ('İB', 35), ('STB', 17), ('ETKB', 13), ('UAB', 13), ('EPDK', 12), ('KTB', 8), ('SBB', 8), ('ÇŞİDB', 7), ('TSB', 6), ('ÇSGB/İŞKUR', 5), ('TOBB', 3), ('ÇSGB/SGK', 3), ('TOB', 2), ('TMSF', 1), ('HÜNEE', 1), ('BTK', 1), ('TİKA', 1)]
+     2026-10-14T18:00:00 TCMB | Merkez Bankası Bünyesindeki Bankalararası Para Piyasası İstatistikleri
+     2026-10-14T19:00:00 SPK | Menkul Kıymet Yatırım Fonlarına/Emeklilik Yatırım Fonlarına/Yatırım Ortaklıklarına İlişkin Günlük İstatistikler
+     2026-10-15T10:00:00 TÜİK | Ücretli Çalışan İstatistikleri
+     2026-10-15T10:00:00 TÜİK | İnşaat Üretim Endeksi
+     2026-10-15T10:00:00 TÜİK | Hizmet Üretim Endeksi
+     2026-10-15T10:00:00 TÜİK | Motorlu Kara Taşıtları
+     2026-10-15T10:00:00 ÇSGB/İŞKUR | Açık İş İstatistikleri
+     2026-10-15T10:30:00 TCMB | Perakende Ödeme Sistemi (PÖS) İşlemleri
+     2026-10-15T10:30:00 TCMB | Elektronik Fon Transfer (EFT) Sistemi ve Elektronik Menkul Kıymet Transfer (EMKT) Sistemi İşlemleri 
+     2026-10-15T11:00:00 HMB | Merkezi Yönetim Bütçe Denge Tablosu
+     2026-10-15T14:00:00 BDDK | Bankacılık Sektörü Kredi Bilgileri (Fonksiyon ve Sahiplik Grubu Detayında)
+     2026-10-15T14:00:00 BDDK | Bankacılık Sektörü Mevduat Bilgileri (Fonksiyon ve Sahiplik Grubu Detayında)
+     2026-10-15T14:00:00 BDDK | Bankacılık Sektörü Menkul Değerler Bilgileri (Fonksiyon ve Sahiplik Grubu Detayında)
+     2026-10-15T14:00:00 BDDK | Bankacılık Sektörü Bilanço Dışı İşlemler ve Diğer Tablolar (Fonksiyon ve Sahiplik Grubu Detayında)
+     2026-10-15T14:00:00 BDDK | Bankacılık Sektörü Yabancı Para Pozisyonu Bilgileri (Fonksiyon ve Sahiplik Grubu Detayında)
+     2026-10-15T14:00:00 BDDK | Bankacılık Sektörü Takipteki Alacaklar Bilgileri (Fonksiyon ve Sahiplik Grubu Detayında)
+     2026-10-15T14:30:00 TCMB |  Menkul Kıymet İstatistikleri
+     2026-10-15T14:30:00 TCMB | TCMB Analitik Bilanço
+     2026-10-15T14:30:00 TCMB | Haftalık Para ve Banka İstatistikleri 
+     2026-10-15T15:30:00 TCMB | Gösterge Niteliğindeki Merkez Bankası Kurları
+     2026-10-15T15:30:00 TCMB | Zorunlu Karşılığa Tabi Mevduatlar
+     2026-10-15T15:30:00 TCMB | Zorunlu Karşılığa Tabi Katılım Fonları
+     2026-10-15T17:00:00 TCMB | Kredi Faiz Oranları (Haftalık Akım, Ağırlıklı Ortalama) 
+     2026-10-15T17:00:00 TCMB | Mevduat Faiz Oranları(Haftalık Akım, Ağırlıklı Ortalama)
+     2026-10-15T18:00:00 TCMB | Merkez Bankası Bünyesindeki Bankalararası Para Piyasası İstatistikleri
+     2026-10-15T19:00:00 SPK | Menkul Kıymet Yatırım Fonlarına/Emeklilik Yatırım Fonlarına/Yatırım Ortaklıklarına İlişkin Günlük İstatistikler
+     2026-10-16T10:00:00 TÜİK | Hanehalkı Tüketim Harcaması (Bölgesel)
+     2026-10-16T10:00:00 TCMB | Konut Fiyat Endeksi
+     2026-10-16T10:00:00 TÜİK | Konut ve İş Yeri Satış İstatistikleri
+     2026-10-16T10:30:00 TCMB | Perakende Ödeme Sistemi (PÖS) İşlemleri
+     2026-10-16T10:30:00 TCMB | Elektronik Fon Transfer (EFT) Sistemi ve Elektronik Menkul Kıymet Transfer (EMKT) Sistemi İşlemleri 
+     2026-10-16T14:30:00 TCMB | TCMB Analitik Bilanço
+     2026-10-16T15:30:00 TCMB | Gösterge Niteliğindeki Merkez Bankası Kurları
+     2026-10-16T17:00:00 ETKB | Elektrik Enerjisi Üretim-İletim İstatistikleri
+     2026-10-16T18:00:00 TCMB | Merkez Bankası Bünyesindeki Bankalararası Para Piyasası İstatistikleri
+     2026-10-16T19:00:00 SPK | Menkul Kıymet Yatırım Fonlarına/Emeklilik Yatırım Fonlarına/Yatırım Ortaklıklarına İlişkin Günlük İstatistikler
+     2026-10-16T19:00:00 SPK | Faaliyetleri Devam Etmekte Olan Aracı Kuruluşlar / Faaliyetleri Geçici Olarak Durdurulan Aracı Kuruluşlar / Aracı Kuruluşların Mevcut Yetki Belgelerine İlişkin Bilgiler / Aracı Kuruluşların Merkez Dışı Örgütleri
+     2026-10-16T19:00:00 SPK | Emeklilik ve Menkul Kıymet Yatırım Fonlarının Katılma Paylarına İlişkin İzahname Onayı; Gayrimenkul ve Girişim Sermayesi Yatırım Fonlarının Katılma Paylarına İlişkin İhraç Belgesi Onayı; Tüm Yatırım Ortaklıkları Pay/Borçlanma Aracına İlişkin İzahname/İhraç Belgesi Onayı
+     2026-10-16T19:00:00 SPK | İzahname/ihraç Belgesi Onayı Verilen Borçlanma Araçları, Kira Sertifikaları ve Varantlar
+     2026-10-16T19:00:00 SPK | Halka Açık Şirket İstatistikleri (İzahname/ihraç belgesi onayı verilen ihraç taleplerine yönelik adet ve tutara ilişkin haftalık istatistikler)
+     2026-10-19T10:00:00 TÜİK | Tarımsal Girdi Fiyat Endeksi
+     2026-10-19T10:00:00 TCMB | Kısa Vadeli Dış Borç İstatistikleri
+     2026-10-19T10:30:00 TCMB | Perakende Ödeme Sistemi (PÖS) İşlemleri
+     2026-10-19T10:30:00 TCMB | Elektronik Fon Transfer (EFT) Sistemi ve Elektronik Menkul Kıymet Transfer (EMKT) Sistemi İşlemleri 
+     2026-10-19T14:00:00 İB | İkamet İzinleri İstatistikleri
+     2026-10-19T14:00:00 İB | Düzensiz Göç İstatistikleri
+     2026-10-19T14:00:00 İB | Geçici Koruma İstatistikleri
+     2026-10-19T14:30:00 TCMB | TCMB Analitik Bilanço
+     2026-10-19T15:30:00 TCMB | Gösterge Niteliğindeki Merkez Bankası Kurları
+     2026-10-19T18:00:00 TCMB | Merkez Bankası Bünyesindeki Bankalararası Para Piyasası İstatistikleri
+     2026-10-19T19:00:00 SPK | Menkul Kıymet Yatırım Fonlarına/Emeklilik Yatırım Fonlarına/Yatırım Ortaklıklarına İlişkin Günlük İstatistikler
+2027 200 application/json; charset=utf-8 52
+ keys ['yayindaOlanlarList', 'yayindaOlmayanlarList']
+  yayindaOlanlarList 0
+  yayindaOlmayanlarList 0
