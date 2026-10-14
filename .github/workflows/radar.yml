@@ -14,20 +14,34 @@ permissions:
   id-token: write
   actions: write          # temel.yml'yi tetiklemek için
 
-concurrency:
-  group: radar
-  cancel-in-progress: false
-
+# Kuyruk kilidi yalnız veri işinde. Pages dağıtımı ayrı işte ve kendi grubunda: 10 Ekim'de github-pages
+# ortamında "waiting" durumunda takılan bir dağıtım, iş akışı düzeyindeki kilit yüzünden radarı 3,5 gün durdurdu.
 jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    concurrency:
+      group: radar
+      cancel-in-progress: false
     env:
       HAS_RAPOR: ${{ secrets.RAPOR_REPO_TOKEN != '' }}
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
+      # Bekçi: 30 dakikadan uzun süredir "waiting"/"queued" kalan eski radar çalışmalarını iptal et
+      - name: Takılı çalışmaları temizle
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          api="https://api.github.com/repos/${{ github.repository }}/actions"
+          cutoff=$(date -u -d '-30 min' +%FT%TZ)
+          for st in waiting queued pending; do
+            curl -sS -H "Authorization: Bearer $GH_TOKEN" "$api/workflows/radar.yml/runs?status=$st&per_page=50" \
+              | jq -r --arg c "$cutoff" --arg me "${{ github.run_id }}" '.workflow_runs[] | select(.created_at < $c and (.id|tostring) != $me) | .id'
+          done | sort -u | while read -r id; do
+            echo "Takılı çalışma iptal ediliyor: $id"
+            curl -sS -X POST -H "Authorization: Bearer $GH_TOKEN" "$api/runs/$id/force-cancel" -o /dev/null -w "HTTP %{http_code}\n"
+          done
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
@@ -115,5 +129,18 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+
+  # Dağıtım ayrı iş: takılırsa sonraki turun dağıtımı onu iptal eder, veri işi hiç beklemez
+  deploy:
+    needs: run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: radar-pages
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - id: deploy
         uses: actions/deploy-pages@v4
