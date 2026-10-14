@@ -1,0 +1,53 @@
+status {'ok': True, 'fetched': '2026-10-14T15:44:18Z', 'cached': False, 'rows': 4086, 'events': 193}
+events 193 Counter({'data': 143, 'macro': 50})
+LAST 2026-09-30 Dış Ticaret · Ağustos 2026 => İhracat (Ağustos 2026): 23,5 milyar $ · İthalat (Ağustos 2026): 28,7 milyar $
+LAST 2026-10-01 Menkul Kıymet İstatistikleri (yabancı akımı) · 39. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-10-05 TÜFE · Eylül 2026 => TÜFE (Eylül 2026): aylık %1,8, yıllık %29,7
+LAST 2026-10-05 Yİ-ÜFE · Eylül 2026 => Yİ-ÜFE (Eylül 2026): aylık %2,1, yıllık %27,4
+LAST 2026-10-08 Menkul Kıymet İstatistikleri (yabancı akımı) · 40. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-10-08 Uluslararası Rezervler · Eylül 2026 => TCMB brüt rezervi (2 Ekim 2026): 167,4 milyar $
+LAST 2026-10-15 Menkul Kıymet İstatistikleri (yabancı akımı) · 41. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-10-16 Konut Fiyat Endeksi · Eylül 2026 => Konut fiyat endeksi (Ağustos 2026): yıllık %23,0
+LAST 2026-10-21 Kapasite Kullanım Oranı · Ekim 2026 => KKO (mevsimsellikten arındırılmış) (Eylül 2026): 74,1
+LAST 2026-10-21 Reel Kesim Güven Endeksi · Ekim 2026 => Reel kesim güven (MA) (Eylül 2026): 102,5
+LAST 2026-10-22 Tüketici Güven Endeksi · Ekim 2026 => Tüketici güven (Eylül 2026): 91,9
+LAST 2026-10-22 Menkul Kıymet İstatistikleri (yabancı akımı) · 42. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-10-28 Dış Ticaret · Eylül 2026 => İhracat (Ağustos 2026): 23,5 milyar $ · İthalat (Ağustos 2026): 28,7 milyar $
+LAST 2026-11-02 Menkul Kıymet İstatistikleri (yabancı akımı) · 43. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-11-03 TÜFE · Ekim 2026 => TÜFE (Eylül 2026): aylık %1,8, yıllık %29,7
+LAST 2026-11-03 Yİ-ÜFE · Ekim 2026 => Yİ-ÜFE (Eylül 2026): aylık %2,1, yıllık %27,4
+LAST 2026-11-05 Menkul Kıymet İstatistikleri (yabancı akımı) · 44. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-11-12 Menkul Kıymet İstatistikleri (yabancı akımı) · 45. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-11-12 Uluslararası Rezervler · Ekim 2026 => TCMB brüt rezervi (2 Ekim 2026): 167,4 milyar $
+LAST 2026-11-17 Konut Fiyat Endeksi · Ekim 2026 => Konut fiyat endeksi (Ağustos 2026): yıllık %23,0
+LAST 2026-11-19 Menkul Kıymet İstatistikleri (yabancı akımı) · 46. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-11-20 Kapasite Kullanım Oranı · Kasım 2026 => KKO (mevsimsellikten arındırılmış) (Eylül 2026): 74,1
+LAST 2026-11-20 Reel Kesim Güven Endeksi · Kasım 2026 => Reel kesim güven (MA) (Eylül 2026): 102,5
+LAST 2026-11-20 Tüketici Güven Endeksi · Kasım 2026 => Tüketici güven (Eylül 2026): 91,9
+LAST 2026-11-26 Menkul Kıymet İstatistikleri (yabancı akımı) · 47. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-11-30 Dış Ticaret · Ekim 2026 => İhracat (Ağustos 2026): 23,5 milyar $ · İthalat (Ağustos 2026): 28,7 milyar $
+LAST 2026-12-03 TÜFE · Kasım 2026 => TÜFE (Eylül 2026): aylık %1,8, yıllık %29,7
+LAST 2026-12-03 Yİ-ÜFE · Kasım 2026 => Yİ-ÜFE (Eylül 2026): aylık %2,1, yıllık %27,4
+LAST 2026-12-03 Menkul Kıymet İstatistikleri (yabancı akımı) · 48. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-12-10 Menkul Kıymet İstatistikleri (yabancı akımı) · 49. Hafta 2026 => Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $
+LAST 2026-12-10 Uluslararası Rezervler · Kasım 2026 => TCMB brüt rezervi (2 Ekim 2026): 167,4 milyar $
+{
+ "fetched": "2026-10-14T15:44:23Z",
+ "values": {
+  "tufe": "TÜFE (Eylül 2026): aylık %1,8, yıllık %29,7",
+  "ufe": "Yİ-ÜFE (Eylül 2026): aylık %2,1, yıllık %27,4",
+  "kko": "KKO (mevsimsellikten arındırılmış) (Eylül 2026): 74,1",
+  "rkge": "Reel kesim güven (MA) (Eylül 2026): 102,5",
+  "tge": "Tüketici güven (Eylül 2026): 91,9",
+  "kfe": "Konut fiyat endeksi (Ağustos 2026): yıllık %23,0",
+  "dis_ticaret": "İhracat (Ağustos 2026): 23,5 milyar $ · İthalat (Ağustos 2026): 28,7 milyar $",
+  "menkul": "Yabancıların hisse net alımı (2 Ekim 2026): -189,9 milyon $",
+  "rezerv": "TCMB brüt rezervi (2 Ekim 2026): 167,4 milyar $"
+ }
+}
+daily [{'name': 'Ödeme sistemleri (PÖS, EFT)', 'inst': 'TCMB', 'time': '10:30', 'url': 'https://evds3.tcmb.gov.tr/tumSeriler/3503/bie_osgmpos'}, {'name': 'SPK fon istatistikleri', 'inst': 'SPK', 'time': '13:00', 'url': 'https://spk.gov.tr/istatistikler/istatistiksel-veriler/gunluk-istatistikler'}, {'name': 'TCMB analitik bilanço', 'inst': 'TCMB', 'time': '14:30', 'url': 'http://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Istatistikler/TCMB+Analitik+Bilanco'}, {'name': 'TCMB gösterge kurları', 'inst': 'TCMB', 'time': '15:30', 'url': 'https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Istatistikler/Doviz+Kurlari/Gosterge+Niteligindeki+Merkez+Bankasi+Kurlarii/'}, {'name': 'Bankalararası para piyasası', 'inst': 'TCMB', 'time': '18:00', 'url': 'https://evds3.tcmb.gov.tr/tumSeriler/3002/bie_pyintbnk'}]
+2026-09-30T10:00+03:00 Dış Ticaret · Ağustos 2026
+2026-09-30T10:00+03:00 İşgücü (işsizlik) · Ağustos 2026
+2026-09-30T10:00+03:00 Elektrik Üretim ve Tüketimi · Ağustos 2026
+2026-09-30T10:00+03:00 Hizmet ÜFE · Ağustos 2026
+2026-09-30T12:00+03:00 AB Tanımlı Borç Stoku · 2. Çeyrek 2026
