@@ -13,8 +13,8 @@ import sys
 import requests
 
 API = "https://api.cloudflare.com/client/v4"
-H = {"Authorization": f"Bearer {os.environ['CLOUDFLARE_API_TOKEN']}", "Content-Type": "application/json"}
-ACC = os.environ["CLOUDFLARE_ACCOUNT_ID"]
+H = {"Authorization": f"Bearer {os.environ['CLOUDFLARE_API_TOKEN'].strip()}", "Content-Type": "application/json"}
+ACC = os.environ["CLOUDFLARE_ACCOUNT_ID"].strip()
 DOMAIN = os.environ.get("CF_DOMAIN", "lyracube.com")
 HOST = f"{os.environ.get('CF_SUB', 'radar')}.{DOMAIN}"
 PROJECT = os.environ.get("CF_PROJECT", "piyasa-radari")
@@ -24,7 +24,13 @@ st: dict = {"host": HOST}
 
 
 def cf(method, path, **kw):
-    r = requests.request(method, API + path, headers=H, timeout=60, **kw)
+    import time
+    for attempt in range(4):
+        r = requests.request(method, API + path, headers=H, timeout=60, **kw)
+        if r.status_code != 429:
+            break
+        time.sleep(20 * (attempt + 1))
+    time.sleep(1)
     try:
         j = r.json()
     except ValueError:
@@ -39,6 +45,20 @@ def step(name, fn):
         st[name] = fn()
     except Exception as e:  # noqa: BLE001
         st[name] = f"hata: {type(e).__name__}: {str(e)[:200]}"
+
+
+def token():
+    tok = os.environ.get("CLOUDFLARE_API_TOKEN", "")
+    out = {"uzunluk": len(tok), "bosluk": tok != tok.strip(), "hesap_id_uzunluk": len(ACC.strip()),
+           "hesap_id_hex": all(c in "0123456789abcdef" for c in ACC.strip().lower())}
+    res, err = cf("GET", "/user/tokens/verify")
+    if err:
+        res, err2 = cf("GET", f"/accounts/{ACC.strip()}/tokens/verify")
+        if err2:
+            out["durum"] = "geçersiz"; out["hata"] = err; out["hata_hesap"] = err2
+            return out
+    out["durum"] = res.get("status")
+    return out
 
 
 def zone():
@@ -138,6 +158,10 @@ def verify():
     return out
 
 
+step("anahtar", token)
+if (st.get("anahtar") or {}).get("durum") != "active":
+    json.dump({k: v for k, v in st.items() if not k.startswith("_")}, open(sys.argv[1] if len(sys.argv) > 1 else "status.json", "w"), ensure_ascii=False, indent=1)
+    sys.exit(0)
 for n, f in [("alan_adi", zone), ("pages_projesi", project), ("pages_ozel_alan", pages_domain), ("dns", dns),
              ("eposta_kodu", otp), ("access", access), ("dogrulama", verify)]:
     step(n, f)
