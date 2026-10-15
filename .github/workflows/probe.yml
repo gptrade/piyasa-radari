@@ -1,4 +1,4 @@
-name: probe-bist  # p58
+name: probe-bist  # p59
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -23,11 +23,11 @@ jobs:
         run: |
           set +e
           pip install -q -r app/requirements.txt
-          mkdir -p probe58
+          mkdir -p probe59
           pip install -q requests pandas lxml yfinance
-          python probe58.py > probe58/sonuc.txt 2>&1 || true
+          python probe59.py > probe59/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe58; git commit -qm "probe58 sonuçları" || true; git push -q
+          git add -A probe59; git commit -qm "probe59 sonuçları" || true; git push -q
