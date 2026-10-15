@@ -151,6 +151,36 @@ def site_query(st, sites: list[str]) -> str:
     return f"({who}) ({where})"
 
 
+# Analist haberi süzgeci: başlıkta şirket adı/sembolü VE tavsiye/hedef fiyat ifadesi aranır.
+ANALYST_RE = {
+    "BIST": re.compile(r"hedef fiyat|tavsiye|öneri|model portföy|aracı kurum|araştırma rapor|kapsama|"
+                       r"değerleme|endeks (üstü|altı)|endekse paralel|\b(al|tut|sat) (notu|önerisi)", re.IGNORECASE),
+    "US": re.compile(r"price target|\bpt\b|upgrade|downgrade|analyst|rating|outperform|underperform|overweight|"
+                     r"underweight|\bbuy\b|\bsell\b|neutral|initiat|coverage|top pick|reiterat|maintains",
+                     re.IGNORECASE),
+}
+
+
+def _tr_lower(s: str) -> str:
+    return s.replace("I", "ı").replace("İ", "i").lower()
+
+
+def analyst_relevant(title: str, st) -> bool:
+    """Başlık bu hisseyle ilgili bir analist/kurum görüşü mü?"""
+    t = title or ""
+    # Google News başlığın sonuna " - Kaynak adı" ekler; kaynak adındaki kelimeler eşleşmesin.
+    if " - " in t:
+        t = t.rsplit(" - ", 1)[0]
+    low = _tr_lower(t)
+    names = [st.name, *getattr(st, "aliases", [])]
+    sym = re.search(rf"(?<![A-Za-z0-9])\$?{re.escape(st.symbol)}(?![A-Za-z0-9])", t)
+    named = sym or any(n and _tr_lower(n) in low for n in names)
+    if not named:
+        return False
+    rx = ANALYST_RE.get(st.market) or ANALYST_RE["US"]
+    return bool(rx.search(low if st.market == "BIST" else t))
+
+
 def collect_google_news(ctx: Context) -> list[Item]:
     gcfg = ctx.cfg("google_news")
     if not gcfg.get("enabled", True):
@@ -186,9 +216,15 @@ def collect_google_news(ctx: Context) -> list[Item]:
             q = f"({who}) ({ors})"
             url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:7d&{hl}"
             for it in entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
-                                       market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol], limit=4):
+                                       market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol], limit=8):
+                # Google gövde metninde geçen kelimelerle de eşleştirir ("tavsiye etti" + sayfa kenarındaki
+                # "Türk Telekom" reklamı gibi). Başlıkta hem şirket hem analist ifadesi yoksa atla.
+                if not analyst_relevant(it.title, st):
+                    continue
                 it.extra["analyst_query"] = True
                 out.append(it)
+                if sum(1 for x in out if x.extra.get("analyst_query") and st.symbol in x.tickers) >= 4:
+                    break
     log.info("Google News: %d haber", len(out))
     return out
 

@@ -307,6 +307,21 @@ def fair_order(queue: list[Item], watch: set[str]) -> list[Item]:
     return out
 
 
+def _drop_stale_analyst(items: list[dict], stocks) -> list[dict]:
+    """Eski sürümün analist sorgusundan kalan alakasız haberleri akıştan çıkarır."""
+    by = {st.symbol: st for st in stocks}
+    keep = []
+    for it in items:
+        if (it.get("extra") or {}).get("analyst_query"):
+            st = next((by[t] for t in it.get("tickers") or [] if t in by), None)
+            if st is not None and not feeds.analyst_relevant(it.get("title", ""), st):
+                continue
+        keep.append(it)
+    if len(keep) != len(items):
+        log.info("Analist süzgeci: %d eski haber çıkarıldı", len(items) - len(keep))
+    return keep
+
+
 def run() -> dict:
     settings = load_settings()
     stocks = load_watchlist()
@@ -320,6 +335,7 @@ def run() -> dict:
         FEED.unlink(missing_ok=True)
     old = _load(FEED, {})
     feed = [] if old.get("demo") else old.get("items", [])   # örnek veriyi gerçek akışa karıştırma
+    feed = _drop_stale_analyst(feed, stocks)
     seen_ids = dict.fromkeys(state.get("seen", []))  # sıralı küme
     seen_keys = dict.fromkeys(state.get("seen_keys", []))
 
