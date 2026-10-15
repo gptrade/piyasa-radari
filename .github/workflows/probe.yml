@@ -1,10 +1,11 @@
-name: probe-bist  # p59
+name: probe-bist  # p60
 on:
   push:
     branches: [arastirma-bist-veri]
     paths: [".github/workflows/probe.yml"]
 permissions:
   contents: write
+  models: read
 jobs:
   probe:
     runs-on: ubuntu-latest
@@ -13,21 +14,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - uses: actions/checkout@v4
-        with: { ref: onizleme-kazanc-takvimi, path: app }
-      - name: Takvim kaynakları
+      - name: AI seçenekleri
         env:
-          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
-          ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.PIYASA_RADARI }}
+          GH_MODELS_TOKEN: ${{ github.token }}
         run: |
-          set +e
-          pip install -q -r app/requirements.txt
-          mkdir -p probe59
-          pip install -q requests pandas lxml yfinance
-          python probe59.py > probe59/sonuc.txt 2>&1 || true
+          mkdir -p probe60; pip install -q requests
+          python probe60.py > probe60/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe59; git commit -qm "probe59 sonuçları" || true; git push -q
+          git add -A probe60; git commit -qm "probe60 sonuçları" || true; git push -q
