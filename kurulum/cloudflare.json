@@ -1,0 +1,23 @@
+{
+ "host": "radar.lyracube.com",
+ "alan_adi": {
+  "durum": "bulunamadı",
+  "hata": "6003 Invalid request headers"
+ },
+ "pages_projesi": {
+  "durum": "yok",
+  "hata": "7003 Could not route to /client/v4/accounts/pages/projects/piyasa-radari, perhaps your object identifier is invalid?"
+ },
+ "pages_ozel_alan": {
+  "durum": "eklenemedi",
+  "hata": "7003 Could not route to /client/v4/accounts/pages/projects/piyasa-radari/domains, perhaps your object identifier is invalid?"
+ },
+ "dns": "atlandı (alan adı ya da proje yok)",
+ "eposta_kodu": {
+  "hata": "7003 Could not route to /client/v4/accounts/access/identity_providers, perhaps your object identifier is invalid?"
+ },
+ "access": "atlandı (CF_ACCESS_EMAILS secret'ı yok)",
+ "dogrulama": {
+  "radar.lyracube.com": "erişilemedi (ConnectionError)"
+ }
+}
