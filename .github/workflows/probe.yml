@@ -1,4 +1,4 @@
-name: probe-bist  # p52
+name: probe-bist  # p53
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -23,11 +23,11 @@ jobs:
         run: |
           set +e
           pip install -q -r app/requirements.txt
-          mkdir -p probe52
+          mkdir -p probe53
           pip install -q requests
-          python probe52.py > probe52/sonuc.txt 2>&1 || true
+          python probe53.py > probe53/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe52; git commit -qm "probe52 sonuçları" || true; git push -q
+          git add -A probe53; git commit -qm "probe53 sonuçları" || true; git push -q
