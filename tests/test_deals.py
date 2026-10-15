@@ -42,3 +42,14 @@ def test_attach_and_adjust(monkeypatch):
     it.analysis = {"materiality": "medium"}
     deals.adjust(it)
     assert it.analysis["materiality"] == "high"
+
+
+def test_dash_separator_and_kap_fields():
+    t = "Sözleşmenin toplam bedeli KDV hariç 10.200.000-ABD Doları'dır. (toplam 502.901.820 -TL'dir.)"
+    assert (10_200_000.0, "USD") in deals.amounts(t) and (502_901_820.0, "TRY") in deals.amounts(t)
+    form = ("| İhale Bedeli | Tender Value | | | | 2.000.000.000 TL | 2.000.000.000 TRY | | İhale Bedelinden Ortaklık Payına Düşen Kısım"
+            " | Share of Company in Tender Value | | | | 500.000.000 TL | 500.000.000 TRY | | Ortaklık Payına Düşen Kısmın ... Oranı (%) |"
+            " Ratio Of Tender Value Corporate Share Amount To Gross Sales Revenue On Publicly Disclosed The Latest Financial Statement Of Company (%) | | | | 12,5 | 12.5 |")
+    d = deals.size(form, RATES, revenue=1e10)
+    assert d["amount"] == 500_000_000 and d["ratio"] == 0.125 and d["src"] == "KAP"
+    assert deals.SUBJECT.search("Yeni İş İlişkisi") and deals.NOT_DEAL.search("Esas Sözleşme Tadili")

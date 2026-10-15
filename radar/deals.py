@@ -18,15 +18,20 @@ from .models import Item
 
 log = logging.getLogger("radar.deals")
 
-SUBJECT = re.compile(r"yeni iş ilişkisi|sözleşme|ihale|sipariş|anlaşma imza", re.I)
+SUBJECT = re.compile(r"yeni iş ilişkisi|(?<!esas )sözleşme|ihale|sipariş|anlaşma imza", re.I)
+NOT_DEAL = re.compile(r"esas sözleşme|ana sözleşme", re.I)
 CUR = {"tl": "TRY", "try": "TRY", "₺": "TRY", "türk lirası": "TRY", "usd": "USD", "$": "USD", "abd doları": "USD",
        "amerikan doları": "USD", "dolar": "USD", "eur": "EUR", "€": "EUR", "avro": "EUR", "euro": "EUR"}
 MULT = {"bin": 1e3, "milyon": 1e6, "mn": 1e6, "milyar": 1e9, "mr": 1e9, "mlr": 1e9, "million": 1e6, "billion": 1e9}
 _NUM = r"(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)"
 _MUL = r"(?:\s*(bin|milyon|milyar|mn|mlr|mr|million|billion)\b)?"
 _CUR = r"(TL|TRY|₺|USD|\$|EUR|€|ABD Doları|Amerikan Doları|Türk Lirası|Dolar|Avro|Euro)"
-AMOUNT = [re.compile(_NUM + _MUL + r"\s*" + _CUR, re.I),           # 12,5 milyon USD
+_SEP = r"\s*[-‑–]?\s*"
+AMOUNT = [re.compile(_NUM + _MUL + _SEP + _CUR, re.I),             # 12,5 milyon USD · 10.200.000-ABD Doları
           re.compile(_CUR + r"\s*" + _NUM + _MUL, re.I)]           # USD 12.500.000
+# KAP ihale formu alanları: ortaklık payı ve şirketin kendi hesapladığı ciroya oran
+SHARE_FIELD = re.compile(r"Share of Company in Tender Value[\s|]*([^|]+?)\s*\|", re.I)
+RATIO_FIELD = re.compile(r"Gross Sales Revenue On Publicly Disclosed The Latest Financial Statement Of Company \(%\)[\s|]*([\d.,]+)\s*\|", re.I)
 
 
 def _num(s: str) -> float:
@@ -71,7 +76,10 @@ def ttm_revenue(code: str) -> float | None:
 
 
 def size(text: str, rates: dict, revenue: float | None) -> dict | None:
-    found = [(v * rates[c], v, c) for v, c in amounts(text) if c in rates]
+    """En büyük tutar (ihalede ortaklık payı varsa o); şirket ciroya oranı kendisi bildirdiyse o kullanılır."""
+    share = SHARE_FIELD.search(text)
+    pool = amounts(share.group(1)) if share and share.group(1).strip() not in ("-", "") else []
+    found = [(v * rates[c], v, c) for v, c in (pool or amounts(text)) if c in rates]
     if not found:
         return None
     tl, v, c = max(found)
@@ -79,6 +87,12 @@ def size(text: str, rates: dict, revenue: float | None) -> dict | None:
     if revenue and revenue > 0:
         out["rev"] = round(revenue)
         out["ratio"] = round(tl / revenue, 4)
+    rf = RATIO_FIELD.search(text)
+    if rf:
+        try:
+            out["ratio"], out["src"] = round(float(rf.group(1).replace(".", "").replace(",", ".")) / 100, 4), "KAP"
+        except ValueError:
+            pass
     return out
 
 
@@ -104,7 +118,8 @@ def attach(items: list[Item], watch: set[str], macro: dict | None, limit: int = 
             break
         if it.source != "KAP" or not (set(it.tickers) & watch) or "deal" in it.extra:
             continue
-        if not SUBJECT.search(f"{it.extra.get('subject') or ''} {it.summary}"):
+        subj = f"{it.extra.get('subject') or ''} {it.summary}"
+        if not SUBJECT.search(subj) or NOT_DEAL.search(subj):
             continue
         r = http.get(it.url, timeout=45, retries=1)
         if r is None:
