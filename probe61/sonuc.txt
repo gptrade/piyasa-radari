@@ -1,0 +1,26 @@
+
+Tesla Roadster hype, the Meta-Apple AI deal, and how AI spending is saving the economy
+  8.2s  yeni: ('gemma-4-26b-a4b-it', 'bullish', 70, 'medium', "Apple ve Meta'dan yeni yapay zeka ortaklığı")
+  eski: ('gemini-3.5-flash-lite', 'bullish', 60, 'medium', 'Meta ve Apple Açık Kaynaklı Yapay Zeka İçin Ortaklık Kurdu')
+
+Apple Closes In On World's Most Valuable Company Crown — iPhone Duo Preorders, China AI Ro
+  8.0s  yeni: ('gemma-4-26b-a4b-it', 'bullish', 60, 'medium', 'Apple dünyanın en değerli şirketi unvanına yaklaşıyor')
+  eski: ('gemini-3.5-flash-lite', 'bullish', 75, 'medium', 'Apple, güçlü iPhone ön siparişleri ve Çin yapay zeka hamlesiyle dünyanın en değerli şirketi tahtına yaklaşıyor.')
+
+Bank of America (BofA) bu hisselerde yüklü alım yaptı (15.10.2026) - Rota Borsa
+  7.1s  yeni: ('gemma-4-26b-a4b-it', 'bullish', 40, 'medium', "Bank of America'dan THYAO ve diğer hisselerde yüklü alım")
+  eski: ('gemini-3.5-flash-lite', 'bullish', 60, 'medium', 'Bank of America THYAO hisselerinde yüklü alım gerçekleştirdi')
+
+Apple iPhone Duo available for pre-order Friday
+  9.3s  yeni: ('gemma-4-26b-a4b-it', 'bullish', 50, 'low', 'Apple iPhone Duo için ön siparişler Cuma günü başlıyor')
+  eski: ('gemini-3.5-flash-lite', 'bullish', 75, 'medium', 'Apple iPhone Duo cuma günü ön siparişe açılıyor')
+
+BofA’nın Bugün Aldığı ve Sattığı Hisseler 15 Ekim 2026 - Paranın Yönü
+  7.3s  yeni: ('gemma-4-26b-a4b-it', 'neutral', 10, 'low', "BofA'nın Günlük Alım-Satım İşlemleri Hakkında Bilgi")
+  eski: ('gemini-3.5-flash-lite', 'neutral', 40, 'low', 'BofA günlük aracı kurum işlem dağılımı haberi.')
+
+TTKOM: Şirket Genel Bilgi Formu
+  6.3s  yeni: ('gemma-4-26b-a4b-it', 'neutral', 90, 'low', 'Türk Telekom Genel Bilgi Formu Paylaşımı')
+  eski: ('gemini-3.5-flash-lite', 'neutral', 10, 'low', 'Türk Telekom Şirket Genel Bilgi Formu Yayımlandı')
+
+status {'model': 'gemma-4-26b-a4b-it', 'enabled': True, 'used': 6, 'errors': [], 'by_provider': {'Gemini': 6}, 'providers': ['Gemini'], 'down': {}}
