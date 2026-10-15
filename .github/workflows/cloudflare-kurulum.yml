@@ -1,0 +1,38 @@
+name: cloudflare-kurulum
+
+# Kapalı grup sitesi kurulumu (elle tetiklenir, tekrar çalıştırılabilir): radar.<alan adı>, DNS, Cloudflare Access.
+# Grup listesi değişince yeniden çalıştırmak yeter (CF_ACCESS_EMAILS secret'ı).
+# Durum özeti (gizli bilgi içermez: kişi sayısı, alan adı durumları) arastirma-bist-veri dalına yazılır.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  kur:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests
+      - name: Kurulum
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_ACCESS_EMAILS: ${{ secrets.CF_ACCESS_EMAILS }}
+          CF_DOMAIN: lyracube.com
+          CF_SUB: radar
+          CF_PROJECT: piyasa-radari
+        run: python tools/cloudflare_setup.py /tmp/cf.json > /dev/null
+      - name: Durumu kaydet
+        if: always()
+        run: |
+          [ -f /tmp/cf.json ] || exit 0
+          git fetch -q origin arastirma-bist-veri && git checkout -q arastirma-bist-veri
+          mkdir -p kurulum && cp /tmp/cf.json kurulum/cloudflare.json
+          git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
+          git add kurulum && git commit -qm "Cloudflare kurulum durumu" && git push -q || true
