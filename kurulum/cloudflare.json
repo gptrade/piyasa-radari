@@ -15,21 +15,32 @@
   ]
  },
  "pages_projesi": {
-  "durum": "yok",
-  "hata": "8000007 Project not found. The specified project name does not match any of your existing projects."
+  "durum": "var",
+  "pages_dev": "piyasa-radari.pages.dev",
+  "domains": [
+   "piyasa-radari.pages.dev"
+  ]
  },
  "pages_ozel_alan": {
-  "durum": "eklenemedi",
-  "hata": "8000007 Project not found. The specified project name does not match any of your existing projects."
+  "durum": "initializing",
+  "dogrulama": "initializing"
  },
- "dns": "atlandı (alan adı ya da proje yok)",
+ "dns": "eklendi",
  "eposta_kodu": {
-  "hata": "9999 access.api.error.not_enabled: Access is not enabled. Visit the Access dashboard at https://dash.cloudflare.com/ and click the 'Enable Access' button."
+  "hata": "1010 "
  },
  "access": {
-  "hata": "9999 access.api.error.not_enabled: Access is not enabled. Visit the Access dashboard at https://dash.cloudflare.com/ and click the 'Enable Access' button."
+  "uygulama": "hazır",
+  "korunan": [
+   "radar.lyracube.com",
+   "piyasa-radari.pages.dev",
+   "*.piyasa-radari.pages.dev"
+  ],
+  "izinli_kisi": 2,
+  "politika": "hazır"
  },
  "dogrulama": {
-  "radar.lyracube.com": "erişilemedi (ConnectionError)"
+  "radar.lyracube.com": "HTTP 522",
+  "piyasa-radari.pages.dev": "HTTP 200 → AÇIK (korumasız!)"
  }
 }
