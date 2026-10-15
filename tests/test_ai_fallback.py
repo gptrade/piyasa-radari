@@ -211,3 +211,17 @@ def test_news_quota_does_not_block_reports(monkeypatch):
                                "gemini_news_models": ["gemma-x", "lite"]}})
     assert a.assess(ITEM) is None and "Gemini (haber)" in a.down
     assert a.ask_json("s", "p", analyze.TOOL, "")["sentiment"] == "bullish"
+
+
+def test_document_quota_does_not_block_news(monkeypatch):
+    import requests
+    monkeypatch.setenv("GEMINI_API_KEY", "g")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setattr(analyze.time, "sleep", lambda s: None)
+    daily = FakeResp(429, {"error": {"message": "quota", "details": [
+        {"violations": [{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}]}})
+    monkeypatch.setattr(requests, "post", lambda url, **kw: gemini_ok(GOOD) if "/gemma-x:" in url else daily)
+    a = Analyzer({"analysis": {"providers": ["gemini"], "gemini_model": "flash", "gemini_fallback_models": ["gemma-x"],
+                               "gemini_news_models": ["gemma-x"]}})
+    assert a.ask_json("s", "p", analyze.TOOL, "", media=[("application/pdf", b"x")]) is None
+    assert "Gemini (belge)" in a.down and a.assess(ITEM)["sentiment"] == "bullish"

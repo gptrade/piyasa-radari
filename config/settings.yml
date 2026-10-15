@@ -76,7 +76,8 @@ sources:
     enabled: true              # gizli rapor kutusu (gptrade/piyasa-radari-raporlar, RAPOR_REPO_TOKEN): sirket/ sektor/ strateji/
     max_per_run: 3             # turda en fazla okunacak rapor (görsel raporlar daha çok AI kotası harcar)
     telegram: true             # ayrıntılı özet yalnız Telegram'a; sitede yalnız tavsiye/hedef/tahmin ve kısa tez
-    reprocess: [rapor-865808ab9ab867b9]   # bir kez yeniden okunacak raporlar (Kuveyt Türk çelik notu: hisse listesi hatalıydı)
+    reprocess: [rapor-865808ab9ab867b9]   # bir kez yeniden okunacak raporlar
+    ignore: [rapor-f6bc90b772766e67]      # rapor olmayan kayıtlar (Kuveyt Türk postası: yalnız indirme bağlantısı, ek yok)
   broker_notes:
     enabled: true              # aracı kurum notları: haber başlıklarından (Foreks llms dosyaları + Google News); kurum siteleri okunmaz
     interval_min: 30

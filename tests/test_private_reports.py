@@ -173,3 +173,11 @@ def test_reprocess_once(tmp_path, monkeypatch):
     assert res["drop"] == [rid] and len(ai.calls) == n + 1 and res["records"][0]["id"] == rid
     res = pr.process(ai, set(), {"reprocess": [rid]}, root=root, done_path=done)
     assert res["drop"] == [] and len(ai.calls) == n + 1          # yalnız bir kez
+
+
+def test_ignore_drops_record_once(tmp_path):
+    done = tmp_path / "done.json"
+    root = make_root(tmp_path)
+    res = pr.process(None, set(), {"ignore": ["rapor-abc"]}, root=root, done_path=done)
+    assert res["drop"] == ["rapor-abc"]
+    assert pr.process(None, set(), {"ignore": ["rapor-abc"]}, root=root, done_path=done)["drop"] == []

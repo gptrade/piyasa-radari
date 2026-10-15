@@ -361,6 +361,10 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
         done = {sha for sha in done if not sha.startswith(prefix)}
         handled.add(rid)
         res["drop"].append(rid)
+    for rid in cfg.get("ignore") or []:              # rapor değil (ör. yalnız indirme bağlantısı olan posta): kaydı sil
+        if f"ignore:{rid}" not in handled:
+            handled.add(f"ignore:{rid}")
+            res["drop"].append(rid)
     if res["drop"]:
         redo_path.write_text(json.dumps(sorted(handled)), encoding="utf-8")
     todo = [u for u in units(root) if u["sha"] not in done]

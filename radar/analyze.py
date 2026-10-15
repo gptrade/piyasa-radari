@@ -448,12 +448,14 @@ class Analyzer:
         """Genel amaçlı yapılandırılmış istek (ör. dönemsel özet, rapor okuma); aynı sağlayıcı sırası ve yedekleme.
         media: [(mime, bytes)] görsel/PDF ekleri (sağlayıcı görüntüden okur)."""
         for p in self.providers:
-            if p.name in self.down:
+            # Belgeli istek yalnız güçlü modellere gider; onların kotası bitti diye haber/özet işleri durmasın
+            key = f"{p.name} (belge)" if media and getattr(p, "news_models", None) is not None else p.name
+            if p.name in self.down or key in self.down:
                 continue
             try:
                 out = p.ask(system, prompt, tool, fmt, max_tokens, media=media) if media else p.ask(system, prompt, tool, fmt, max_tokens)
             except ProviderDown as e:
-                self.down[p.name] = str(e)[:200]
+                self.down[key] = str(e)[:200]
                 self._err(f"{p.name} devre dışı: {e}")
                 continue
             except Exception as e:
