@@ -117,16 +117,59 @@
     });
     const covered = parts.filter(Boolean);
     const cover = covered.reduce((s, x) => s + x.w, 0);
-    if (!covered.length || cover < 0.5) return { beta, var: null, cover };
-    const days = [...new Set(covered.flatMap(x => [...x.m.keys()]))].sort().slice(-121, -1);
-    const pr = days.map(d => covered.reduce((s, x) => {
-      const r = x.m.get(d) ?? 0, f = x.us ? (fx.get(d) ?? 0) : 0;
-      return s + x.w / cover * ((1 + r) * (1 + f) - 1);
-    }, 0));
-    if (pr.length < 40) return { beta, var: null, cover };
+    if (!covered.length || cover < 0.5) return { beta, var: null, cover, corr: corrOf(rs, fx) };
+    const allDays = [...new Set(covered.flatMap(x => [...x.m.keys()]))].sort();
+    const tlRet = (x, d) => { const r = x.m.get(d) ?? 0, f = x.us ? (fx.get(d) ?? 0) : 0; return (1 + r) * (1 + f) - 1; };
+    const port = ds => ds.map(d => covered.reduce((s, x) => s + x.w / cover * tlRet(x, d), 0));
+    const pr = port(allDays.slice(-121, -1));
+    if (pr.length < 40) return { beta, var: null, cover, corr: corrOf(rs, fx) };
     const sorted = pr.slice().sort((a, b) => a - b), q = sorted[Math.floor(0.05 * sorted.length)];
     const m = pr.reduce((s, v) => s + v, 0) / pr.length, sd = Math.sqrt(pr.reduce((s, v) => s + (v - m) ** 2, 0) / (pr.length - 1));
-    return { beta, var: -q, sd, n: pr.length, cover, fx: fx.size > 0 };
+    // Maksimum düşüş: bugünkü ağırlıklarla son ~1 yılın TL bazında birikimli getirisinde zirveden en büyük düşüş
+    const long = port(allDays.slice(-251, -1));
+    let idx = 1, peak = 1, mdd = 0;
+    long.forEach(r => { idx *= 1 + r; peak = Math.max(peak, idx); mdd = Math.min(mdd, idx / peak - 1); });
+    return { beta, var: -q, sd, n: pr.length, cover, fx: fx.size > 0, mdd: -mdd, mddN: long.length, corr: corrOf(rs, fx) };
+  }
+  // Korelasyon: pozisyonların TL bazında günlük getirileri (son 120 ortak gün)
+  function corrOf(rs, fx) {
+    const xs = rs.filter(r => r.val).map(r => {
+      const p = R()?.prices?.[r.pos.sym] || S.px[r.pos.sym];
+      return p?.daily ? { sym: r.pos.sym, w: r.w, m: rets(p.daily, TZ[r.pos.market]), us: r.pos.market === "US" } : null;
+    }).filter(Boolean).sort((a, b) => b.w - a.w).slice(0, 10);
+    if (xs.length < 2) return null;
+    const days = [...xs[0].m.keys()].filter(d => xs.every(x => x.m.has(d))).sort().slice(-121, -1);
+    if (days.length < 40) return null;
+    const ser = xs.map(x => days.map(d => (1 + x.m.get(d)) * (1 + (x.us ? fx.get(d) ?? 0 : 0)) - 1));
+    const c = (a, b) => {
+      const ma = a.reduce((s, v) => s + v, 0) / a.length, mb = b.reduce((s, v) => s + v, 0) / b.length;
+      let num = 0, va = 0, vb = 0;
+      a.forEach((v, i) => { num += (v - ma) * (b[i] - mb); va += (v - ma) ** 2; vb += (b[i] - mb) ** 2; });
+      return va && vb ? num / Math.sqrt(va * vb) : 0;
+    };
+    const m = ser.map(a => ser.map(b => c(a, b)));
+    let sum = 0, n = 0;
+    m.forEach((row, i) => row.forEach((v, j) => { if (j > i) { sum += v; n++; } }));
+    return { syms: xs.map(x => x.sym), m, avg: n ? sum / n : null, days: days.length };
+  }
+  // "Portföy tek şirket olsaydı": temel analiz verisi olan BIST pozisyonlarının piyasa değeri ağırlıklı toplamı
+  function lookThrough(rs) {
+    const fa = window.radarFundamentals?.rows || [];
+    const xs = rs.filter(r => r.val && r.pos.market === "BIST").map(r => ({ r, f: fa.find(x => x.code === r.pos.sym) })).filter(o => o.f?.v);
+    const bist = rs.filter(r => r.val && r.pos.market === "BIST").reduce((s, r) => s + r.val, 0);
+    if (!xs.length || !bist) return null;
+    const agg = (fn) => { let s = 0, w = 0; xs.forEach(({ r, f }) => { const v = fn(f); if (v != null && isFinite(v)) { s += r.val * v; w += r.val; } }); return w ? { v: s / w, w } : null; };
+    const ey = agg(f => f.v.ps && f.r.net_margin != null ? f.r.net_margin / f.v.ps : (f.v.pe ? 1 / f.v.pe : null));   // kar / piyasa değeri
+    const by = agg(f => f.v.pb ? 1 / f.v.pb : null);                                                                  // defter değeri / piyasa değeri
+    const nd = agg(f => f.v.ev && f.v.mcap && f.v.ev_ebitda ? (f.v.ev - f.v.mcap) / f.v.mcap : null);
+    const eb = agg(f => f.v.ev && f.v.mcap && f.v.ev_ebitda ? f.v.ev / f.v.ev_ebitda / f.v.mcap : null);
+    const dy = agg(f => f.div ? (f.div.status === "yok" ? 0 : f.div.yield ?? null) : (f.v.div_yield || null));   // KAP son temettü kararı
+    const cov = xs.reduce((s, o) => s + o.r.val, 0) / bist;
+    return {
+      pe: ey && ey.v > 0 ? 1 / ey.v : null, pb: by && by.v > 0 ? 1 / by.v : null,
+      roe: ey && by && by.v > 0 ? ey.v / by.v : null, nde: nd && eb && eb.v > 0 ? nd.v / eb.v : null,
+      dy: dy?.v ?? null, cov, n: xs.length,
+    };
   }
   // Sinyal özeti: son 24 saat
   function sig(sym) {
@@ -167,7 +210,7 @@
       <div class="kpi"><span class="kpi-label">Portföy değeri</span><span class="kpi-value">${tlShort(t.val)}</span><span class="kpi-sub">${fx ? `≈ ${fmt.num(t.val / fx, 0)} $ · USD/TRY ${fmt.num(fx, 2)}` : "kur yok"}</span></div>
       <div class="kpi"><span class="kpi-label">Bugün</span><span class="kpi-value">${signedTl(t.day)}</span><span class="kpi-sub">${t.dayPct == null ? "—" : fmt.pct(t.dayPct, 2)} · ABD kur etkisi hariç</span></div>
       <div class="kpi"><span class="kpi-label">Toplam kâr / zarar</span><span class="kpi-value">${signedTl(t.pnl)}</span><span class="kpi-sub">${t.pnlPct == null ? "—" : fmt.pct(t.pnlPct, 1)} · bugünkü kurla</span></div>
-      <div class="kpi"><span class="kpi-label">1 günlük risk (%95)</span><span class="kpi-value">${rk.var != null ? tlShort(rk.var * t.val) : "—"}</span><span class="kpi-sub" data-tip="Tarihsel yöntem: bugünkü ağırlıklarla son ${rk.n || 120} günün TL bazında günlük getirileri; 20 günde 1 bu kadar ya da daha fazla kayıp beklenir${rk.cover < 0.999 ? ` (fiyat geçmişi olan pozisyonlar: portföyün %${fmt.num(rk.cover * 100, 0)}'i)` : ""}">${rk.var != null ? `%${fmt.num(rk.var * 100, 1)} · günlük oynaklık %${fmt.num(rk.sd * 100, 1)}` : "fiyat geçmişi yetersiz"}</span></div>
+      <div class="kpi"><span class="kpi-label">1 günlük risk (%95)</span><span class="kpi-value">${rk.var != null ? tlShort(rk.var * t.val) : "—"}</span><span class="kpi-sub" data-tip="Tarihsel yöntem: bugünkü ağırlıklarla son ${rk.n || 120} günün TL bazında günlük getirileri; 20 günde 1 bu kadar ya da daha fazla kayıp beklenir${rk.cover < 0.999 ? ` (fiyat geçmişi olan pozisyonlar: portföyün %${fmt.num(rk.cover * 100, 0)}'i)` : ""}">${rk.var != null ? `%${fmt.num(rk.var * 100, 1)} · günlük oynaklık %${fmt.num(rk.sd * 100, 1)}` : "fiyat geçmişi yetersiz"}</span>${rk.mdd != null ? `<span class="kpi-sub" data-tip="Bugünkü ağırlıklarla son ${rk.mddN} işlem gününün TL bazında birikimli getirisinde zirveden en büyük düşüş">maks. düşüş %${fmt.num(rk.mdd * 100, 1)} · ${rk.mddN} gün</span>` : ""}</div>
     </div>`;
     // dağılım
     const vals = rs.filter(r => r.val).sort((a, b) => b.val - a.val);
@@ -179,6 +222,7 @@
         `<span style="flex:${s.v};background:${s.c}" data-tip="<b>${esc(s.l)}</b> %${fmt.num(s.v / t.val * 100, 1)} · ${tlShort(s.v)}"></span>`).join("")}</div>
       <ul class="pf-leg">${segs.map(s => `<li><i style="background:${s.c}"></i>${esc(s.l)} <b>%${fmt.num(s.v / t.val * 100, 1)}</b></li>`).join("")}</ul>
       ${t.missing ? `<p class="k-note">${t.missing} pozisyonun fiyatı yok; toplamlara girmedi (satırda elle fiyat girebilirsin).</p>` : ""}</div>`;
+    html += riskHTML(rk, rs);
     // tablo
     const K = S.sort, val = { w: r => r.val ?? -1, pnl: r => r.pnlPct ?? -999, day: r => r.q?.chg ?? -999, sym: r => r.pos.sym };
     const sorted = rs.slice().sort((a, b) => { const x = val[K.k](a), y = val[K.k](b); return (x > y ? 1 : x < y ? -1 : 0) * K.d; });
@@ -192,6 +236,26 @@
     html += `<p class="k-note">Pozisyonlar yalnız bu tarayıcıda (localStorage) saklanır, sunucuya gönderilmez; tarayıcı verisi silinirse kaybolur — Dışa aktar → Portföy yedeği (JSON) ile yedekle. Fiyatlar son taramadan (15 dk); izleme listesi dışındaki BIST hisseleri için geri alım fiyat listesi, o da yoksa elle girilen fiyat kullanılır. ABD pozisyonları ${fxSrc()} USD/TRY kuruyla TL'ye çevrilir. Betalar son 60 günde kendi endeksine (BIST 100 / S&P 500) göre. Bu bir takip aracıdır, yatırım tavsiyesi değildir.</p>`;
     box.innerHTML = html;
     bindForm(); bindTable(); badge();
+  }
+  function riskHTML(rk, rs) {
+    const lt = lookThrough(rs), c = rk.corr;
+    const cell = v => { const a = Math.min(1, Math.abs(v)); return `background:color-mix(in srgb, var(${v >= 0 ? "--down" : "--up"}) ${Math.round(a * 55)}%, transparent)`; };
+    const lk = lt ? `<div class="card"><div class="card-head"><h2 class="card-title">Portföy tek şirket olsaydı</h2>
+        <span class="card-meta">BIST pozisyonları, temel analiz verisiyle · kapsam %${fmt.num(lt.cov * 100, 0)} (${lt.n} hisse)</span></div>
+      <div class="kpi-grid pf-lt">
+        <div class="kpi"><span class="kpi-label">F/K</span><span class="kpi-value">${lt.pe ? fmt.num(lt.pe, 1) + "x" : "—"}</span><span class="kpi-sub">ağırlıklı kar</span></div>
+        <div class="kpi"><span class="kpi-label">PD/DD</span><span class="kpi-value">${lt.pb ? fmt.num(lt.pb, 2) + "x" : "—"}</span><span class="kpi-sub">&nbsp;</span></div>
+        <div class="kpi"><span class="kpi-label">ROE</span><span class="kpi-value">${lt.roe != null ? "%" + fmt.num(lt.roe * 100, 1) : "—"}</span><span class="kpi-sub">kar / özkaynak</span></div>
+        <div class="kpi"><span class="kpi-label">Net borç / FAVÖK</span><span class="kpi-value">${lt.nde != null ? fmt.num(lt.nde, 2) + "x" : "—"}</span><span class="kpi-sub">banka/sigorta hariç</span></div>
+        <div class="kpi"><span class="kpi-label">Temettü verimi</span><span class="kpi-value">${lt.dy != null ? "%" + fmt.num(lt.dy * 100, 1) : "—"}</span><span class="kpi-sub">KAP son karar, brüt</span></div>
+      </div><p class="k-note">Her pozisyon, portföydeki TL değeri kadar şirketin karına, özkaynağına ve borcuna sahipmiş gibi toplanır (look-through). Zarar eden şirketler F/K'yı doğru şekilde yükseltir.</p></div>` : "";
+    const mx = c ? `<div class="card"><div class="card-head"><h2 class="card-title">Korelasyon</h2>
+        <span class="card-meta">TL bazında günlük getiriler · son ${c.days} gün${c.avg != null ? ` · ortalama <b>${fmt.num(c.avg, 2)}</b>` : ""}</span></div>
+      ${c.avg != null && c.avg >= 0.6 ? `<p class="banner warn">Pozisyonlar birbirine çok benzer hareket ediyor (ortalama korelasyon ${fmt.num(c.avg, 2)}): çeşitlendirme sınırlı.</p>` : ""}
+      <div class="tbl-scroll"><table class="tbl pf-corr"><thead><tr><th></th>${c.syms.map(s => `<th class="num">${esc(s)}</th>`).join("")}</tr></thead>
+      <tbody>${c.m.map((row, i) => `<tr><th scope="row">${esc(c.syms[i])}</th>${row.map((v, j) => `<td class="num" style="${i === j ? "" : cell(v)}">${i === j ? "—" : fmt.num(v, 2)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+      <p class="k-note">+1 aynı yönde, 0 ilişkisiz, −1 ters yönde hareket. Yalnız fiyat geçmişi olan pozisyonlar (izleme listesi); en büyük 10 pozisyon.</p></div>` : "";
+    return lk + mx;
   }
   // Temel analiz notu (BIST-100 kapsamındaysa): tıklayınca şirket sayfası
   function faTag(sym) {

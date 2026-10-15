@@ -1092,3 +1092,5 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .tp-hi { display: inline-block; padding: 0 5px; margin-right: 2px; border-radius: var(--r-xs); background: var(--warn-soft); color: var(--warn); font-size: var(--fs-2xs); font-weight: var(--fw-semibold); vertical-align: 1px; }
 
 .doc-badge.deal-hi { background: var(--warn-soft); color: var(--warn); }
+.pf-corr td, .pf-corr th { padding: 6px 8px; min-width: 56px; }
+.pf-lt { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
