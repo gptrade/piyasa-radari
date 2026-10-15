@@ -46,7 +46,7 @@ US_MEGA = {"AAPL", "MSFT", "NVDA", "GOOGL", "GOOG", "AMZN", "META", "AVGO", "TSL
 # (Yahoo kodu, ad, ülke, büyük mü)
 EU_COMPANIES: list[tuple[str, str, str, bool]] = [
     ("ASML.AS", "ASML", "NL", True), ("SAP.DE", "SAP", "DE", True), ("MC.PA", "LVMH", "FR", True),
-    ("NOVO-B.CO", "Novo Nordisk", "DK", True), ("NESN.SW", "Nestlé", "CH", True), ("ROG.SW", "Roche", "CH", True),
+    ("NOVO-B.CO", "Novo Nordisk", "DK", True), ("NESN.SW", "Nestlé", "CH", True),
     ("NOVN.SW", "Novartis", "CH", True), ("SHEL.L", "Shell", "GB", True), ("AZN.L", "AstraZeneca", "GB", True),
     ("HSBA.L", "HSBC", "GB", True), ("SIE.DE", "Siemens", "DE", True), ("TTE.PA", "TotalEnergies", "FR", True),
     ("OR.PA", "L'Oréal", "FR", False), ("SAN.PA", "Sanofi", "FR", False), ("ALV.DE", "Allianz", "DE", False),
@@ -196,14 +196,17 @@ def parse_eurostat(items: list[dict]) -> list[dict]:
 
 def fetch_eurostat(lo: date, hi: date) -> list[dict] | None:
     s = requests.Session()
-    s.headers.update({"User-Agent": http.DEFAULT_UA, "Accept-Language": "en"})
+    s.headers.update({"User-Agent": "Mozilla/5.0 (piyasa-radari takvim; github.com/gptrade/piyasa-radari)", "Accept-Language": "en"})
     try:
         s.get(EUROSTAT_PAGE, timeout=60)
         r = s.get(EUROSTAT_JSON, timeout=60, headers={"X-Requested-With": "XMLHttpRequest", "Referer": EUROSTAT_PAGE,
                                                       "Accept": "application/json, text/javascript, */*; q=0.01"},
-                  params={"start": f"{lo}T00:00:00", "end": f"{hi}T00:00:00", "theme": "", "category": "",
+                  params={"start": f"{lo}T00:00:00+00:00", "end": f"{hi}T00:00:00+00:00", "theme": "", "category": "",
                           "keywords": "", "isEuroindicator": "true", "authorInclude": "", "authorExclude": ""})
-        return parse_eurostat(r.json()) if r.status_code == 200 and r.content else None
+        if r.status_code != 200 or not r.content:
+            log.warning("Eurostat takvimi boş döndü (HTTP %s)", r.status_code)
+            return None
+        return parse_eurostat(r.json())
     except (requests.RequestException, ValueError) as e:
         log.warning("Eurostat takvimi alınamadı: %s", e)
         return None
