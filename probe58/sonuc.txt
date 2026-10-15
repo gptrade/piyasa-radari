@@ -1,0 +1,43 @@
+HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: ROG.SW"}}}
+status {'us': {'ok': True, 'n': 466, 'cached': False}, 'eu': {'ok': True, 'n': 51, 'cached': False}, 'ecb': {'ok': True, 'n': 18, 'cached': False}, 'eurostat': {'ok': False, 'n': 0, 'cached': True, 'error': 'alınamadı'}}
+events 519 Counter({('US', 'earnings', 1): 436, ('EU', 'earnings', 2): 43, ('US', 'earnings', 3): 30, ('EU', 'earnings', 3): 8, ('EU', 'cb', 3): 2})
+  2026-10-20 US NFLX bilanço ABD seans kapanışı sonrası · EPS beklentisi 0,82 $ · Communi
+  2026-10-21 US IBM bilanço ABD seans kapanışı sonrası · EPS beklentisi 2,89 $ · Informa
+  2026-10-21 US TSLA bilanço ABD seans kapanışı sonrası · EPS beklentisi 0,23 $ · Consume
+  2026-10-21 US TXN bilanço ABD seans kapanışı sonrası · EPS beklentisi 2,39 $ · Informa
+  2026-10-21 EU SAP bilanço EPS beklentisi 1,83 · tarih Yahoo'dan; şirket teyidi için ya
+  2026-10-22 US PG bilanço ABD seans açılışı öncesi · EPS beklentisi 1,89 $ · Consumer 
+  2026-10-27 US KO bilanço ABD seans açılışı öncesi · EPS beklentisi 0,87 $ · Consumer 
+  2026-10-27 US V bilanço EPS beklentisi 3,43 $ · Financials
+  2026-10-27 EU Novartis bilanço EPS beklentisi 2,28 · tarih Yahoo'dan; şirket teyidi için ya
+  2026-10-27 EU HSBC bilanço EPS beklentisi 0,44 · tarih Yahoo'dan; şirket teyidi için ya
+  2026-10-28 US GOOG bilanço ABD seans kapanışı sonrası · EPS beklentisi 2,95 $ · Communi
+  2026-10-28 US GOOGL bilanço ABD seans kapanışı sonrası · EPS beklentisi 2,95 $ · Communi
+  2026-10-28 US MSFT bilanço ABD seans kapanışı sonrası · EPS beklentisi 4,71 $ · Informa
+  2026-10-29 US AMZN bilanço EPS beklentisi 2,02 $ · Consumer Discretionary
+  2026-10-29 US INTC bilanço ABD seans kapanışı sonrası · EPS beklentisi 0,27 $ · Informa
+  2026-10-29 US LLY bilanço ABD seans açılışı öncesi · EPS beklentisi 9,83 $ · Health Ca
+  2026-10-29 US MA bilanço EPS beklentisi 5,13 $ · Financials
+  2026-10-29 US MRK bilanço ABD seans açılışı öncesi · EPS beklentisi 2,14 $ · Health Ca
+  2026-10-29 EU Shell bilanço EPS beklentisi 1,80 · tarih Yahoo'dan; şirket teyidi için ya
+  2026-10-29 EU TotalEnergies bilanço EPS beklentisi 3,58 · tarih Yahoo'dan; şirket teyidi için ya
+  2026-10-29 EU ECB faiz kararı Karar 14:15 CET'te, basın toplantısı 14:45 CET'te
+  2026-10-30 US ABBV bilanço ABD seans açılışı öncesi · EPS beklentisi 3,77 $ · Health Ca
+  2026-10-30 US CVX bilanço ABD seans açılışı öncesi · EPS beklentisi 4,89 $ · Energy
+  2026-10-30 US XOM bilanço EPS beklentisi 3,93 $ · Energy
+  2026-10-30 EU AstraZeneca bilanço EPS beklentisi 2,57 · tarih Yahoo'dan; şirket teyidi için ya
+  2026-11-02 US AAPL bilanço ABD seans kapanışı sonrası · EPS beklentisi 1,98 $ · Informa
+  2026-11-02 US PLTR bilanço EPS beklentisi 0,34 $ · Information Technology
+  2026-11-03 US AMD bilanço ABD seans kapanışı sonrası · EPS beklentisi 1,66 $ · Informa
+  2026-11-04 US CAT bilanço EPS beklentisi 6,95 $ · Industrials
+  2026-11-04 US META bilanço EPS beklentisi 6,39 $ · Communication Services
+  2026-11-04 US QCOM bilanço EPS beklentisi 1,47 $ · Information Technology
+  2026-11-04 EU Novo Nordisk bilanço EPS beklentisi 4,95 · tarih Yahoo'dan; şirket teyidi için ya
+  2026-11-06 US BRK.B bilanço EPS beklentisi 5,66 $ · Financials
+  2026-11-11 US CSCO bilanço EPS beklentisi 1,15 $ · Information Technology
+  2026-11-12 EU Siemens bilanço EPS beklentisi 2,79 · tarih Yahoo'dan; şirket teyidi için ya
+  2026-11-17 US HD bilanço ABD seans açılışı öncesi · EPS beklentisi 3,86 $ · Consumer 
+  2026-11-18 US NVDA bilanço EPS beklentisi 2,47 $ · Information Technology
+  2026-11-19 US WMT bilanço ABD seans açılışı öncesi · EPS beklentisi 0,63 $ · Consumer 
+  2026-12-02 US CRM bilanço EPS beklentisi 2,41 $ · Information Technology
+  2026-12-17 EU ECB faiz kararı Karar 14:15 CET'te, basın toplantısı 14:45 CET'te
