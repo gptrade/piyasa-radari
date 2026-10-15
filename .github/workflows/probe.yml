@@ -1,4 +1,4 @@
-name: probe-bist  # p62c
+name: probe-bist  # p63
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -14,14 +14,14 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - uses: actions/checkout@v4
-        with: { ref: onizleme-sozlesme, path: app, fetch-depth: 0 }
-      - name: KAP sözleşme denemesi
+        with: { ref: onizleme-gyo-pddd, path: app, fetch-depth: 0 }
+      - name: GYO PD/DD
         run: |
-          mkdir -p probe62; pip install -q -r app/requirements.txt
+          mkdir -p probe63; pip install -q -r app/requirements.txt
           git -C app fetch -q origin fin
-          python probe62.py > probe62/sonuc.txt 2>&1 || true
+          python probe63.py > probe63/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe62; git commit -qm "probe62 sonuçları" || true; git push -q
+          git add -A probe63; git commit -qm "probe63 sonuçları" || true; git push -q
