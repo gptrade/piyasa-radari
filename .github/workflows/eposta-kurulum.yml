@@ -51,6 +51,7 @@ jobs:
         run: |
           [ -f /tmp/eposta.json ] || exit 0
           cat /tmp/eposta.json
+          git reset -q --hard && git clean -qfdx      # wrangler package.json'u değiştiriyor
           git fetch -q origin arastirma-bist-veri && git checkout -q arastirma-bist-veri
           mkdir -p kurulum && cp /tmp/eposta.json kurulum/eposta.json
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
