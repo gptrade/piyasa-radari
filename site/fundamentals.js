@@ -325,7 +325,7 @@
     if (!el.dataset.code || el.dataset.code !== code) { loading(el); el.dataset.code = code; }
     let d;
     try { d = await doc(code); } catch (e) {
-      el.innerHTML = `<div class="card">${sh.stateHTML({ kind: "info", title: `${code} için temel analiz verisi yok`, msg: "Şirket BIST-100 kapsamında değil ya da tabloları henüz yüklenmedi." })}</div>`; return;
+      el.innerHTML = `<div class="card">${sh.stateHTML({ kind: "info", title: `${code} için temel analiz verisi yok`, msg: "Şirket BIST Tüm kapsamında değil ya da tabloları henüz yüklenmedi." })}</div>`; return;
     }
     if (sh.route !== "hisse" || (sh.param || "").toUpperCase() !== code) return;
     const m = d.metrics, se = d.series;
@@ -334,11 +334,13 @@
     }
     const tabs = [["ozet", "Özet"], ["fin", "Finansallar"], ["graf", "Grafikler"], ["detay", "Detaylı Analiz"]];
     const v = m.valuation || {};
+    const nRep = Object.keys(d.reports || {}).length;
     el.innerHTML = `
+      <button type="button" class="fa-back" id="faBack">‹ Geri</button>
       <div class="fa-head card">
         <span class="fa-badge">${code}</span>
         <div class="fa-h-main"><h2 class="fa-h-title">${esc(trTitle(d.title))}</h2>
-          <p class="fa-h-tags"><span class="tag na">${esc(row?.sector || "—")}</span><span class="tag na">Son dönem ${esc(m.period)}</span><span class="tag na">${d.reports?.[m.period]?.consolidated ? "Konsolide" : "Solo"}</span>${(S.screen.rows.find(r => r.code === code)) ? "" : ""}</p></div>
+          <p class="fa-h-tags"><span class="tag na">${esc(row?.sector || "—")}</span><span class="tag na">Son dönem ${esc(m.period)}</span><span class="tag na">${d.reports?.[m.period]?.consolidated ? "Konsolide" : "Solo"}</span>${nRep < 8 ? `<span class="tag warn" data-tip="KAP'tan ${nRep} dönem raporu indirildi; geçmiş çeyrekler sırayla iniyor. Çeyreklik grafikler ve büyüme oranları tamamlandıkça dolar.">geçmiş dönemler yükleniyor · ${nRep} dönem</span>` : ""}${(S.screen.rows.find(r => r.code === code)) ? "" : ""}</p></div>
         <div class="fa-h-px"><b class="mono">${fmt.num(v.price, 2)} ₺</b><span class="muted">${tl(v.mcap)} piyasa değeri</span></div>
         <div class="fa-h-acts">${realToggle()}
           <button type="button" class="btn" id="faCmpAdd">${S.cmp.includes(code) ? "Karşılaştırmada ✓" : "Karşılaştırmaya ekle"}</button>
@@ -347,6 +349,7 @@
       <div class="seg fa-tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" data-tab="${k}" aria-checked="${S.tab === k}" aria-selected="${S.tab === k}">${l}</button>`).join("")}</div>
       <div id="faBody"></div>`;
     $$("[data-tab]", el).forEach(b => b.onclick = () => { S.tab = b.dataset.tab; renderCompany(); });
+    $("#faBack").onclick = () => history.state?.r ? history.back() : sh.go("temel");
     bindReal(el, renderCompany);
     $("#faCmpAdd").onclick = () => { if (!S.cmp.includes(code)) S.cmp = [...S.cmp, code].slice(-5); store.set("radar.finCmp", S.cmp); sh.go("karsilastir", { param: S.cmp.join(",") }); };
     $("#faSig") && ($("#faSig").onclick = e => { sh.go("sinyal"); setTimeout(() => window.radar?.openTicker?.(code, e.target), 60); });
