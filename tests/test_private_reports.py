@@ -158,3 +158,18 @@ def test_grounded_drops_tickers_not_in_text():
     g = pr.grounded(x, text, names={"TTKOM": ["Türk Telekom"]})
     assert g["tickers"] == ["THYAO", "TTKOM"] and [p["ticker"] for p in g["top_picks"]] == ["THYAO.IS"]
     assert g["model_portfolio"] == {"added": ["ASELS"], "removed": []}
+
+
+def test_reprocess_once(tmp_path, monkeypatch):
+    root = make_root(tmp_path)
+    done = tmp_path / "done.json"
+    monkeypatch.setattr(pr, "telegram", lambda r, x: True)
+    ai = FakeAI()
+    pr.process(ai, set(), {"max_per_run": 99}, root=root, done_path=done)
+    sha = pr.units(root)[0]["sha"]
+    rid = f"rapor-{sha[:16]}"
+    n = len(ai.calls)
+    res = pr.process(ai, set(), {"reprocess": [rid]}, root=root, done_path=done)
+    assert res["drop"] == [rid] and len(ai.calls) == n + 1 and res["records"][0]["id"] == rid
+    res = pr.process(ai, set(), {"reprocess": [rid]}, root=root, done_path=done)
+    assert res["drop"] == [] and len(ai.calls) == n + 1          # yalnız bir kez

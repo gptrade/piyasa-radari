@@ -513,6 +513,12 @@ def run() -> dict:
                 if pr["status"].get("failed"):
                     entry.setdefault("warnings", []).append(f"{pr['status']['failed']} rapor {private_reports.MAX_TRIES} denemede okunamadı ve bırakıldı (dosya adı/görüntü kalitesini kontrol et)")
                 status.append(entry)
+            if pr.get("drop"):                       # yeniden okunacak raporların eski akış kayıtları
+                drop = tuple(pr["drop"])
+                research.PRIVATE["drop"] = list(drop)
+                feed = [x for x in feed if not str(x.get("id", "")).startswith(drop)]
+                for k in [k for k in seen_ids if str(k).startswith(drop)]:
+                    del seen_ids[k]
             research.PRIVATE["records"] += pr["records"]
             research.PRIVATE["notes"] += pr["notes"]
             for it in pr["items"]:
