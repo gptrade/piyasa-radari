@@ -1,127 +1,540 @@
-bulunan 55
 
-['AYES'] Esas Sözleşme | Güncel Şirket Esas Sözleşmesi
-  bulunan: []
-  seçilen: None
-  bağlam: AYES ÇELİK HASIR VE ÇİT SANAYİ A.Ş. AYES Kapat Gönderim Tarihi 15.10.2026 17:31:01 Bildirim Tipi DG Yıl -- Periyot - Bildirim Ekleri ( 1 ) ESAS SÖZLEŞME.pdf Esas Sözleşme A+ A- EN Bildirim Ekleri ( 1 ) ESAS SÖZLEŞME.pdf Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl YAZDIR Özet Bilgi 
+===== ['MASFN'] Yeni İş İlişkisi
+Özet Bilgi Güneş Enerjisi Santrali (GES) Anahtar Teslim Kurulum Sözleşmesi İmzalanması Hk.
+[CONSOLIDATION_METHOD_TITLE] | [CONSOLIDATION_METHOD] |
+İlgili Şirketler
+Related Companies
+| []
+|
+İlgili Fonlar
+Related Funds
+| []
+|
+|
+Türkçe
+Turkish
+| İngilizce
+English
+|
+|
+oda_NewBusinessRelationAbstract|
+| | Yeni İş İlişkisi
+| New Business Relation
+|
+|
+|
+| | |
+oda_UpdateAnnouncementFlag|
+| |
+| Yapılan Açıklama Güncelleme mi?
+| Update Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_CorrectionAnnouncementFlag|
+| |
+| Yapılan Açıklama Düzeltme mi?
+| Correction Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_DateOfThePreviousNotificationAboutTheSameSubject|
+| |
+| Konuya İlişkin Daha Önce Yapılan Açıklamanın Tarihi
+| Date Of The Previous Notification About The Same Subject
+|
+|
+|
+| -
+|
+|
+oda_DelayedAnnouncementFlag|
+| |
+| Yapılan Açıklama Ertelenmiş Bir Açıklama mı?
+| Postponed Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_AnnouncementContentSection|
+| |
+| Bildirim İçeriği
+| Announcement Content
+|
+|
+|
+| | |
+oda_NatureOfTheOtherPartyWithWhichNewBusinessRelationWillStart|
+| |
+|
+| Yeni İş İlişkisine Başlanan/Başlanacak Kişinin Niteliği
+| Nature Of The Other Party With Which New Business Relation Will Start
+|
+|
+|
+| Müşteri (Customer)
+| Müşteri (Customer)
+|
+oda_NameSurnameOrCompanyTitleOfCustomerOrSupplier|
+| |
+|
+| Müşterinin/Tedarikçinin Adı Soyadı/Ticaret Ünvanı
+| Name Surname Or Company Title Of Customer Or Supplier
+|
+|
+|
+| -
+|
+|
+oda_IfExistsShareOfCustomerOrSupplierInNetSalesOrCostOfGoodsSoldOnLatestDisclosedProfitOrLossAndOtherComprehensiveIncomeStatementOfCompany|
+| |
+|
+| Varsa Müşterinin/Tedarikçinin Ortaklığın Kamuya Açıklanan Son Gelir Tablosundaki Net Satışlar/Satılan Mal Maliyeti İçindeki Payı
+| If Exists Share Of Customer Or Supplier In Net Sales Or Co
 
-['ETILR'] Yeni İş İlişkisi | Yeni İş İlişkisi Hakkında
-  bulunan: [(555402549.0, 'TRY'), (10077560.0, 'EUR'), (555402549.0, 'TRY'), (10077560.0, 'EUR')]
-  seçilen: {'amount': 10077560.0, 'cur': 'EUR', 'tl': 556281312, 'rev': 2274179900, 'ratio': 0.2446}
-  bağlam: ETİLER GIDA VE TİCARİ YATIRIMLAR SANAYİ VE TİCARET A.Ş. ETILR Kapat Gönderim Tarihi 15.10.2026 16:49:00 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Yeni İş İlişkisi A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl Y
+===== ['MEDTR'] İhale Süreci / Sonucu
+Özet Bilgi Tekirdağ İl Sağlık Müdürlüğü İhalesi Hakkında
+[CONSOLIDATION_METHOD_TITLE] | [CONSOLIDATION_METHOD] |
+İlgili Şirketler
+Related Companies
+| []
+|
+İlgili Fonlar
+Related Funds
+| []
+|
+|
+Türkçe
+Turkish
+| İngilizce
+English
+|
+|
+oda_WinningATenderAbstract|
+| | İhale Süreci / Sonucu
+| Tender Process / Result
+|
+|
+|
+| | |
+oda_UpdateAnnouncementFlag|
+| |
+| Yapılan Açıklama Güncelleme mi?
+| Update Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_CorrectionAnnouncementFlag|
+| |
+| Yapılan Açıklama Düzeltme mi?
+| Correction Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_DateOfThePreviousNotificationAboutTheSameSubject|
+| |
+| Konuya İlişkin Daha Önce Yapılan Açıklamanın Tarihi
+| Date Of The Previous Notification About The Same Subject
+|
+|
+|
+| -
+| -
+|
+oda_DelayedAnnouncementFlag|
+| |
+| Yapılan Açıklama Ertelenmiş Bir Açıklama mı?
+| Postponed Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_AnnouncementContentSection|
+| |
+| Bildirim İçeriği
+| Announcement Content
+|
+|
+|
+| | |
+oda_SubjectOfTender|
+| |
+|
+| İhale Konusu
+| Subject of Tender
+|
+|
+|
+| Kemoterapi İlaç Hazırlama ve Uygulama Hizmet Alımı
+| Procurement of Chemotherapy Drug Preparation and Administration Services
+|
+oda_PartyOpenedTender|
+| |
+|
+| İhaleyi Açan Taraf
+| Party Opened Tender
+|
+|
+|
+| Tekirdağ İl Sağlık Müdürlüğü
+| Tekirdağ İl Sağlık Müdürlüğü
+|
+oda_BoardDecisionOnBidForTender|
+| |
+|
+| İhaleye Teklif Verilmesine İlişkin Yönetim Kurulu Kararı
+| Board Decision On Bid for Tender
+|
+|
+|
+| 2026/37
+| 2026/37
+|
+oda_OtherPartiesIfParticipatedInTheTenderAsAGroup|
+| |
+|
+| Grup Olarak İhaleye Girilmesi Halinde Diğer Taraflar
+| Other Parties if Participated in The Tender as a Group
+|
+|
+|
+| -
+| -
+|
+oda_ShareOfTheCompanyIfParticipatedInTheTenderAsAGroup|
+| |
+|
+| Grup Olarak İhaleye Girilmesi Halinde Ortaklığ
 
-['EUPWR'] İhale Süreci / Sonucu | İhale Süreci Hakkında
-  bulunan: [(390931876.0, 'TRY'), (390931876.0, 'TRY'), (390931876.0, 'TRY')]
-  seçilen: {'amount': 390931876.0, 'cur': 'TRY', 'tl': 390931876, 'rev': 17237558738, 'ratio': 0.0227}
-  bağlam: İhale Bedeli
+===== ['PCILT'] Yeni İş İlişkisi
+Özet Bilgi Yeni İş İlişkisi
+[CONSOLIDATION_METHOD_TITLE] | [CONSOLIDATION_METHOD] |
+İlgili Şirketler
+Related Companies
+| []
+|
+İlgili Fonlar
+Related Funds
+| []
+|
+|
+Türkçe
+Turkish
+| İngilizce
+English
+|
+|
+oda_NewBusinessRelationAbstract|
+| | Yeni İş İlişkisi
+| New Business Relation
+|
+|
+|
+| | |
+oda_UpdateAnnouncementFlag|
+| |
+| Yapılan Açıklama Güncelleme mi?
+| Update Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_CorrectionAnnouncementFlag|
+| |
+| Yapılan Açıklama Düzeltme mi?
+| Correction Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_DateOfThePreviousNotificationAboutTheSameSubject|
+| |
+| Konuya İlişkin Daha Önce Yapılan Açıklamanın Tarihi
+| Date Of The Previous Notification About The Same Subject
+|
+|
+|
+| -
+| -
+|
+oda_DelayedAnnouncementFlag|
+| |
+| Yapılan Açıklama Ertelenmiş Bir Açıklama mı?
+| Postponed Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_AnnouncementContentSection|
+| |
+| Bildirim İçeriği
+| Announcement Content
+|
+|
+|
+| | |
+oda_NatureOfTheOtherPartyWithWhichNewBusinessRelationWillStart|
+| |
+|
+| Yeni İş İlişkisine Başlanan/Başlanacak Kişinin Niteliği
+| Nature Of The Other Party With Which New Business Relation Will Start
+|
+|
+|
+| Müşteri (Customer)
+| Müşteri (Customer)
+|
+oda_NameSurnameOrCompanyTitleOfCustomerOrSupplier|
+| |
+|
+| Müşterinin/Tedarikçinin Adı Soyadı/Ticaret Ünvanı
+| Name Surname Or Company Title Of Customer Or Supplier
+|
+|
+|
+| Doğanlar Mobilya Grubu İmalat Sanayi ve Ticaret A.Ş. (Doğtaş,Kelebek,Lova)
+| Doğanlar Mobilya Grubu İmalat Sanayi ve Ticaret A.Ş. (Doğtaş, Kelebek and Lova)
+|
+oda_IfExistsShareOfCustomerOrSupplierInNetSalesOrCostOfGoodsSoldOnLatestDisclosedProfitOrLossAndOtherComprehensiveIncomeStatementOfCompany|
+| |
+|
+| Varsa Müşterinin/Tedarikçinin Ortaklığın Kamuya Açıklanan Son Gelir Tablosundaki Net Satışlar/Sat
 
-['GOODY'] Esas Sözleşme | Esas Sözleşme
+===== ['CLEBI'] İhale Süreci / Sonucu
+Özet Bilgi Bangladeş Hazrat Shahjalal Uluslararası Havalimanı Terminal 3 yer hizmetleri ihale sürecine ilişkin bilgilendirme
+[CONSOLIDATION_METHOD_TITLE] | [CONSOLIDATION_METHOD] |
+İlgili Şirketler
+Related Companies
+| []
+|
+İlgili Fonlar
+Related Funds
+| []
+|
+|
+Türkçe
+Turkish
+| İngilizce
+English
+|
+|
+oda_WinningATenderAbstract|
+| | İhale Süreci / Sonucu
+| Tender Process / Result
+|
+|
+|
+| | |
+oda_UpdateAnnouncementFlag|
+| |
+| Yapılan Açıklama Güncelleme mi?
+| Update Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_CorrectionAnnouncementFlag|
+| |
+| Yapılan Açıklama Düzeltme mi?
+| Correction Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_DateOfThePreviousNotificationAboutTheSameSubject|
+| |
+| Konuya İlişkin Daha Önce Yapılan Açıklamanın Tarihi
+| Date Of The Previous Notification About The Same Subject
+|
+|
+|
+| -
+| -
+|
+oda_DelayedAnnouncementFlag|
+| |
+| Yapılan Açıklama Ertelenmiş Bir Açıklama mı?
+| Postponed Notification Flag
+|
+|
+|
+| Evet (Yes)
+| Evet (Yes)
+|
+oda_AnnouncementContentSection|
+| |
+| Bildirim İçeriği
+| Announcement Content
+|
+|
+|
+| | |
+oda_SubjectOfTender|
+| |
+|
+| İhale Konusu
+| Subject of Tender
+|
+|
+|
+| Bangladeş Hazrat Shahjalal Uluslararası Havalimanı Terminal 3'ünde uluslararası uçuşlara yönelik ikinci yer hizmetleri sağlayıcısının seçimi
+| Selection of the second ground handling service provider for international flights at Terminal 3 of Hazrat Shahjalal International Airport, Bangladesh
+|
+oda_PartyOpenedTender|
+| |
+|
+| İhaleyi Açan Taraf
+| Party Opened Tender
+|
+|
+|
+| Sumitomo Corporation, Japan Airport Terminal Co. Ltd., Narita International Airport Corporation ve Nippon Koei Co. Ltd.'den oluşan Terminal3 İşletme Konsorsiyumu
+| The Terminal 3 Operating Consortium comprising Sumitomo Corporation, Japan Airport Terminal Co. Ltd., Narita Internati
 
-  bulunan: []
-  seçilen: None
-  bağlam: GOODYEAR LASTİKLERİ T.A.Ş. GOODY Kapat Gönderim Tarihi 14.10.2026 20:51:38 Bildirim Tipi DG Yıl -- Periyot - Bildirim Ekleri ( 2 ) Esas Sözleşme.pdf Articles of Association.pdf Esas Sözleşme A+ A- EN Bildirim Ekleri ( 2 ) Esas Sözleşme.pdf Articles of Association.pdf Bildirimler Finansal Tablolar Ha
-
-['MASFN'] Yeni İş İlişkisi | Güneş Enerjisi Santrali (GES) Anahtar Teslim Kurulum Sözleşmesi İmzalanması Hk.
-  bulunan: []
-  seçilen: None
-  bağlam: MASFEN ENERJİ A.Ş. MASFN Kapat Gönderim Tarihi 14.10.2026 15:32:21 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Yeni İş İlişkisi A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl YAZDIR Özet Bilgi Güneş Enerjisi Santr
-
-['MEDTR'] İhale Süreci / Sonucu | Tekirdağ İl Sağlık Müdürlüğü İhalesi Hakkında
-  bulunan: []
-  seçilen: None
-  bağlam: İhale Bedeli
-
-['ORGE'] Yeni İş İlişkisi | Bodrum Hillside Hotel Projesine ilişkin sözleşme bedeli artışı
-  bulunan: [(649258506.0, 'TRY'), (70021744.0, 'TRY'), (719280250.0, 'TRY')]
-  seçilen: {'amount': 719280250.0, 'cur': 'TRY', 'tl': 719280250, 'rev': 4644176762, 'ratio': 0.1549}
-  bağlam: ORGE ENERJİ ELEKTRİK TAAHHÜT A.Ş. ORGE Kapat Gönderim Tarihi 13.10.2026 18:57:29 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Yeni İş İlişkisi A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl YAZDIR Özet Bilgi Bodrum
-
-['VKGYO'] Esas Sözleşme | Esas Sözleşme
-  bulunan: []
-  seçilen: None
-  bağlam: VAKIF GAYRİMENKUL YATIRIM ORTAKLIĞI A.Ş. VKGYO Kapat Gönderim Tarihi 13.10.2026 18:32:11 Bildirim Tipi DG Yıl -- Periyot - Bildirim Ekleri ( 2 ) ESAS SÖZLEŞME 13.10.2026.pdf ARTICLES OF ASSOCIATION 13.10.2026.pdf Esas Sözleşme A+ A- EN Bildirim Ekleri ( 2 ) ESAS SÖZLEŞME 13.10.2026.pdf ARTICLES OF A
-
-['BETAE'] Yeni İş İlişkisi | Yeni İş İlişkisi
-  bulunan: [(1880000.0, 'EUR'), (675043.0, 'EUR'), (140802032.0, 'TRY')]
-  seçilen: {'amount': 140802032.0, 'cur': 'TRY', 'tl': 140802032}
-  bağlam: BETA ENERJİ VE TEKNOLOJİ A.Ş. BETAE Kapat Gönderim Tarihi 13.10.2026 16:44:50 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Yeni İş İlişkisi A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl YAZDIR Özet Bilgi Yeni İş İ
-
-['FONET'] Yeni İş İlişkisi | Batman İl Sağlık Müdürlüğü ile imzalanan sözleşme hakkında.
-  bulunan: [(137716980.0, 'TRY')]
-  seçilen: {'amount': 137716980.0, 'cur': 'TRY', 'tl': 137716980, 'rev': 1117827143, 'ratio': 0.1232}
-  bağlam: FONET BİLGİ TEKNOLOJİLERİ A.Ş. FONET Kapat Gönderim Tarihi 13.10.2026 16:15:29 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Yeni İş İlişkisi A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl YAZDIR Özet Bilgi Batman İ
-
-['INFO', 'IYF'] Esas Sözleşme | Şirket Ana Sözleşmesinin İlanı Hk.
-  bulunan: []
-  seçilen: None
-  bağlam: İNFO YATIRIM MENKUL DEĞERLER A.Ş. INFO, IYF Kapat Gönderim Tarihi 13.10.2026 12:23:17 Bildirim Tipi DG Yıl -- Periyot - Bildirim Ekleri ( 1 ) İnfo Yatırım Ana Sözleşme.pdf Esas Sözleşme A+ A- EN Bildirim Ekleri ( 1 ) İnfo Yatırım Ana Sözleşme.pdf Bildirimler Finansal Tablolar Hak Kullanımları PDF WO
-
-['OZATD'] Yeni İş İlişkisi | YENİ İŞ İLİŞKİSİ HK.
-  bulunan: [(4565000.0, 'USD'), (217804367.0, 'TRY'), (5605000.0, 'USD'), (276029995.5, 'TRY')]
-  seçilen: {'amount': 5605000.0, 'cur': 'USD', 'tl': 276326500, 'rev': 2881550891, 'ratio': 0.0959}
-  bağlam: ÖZATA DENİZCİLİK SANAYİ VE TİCARET A.Ş. OZATD Kapat Gönderim Tarihi 12.10.2026 20:31:31 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Yeni İş İlişkisi A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl YAZDIR Özet Bilgi
-
-['PCILT'] Yeni İş İlişkisi | Yeni İş İlişkisi
-  bulunan: []
-  seçilen: None
-  bağlam: PC İLETİŞİM VE MEDYA HİZMETLERİ SANAYİ TİCARET A.Ş. PCILT Kapat Gönderim Tarihi 12.10.2026 18:13:09 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Yeni İş İlişkisi A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl YAZDI
-
-['OSVKS'] Esas Sözleşme | Esas Sözleşme
-  bulunan: []
-  seçilen: None
-  bağlam: OSMANLI VARLIK KİRALAMA A.Ş. OSVKS Kapat Gönderim Tarihi 12.10.2026 17:39:48 Bildirim Tipi DG Yıl -- Periyot - Bildirim Ekleri ( 1 ) Esas Sozlesme.pdf Esas Sözleşme A+ A- EN Bildirim Ekleri ( 1 ) Esas Sozlesme.pdf Bildirimler Finansal Tablolar PDF WORD EXCEl YAZDIR Özet Bilgi Esas Sözleşme [CONSOLID
-
-['BKRGY'] Esas Sözleşme | Bakırcı GYO Esas Sözleşme
-  bulunan: []
-  seçilen: None
-  bağlam: BAKIRCI GAYRİMENKUL YATIRIM ORTAKLIĞI A.Ş. BKRGY Kapat Gönderim Tarihi 09.10.2026 23:05:46 Bildirim Tipi DG Yıl -- Periyot - Bildirim Ekleri ( 1 ) Bakırcı GYO Esas Sözleşme.pdf Esas Sözleşme A+ A- EN Bildirim Ekleri ( 1 ) Bakırcı GYO Esas Sözleşme.pdf Bildirimler Finansal Tablolar Hak Kullanımları P
-
-['CRFSA'] Esas Sözleşme Tadili | Esas Sözleşme tadiline ilişkin Yönetim Kurulu Kararı
-  bulunan: []
-  seçilen: None
-  bağlam: CARREFOURSA CARREFOUR SABANCI TİCARET MERKEZİ A.Ş. CRFSA Kapat Gönderim Tarihi 09.10.2026 19:34:00 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 2 ) Esas Sözleşme Tadil Metni TR.pdf Amendment to the Articles of Association Former and New Versions EN.pdf Esas Sözleşme Tadili A+ A- EN Bildirim 
-
-['CLEBI'] İhale Süreci / Sonucu | Bangladeş Hazrat Shahjalal Uluslararası Havalimanı Terminal 3 yer hizmetleri iha
-  bulunan: []
-  seçilen: None
-  bağlam: İhale Bedeli
-
-['BKRGY'] Esas Sözleşme Tadili | Esas Sözleşme Tadilinin Tescil Edilmesi
-  bulunan: [(1500000000.0, 'TRY'), (501000000.0, 'TRY'), (668000000.0, 'TRY')]
-  seçilen: {'amount': 1500000000.0, 'cur': 'TRY', 'tl': 1500000000}
-  bağlam: BAKIRCI GAYRİMENKUL YATIRIM ORTAKLIĞI A.Ş. BKRGY Kapat Gönderim Tarihi 09.10.2026 17:23:38 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Esas Sözleşme Tadili A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl YAZDIR Öze
-
-['GESAN'] İhale Süreci / Sonucu | İhale Sonucu hakkında
-  bulunan: [(497777777.0, 'TRY'), (497777777.0, 'TRY')]
-  seçilen: {'amount': 497777777.0, 'cur': 'TRY', 'tl': 497777777, 'rev': 23730216904, 'ratio': 0.021}
-  bağlam: İhale Bedeli
-
-['ATSYH'] Esas Sözleşme Tadili | Şirketimiz Esas Sözleşmesi?nin Sermaye ve Hisse Senetleri başlıklı 7. maddesinin
-  bulunan: []
-  seçilen: None
-  bağlam: ATLANTİS YATIRIM HOLDİNG A.Ş. ATSYH Kapat Gönderim Tarihi 08.10.2026 20:33:47 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 1 ) 7.MADDE ESAS SOZLESME TADILI.pdf Esas Sözleşme Tadili A+ A- EN Bildirim Ekleri ( 1 ) 7.MADDE ESAS SOZLESME TADILI.pdf Bildirimler Finansal Tablolar Hak Kullanımları 
-
-['BIGEN'] Esas Sözleşme | Esas Sözleşme
-  bulunan: []
-  seçilen: None
-  bağlam: BİRLEŞİM GRUP ENERJİ YATIRIMLARI A.Ş. BIGEN Kapat Gönderim Tarihi 08.10.2026 18:10:39 Bildirim Tipi DG Yıl -- Periyot - Bildirim Ekleri ( 1 ) Esas Sözleşme.pdf Esas Sözleşme A+ A- EN Bildirim Ekleri ( 1 ) Esas Sözleşme.pdf Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl YAZDIR Özet Bil
-
-['ASELS'] Yeni İş İlişkisi | Sözleşme İmzalanması
-  bulunan: [(125000000.0, 'USD'), (125000000.0, 'USD')]
-  seçilen: {'amount': 125000000.0, 'cur': 'USD', 'tl': 6162500000, 'rev': 230030036910, 'ratio': 0.0268}
-  bağlam: ASELSAN ELEKTRONİK SANAYİ VE TİCARET A.Ş. ASELS Kapat Gönderim Tarihi 08.10.2026 09:16:20 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Yeni İş İlişkisi A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak Kullanımları PDF WORD EXCEl YAZDIR Özet Bil
-
-['SMRTG'] Yeni İş İlişkisi | Yeni İş İlişkisi, Arçelik Pazarlama ve Smart Güneş
-  bulunan: [(19516911.55, 'USD')]
-  seçilen: {'amount': 19516911.55, 'cur': 'USD', 'tl': 962183739, 'rev': 13688735393, 'ratio': 0.0703}
-  bağlam: SMART GÜNEŞ ENERJİSİ TEKNOLOJİLERİ ARAŞTIRMA GELİŞTİRME ÜRETİM SANAYİ VE TİCARET A.Ş. SMRTG Kapat Gönderim Tarihi 08.10.2026 07:31:10 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Yeni İş İlişkisi A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak
-
-['PLTUR'] Yeni İş İlişkisi | Yeni İş İlişkisi Hk.
-  bulunan: [(1098388750.0, 'TRY')]
-  seçilen: {'amount': 1098388750.0, 'cur': 'TRY', 'tl': 1098388750, 'rev': 9913938546, 'ratio': 0.1108}
-  bağlam: PLATFORM TURİZM TAŞIMACILIK GIDA İNŞAAT TEMİZLİK HİZMETLERİ SANAYİ VE TİCARET A.Ş. PLTUR Kapat Gönderim Tarihi 07.10.2026 18:51:36 Bildirim Tipi ÖDA Yıl -- Periyot - Bildirim Ekleri ( 0 ) Ek Dosya Yok! Yeni İş İlişkisi A+ A- EN Bildirim Ekleri ( 0 ) Ek Dosya Yok! Bildirimler Finansal Tablolar Hak Ku
-
-['VEYAS'] Esas Sözleşme | Esas Sözleşme
-  bulunan: []
-  seçilen: None
-  bağlam: TÜRKER VANGÖLÜ ENERJİ YATIRIM A.Ş. VEYAS Kapat Gönderim Tarihi 07.10.2026 18:09:47 Bildirim Tipi DG Yıl -- Periyot - Bildirim Ekleri ( 1 ) VEYAS Esas Sözleşme güncel.pdf Esas Sözleşme A+ A- EN Bildirim Ekleri ( 1 ) VEYAS Esas Sözleşme güncel.pdf Bildirimler Finansal Tablolar Hak Kullanımları PDF WOR
+===== ['MEDTR'] İhale Süreci / Sonucu
+Özet Bilgi Devlet Malzeme Ofisi İhalesi Hakkında
+[CONSOLIDATION_METHOD_TITLE] | [CONSOLIDATION_METHOD] |
+İlgili Şirketler
+Related Companies
+| []
+|
+İlgili Fonlar
+Related Funds
+| []
+|
+|
+Türkçe
+Turkish
+| İngilizce
+English
+|
+|
+oda_WinningATenderAbstract|
+| | İhale Süreci / Sonucu
+| Tender Process / Result
+|
+|
+|
+| | |
+oda_UpdateAnnouncementFlag|
+| |
+| Yapılan Açıklama Güncelleme mi?
+| Update Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_CorrectionAnnouncementFlag|
+| |
+| Yapılan Açıklama Düzeltme mi?
+| Correction Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_DateOfThePreviousNotificationAboutTheSameSubject|
+| |
+| Konuya İlişkin Daha Önce Yapılan Açıklamanın Tarihi
+| Date Of The Previous Notification About The Same Subject
+|
+|
+|
+| -
+| -
+|
+oda_DelayedAnnouncementFlag|
+| |
+| Yapılan Açıklama Ertelenmiş Bir Açıklama mı?
+| Postponed Notification Flag
+|
+|
+|
+| Hayır (No)
+| Hayır (No)
+|
+oda_AnnouncementContentSection|
+| |
+| Bildirim İçeriği
+| Announcement Content
+|
+|
+|
+| | |
+oda_SubjectOfTender|
+| |
+|
+| İhale Konusu
+| Subject of Tender
+|
+|
+|
+| A Grubu Tıbbi Sarf Malzeme Alımı (4 Aylık) Eylül 2026
+| Procurement of Group A Medical Consumables (4 Months) September 2026
+|
+oda_PartyOpenedTender|
+| |
+|
+| İhaleyi Açan Taraf
+| Party Opened Tender
+|
+|
+|
+| Devlet Malzeme Ofisi
+| Devlet Malzeme Ofisi (The State Supply Office)
+|
+oda_BoardDecisionOnBidForTender|
+| |
+|
+| İhaleye Teklif Verilmesine İlişkin Yönetim Kurulu Kararı
+| Board Decision On Bid for Tender
+|
+|
+|
+| 2026/36
+| 2026/36
+|
+oda_OtherPartiesIfParticipatedInTheTenderAsAGroup|
+| |
+|
+| Grup Olarak İhaleye Girilmesi Halinde Diğer Taraflar
+| Other Parties if Participated in The Tender as a Group
+|
+|
+|
+| -
+| -
+|
+oda_ShareOfTheCompanyIfParticipatedInTheTenderAsAGroup|
+| |
+|
+| Grup Olarak İhaleye Girilmesi Halinde Ortaklı
