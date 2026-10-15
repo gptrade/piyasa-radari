@@ -97,3 +97,23 @@ def test_tms29_and_cash_quality(trgyo):
     assert approx(r["ccc_chg"], -30.0, 0.1) and r["ccc"] > 0
     c = M.company(trgyo, 92.70)["criteria"]["Enflasyon Muhasebesi & Nakit Kalitesi"]
     assert (c["pass"], c["total"]) == (6, 6)
+
+
+def test_pb_history_median_and_relative(trgyo):
+    # ay sonu gerçek fiyatlar (bedelsiz düzeltmesi geri alınmış); TRGYO dönemleri 2025/03…2026/06
+    hist = [["2025-03", 60.0], ["2025-06", 70.0], ["2025-09", 75.0], ["2025-12", 80.0], ["2026-03", 85.0], ["2026-06", 88.0]]
+    m = M.company(trgyo, 92.70, hist)
+    ph, v = m["pb_hist"], m["valuation"]
+    assert ph["n"] >= 3 and ph["med"] > 0 and v["pb_med3"] == ph["med"]
+    assert abs(v["pb_rel3"] - (v["pb"] / ph["med"] - 1)) < 1e-3
+    assert M.company(trgyo, 92.70)["pb_hist"] is None and "pb_med3" not in M.company(trgyo, 92.70)["valuation"]
+
+
+def test_raw_monthly_undoes_splits():
+    import pandas as pd
+    from radar.fundamentals import store
+    idx = pd.to_datetime(["2025-01-30", "2025-01-31", "2025-02-28", "2025-03-31"])
+    close = pd.Series([10.0, 10.0, 11.0, 12.0], index=idx)          # Yahoo: geriye dönük düzeltilmiş
+    splits = pd.Series([0.0, 0.0, 2.0, 0.0], index=idx)             # Şubat sonu %100 bedelsiz
+    out = store.raw_monthly(close, splits)
+    assert out == [["2025-01", 20.0], ["2025-02", 11.0], ["2025-03", 12.0]]

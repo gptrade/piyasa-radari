@@ -438,9 +438,12 @@ def pb_history(view: View, hist: list | None, now_pb: float | None, years: int =
     past = [v for pk, v in pts if lo < pk < last] or [v for pk, v in pts if pk < last]
     if len(past) < 3:
         return {"series": pts, "n": len(past)}
-    avg = sum(past) / len(past)
-    return {"series": pts, "n": len(past), "avg": round(avg, 3), "min": min(past), "max": max(past),
-            "rel": round(now_pb / avg - 1, 4), "from": pts[0][0]}
+    # Medyan: tek dönemlik veri hatası (ör. bedelsiz tarihi ile rapor dönemi kayması) ortalamayı bozmasın
+    med = median(past)
+    clean = [v for v in past if med / 3 <= v <= med * 3]
+    return {"series": [p for p in pts if med / 3 <= p[1] <= med * 3 or p[0] == last], "n": len(clean),
+            "med": round(median(clean), 3), "min": min(clean), "max": max(clean),
+            "rel": round(now_pb / median(clean) - 1, 4), "from": pts[0][0]}
 
 
 def company(doc: dict, price: float | None, px_hist: list | None = None) -> dict | None:
@@ -449,6 +452,7 @@ def company(doc: dict, price: float | None, px_hist: list | None = None) -> dict
         out = company_fin(doc, price)
         if out and ser and ser.get("periods"):
             out["pb_hist"] = pb_history(View(ser, doc.get("currency") or "TRY"), px_hist, out["valuation"].get("pb"))
+            _pb_fields(out)
         return out
     if not ser or not ser.get("periods") or doc.get("template") != "sanayi":
         return None
@@ -467,7 +471,7 @@ def company(doc: dict, price: float | None, px_hist: list | None = None) -> dict
         for k in HISTORY_KEYS:
             v = rp.get(k)
             hist[k].append(round(v, 4) if isinstance(v, float) else v)
-    return {
+    out = {
         "template": "sanayi",
         "period": pk, "ratios": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in r.items()},
         "valuation": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in val.items()},
@@ -479,6 +483,15 @@ def company(doc: dict, price: float | None, px_hist: list | None = None) -> dict
         "history": {"periods": view.p, **hist},
         "pb_hist": pb_history(view, px_hist, val.get("pb")),
     }
+    _pb_fields(out)
+    return out
+
+
+def _pb_fields(m: dict) -> None:
+    ph = m.get("pb_hist") or {}
+    if ph.get("med"):
+        m["valuation"]["pb_med3"] = ph["med"]
+        m["valuation"]["pb_rel3"] = ph["rel"]
 
 
 # ---------- evren aşaması: sektör medyanları, değerleme puanı, genel skor ----------

@@ -521,7 +521,6 @@ def build_metrics() -> int:
             "mscore": m["beneish_m"], "intrinsic": m.get("intrinsic"), "potential": m.get("potential"),
             "crit": {k: [c["pass"], c["total"], c["known"], [v for _, v in c["items"]]] for k, c in m["criteria"].items()},
             "div": div_summary(divs.get(row["code"], []), m["valuation"].get("price")),
-            "pbh": m.get("pb_hist"),
         })
     done = {r["code"] for r in rows}
     for code, (p, doc) in docs.items():                   # skoru henüz çıkmayanlar: temel bilgilerle listelenir

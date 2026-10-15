@@ -61,6 +61,8 @@
     ev_sales: ["FD/Satış", x, -1, "Değerleme"], ps: ["F/Satış", x, -1, "Değerleme"], peg: ["PEG", x, -1, "Değerleme"],
     earnings_yield: ["Kazanç getirisi", pct, 1, "Değerleme"], fcf_yield: ["Serbest nakit getirisi", pct, 1, "Değerleme"],
     div_yield: ["Temettü verimi (12A)", pct, 1, "Değerleme"],
+    pb_med3: ["PD/DD 3 yıllık medyan", x, -1, "Değerleme"],
+    pb_rel3: ["PD/DD'nin 3 yıllık medyanına göre farkı", pctS, -1, "Değerleme"],
     // banka
     real_roe: ["Reel ROE (TÜFE'den arındırılmış)", pctS, 1, "Karlılık"], inflation: ["Yıllık TÜFE (dönem sonu)", pct, -1, "Karlılık"],
     nim: ["Net faiz marjı (aktife göre)", pct, 1, "Faiz marjı & gelir"], fee_share: ["Ücret-komisyonun gelirdeki payı", pct, 1, "Faiz marjı & gelir"],
@@ -78,11 +80,11 @@
   const MET_T = {
     sanayi: ["gross_margin", "ebitda_margin", "op_margin", "core_margin", "net_margin", "roe", "roa", "roic", "rev_growth", "ebitda_growth", "net_growth", "asset_growth",
       "net_debt_ebitda", "debt_equity", "fin_debt_equity", "liab_assets", "interest_cov", "current", "quick", "cash_ratio", "cfo_ni", "fcf_margin", "accruals", "fcf_conv", "mon_share", "pbt_ex_mon_margin", "rule40",
-      "asset_turnover", "inv_days", "rec_days", "pay_days", "ccc", "ccc_chg", "pe", "pb", "ev_ebitda", "ev_sales", "ps", "peg", "earnings_yield", "fcf_yield", "div_yield"],
+      "asset_turnover", "inv_days", "rec_days", "pay_days", "ccc", "ccc_chg", "pe", "pb", "pb_med3", "pb_rel3", "ev_ebitda", "ev_sales", "ps", "peg", "earnings_yield", "fcf_yield", "div_yield"],
     banka: ["roe", "real_roe", "roa", "inflation", "tax_rate", "nim", "fee_share", "cost_income", "fee_cover", "cost_of_risk", "ldr", "equity_assets",
-      "loan_growth", "deposit_growth", "net_growth", "rev_growth", "pe", "pb", "peg", "earnings_yield", "div_yield"],
+      "loan_growth", "deposit_growth", "net_growth", "rev_growth", "pe", "pb", "pb_med3", "pb_rel3", "peg", "earnings_yield", "div_yield"],
     sigorta: ["roe", "real_roe", "roa", "inflation", "loss_ratio", "expense_ratio", "combined", "tech_margin", "retention", "equity_assets", "reserves_cover",
-      "premium_growth", "net_growth", "pe", "pb", "peg", "earnings_yield", "div_yield"],
+      "premium_growth", "net_growth", "pe", "pb", "pb_med3", "pb_rel3", "peg", "earnings_yield", "div_yield"],
   };
   const TPL = { sanayi: "Sanayi/hizmet", banka: "Banka", sigorta: "Sigorta" };
   const tplOf = x => x?.metrics?.template || x?.template || x?.t || "sanayi";
@@ -444,6 +446,22 @@
       Değerleme puanı <b>${m.valuation_score ?? "—"}/100</b> ile genel skor <b>${m.overall ?? "—"}/100 (${m.grade || "—"})</b>. Piotroski ${m.piotroski ?? "—"}/9, Altman Z'' ${fmt.num(m.altman_z2, 2)} (${zZone(m.altman_z2)}), Beneish M ${fmt.num(m.beneish_m, 2)} (${m.beneish_m == null ? "—" : m.beneish_m < -1.78 ? "düşük risk" : "dikkat"}).`;
     return { strong, weak, view, viewCls, text };
   }
+  // PD/DD tarihçesi; GYO ve holdinglerde net aktif değere (özkaynak) göre iskonto olarak okunur
+  function pbCard(m, row) {
+    const ph = m.pb_hist, v = m.valuation;
+    if (!ph?.series?.length || ph.series.length < 3) return "";
+    const nav = /GAYRİMENKUL YATIRIM|HOLDİNG/i.test(row?.sector || "");
+    const disc = p => p == null ? "—" : p < 1 ? `%${fmt.num((1 - p) * 100, 0)} iskonto` : `%${fmt.num((p - 1) * 100, 0)} prim`;
+    const labels = ph.series.map(p => qlabel(p[0])).concat(["Bugün"]);
+    const vals = ph.series.map(p => p[1]).concat([v.pb]);
+    const verdict = ph.rel == null ? "" : ph.rel <= -0.15 ? `<b class="up">tarihsel medyanına göre ucuz</b>` : ph.rel >= 0.15 ? `<b class="down">tarihsel medyanına göre pahalı</b>` : "tarihsel medyanına yakın";
+    const text = ph.med ? `Bugün PD/DD <b>${x(v.pb)}</b>${nav ? ` (özkaynağa ${disc(v.pb)})` : ""}; son 3 yılın dönem sonu medyanı <b>${x(ph.med)}</b>${nav ? ` (${disc(ph.med)})` : ""}, aralık ${x(ph.min)}–${x(ph.max)}. Fark <b>${pctS(ph.rel)}</b>: ${verdict}.`
+      : `Karşılaştırma için en az 3 geçmiş dönem gerekiyor (şu an ${ph.n}).`;
+    return `<section class="card"><div class="card-head"><h2 class="card-title">${nav ? "Net aktif değer iskontosu (PD/DD)" : "PD/DD tarihçesi"}</h2><span class="card-meta">dönem sonu fiyat × o dönemin pay sayısı / ana ortaklık özkaynağı</span></div>
+      <p class="d-sum">${text}</p>
+      ${lineChart(labels, [{ name: "PD/DD", vals }, ...(ph.med ? [{ name: "3 yıllık medyan", vals: vals.map(() => ph.med) }] : [])], { kind: "x", tipFmt: x, w: 900 })}
+      ${nav ? `<p class="card-foot">GYO'larda özkaynak büyük ölçüde ekspertiz değerli gayrimenkullerden oluşur; PD/DD < 1 net aktif değere iskonto demektir. Tek başına iskonto alım sinyali değildir: hisse her zaman iskontolu işlem görüyorsa asıl soru, bugünkü iskontonun kendi geçmişine göre derin olup olmadığıdır. Holdinglerde özkaynak, iştiraklerin piyasa değerini değil defter değerini yansıtır.</p>` : ""}</section>`;
+  }
   const zZone = z => z == null ? "—" : z > 2.6 ? "güvenli bölge" : z > 1.1 ? "gri bölge" : "riskli bölge";
 
   function tabSummary(d, row) {
@@ -491,6 +509,7 @@
         ${mini("Beklentiler", "aracı kurumlar", res ? [["Medyan hedef", res.median_tp ? fmt.num(res.median_tp, 2) + " ₺" : "—", res.median_tp && v.price ? q(pctS(res.median_tp / v.price - 1, 1), res.median_tp / v.price - 1) : ""], ["Hedef veren kurum", fmt.int(res.n || 0)], ["Dağılım", `${res.dist?.AL || 0} AL · ${res.dist?.TUT || 0} TUT · ${res.dist?.SAT || 0} SAT`]] : [["Kurum notu", "Yok"], ["Kapsam", "İzleme listesi"]])}
         ${mini("Şirket", "", [["Ödenmiş sermaye", tl(se.bs.paid_capital?.[i])], ["Özkaynak (ana ort.)", tl(se.bs.equity_parent?.[i])], ["Toplam varlık", tl(se.bs.total_assets?.[i])]])}
       </div>
+      ${pbCard(m, row)}
       <div class="fa-two">
         <section class="card"><div class="card-head"><h2 class="card-title">Yönetici özeti</h2><span class="fa-outlook ${s.viewCls}">Temel görünüm: ${s.view}</span></div>
           <p class="d-sum">${s.text}</p>
@@ -819,6 +838,7 @@
           <li><b>Serbest nakit / FAVÖK</b> = 12A serbest nakit akışı / 12A FAVÖK. <b>Tahakkuk oranı</b> = (net kar − işletme nakdi) / ortalama aktif (Sloan).</li>
           <li><b>Nakit dönüşüm süresi</b> = stok süresi + alacak süresi − borç süresi (gün); <b>değişim</b> bir yıl önceki aynı döneme göre.</li>
           <li><b>Rule of 40</b> = reel satış büyümesi + FAVÖK marjı; %40 ve üstü büyüme ile karlılığın birlikte güçlü olduğunu gösterir.</li>
+          <li><b>Tarihsel PD/DD</b> = her rapor dönemi sonunda (ay sonu kapanış × o dönemin ödenmiş sermayesi) / ana ortaklık özkaynağı. Yahoo kapanışlarındaki bedelsiz/bölünme düzeltmesi geri alınır; TMS 29'da özkaynak da o dönemin TL'siyle olduğundan oran tutarlıdır. Bugünkü PD/DD son 3 yılın dönem sonu <b>medyanıyla</b> karşılaştırılır (medyanın üçte biri ile üç katı dışındaki tekil veri hataları atılır). GYO ve holdinglerde net aktif değer iskontosu olarak okunur.</li>
         </ul>
       </section>
       <section class="card fa-method"><h2 class="card-title">Puanlar</h2>
