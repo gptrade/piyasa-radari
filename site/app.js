@@ -915,7 +915,10 @@
     wrap.className = "tk-panel";
     const p = state.prices[sym];
     const all = state.feed.items.filter(it => relTickers(it).includes(sym));
-    const items = all.filter(it => !isTech(it)).sort((a, b) => impact(b) - impact(a) || (b.published > a.published ? 1 : -1));
+    // Hisse paneli: son 14 günün haberleri, yeniden eskiye; yüksek önemliler işaretli (eskiden etki puanına göreydi)
+    // gürültü: AI'ın çok düşük güven verdiği kayıtlar ve TradingView'in boş haber listesi sayfaları (akışta kalırlar)
+    const noise = it => (it.analysis && it.analysis.confidence <= 10) || (!it.analysis && /TradingView'de .* tarafından haberler|News by .* on TradingView/i.test(it.title || ""));
+    const items = all.filter(it => !isTech(it) && !noise(it) && ageMin(it.published) <= 14 * 1440).sort((a, b) => (b.published > a.published ? 1 : -1));
     const techs = all.filter(it => isTech(it) && !isAnom(it)).sort((a, b) => (b.published > a.published ? 1 : -1)).slice(0, 4);
     const { net, raw, base, n } = newsNet(sym);
     const nk = !n ? null : net > 0.15 ? 1 : net < -0.15 ? -1 : 0;
@@ -928,10 +931,10 @@
       </div>
       <p class="tp-sub">Haber (son 24 sa): ${n ? `<b>${fmt.int(n)}</b> · net <span class="${dirCls(nk)}">${glyph(nk)} ${nk > 0 ? "olumlu" : nk < 0 ? "olumsuz" : "nötr"}</span>
         <span class="tp-norm" data-tip="Haberler ve AI genelde iyimser yazar; olumlu haberden hissenin olağan iyimserlik payı düşülür. Ham ortalama ${netTxt(raw)}, normal seviye ${netTxt(base)} (son 1–7 gün), etkin yön ${netTxt(net)} (±0,15 üstü olumlu/olumsuz).">ham ${netTxt(raw)} · normal ${netTxt(base)}</span>` : "yok"}</p>
-      ${items.length ? `<ul class="tp-news">${items.slice(0, 5).map(it => { const a = it.analysis, k = a ? sign(a.sentiment) : null; return `
-        <li><button type="button" data-id="${it.id}"><span class="dir ${dirCls(k)}">${a ? glyph(k) : "·"}</span>
-          <span class="tp-t">${a?.event_label ? `<b>${esc(a.event_label)}</b> · ` : ""}${esc(a?.what || a?.headline_tr || it.title)}</span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>
-        ${items.length > 5 ? `<p class="tp-more">+${items.length - 5} kayıt daha · “Akışı bu hisseye süz” ile hepsini gör</p>` : ""}` : `<p class="tp-empty">Akışta bu hisse için kayıt yok. Teknik görünüm aşağıda.</p>`}`;
+      ${items.length ? `<p class="tp-h">Son haberler · 14 gün</p><ul class="tp-news">${items.slice(0, 5).map(it => { const a = it.analysis, k = a ? sign(a.sentiment) : null; return `
+        <li><button type="button" data-id="${it.id}" class="${a?.materiality === "high" ? "hi" : ""}"><span class="dir ${dirCls(k)}">${a ? glyph(k) : "·"}</span>
+          <span class="tp-t">${a?.materiality === "high" ? `<span class="tp-hi" title="Yüksek önemli">Önemli</span> ` : ""}${a?.event_label ? `<b>${esc(a.event_label)}</b> · ` : ""}${esc(a?.what || a?.headline_tr || it.title)}</span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>
+        ${items.length > 5 ? `<p class="tp-more">+${items.length - 5} kayıt daha · “Akışı bu hisseye süz” ile hepsini gör</p>` : ""}` : `<p class="tp-empty">Son 14 günde bu hisse için haber yok. Teknik görünüm aşağıda.</p>`}`;
     $('[data-a="filter"]', head).onclick = () => {
       if (state.ticker === sym) { state.ticker = null; } else { state.ticker = sym; state.view = state.view === "tickers" ? "feed" : state.view; }
       state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE;
