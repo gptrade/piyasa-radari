@@ -28,6 +28,7 @@ IST = ZoneInfo("Europe/Istanbul")
 # Borsa İstanbul sabit resmi tatilleri (dini bayramlar yıla göre değişir; vade sonu çakışırsa BIST duyurusu esastır)
 TR_FIXED = {(1, 1), (4, 23), (5, 1), (5, 19), (7, 15), (8, 30), (10, 29)}
 QUAD = {3, 6, 9, 12}
+REGION = {"BIST": "TR", "US": "US", "EU": "EU"}          # olay bölgesi (takvim filtresi)
 
 
 def _when(d: date, hhmm: str | None, tz: str) -> tuple[str, bool]:
@@ -133,7 +134,8 @@ def extra_events(raw: list[dict]) -> list[dict]:
 
 
 def build(stocks: list, px: dict, days_ahead: int = 60, days_back: int = 14, conf: dict | None = None,
-          extra: list[dict] | None = None, tr: tuple[list[dict], list[dict], dict] | None = None) -> dict:
+          extra: list[dict] | None = None, tr: tuple[list[dict], list[dict], dict] | None = None,
+          world: list[dict] | None = None) -> dict:
     if conf is None:
         conf = yaml.safe_load(CONF.read_text(encoding="utf-8")) if CONF.exists() else {}
     today = now_utc().astimezone(IST).date()
@@ -141,8 +143,13 @@ def build(stocks: list, px: dict, days_ahead: int = 60, days_back: int = 14, con
     tr_evs, tr_daily, tr_status = tr or ([], [], None)
     official_keys = {(e.get("key"), e["date"]) for e in tr_evs}
     macro = [e for e in macro_events(conf) if not e.get("key") or (e["key"], e["date"]) not in official_keys]
-    evs = [e for e in macro + tr_evs + expiry_events(lo, hi) + extra_events(extra) + company_events(stocks, px)
+    comp = company_events(stocks, px)
+    own = {e.get("ticker") for e in comp if e["kind"] == "earnings"}
+    world = [e for e in world or [] if not (e["kind"] == "earnings" and e.get("ticker") in own)]  # izleme listesi: Yahoo kaydı
+    evs = [e for e in macro + tr_evs + expiry_events(lo, hi) + extra_events(extra) + comp + world
            if lo.isoformat() <= e["date"] <= hi.isoformat()]
+    for e in evs:
+        e.setdefault("region", REGION.get(e.get("market"), "TR"))
     seen, uniq = set(), []
     for e in sorted(evs, key=lambda e: (e["when"], -e["importance"], e["title"])):
         if e["id"] not in seen:
@@ -177,8 +184,24 @@ def official(days_ahead: int = 60, days_back: int = 14) -> tuple[list[dict], lis
     return evs, daily, status
 
 
+def worldwide(stocks: list, days_ahead: int = 60, days_back: int = 14) -> tuple[list[dict], dict]:
+    """ABD/Avrupa bilançoları, ECB ve Eurostat (radar/global_calendar.py)."""
+    from . import global_calendar as gc
+    watch = {s.symbol.upper() for s in stocks if s.market == "US"}
+    try:
+        cache, status = gc.refresh(watch)
+    except Exception as e:
+        log.warning("Küresel takvim okunamadı: %s", e)
+        return [], {"error": str(e)[:200]}
+    today = now_utc().astimezone(IST).date()
+    lo, hi = (today - timedelta(days=days_back)).isoformat(), (today + timedelta(days=days_ahead)).isoformat()
+    return gc.events(cache, lo, hi, watch), status
+
+
 def update(stocks: list, px: dict, extra: list[dict] | None = None) -> dict:
-    cal = build(stocks, px, extra=extra, tr=official())
+    world, wstatus = worldwide(stocks)
+    cal = build(stocks, px, extra=extra, tr=official(), world=world)
+    cal["world_status"] = wstatus
     CAL_FILE.write_text(json.dumps(cal, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("Takvim: %d olay", len(cal["events"]))
     return cal

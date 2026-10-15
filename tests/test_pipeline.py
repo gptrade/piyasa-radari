@@ -21,6 +21,7 @@ def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline.scorecard, "SCORE", tmp_path / "scorecard.json")
     monkeypatch.setattr(pipeline.calendar_events, "CAL_FILE", tmp_path / "calendar.json")
     monkeypatch.setattr(pipeline.calendar_events, "official", lambda *a, **k: ([], [], {"ok": True, "events": 0, "rows": 0}))
+    monkeypatch.setattr(pipeline.calendar_events, "worldwide", lambda *a, **k: ([], {}))
     monkeypatch.setattr(pipeline.research, "STORE", tmp_path / "research.json")
     monkeypatch.setattr(pipeline.bist_data, "update_flows", lambda stocks: {})
     monkeypatch.setattr(pipeline.bist_data, "agm_list", lambda: [])
