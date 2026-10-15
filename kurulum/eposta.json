@@ -1,0 +1,10 @@
+{
+ "adres": "rapor@lyracube.com",
+ "alan_adi": "active",
+ "routing": {
+  "acik": true,
+  "durum": "ready"
+ },
+ "dns_kayit": 5,
+ "kural": "tamam"
+}
