@@ -1,25 +1,12 @@
 {
  "host": "radar.lyracube.com",
- "alan_adi": {
-  "durum": "bulunamadı",
-  "hata": "10502 Too many authentication failures. Please try again later."
- },
- "pages_projesi": {
-  "durum": "yok",
-  "hata": "10429 Rate limited. Please wait and consider throttling your request speed"
- },
- "pages_ozel_alan": {
-  "durum": "eklenemedi",
-  "hata": "10429 Rate limited. Please wait and consider throttling your request speed"
- },
- "dns": "atlandı (alan adı ya da proje yok)",
- "eposta_kodu": {
-  "hata": "10429 Rate limited. Please wait and consider throttling your request speed"
- },
- "access": {
-  "hata": "10429 Rate limited. Please wait and consider throttling your request speed"
- },
- "dogrulama": {
-  "radar.lyracube.com": "erişilemedi (ConnectionError)"
+ "anahtar": {
+  "uzunluk": 52,
+  "bosluk": false,
+  "hesap_id_uzunluk": 32,
+  "hesap_id_hex": true,
+  "durum": "geçersiz",
+  "hata": "1000 Invalid API Token",
+  "hata_hesap": "1000 Invalid API Token"
  }
 }
