@@ -1,4 +1,4 @@
-name: probe-bist  # p57
+name: probe-bist  # p58
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - uses: actions/checkout@v4
-        with: { ref: onizleme-veri-takvimi, path: app }
+        with: { ref: onizleme-kazanc-takvimi, path: app }
       - name: Takvim kaynakları
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
@@ -23,11 +23,11 @@ jobs:
         run: |
           set +e
           pip install -q -r app/requirements.txt
-          mkdir -p probe57
+          mkdir -p probe58
           pip install -q requests pandas lxml yfinance
-          python probe57.py > probe57/sonuc.txt 2>&1 || true
+          python probe58.py > probe58/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe57; git commit -qm "probe57 sonuçları" || true; git push -q
+          git add -A probe58; git commit -qm "probe58 sonuçları" || true; git push -q
