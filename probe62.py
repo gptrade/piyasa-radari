@@ -16,5 +16,8 @@ for x in rows:
     if not set(_codes(x)) & {"MASFN", "MEDTR", "PCILT", "CLEBI"}: continue
     p = http.get(f"https://www.kap.org.tr/tr/Bildirim/{x.get('disclosureIndex')}", timeout=45, retries=1)
     body = kap_body(p.text, x.get("kapTitle"))
-    i = body.find("Özet Bilgi")
-    print("\n=====", _codes(x), x.get("subject")); print(body[i:i + 1800])
+    print("\n=====", _codes(x), x.get("subject"))
+    for m in re.finditer(r"oda_[A-Za-z]*(Amount|Value|Price|Cost|Currency|Bedel|Tutar|Sum)[A-Za-z]*\|", body):
+        print(re.sub(r"\s*\|\s*", " | ", body[m.start():m.start() + 420]))
+    i = body.find("oda_ExplanationSection"); j = body.find("Açıklamalar")
+    print("AÇIKLAMA:", re.sub(r"\s+", " ", body[max(i, j):max(i, j) + 900]))
