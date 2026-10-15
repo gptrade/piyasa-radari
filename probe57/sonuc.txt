@@ -1,0 +1,13 @@
+page 200 ['JSESSIONID', 'dtCookie']
+== https://ec.europa.eu/eurostat/o/calendars/eventsJson GET 200 17163 application/json
+44
+[{"recordid": "22494267", "allDay": true, "unit": "C1", "period": "September 2026", "types": [{"label": "Data release", "order": 1}, {"label": "Euro indicators release", "order": 2}], "euroind": true, "euroindAuthor": "ecb", "start": "2026-10-13T11:00Z", "theme": "", "datasetCodes": "", "preliminary": false, "title": "Interest rates (3 months)"}, {"recordid": "22494277", "allDay": true, "unit": "C1", "period": "September 2026", "types": [{"label": "Data release", "order": 1}, {"label": "Euro indicators release", "order": 2}], "euroind": true, "euroindAuthor": "ecb", "start": "2026-10-13T11:00Z", "theme": "", "datasetCodes": "", "preliminary": false, "title": "Long-term government bond yield"}]
+[('2026-10-16T11:00Z', 'Inflation (HICP)'), ('2026-11-04T11:00Z', 'Flash estimate inflation euro area'), ('2026-11-18T11:00Z', 'Inflation (HICP)'), ('2026-12-01T11:00Z', 'Flash estimate inflation euro area'), ('2026-12-17T11:00Z', 'Inflation (HICP)')]
+== https://ec.europa.eu/eurostat/o/calendars/eventsJson POST 405 0 None
+== https://ec.europa.eu/eurostat/en/o/calendars/eventsJson GET 200 17163 application/json
+44
+[{"recordid": "22494267", "allDay": true, "unit": "C1", "period": "September 2026", "types": [{"label": "Data release", "order": 1}, {"label": "Euro indicators release", "order": 2}], "euroind": true, "euroindAuthor": "ecb", "start": "2026-10-13T11:00Z", "theme": "", "datasetCodes": "", "preliminary": false, "title": "Interest rates (3 months)"}, {"recordid": "22494277", "allDay": true, "unit": "C1", "period": "September 2026", "types": [{"label": "Data release", "order": 1}, {"label": "Euro indicators release", "order": 2}], "euroind": true, "euroindAuthor": "ecb", "start": "2026-10-13T11:00Z", "theme": "", "datasetCodes": "", "preliminary": false, "title": "Long-term government bond yield"}]
+[('2026-10-16T11:00Z', 'Inflation (HICP)'), ('2026-11-04T11:00Z', 'Flash estimate inflation euro area'), ('2026-11-18T11:00Z', 'Inflation (HICP)'), ('2026-12-01T11:00Z', 'Flash estimate inflation euro area'), ('2026-12-17T11:00Z', 'Inflation (HICP)')]
+== https://ec.europa.eu/eurostat/en/o/calendars/eventsJson POST 405 0 None
+ics page 200 183443
+set()
