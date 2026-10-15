@@ -26,6 +26,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RAPOR_YAZMA_TOKEN }}
           GONDERENLER: ${{ secrets.CF_ACCESS_EMAILS }},${{ secrets.RAPOR_GONDERENLER }}
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -34,6 +36,8 @@ jobs:
           secrets: |
             GH_TOKEN
             GONDERENLER
+            TG_TOKEN
+            TG_CHAT
       - uses: actions/setup-python@v5
         if: always()
         with:

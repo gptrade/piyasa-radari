@@ -10,10 +10,37 @@ const MIN_IMG = 40_000;          // imza/logo görsellerini atla
 const MAX_FILE = 20_000_000;
 const MIN_TEXT = 800;            // eksiz postada bu kadar metin yoksa bülten sayılmaz
 
+// Gmail otomatik iletmede zarf göndericisi "ad+caf_=rapor=lyracube.com@gmail.com" olur: "+..." kısmı atılır.
+export function bare(addr) {
+  const f = String(addr || "").trim().toLowerCase();
+  const at = f.lastIndexOf("@");
+  return at < 0 ? f : f.slice(0, at).split("+")[0] + f.slice(at);
+}
+
 export function allowed(from, list) {
-  const f = String(from || "").trim().toLowerCase();
+  const f = bare(from);
   return String(list || "").toLowerCase().split(/[\s,;]+/).filter(Boolean)
-    .some(a => a.startsWith("@") ? f.endsWith(a) : f === a);
+    .some(a => a.startsWith("@") ? f.endsWith(a) : f === bare(a));
+}
+
+// Gmail "iletme onayı" postası: kod ve bağlantı Telegram'a gönderilir, rapor olarak kaydedilmez.
+export function gmailConfirm(mail) {
+  const from = String(mail.from?.address || "").toLowerCase();
+  if (!from.endsWith("@google.com") || !/forwarding|iletme|yönlendirme/i.test(mail.subject || "")) return null;
+  const text = mail.text || String(mail.html || "").replace(/<[^>]+>/g, " ");
+  const code = (text.match(/\b\d{9}\b/) || [])[0] || null;
+  const link = (text.match(/https:\/\/mail[-.]settings\.google\.com\/\S+/) || text.match(/https:\/\/mail\.google\.com\/mail\/vf-\S+/) || [])[0] || null;
+  return { code, link };
+}
+
+async function tg(env, text) {
+  if (!env.TG_TOKEN || !env.TG_CHAT) return;
+  try {
+    await fetch(`https://api.telegram.org/bot${env.TG_TOKEN}/sendMessage`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: env.TG_CHAT, text, disable_web_page_preview: true }),
+    });
+  } catch (e) { /* bildirim isteğe bağlı */ }
 }
 
 export function slug(s, n = 40) {
@@ -70,18 +97,32 @@ async function put(env, path, data, msg) {
 
 export default {
   async email(message, env) {
+    const sender = String(message.from || "").toLowerCase();
+    if (sender.endsWith("@google.com")) {          // Gmail iletme onayı: kodu Telegram'a gönder
+      const mail = await PostalMime.parse(message.raw);
+      const c = gmailConfirm(mail);
+      if (c) {
+        await tg(env, `📮 Gmail iletme onayı (rapor@)\nOnay kodu: ${c.code || "bulunamadı"}${c.link ? `\nBağlantı: ${c.link}` : ""}`);
+        return;
+      }
+    }
     if (!allowed(message.from, env.GONDERENLER)) {
+      await tg(env, `⛔ rapor@ adresine izinsiz gönderici: ${bare(message.from)}\nKabul edilmesi için RAPOR_GONDERENLER secret'ına ekleyip eposta-kurulum iş akışını çalıştır.`);
       message.setReject("Bu adres yalnız kayıtlı göndericilerden posta kabul eder.");
       return;
     }
     const mail = await PostalMime.parse(message.raw);
     const files = pick(mail);
-    if (!files.length) return;                     // ek ya da bülten metni yok: sessizce bırak
+    if (!files.length) {
+      await tg(env, `📭 rapor@: "${mail.subject || ""}" geldi ama ek ya da bülten metni yok, atlandı.`);
+      return;
+    }
     const day = new Date().toISOString().slice(0, 10);
     const base = slug(mail.subject);
     for (const f of files) {
       const h = await sha1(f.data);
       await put(env, `gelen/${day}_${base}-${h.slice(0, 10)}.${f.ext}`, f.data, `Gelen rapor ${day}`);
     }
+    await tg(env, `📥 rapor@: "${mail.subject || ""}" alındı (${files.length} dosya). Radar 15–30 dk içinde özetler.`);
   },
 };
