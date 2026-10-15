@@ -410,6 +410,15 @@ def run() -> dict:
         if trs.get("error"):
             entry["error" if not trs.get("ok") else "warnings"] = trs["error"] if not trs.get("ok") else [trs["error"]]
         status.append(entry)
+        ws = cal.get("world_status") or {}
+        names = {"us": "ABD bilanço takvimi", "eu": "Avrupa bilanço takvimi", "ecb": "ECB takvimi", "eurostat": "Eurostat takvimi"}
+        for k, nm in names.items():
+            st = ws.get(k) or {}
+            if st:
+                e2 = {"name": nm, "ok": bool(st.get("ok")), "count": st.get("n", 0)}
+                if st.get("error"):
+                    e2["warnings" if st.get("ok") else "error"] = [st["error"]] if st.get("ok") else st["error"]
+                status.append(e2)
     except Exception as e:
         log.warning("Takvim oluşturulamadı: %s", e)
     try:                                                    # Şirket Geri Alım: güncel / ortalama fiyat için

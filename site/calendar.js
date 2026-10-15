@@ -14,8 +14,12 @@
   };
   const RANGE = { 14: "2 hafta", 30: "1 ay", 60: "2 ay" };
   const VIEWS = { week: "Hafta", month: "Ay", list: "Liste" };
+  const REGIONS = { TR: "Türkiye", US: "ABD", EU: "Avrupa" };
+  const RTAG = { US: "ABD", EU: "AB" };
+  const SESSION = { bmo: "açılış öncesi", amc: "kapanış sonrası" };
   const WD = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
   const S = { cal: null, loaded: false, error: null, kinds: new Set(store.get("radar.calKinds", [])),
+    regions: new Set(store.get("radar.calRegions", [])),
     days: store.get("radar.calDays", 30), important: store.get("radar.calImp", false),
     view: store.get("radar.calView", "week"), anchor: null, idx: [] };
   if (!VIEWS[S.view]) S.view = "week";
@@ -42,7 +46,27 @@
   const dLabel = (iso, o) => D(iso).toLocaleDateString("tr-TR", { timeZone: "UTC", ...o });
 
   const inMarket = e => sh.market === "ALL" || e.market === "ALL" || e.market === sh.market;
-  const passes = e => inMarket(e) && (!S.kinds.size || S.kinds.has(e.kind)) && (!S.important || e.importance >= 3);
+  const regionOf = e => e.region || ({ BIST: "TR", US: "US", EU: "EU" })[e.market] || "TR";
+  const passes = e => inMarket(e) && (!S.kinds.size || S.kinds.has(e.kind)) && (!S.regions.size || S.regions.has(regionOf(e)))
+    && (!S.important || e.importance >= 3);
+  // Düşük önemli bilançolar (S&P 500'ün geri kalanı) gün ve bölge başına tek kutuda toplanır
+  function grouped(list) {
+    const keep = [], bucket = new Map();
+    for (const e of list) {
+      if (e.kind === "earnings" && e.importance <= 1 && !e.members) {
+        const k = e.date + "|" + regionOf(e);
+        (bucket.get(k) || bucket.set(k, []).get(k)).push(e);
+      } else keep.push(e);
+    }
+    for (const [, items] of bucket) {
+      if (items.length < 3) { keep.push(...items); continue; }
+      const r = regionOf(items[0]);
+      keep.push({ kind: "earnings", importance: 1, date: items[0].date, when: items[0].date + "T23:59", timed: false,
+        market: items[0].market, region: r, title: `${r === "US" ? "S&P 500" : REGIONS[r]} bilançoları`, count: items.length,
+        members: items.sort((a, b) => (a.ticker || "").localeCompare(b.ticker || "")) });
+    }
+    return keep;
+  }
   function visible() {
     const lim = todayISO(), hi = addDays(lim, S.days);
     return (S.cal?.events || []).filter(e => passes(e) && e.date >= lim && e.date <= hi);
@@ -56,17 +80,17 @@
     return `<span class="cal-day-name">${esc(dLabel(iso, { weekday: "long", day: "numeric", month: "long" }))}</span><span class="cal-rel${n >= 0 && n <= 1 ? " soon" : ""}">${rel(n)}</span>`;
   }
   const hm = e => new Date(e.when).toLocaleTimeString("tr-TR", { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" });
-  const timeOf = e => e.timed ? hm(e) : ["earnings", "dividend", "agm"].includes(e.kind) ? "—" : "gün boyu";
+  const timeOf = e => e.timed ? hm(e) : SESSION[e.session] || (["earnings", "dividend", "agm"].includes(e.kind) ? "—" : "gün boyu");
   const imp = n => `<span class="meter" data-l="${n}" role="img" aria-label="Önem ${n === 3 ? "yüksek" : n === 2 ? "orta" : "düşük"}"><i></i><i></i><i></i></span>`;
-  const mk = m => m === "ALL" ? "" : `<span class="tag mk">${m === "US" ? "ABD" : m}</span>`;
+  const mk = m => m === "ALL" ? "" : `<span class="tag mk">${m === "US" ? "ABD" : m === "EU" ? "Avrupa" : m}</span>`;
   const shortTitle = e => e.title.split(" · ")[0];
   const reg = e => { S.idx.push(e); return S.idx.length - 1; };
 
   function chip(e, { time = true } = {}) {
-    const lbl = `${shortTitle(e)}${e.ticker ? "" : ""}`;
+    const lbl = e.members ? `${e.title} · ${e.count}` : shortTitle(e);
     return `<li><button type="button" class="cal-chip k-${e.kind} i${e.importance}" data-i="${reg(e)}"
       aria-label="${esc(`${e.timed ? hm(e) + " " : ""}${e.title}, ${KIND[e.kind]?.l || e.kind}, önem ${e.importance}`)}">
-      ${time && e.timed ? `<span class="cal-chip-t">${hm(e)}</span>` : ""}<span class="cal-chip-n">${esc(lbl)}</span>${e.market === "US" ? `<span class="cal-chip-m">ABD</span>` : ""}</button></li>`;
+      ${time && e.timed ? `<span class="cal-chip-t">${hm(e)}</span>` : ""}<span class="cal-chip-n">${esc(lbl)}</span>${RTAG[regionOf(e)] ? `<span class="cal-chip-m">${RTAG[regionOf(e)]}</span>` : ""}</button></li>`;
   }
 
   // ── Hafta görünümü
@@ -87,7 +111,7 @@
     const days = [...Array(7)].map((_, i) => addDays(mon, i)).filter((d, i) => i < 5 || evs.some(e => e.date === d));
     const label = `${dLabel(mon, { day: "numeric", month: D(mon).getUTCMonth() === D(addDays(mon, 4)).getUTCMonth() ? undefined : "long" })}–${dLabel(addDays(mon, 4), { day: "numeric", month: "long", year: "numeric" })}`;
     const cols = days.map(d => {
-      const list = evs.filter(e => e.date === d).sort((a, b) => (a.when > b.when) - (a.when < b.when) || b.importance - a.importance);
+      const list = grouped(evs.filter(e => e.date === d)).sort((a, b) => (a.when > b.when) - (a.when < b.when) || b.importance - a.importance);
       const wd = WD[(D(d).getUTCDay() + 6) % 7];
       return `<section class="cal-col${d === t ? " today" : ""}${d < t ? " past" : ""}" aria-label="${esc(dLabel(d, { weekday: "long", day: "numeric", month: "long" }))}">
         <header class="cal-col-h"><span class="cal-wd">${wd}</span><b class="cal-dn">${D(d).getUTCDate()}</b>${list.length ? `<span class="cal-cnt">${list.length}</span>` : ""}</header>
@@ -108,7 +132,7 @@
     const evs = between(start, end);
     const cells = [];
     for (let d = start; d <= end; d = addDays(d, 1)) {
-      const list = evs.filter(e => e.date === d).sort((x, y) => y.importance - x.importance || (x.when > y.when) - (x.when < y.when));
+      const list = grouped(evs.filter(e => e.date === d)).sort((x, y) => y.importance - x.importance || (x.when > y.when) - (x.when < y.when));
       const show = list.slice(0, 4), more = list.length - show.length;
       const wkend = (D(d).getUTCDay() + 6) % 7 >= 5;
       const nodata = !covered(d, d);
@@ -129,7 +153,7 @@
   function side() {
     const daily = S.cal?.daily || [];
     return `<aside class="cal-side">
-      <div class="card"><h3 class="card-h">Her iş günü</h3>
+      <div class="card"><h3 class="card-h">Her iş günü · Türkiye</h3>
         ${daily.length ? `<ul class="cal-daily">${daily.map(d => `<li><span class="cal-daily-t">${esc(d.time)}</span><span>${d.url ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.name)}</a>` : esc(d.name)}</span><span class="cal-inst">${esc(d.inst)}</span></li>`).join("")}</ul>`
           : `<p class="k-note">Liste resmi takvimle birlikte gelir.</p>`}</div>
       <div class="card"><h3 class="card-h">Gösterim</h3>
@@ -161,12 +185,13 @@
     }
     const byDay = new Map();
     evs.forEach(e => (byDay.get(e.date) || byDay.set(e.date, []).get(e.date)).push(e));
+    for (const [d, list] of byDay) byDay.set(d, grouped(list).sort((a, b) => (a.when > b.when) - (a.when < b.when) || b.importance - a.importance));
     return html + `<div class="card card-flush"><ol class="cal-list">${[...byDay].map(([d, list]) => `
       <li class="cal-day${daysTo(d) <= 1 ? " soon" : ""}"><h3 class="cal-day-h">${dayHead(d)}</h3>
         <ul>${list.map(e => `<li class="cal-ev k-${e.kind}">
           <span class="cal-t">${timeOf(e)}</span>
           <span class="cal-k"><span class="cal-dot" aria-hidden="true"></span>${esc(KIND[e.kind]?.s || e.kind)}</span>
-          <span class="cal-main"><span class="cal-name">${e.ticker ? `<button type="button" class="tk-link" data-sym="${esc(e.ticker)}">${esc(e.ticker)}</button> ` : ""}<button type="button" class="cal-open" data-i="${reg(e)}">${esc(e.ticker ? e.title.replace(e.ticker + " ", "") : e.title)}</button> ${mk(e.market)}</span>
+          <span class="cal-main"><span class="cal-name">${e.ticker ? `<button type="button" class="tk-link" data-sym="${esc(e.ticker)}">${esc(e.ticker)}</button> ` : ""}<button type="button" class="cal-open" data-i="${reg(e)}">${esc(e.members ? `${e.title} · ${e.count} şirket` : e.ticker ? (e.name && e.region !== "TR" ? e.name + " bilanço" : e.title.replace(e.ticker + " ", "")) : e.title)}</button> ${mk(e.market)}</span>
             ${e.detail ? `<span class="cal-detail">${esc(e.detail)}</span>` : ""}${e.last ? `<span class="cal-detail cal-last">Son: ${esc(e.last)}</span>` : ""}</span>
           <span class="cal-imp">${imp(e.importance)}</span>
           <span class="cal-src">${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" aria-label="${esc(e.title)} kaynağı">Kaynak ↗</a>` : ""}</span>
@@ -174,14 +199,29 @@
   }
 
   // ── ayrıntı penceresi
+  function openGroup(e, opener) {
+    const dlg = $("#calDlg");
+    $("#calDlgBody").innerHTML = `
+      <p class="cal-dlg-meta"><span class="cal-dot k-earnings" aria-hidden="true"></span>Bilanço · ${esc(REGIONS[e.region] || "")}</p>
+      <h2 class="cal-dlg-t" id="calDlgTitle">${esc(e.title)} · ${e.count} şirket</h2>
+      <p class="cal-dlg-when">${esc(dLabel(e.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" }))} <span class="cal-rel">${rel(daysTo(e.date))}</span></p>
+      <div class="tbl-wrap"><table class="tbl cal-grp"><thead><tr><th>Hisse</th><th>Şirket</th><th>Zaman</th><th class="num">EPS bekl.</th></tr></thead><tbody>
+      ${e.members.map(m => `<tr><td><a href="${esc(m.url || "#")}" target="_blank" rel="noopener" class="mono">${esc(m.ticker)}</a></td><td>${esc(m.name || "")}</td>
+        <td>${esc(SESSION[m.session] || "—")}</td><td class="num mono">${m.eps_est != null ? fmt.num(m.eps_est, 2) : "—"}</td></tr>`).join("")}
+      </tbody></table></div>
+      <p class="k-note">S&P 500 içindeki en büyük şirketler ve izleme listen ayrı kutularda, yüksek önemle gösterilir. Kaynak: Alpha Vantage.</p>`;
+    S.opener = opener;
+    dlg.showModal();
+  }
   function openDetail(e, opener) {
+    if (e.members) return openGroup(e, opener);
     const dlg = $("#calDlg");
     const when = `${dLabel(e.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}${e.timed ? ` · ${hm(e)}` : ""}`;
-    const meta = [KIND[e.kind]?.l || e.kind, e.inst, e.group, e.freq ? e.freq + " yayın" : ""].filter(Boolean);
+    const meta = [KIND[e.kind]?.l || e.kind, e.inst, e.group, e.freq ? e.freq + " yayın" : "", REGIONS[regionOf(e)]].filter(Boolean);
     $("#calDlgBody").innerHTML = `
       <p class="cal-dlg-meta"><span class="cal-dot k-${e.kind}" aria-hidden="true"></span>${meta.map(esc).join(" · ")} ${mk(e.market)}</p>
-      <h2 class="cal-dlg-t" id="calDlgTitle">${esc(shortTitle(e))}</h2>
-      <p class="cal-dlg-when">${esc(when)}${e.period ? ` · dönem: ${esc(e.period)}` : ""} <span class="cal-rel">${rel(daysTo(e.date))}</span></p>
+      <h2 class="cal-dlg-t" id="calDlgTitle">${esc(e.name && e.kind === "earnings" ? `${e.name} (${e.ticker}) bilanço` : shortTitle(e))}</h2>
+      <p class="cal-dlg-when">${esc(when)}${e.session ? ` · ${esc(SESSION[e.session] || "")}` : ""}${e.period ? ` · dönem: ${esc(e.period)}` : ""} <span class="cal-rel">${rel(daysTo(e.date))}</span></p>
       ${e.detail ? `<p>${esc(e.detail)}</p>` : ""}
       ${e.last ? `<div class="cal-dlg-box"><span class="k-lbl">Son açıklanan</span><b>${esc(e.last)}</b><span class="k-note">Kaynak: TCMB EVDS</span></div>` : ""}
       ${e.assets?.length ? `<div class="cal-dlg-sec"><span class="k-lbl">Etkilediği varlıklar</span><div class="cal-assets">${e.assets.map(a => `<span class="tag">${esc(a)}</span>`).join("")}</div></div>` : ""}
@@ -208,6 +248,8 @@
     }
     if (!S.anchor) S.anchor = todayISO();
     const all = (S.cal.events || []).filter(e => inMarket(e) && e.date >= todayISO());
+    $("#calRegions").innerHTML = Object.entries(REGIONS).filter(([r]) => all.some(e => regionOf(e) === r)).map(([r, l]) =>
+      `<button type="button" class="chip" data-r="${r}" aria-pressed="${S.regions.has(r)}">${esc(l)} <span class="n">${all.filter(e => regionOf(e) === r).length}</span></button>`).join("");
     $("#calKinds").innerHTML = Object.entries(KIND).filter(([k]) => all.some(e => e.kind === k)).map(([k, v]) =>
       `<button type="button" class="chip" data-k="${k}" aria-pressed="${S.kinds.has(k)}">${esc(v.l)} <span class="n">${all.filter(e => e.kind === k).length}</span></button>`).join("");
     $$("#calRange button").forEach(b => b.setAttribute("aria-checked", String(+b.dataset.d === S.days)));
@@ -215,7 +257,7 @@
     S.idx = [];
     const body = S.view === "week" ? renderWeek() : S.view === "month" ? renderMonth() : renderList();
     const until = S.cal.tr_until, mu = S.cal.macro_until;
-    box.innerHTML = body + `<p class="k-note">Saatler İstanbul saatiyle. Türkiye verileri TÜİK Ulusal Veri Yayımlama Takvimi'nden (TÜİK, TCMB, BDDK, Hazine ve Maliye Bakanlığı, SPK ve diğer kurumlar; otomatik${until ? `, ${fmt.date(until, { day: "numeric", month: "long" })} tarihine kadar` : ""}); son açıklanan değerler TCMB EVDS'ten · TCMB PPK, Fed ve ABD TÜFE resmi takvimlerden${mu ? ` (tanımlı son tarih ${fmt.date(mu, { day: "numeric", month: "long", year: "numeric" })})` : ""} · temettüler KAP'tan, bilançolar Yahoo Finance'ten (şirketler değiştirebilir), genel kurullar Borsa İstanbul listesinden · VİOP vade sonu çift ayların son iş günü, ABD opsiyon vadesi ayın 3. cuması olarak hesaplanır.</p>`;
+    box.innerHTML = body + `<p class="k-note">Saatler İstanbul saatiyle. Türkiye verileri TÜİK Ulusal Veri Yayımlama Takvimi'nden (TÜİK, TCMB, BDDK, Hazine ve Maliye Bakanlığı, SPK ve diğer kurumlar; otomatik${until ? `, ${fmt.date(until, { day: "numeric", month: "long" })} tarihine kadar` : ""}); son açıklanan değerler TCMB EVDS'ten · TCMB PPK, Fed ve ABD TÜFE resmi takvimlerden${mu ? ` (tanımlı son tarih ${fmt.date(mu, { day: "numeric", month: "long", year: "numeric" })})` : ""} · ECB toplantıları ecb.europa.eu'dan, Euro Bölgesi verileri Eurostat'tan · ABD bilançoları (S&P 500) Alpha Vantage'dan, Avrupa ve izleme listesi bilançoları Yahoo Finance'ten (şirketler değiştirebilir) · temettüler KAP'tan, genel kurullar Borsa İstanbul listesinden · VİOP vade sonu çift ayların son iş günü, ABD opsiyon vadesi ayın 3. cuması olarak hesaplanır.</p>`;
   }
   function badge() {
     const n = (S.cal?.events || []).filter(e => inMarket(e) && e.importance >= 3 && [0, 1].includes(daysTo(e.date))).length;
@@ -228,6 +270,11 @@
     render();
   }
   function bind() {
+    $("#calRegions").addEventListener("click", e => {
+      const b = e.target.closest(".chip"); if (!b) return;
+      S.regions.has(b.dataset.r) ? S.regions.delete(b.dataset.r) : S.regions.add(b.dataset.r);
+      store.set("radar.calRegions", [...S.regions]); render(); $(`#calRegions .chip[data-r="${b.dataset.r}"]`)?.focus();
+    });
     $("#calKinds").addEventListener("click", e => {
       const b = e.target.closest(".chip"); if (!b) return;
       S.kinds.has(b.dataset.k) ? S.kinds.delete(b.dataset.k) : S.kinds.add(b.dataset.k);
