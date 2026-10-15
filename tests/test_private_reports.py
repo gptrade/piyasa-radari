@@ -149,3 +149,12 @@ def test_inbox_folder_type_from_ai(tmp_path, monkeypatch):
     ai = NoType()
     res = pr.process(ai, set(), {}, root=r, done_path=tmp_path / "d.json")
     assert "E-postayla geldi" in ai.calls[0] and res["records"][0]["type"] == "strateji"
+
+
+def test_grounded_drops_tickers_not_in_text():
+    text = "Kuveyt Türk Yatırım strateji: THYAO için AL, Türk Telekom hedef 90 TL. Model portföye ASELS eklendi."
+    x = {**X, "tickers": ["THYAO", "TTKOM", "MSFT", "KLNMA"], "top_picks": [{"ticker": "THYAO.IS"}, {"ticker": "NVDA"}],
+         "model_portfolio": {"added": ["ASELS", "GOZDE"], "removed": ["TSLA"]}}
+    g = pr.grounded(x, text, names={"TTKOM": ["Türk Telekom"]})
+    assert g["tickers"] == ["THYAO", "TTKOM"] and [p["ticker"] for p in g["top_picks"]] == ["THYAO.IS"]
+    assert g["model_portfolio"] == {"added": ["ASELS"], "removed": []}

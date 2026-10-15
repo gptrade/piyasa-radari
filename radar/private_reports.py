@@ -309,6 +309,36 @@ def telegram(r: dict, x: dict) -> bool:
     return rr is not None
 
 
+def _names() -> dict:
+    try:
+        from .config import load_watchlist
+        return {st.symbol: [st.name, *st.aliases] for st in load_watchlist()}
+    except Exception:
+        return {}
+
+
+def grounded(x: dict, text: str, names: dict | None = None) -> dict:
+    """Rapor metninde geçmeyen hisse kodlarını atar (model izleme listesini ya da örnekleri kopyalayabiliyor)."""
+    names = _names() if names is None else names
+    low = text.lower()
+
+    def seen(t) -> bool:
+        t = str(t or "").upper().replace(".IS", "")
+        if not t:
+            return False
+        if re.search(rf"(?<![A-Za-z0-9]){re.escape(t)}(?![A-Za-z0-9])", text, re.I):
+            return True
+        return any(n and n.lower() in low for n in names.get(t, []))
+
+    x = dict(x)
+    x["tickers"] = [t for t in (x.get("tickers") or []) if seen(t)]
+    x["top_picks"] = [p for p in (x.get("top_picks") or []) if seen(p.get("ticker"))]
+    mp = x.get("model_portfolio") or {}
+    if mp:
+        x["model_portfolio"] = {k: [t for t in (mp.get(k) or []) if seen(t)] for k in ("added", "removed")}
+    return x
+
+
 def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path = DONE) -> dict:
     """Yeni raporları okur. Döner: {records, notes, items, status}."""
     res = {"records": [], "notes": [], "items": [], "status": {"count": 0}}
@@ -331,7 +361,7 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
         where = (KINDS[u["kind"]] if u["kind"] in KINDS else
                  "E-postayla geldi; türü sen belirle (günlük/haftalık bülten ve piyasa yorumu = strateji)")
         prompt = (f"Klasör: {where}\nDosya adı ipuçları: tarih={hints['date'] or '?'}, konu={hints['subject'] or '?'}, "
-                  f"kurum={hints['broker'] or '?'}\nİzleme listesi: {', '.join(sorted(watch))}\n\n"
+                  f"kurum={hints['broker'] or '?'}\n\n"
                   + (f"RAPOR METNİ:\n{text}" if text else "RAPOR: ekteki sayfa görüntülerinde."))
         x = analyzer.ask_json(REPORT_SYSTEM, prompt, REPORT_TOOL, REPORT_FMT, max_tokens=3000, media=media or None)
         if isinstance(x, dict) and not x.get("broker") and (x.get("thesis") or x.get("tickers") or x.get("sector")):
@@ -346,6 +376,8 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
             else:
                 log.warning("Rapor okunamadı (%s): AI yanıtı yok", u["kind"])
             continue                                  # AI yok/kota: sonraki turda yeniden denenir
+        if text:
+            x = grounded(x, text)
         r = public_record(x, u["sha"], u["kind"] if u["kind"] in KINDS else "strateji", hints, iso(now_utc()))
         res["records"].append(r)
         res["notes"] += notes_from_record(r)
