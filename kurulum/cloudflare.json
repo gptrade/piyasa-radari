@@ -1,12 +1,35 @@
 {
  "host": "radar.lyracube.com",
  "anahtar": {
-  "uzunluk": 52,
+  "uzunluk": 53,
   "bosluk": false,
   "hesap_id_uzunluk": 32,
   "hesap_id_hex": true,
-  "durum": "geçersiz",
-  "hata": "1000 Invalid API Token",
-  "hata_hesap": "1000 Invalid API Token"
+  "durum": "active"
+ },
+ "alan_adi": {
+  "durum": "active",
+  "ns": [
+   "dawn.ns.cloudflare.com",
+   "troy.ns.cloudflare.com"
+  ]
+ },
+ "pages_projesi": {
+  "durum": "yok",
+  "hata": "8000007 Project not found. The specified project name does not match any of your existing projects."
+ },
+ "pages_ozel_alan": {
+  "durum": "eklenemedi",
+  "hata": "8000007 Project not found. The specified project name does not match any of your existing projects."
+ },
+ "dns": "atlandı (alan adı ya da proje yok)",
+ "eposta_kodu": {
+  "hata": "9999 access.api.error.not_enabled: Access is not enabled. Visit the Access dashboard at https://dash.cloudflare.com/ and click the 'Enable Access' button."
+ },
+ "access": {
+  "hata": "9999 access.api.error.not_enabled: Access is not enabled. Visit the Access dashboard at https://dash.cloudflare.com/ and click the 'Enable Access' button."
+ },
+ "dogrulama": {
+  "radar.lyracube.com": "erişilemedi (ConnectionError)"
  }
 }
