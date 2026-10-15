@@ -1,0 +1,47 @@
+== https://en.wikipedia.org/wiki/List_of_S%26P_500_companies 200 570640
+['Symbol', 'Security', 'GICS Sector', 'GICS Sub-Industry', 'Headquarters Location'] 503
+== https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html 200 106610
+   10 September 2026 Introduction Benefits of price stability Scope of monetary policy
+ Meetings of the Governing Council and the General Council var ECB = {}; ECB.currentLanguage = 'en'; ECB.isoLocalLanguageName = 'English'; ECB.isLive = true; ECB.version = '5581938'; ECB.navigationVersion = '1792048515'; ECB.clientTimeError = 1792085838 - (new Date().getTime()); ECB.availableLanguages = [{"en": "English"}]; .accordion .content-box { display: block; } /*! ecb - v2.0.0 - European Central Bank */ var ECB=window.ECB||{};ECB.fast=ECB.fast||{},ECB.slow=ECB.slow||{},ECB.supports=ECB.supports||{},ECB.fast.annexSwap=function(){var t,e,n=document.querySelector(".section-press .address-box + .definition-list");n&&(t=(e=(t=(e=(t=n.previousElementSibling).previousElementSibling)&&e.classList.contains("related-topics")?e:t).previousElementSibling)&&e.classList.contains("footnotes")?e:t).parentNode.insertBefore(n,t)},ECB.fast.attribution=function(n){var t,e,a=n.style.backgroundImage||n.src;a=(a=a.replace('url("',"")).replace('")',""),n.src&&(n=n.closest("picture"));a&&(t=(t=a).replace('url("',""),e=document.location.protocol+"//"+document.location.hostname,-1===t.indexOf("http")&&-1===t.indexOf('url("//')||t.startsWith(e))&&ECB.fast.exif.getArtist(a,function(t){var e;0 '+(t.startsWith("©")?"":"© ")+t+' ',n.classList.contains("slider_image")&&n.parentElement?.classList.contains("-bottom")&&((e=n.parentElement?.querySelector(".slider_content_container .slider_text")).insertAdjacentHTML("beforeend",t),e=e.querySelector(".attribution button")),n.insertAdjacentHTML("beforeend",t
+== https://www.ecb.europa.eu/robots.txt 200 1141
+User-agent: *
+Sitemap: https://www.ecb.europa.eu/sitemap.xml
+Disallow: /*_content.bg.html$
+Disallow: /*_content.cs.html$
+Disallow: /*_content.da.html$
+Disallow: /*_content.de.html$
+Disallow: /*_content.el.html$
+Disallow: /*_content.en.html$
+Disallow: /*_content.es.html$
+Disallow: /*_content.et.html$
+Disallow: /*_content.fi.html$
+Disallow: /*_content.fr.html$
+Disallow: /*_content.ga.html$
+Disallow: /*_content.hr.html$
+Disallow: /*_content.hu.html$
+Disallow: /*_content.it.html$
+Disallow: /*_content.lt.html$
+Disallow: /*_content.lv.html$
+Disallow: /*_content.mt.html$
+Disallow: /*_content.nl.html$
+Disallow: /*_content.pl.html$
+Disallow: /*_content.pt.html$
+Disallow: /*_content.ro.html$
+Disallow: /*_content.sk.html$
+Disallow: /*_content.sl.html$
+Disallow: /*_content.sv.html$
+Disallow: /ecb/10an
+== https://ec.europa.eu/eurostat/api/dissemination/catalogue/rss/en/statistics-update.rss 200 460944
+== https://ec.europa.eu/eurostat/news/release-calendar 200 205860
+== https://ec.europa.eu/eurostat/robots.txt 200 61
+User-Agent: *
+Disallow:
+Sitemap: http://localhost/sitemap.xml
+ASML.AS [datetime.date(2026, 10, 14)]
+SAP.DE [datetime.date(2026, 10, 21)]
+MC.PA [datetime.date(2026, 7, 27)]
+NESN.SW []
+SHEL.L [datetime.date(2026, 10, 29)]
+NOVO-B.CO [datetime.date(2026, 11, 4)]
+SIE.DE [datetime.date(2026, 11, 12)]
+AZN.L [datetime.date(2026, 10, 30)]
