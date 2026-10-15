@@ -122,7 +122,7 @@
       if ((param || "") === S.param) return;
       S.param = param || "";
       const h = "#" + route + (S.param ? "/" + S.param : "");
-      if (location.hash !== h) (push ? history.pushState : history.replaceState).call(history, null, "", h);
+      if (location.hash !== h) (push ? history.pushState : history.replaceState).call(history, { r: 1 }, "", h);
       H[route]?.onShow?.();
       if (focus) $("#main").focus({ preventScroll: true });
       return;
@@ -140,14 +140,17 @@
     document.title = `${ROUTES[route].title} · Piyasa Radarı`;
     $("#marketSec").hidden = !ROUTES[route].market;
     const h = "#" + route + (S.param ? "/" + S.param : "");
-    if (location.hash !== h) (push ? history.pushState : history.replaceState).call(history, null, "", h);
+    if (location.hash !== h) (push ? history.pushState : history.replaceState).call(history, { r: 1 }, "", h);
     closeMenu();
     if (isNarrow()) setDrawer(false);
     syncActions();
     H[route]?.onShow?.();
     if (focus) $("#main").focus({ preventScroll: true });
   }
-  addEventListener("hashchange", () => { const p = parseHash(); go(p ? p.route : "sinyal", { push: false, param: p?.param || "" }); });
+  // Geri/İleri: pushState kayıtlarında tarayıcı yalnız popstate yollar (hashchange gelmez); ikisi de aynı işleyici
+  const fromURL = () => { const p = parseHash(); go(p ? p.route : "sinyal", { push: false, param: p?.param || "" }); };
+  addEventListener("hashchange", fromURL);
+  addEventListener("popstate", fromURL);
   $$(".nav-item").forEach(a => a.addEventListener("click", e => { e.preventDefault(); go(a.dataset.route, { focus: true }); }));
 
   // ─────────────────────────────── eylem çubuğu

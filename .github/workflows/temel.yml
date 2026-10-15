@@ -1,7 +1,8 @@
 name: temel
 
-# Temel analiz verisi (KAP mali tabloları, kar payı, TÜFE, fiyat) radardan ayrı, 10 dakikada bir.
-# KAP rapor indirme sınırı (~5 dakikada 10) nedeniyle her çalıştırma en fazla 9 rapor indirir.
+# Temel analiz verisi (KAP mali tabloları, kar payı, TÜFE, fiyat) radardan ayrı; radar her turda tetikler.
+# KAP rapor indirme sınırı (~5 dakikada 10) nedeniyle bir tur en fazla 9 rapor indirir; kuyruk doluyken
+# aynı çalıştırmada 6+ dakika arayla 3 tur atılır (~27 rapor / ~16 dk).
 # Veri ayrı, tek commit'lik `fin` dalında tutulur; radar iş akışı yayımlarken bu daldan okur.
 on:
   schedule:
@@ -18,7 +19,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -42,10 +43,10 @@ jobs:
           fi
 
       - name: Temel analiz verisi
-        timeout-minutes: 7
+        timeout-minutes: 21
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
-        run: python -m radar.fundamentals 240
+        run: python -m radar.fundamentals 240 3 390
 
       - name: Veriyi fin dalına kaydet
         if: always()
