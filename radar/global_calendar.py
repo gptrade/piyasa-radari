@@ -182,6 +182,17 @@ def fetch_ecb() -> list[str] | None:
 
 
 # ------------------------------------------------------------------ Eurostat
+EN_TR = {"January": "Ocak", "February": "Şubat", "March": "Mart", "April": "Nisan", "May": "Mayıs", "June": "Haziran",
+         "July": "Temmuz", "August": "Ağustos", "September": "Eylül", "October": "Ekim", "November": "Kasım", "December": "Aralık"}
+
+
+def tr_period(p: str) -> str:
+    m = re.fullmatch(r"Q([1-4])/(\d{4})", (p or "").strip())
+    if m:
+        return f"{m.group(1)}. çeyrek {m.group(2)}"
+    return " ".join(EN_TR.get(w, w) for w in (p or "").split())
+
+
 def parse_eurostat(items: list[dict]) -> list[dict]:
     out = []
     for x in items:
@@ -190,7 +201,7 @@ def parse_eurostat(items: list[dict]) -> list[dict]:
         if not m or not x.get("start"):
             continue
         out.append({"title": title, "short": m[0], "imp": m[1], "assets": m[2], "d": x["start"][:10],
-                    "hm": x["start"][11:16] or "11:00", "period": x.get("period") or ""})
+                    "hm": x["start"][11:16] or "11:00", "period": tr_period(x.get("period") or "")})
     return out
 
 
