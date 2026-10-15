@@ -1,4 +1,4 @@
-name: probe-bist  # p63
+name: probe-bist  # p63b
 on:
   push:
     branches: [arastirma-bist-veri]
