@@ -1,0 +1,39 @@
+== https://earningshub.com/robots.txt 200 112
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow:
+Sitemap: https://earningshub.com/sitemap.xml
+
+== https://www.earningshub.com/robots.txt 200 112
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow:
+Sitemap: https://earningshub.com/sitemap.xml
+
+== https://earningshub.com/terms 200 4964
+
+== https://api.nasdaq.com/robots.txt ERR HTTPSConnectionPool(host='api.nasdaq.com', port=443): Read timed out. (read timeout=30)
+== https://www.nasdaq.com/robots.txt ERR HTTPSConnectionPool(host='www.nasdaq.com', port=443): Read timed out. (read timeout=30)
+FINNHUB 200
+ n 1500
+ sample [{'symbol': 'ALLR', 'date': '2026-11-14', 'hour': '', 'quarter': 3, 'year': 2026, 'epsEstimate': -0.2142, 'epsActual': None, 'revenueEstimate': 0, 'revenueActual': None}, {'symbol': 'GMEX', 'date': '2026-11-14', 'hour': '', 'quarter': 4, 'year': 2026, 'epsEstimate': None, 'epsActual': None, 'revenueEstimate': None, 'revenueActual': None}, {'symbol': 'AADX', 'date': '2026-11-13', 'hour': '', 'quarter': 3, 'year': 2026, 'epsEstimate': 0.1204, 'epsActual': None, 'revenueEstimate': 173864100, 'revenueActual': None}]
+ suffix [('US', 1499), ('B', 1)]
+ hour Counter({'': 1320, 'amc': 118, 'bmo': 62})
+   SAP []
+   ASML []
+   NESN.SW []
+   SAP.DE []
+   MC.PA []
+   AAPL []
+   MSFT []
+   TSLA []
+   NVDA []
+FINNHUB SAP.DE 403 {"error":"You don't have access to this resource."}
+AV 200 application/x-download
+ n 4592 [{'symbol': 'AA', 'name': 'ALCOA CORPORATION', 'reportDate': '2026-10-15', 'fiscalDateEnding': '2026-09-30', 'estimate': '1.65', 'currency': 'USD', 'timeOfTheDay': 'post-market'}, {'symbol': 'ALOY', 'name': 'REALLOYS INCORPORATED', 'reportDate': '2026-10-15', 'fiscalDateEnding': '2026-09-30', 'estimate': '', 'currency': 'USD', 'timeOfTheDay': ''}]
+ cur [('USD', 4592)]
+ suffix [('US', 4573), ('A', 10), ('B', 9)]
+   SAP [{'symbol': 'SAP', 'name': 'SAP SE', 'reportDate': '2026-10-21', 'fiscalDateEnding': '2026-09-30', 'estimate': '2.04', 'currency': 'USD', 'timeOfTheDay': 'post-market'}]
+   ASML []
+   AAPL [{'symbol': 'AAPL', 'name': 'APPLE INCORPORATED', 'reportDate': '2026-11-02', 'fiscalDateEnding': '2026-09-30', 'estimate': '1.98', 'currency': 'USD', 'timeOfTheDay': 'post-market'}]
+   NVDA [{'symbol': 'NVDA', 'name': 'NVIDIA CORPORATION', 'reportDate': '2026-11-18', 'fiscalDateEnding': '2026-10-31', 'estimate': '2.47', 'currency': 'USD', 'timeOfTheDay': ''}]
