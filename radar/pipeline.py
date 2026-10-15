@@ -13,7 +13,7 @@ from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
-from . import anomaly, bb_quotes, documents, private_reports, research, bist_data, calendar_events, scorecard
+from . import anomaly, bb_quotes, deals, documents, private_reports, research, bist_data, calendar_events, scorecard
 from .sources import Context, alphavantage, feeds, finnhub, global_macro, kap, marketaux, reports, social, spk, tcmb, tr_official, vendors
 
 log = logging.getLogger("radar")
@@ -535,6 +535,11 @@ def run() -> dict:
         except Exception as e:
             log.exception("Belge okuma hatası")
             status.append({"name": "Belge okuma", "ok": False, "count": 0, "error": str(e)[:200]})
+    # 4b) Sözleşme/ihale bildirimleri: tutar / son 12 ay hasılat (AI bu oranı görür, önem buna göre ayarlanır)
+    try:
+        deals.attach(new, watch, macro)
+    except Exception:
+        log.exception("Sözleşme büyüklüğü hesaplanamadı")
     queue = fair_order(sorted(new, key=lambda i: (PRIORITY.get(i.source_type, 9), -parse_iso(i.published).timestamp())), watch)
     for it in queue:
         if not analyzer.can_run():
@@ -549,6 +554,7 @@ def run() -> dict:
             ctx_text = (f"Piyasa geneli haber. İzleme listesi: {watch_desc}. "
                         f"Makro: {tcmb.macro_context(macro) or 'yok'}")
         it.analysis = analyzer.assess(it, ctx_text)
+        deals.adjust(it)
 
     # 5) Birleştir, fiyat tepkisini güncelle, kaydet
     items = [i.to_dict() for i in new] + feed

@@ -274,7 +274,7 @@
     return `<tr class="row${reason ? " dim" : ""}${state.open.has(it.id) ? " open" : ""}" data-id="${it.id}" tabindex="0" aria-expanded="${state.open.has(it.id)}">
       <td class="c-dir">${dirHTML(a)}</td>
       <td class="c-tk">${tk}</td>
-      <td class="c-ol"><div class="ol-t" data-tip="${esc(full)}">${isNew ? `<span class="new-dot" aria-label="yeni"></span>` : ""}${reason ? DIM_IC(reason) : ""}${simBadge(it)}${docBadge(it)}${text} <span class="ol-src">· ${esc(it.source.split(" · ")[0])}</span></div></td>
+      <td class="c-ol"><div class="ol-t" data-tip="${esc(full)}">${isNew ? `<span class="new-dot" aria-label="yeni"></span>` : ""}${reason ? DIM_IC(reason) : ""}${simBadge(it)}${docBadge(it)}${dealBadge(it)}${text} <span class="ol-src">· ${esc(it.source.split(" · ")[0])}</span></div></td>
       <td class="c-imp">${imp}</td>
       <td class="c-rx num">${rxHTML(it)}</td>
       <td class="c-src"><span class="src-cell" data-tip="${esc(srcTip)}"><span class="${t1 ? "t1" : ""}">${TYPE[it.source_type] || "Haber"}</span>${it.dups ? ` <span class="x">×${it.dups + 1}</span>` : ""}</span></td>
@@ -311,6 +311,13 @@
     const pdf = (d.files || []).filter(f => f.type === "PDF" && f.pages);
     const pages = pdf.reduce((n, f) => n + f.pages, 0);
     return `${esc(d.kind)}${pdf.length ? ` · ${pdf.length} PDF, ${pages} sayfa` : ""}${(d.files || []).some(f => f.type === "EX-99") ? ` · ${d.files.filter(f => f.type === "EX-99").length} ek` : ""}`;
+  }
+  // Sözleşme/ihale bildirimi: tutarın son 12 ay hasılata oranı
+  function dealBadge(it) {
+    const d = it.extra?.deal;
+    if (!d?.ratio) return "";
+    const amt = `${fmt.num(d.amount / (d.amount >= 1e9 ? 1e9 : d.amount >= 1e6 ? 1e6 : 1), 1)}${d.amount >= 1e9 ? " mr" : d.amount >= 1e6 ? " mn" : ""} ${d.cur}`;
+    return `<span class="doc-badge${d.ratio >= 0.1 ? " deal-hi" : ""}" data-tip="Sözleşme tutarı ${esc(amt)} · son 12 ay hasılatın %${fmt.num(d.ratio * 100, 1)}'i (TCMB kuru ile)">Ciro %${fmt.num(d.ratio * 100, d.ratio < 0.1 ? 1 : 0)}</span> `;
   }
   function docBadge(it) {
     const d = it.extra?.doc;
@@ -933,7 +940,7 @@
         <span class="tp-norm" data-tip="Haberler ve AI genelde iyimser yazar; olumlu haberden hissenin olağan iyimserlik payı düşülür. Ham ortalama ${netTxt(raw)}, normal seviye ${netTxt(base)} (son 1–7 gün), etkin yön ${netTxt(net)} (±0,15 üstü olumlu/olumsuz).">ham ${netTxt(raw)} · normal ${netTxt(base)}</span>` : "yok"}</p>
       ${items.length ? `<p class="tp-h">Son haberler · 14 gün</p><ul class="tp-news">${items.slice(0, 5).map(it => { const a = it.analysis, k = a ? sign(a.sentiment) : null; return `
         <li><button type="button" data-id="${it.id}" class="${a?.materiality === "high" ? "hi" : ""}"><span class="dir ${dirCls(k)}">${a ? glyph(k) : "·"}</span>
-          <span class="tp-t">${a?.materiality === "high" ? `<span class="tp-hi" title="Yüksek önemli">Önemli</span> ` : ""}${a?.event_label ? `<b>${esc(a.event_label)}</b> · ` : ""}${esc(a?.what || a?.headline_tr || it.title)}</span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>
+          <span class="tp-t">${a?.materiality === "high" ? `<span class="tp-hi" title="Yüksek önemli">Önemli</span> ` : ""}${dealBadge(it)}${a?.event_label ? `<b>${esc(a.event_label)}</b> · ` : ""}${esc(a?.what || a?.headline_tr || it.title)}</span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>
         ${items.length > 5 ? `<p class="tp-more">+${items.length - 5} kayıt daha · “Akışı bu hisseye süz” ile hepsini gör</p>` : ""}` : `<p class="tp-empty">Son 14 günde bu hisse için haber yok. Teknik görünüm aşağıda.</p>`}`;
     $('[data-a="filter"]', head).onclick = () => {
       if (state.ticker === sym) { state.ticker = null; } else { state.ticker = sym; state.view = state.view === "tickers" ? "feed" : state.view; }
