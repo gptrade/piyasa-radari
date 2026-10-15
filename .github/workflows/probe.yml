@@ -1,4 +1,4 @@
-name: probe-bist  # p61
+name: probe-bist  # p62
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -8,22 +8,20 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 100
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - uses: actions/checkout@v4
-        with: { ref: onizleme-gemma, path: app, fetch-depth: 0 }
-      - name: Gemma haber denemesi
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.PIYASA_RADARI }}
+        with: { ref: onizleme-sozlesme, path: app, fetch-depth: 0 }
+      - name: KAP sözleşme denemesi
         run: |
-          mkdir -p probe61; pip install -q -r app/requirements.txt
-          git -C app fetch -q origin data
-          python probe61.py > probe61/sonuc.txt 2>&1 || true
+          mkdir -p probe62; pip install -q -r app/requirements.txt
+          git -C app fetch -q origin fin
+          python probe62.py > probe62/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe61; git commit -qm "probe61 sonuçları" || true; git push -q
+          git add -A probe62; git commit -qm "probe62 sonuçları" || true; git push -q
