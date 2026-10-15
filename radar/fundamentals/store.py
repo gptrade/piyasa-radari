@@ -358,6 +358,8 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
 
     rebuilt = rebuild_series(force=bool(cpi_new))
     prices_new = _due(state, "prices", 1) and update_prices(sorted(members))
+    if _due(state, "px_hist", 24 * 3):                   # tarihsel PD/DD için ay sonu fiyatları (3 günde bir)
+        prices_new = update_price_history(sorted(members)) or prices_new
     if rebuilt or prices_new or not SCREEN.exists():
         try:
             stats["screened"] = build_metrics()
@@ -406,6 +408,55 @@ def update_prices(codes: list[str]) -> bool:
     return bool(out)
 
 
+PX_HIST = FIN / "_px_hist.json"
+
+
+def raw_monthly(close, splits) -> list[list]:
+    """Ay sonu kapanışları, bölünme/bedelsiz düzeltmesi geri alınmış (o günkü gerçek fiyat).
+
+    Yahoo kapanışları sonraki bölünmelere göre geriye dönük düzeltir; ay sonu piyasa değeri için o günkü
+    gerçek fiyat × o dönemin ödenmiş sermayesi gerekir. close/splits: tarih indeksli pandas serileri."""
+    import pandas as pd
+    sp = splits[splits > 0] if splits is not None else pd.Series(dtype=float)
+    me = close.dropna().groupby(close.dropna().index.to_period("M")).last()
+    out = []
+    for per, v in me.items():
+        end = per.to_timestamp(how="end")
+        if getattr(sp.index, "tz", None) is not None:
+            end = end.tz_localize(sp.index.tz)
+        factor = float(sp[sp.index > end].prod()) if len(sp) else 1.0
+        out.append([str(per), round(float(v) * factor, 4)])
+    return out
+
+
+def update_price_history(codes: list[str]) -> bool:
+    """Son ~4 yılın ay sonu gerçek kapanışları (Yahoo). Tarihsel PD/DD ve iskonto karşılaştırması için."""
+    try:
+        import yfinance as yf
+    except ImportError:
+        return False
+    out = _load(PX_HIST, {}).get("p", {})
+    for i in range(0, len(codes), 50):
+        part = codes[i:i + 50]
+        try:
+            df = yf.download(" ".join(f"{c}.IS" for c in part), period="4y", interval="1d", actions=True,
+                             group_by="ticker", auto_adjust=False, threads=True, progress=False)
+        except Exception as e:
+            log.warning("Fiyat geçmişi alınamadı: %s", e)
+            continue
+        for c in part:
+            try:
+                sub = df[f"{c}.IS"] if len(part) > 1 else df
+                ser = raw_monthly(sub["Close"], sub.get("Stock Splits"))
+            except (KeyError, TypeError, ValueError):
+                continue
+            if ser:
+                out[c] = ser
+    if out:
+        _save(PX_HIST, {"updated": _now().isoformat(timespec="seconds"), "p": out})
+    return bool(out)
+
+
 def merge_divs(lst: list[dict], d: dict) -> list[dict]:
     """Aynı karar tarihli bildirimlerden (YK önerisi → GK sonucu, güncellemeler) yalnız en yenisi kalır."""
     by: dict[str, dict] = {}
@@ -437,6 +488,7 @@ def build_metrics() -> int:
     from . import metrics as M
     uni = {m["code"]: m for m in _load(UNIVERSE, {}).get("members", [])}
     prices = _load(PRICES, {}).get("p", {})
+    hist = _load(PX_HIST, {}).get("p", {})
     divs = _load(DIVS, {})
     rows, docs = [], {}
     for p in sorted(FIN.glob("[A-Z0-9]*.json")):
@@ -445,7 +497,7 @@ def build_metrics() -> int:
             continue
         code = doc.get("code") or p.stem
         try:
-            m = M.company(doc, (prices.get(code) or {}).get("price"))
+            m = M.company(doc, (prices.get(code) or {}).get("price"), hist.get(code))
         except Exception:
             log.exception("Metrik hesaplanamadı: %s", code)
             m = None
@@ -469,6 +521,7 @@ def build_metrics() -> int:
             "mscore": m["beneish_m"], "intrinsic": m.get("intrinsic"), "potential": m.get("potential"),
             "crit": {k: [c["pass"], c["total"], c["known"], [v for _, v in c["items"]]] for k, c in m["criteria"].items()},
             "div": div_summary(divs.get(row["code"], []), m["valuation"].get("price")),
+            "pbh": m.get("pb_hist"),
         })
     done = {r["code"] for r in rows}
     for code, (p, doc) in docs.items():                   # skoru henüz çıkmayanlar: temel bilgilerle listelenir

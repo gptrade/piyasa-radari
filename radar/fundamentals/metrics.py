@@ -417,10 +417,39 @@ HISTORY_KEYS = ["roe", "roa", "net_margin", "ebitda_margin", "gross_margin", "cu
                 "debt_equity", "rev_growth", "net_growth", "asset_growth", "cfo_ni", "asset_turnover", "ccc", "mon_share"]
 
 
-def company(doc: dict, price: float | None) -> dict | None:
+def pb_history(view: View, hist: list | None, now_pb: float | None, years: int = 3) -> dict | None:
+    """Dönem sonlarındaki PD/DD: ay sonu gerçek fiyat × o dönemin ödenmiş sermayesi / ana ortaklık özkaynağı.
+
+    TMS 29'da her dönemin özkaynağı kendi dönem sonu TL'siyle; fiyat da o tarihin TL'si: oran tutarlı.
+    Son `years` yılın (bugünkü dönem hariç) ortalaması ve bugünkü PD/DD'nin buna göre primi/iskontosu."""
+    if not hist or not now_pb:
+        return None
+    px = {m: v for m, v in hist}
+    pts = []
+    for pk in view.p:
+        y, mo = pk.split("/")
+        price = px.get(f"{y}-{mo}")
+        eq, sh = view.v("bs", "equity_parent", pk), view.v("bs", "paid_capital", pk)
+        if price and eq and eq > 0 and sh:
+            pts.append([pk, round(price * sh / eq, 3)])
+    last = view.p[-1]
+    ly, lm = (int(x) for x in last.split("/"))
+    lo = f"{ly - years}/{lm:02d}"
+    past = [v for pk, v in pts if lo < pk < last] or [v for pk, v in pts if pk < last]
+    if len(past) < 3:
+        return {"series": pts, "n": len(past)}
+    avg = sum(past) / len(past)
+    return {"series": pts, "n": len(past), "avg": round(avg, 3), "min": min(past), "max": max(past),
+            "rel": round(now_pb / avg - 1, 4), "from": pts[0][0]}
+
+
+def company(doc: dict, price: float | None, px_hist: list | None = None) -> dict | None:
     ser = doc.get("series")
     if doc.get("template") in ("banka", "sigorta"):
-        return company_fin(doc, price)
+        out = company_fin(doc, price)
+        if out and ser and ser.get("periods"):
+            out["pb_hist"] = pb_history(View(ser, doc.get("currency") or "TRY"), px_hist, out["valuation"].get("pb"))
+        return out
     if not ser or not ser.get("periods") or doc.get("template") != "sanayi":
         return None
     view = View(ser, doc.get("currency") or "TRY")
@@ -448,6 +477,7 @@ def company(doc: dict, price: float | None) -> dict | None:
         "categories": category_scores(r),
         "criteria": criteria(view, pk, r, val, z, f, m),
         "history": {"periods": view.p, **hist},
+        "pb_hist": pb_history(view, px_hist, val.get("pb")),
     }
 
 
