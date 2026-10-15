@@ -441,9 +441,22 @@ def pb_history(view: View, hist: list | None, now_pb: float | None, years: int =
     # Medyan: tek dönemlik veri hatası (ör. bedelsiz tarihi ile rapor dönemi kayması) ortalamayı bozmasın
     med = median(past)
     clean = [v for v in past if med / 3 <= v <= med * 3]
-    return {"series": [p for p in pts if med / 3 <= p[1] <= med * 3 or p[0] == last], "n": len(clean),
-            "med": round(median(clean), 3), "min": min(clean), "max": max(clean),
-            "rel": round(now_pb / median(clean) - 1, 4), "from": pts[0][0]}
+    out = {"series": [p for p in pts if med / 3 <= p[1] <= med * 3 or p[0] == last], "n": len(clean),
+           "med": round(median(clean), 3), "min": min(clean), "max": max(clean),
+           "rel": round(now_pb / median(clean) - 1, 4), "from": pts[0][0]}
+    # Güvenilirlik: (1) işlem görmediği aylarda Yahoo aynı fiyatı tekrarlar; (2) aşırı fark çoğunlukla rapor döneminden
+    # sonraki bir bedelsizden gelir (bugünkü PD/DD eski pay sayısıyla hesaplanır). Bu durumda karşılaştırma uyarıyla gösterilir.
+    lo_m = f"{ly - years}-{lm:02d}"
+    win = [v for mth, v in hist if mth > lo_m]
+    run = best = 1
+    for a, b in zip(win, win[1:]):
+        run = run + 1 if a == b else 1
+        best = max(best, run)
+    if best >= 4:
+        out["warn"] = "Hisse bu dönemin bir kısmında işlem görmemiş görünüyor (aynı fiyat aylarca tekrar ediyor)."
+    elif not -0.75 <= out["rel"] <= 1.5:
+        out["warn"] = "Fark olağan dışı büyük; rapor döneminden sonra yapılan bir sermaye artırımı (bedelsiz) bugünkü PD/DD'yi bozmuş olabilir."
+    return out
 
 
 def company(doc: dict, price: float | None, px_hist: list | None = None) -> dict | None:
@@ -489,7 +502,7 @@ def company(doc: dict, price: float | None, px_hist: list | None = None) -> dict
 
 def _pb_fields(m: dict) -> None:
     ph = m.get("pb_hist") or {}
-    if ph.get("med"):
+    if ph.get("med") and not ph.get("warn"):
         m["valuation"]["pb_med3"] = ph["med"]
         m["valuation"]["pb_rel3"] = ph["rel"]
 

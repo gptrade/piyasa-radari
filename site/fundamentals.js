@@ -452,13 +452,13 @@
     if (!ph?.series?.length || ph.series.length < 3) return "";
     const nav = /GAYRİMENKUL YATIRIM|HOLDİNG/i.test(row?.sector || "");
     const disc = p => p == null ? "—" : p < 1 ? `%${fmt.num((1 - p) * 100, 0)} iskonto` : `%${fmt.num((p - 1) * 100, 0)} prim`;
-    const labels = ph.series.map(p => qlabel(p[0])).concat(["Bugün"]);
+    const labels = ph.series.map(p => qlabel(p[0])).concat(["Son"]);
     const vals = ph.series.map(p => p[1]).concat([v.pb]);
     const verdict = ph.rel == null ? "" : ph.rel <= -0.15 ? `<b class="up">tarihsel medyanına göre ucuz</b>` : ph.rel >= 0.15 ? `<b class="down">tarihsel medyanına göre pahalı</b>` : "tarihsel medyanına yakın";
     const text = ph.med ? `Bugün PD/DD <b>${x(v.pb)}</b>${nav ? ` (özkaynağa ${disc(v.pb)})` : ""}; son 3 yılın dönem sonu medyanı <b>${x(ph.med)}</b>${nav ? ` (${disc(ph.med)})` : ""}, aralık ${x(ph.min)}–${x(ph.max)}. Fark <b>${pctS(ph.rel)}</b>: ${verdict}.`
       : `Karşılaştırma için en az 3 geçmiş dönem gerekiyor (şu an ${ph.n}).`;
     return `<section class="card"><div class="card-head"><h2 class="card-title">${nav ? "Net aktif değer iskontosu (PD/DD)" : "PD/DD tarihçesi"}</h2><span class="card-meta">dönem sonu fiyat × o dönemin pay sayısı / ana ortaklık özkaynağı</span></div>
-      <p class="d-sum">${text}</p>
+      <p class="d-sum">${text}</p>${ph.warn ? `<p class="banner warn">${esc(ph.warn)} Taramada bu hisse için PD/DD karşılaştırması kullanılmaz.</p>` : ""}
       ${lineChart(labels, [{ name: "PD/DD", vals }, ...(ph.med ? [{ name: "3 yıllık medyan", vals: vals.map(() => ph.med) }] : [])], { kind: "x", tipFmt: x, w: 900 })}
       ${nav ? `<p class="card-foot">GYO'larda özkaynak büyük ölçüde ekspertiz değerli gayrimenkullerden oluşur; PD/DD < 1 net aktif değere iskonto demektir. Tek başına iskonto alım sinyali değildir: hisse her zaman iskontolu işlem görüyorsa asıl soru, bugünkü iskontonun kendi geçmişine göre derin olup olmadığıdır. Holdinglerde özkaynak, iştiraklerin piyasa değerini değil defter değerini yansıtır.</p>` : ""}</section>`;
   }
@@ -730,7 +730,9 @@
     if (fromHash.length) { S.cmp = fromHash.slice(0, 5); store.set("radar.finCmp", S.cmp); }
     const codes = S.cmp.filter(c => rowOf(c));
     const pick = `<section class="card"><div class="toolbar"><span class="chip-label">Karşılaştırılan</span><div class="chips">${codes.map(c => `<button type="button" class="chip" data-rm="${c}" aria-pressed="true">${c} <span aria-hidden="true">×</span></button>`).join("")}</div>
-      ${codes.length < 5 ? `<select id="faCmpPick" class="fa-select" aria-label="Şirket ekle"><option value="">+ Şirket ekle</option>${rows().filter(r => !codes.includes(r.code)).sort((a, b) => a.code.localeCompare(b.code)).map(r => `<option value="${r.code}">${r.code} · ${esc(trTitle(r.title))}</option>`).join("")}</select>` : ""}</div></section>`;
+      ${codes.length < 5 ? `<div class="fa-pick"><label class="search"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m13.5 13.5 3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <input type="search" id="faCmpQ" placeholder="Şirket ekle: kod ya da ad (ör. THYAO, PGSUS)" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="faCmpList" aria-label="Karşılaştırmaya şirket ekle"></label>
+        <ul id="faCmpList" class="fa-sug" role="listbox" hidden></ul></div>` : `<span class="card-meta">En fazla 5 şirket</span>`}</div></section>`;
     if (codes.length < 2) {
       el.innerHTML = pick + `<div class="card">${sh.stateHTML({ title: "En az iki şirket seç", msg: "Şirket sayfasındaki “Karşılaştırmaya ekle” düğmesini ya da yukarıdaki listeyi kullan (en fazla 5)." })}</div>`;
       bindCmp(el); return;
@@ -795,7 +797,44 @@
   }
   function bindCmp(el) {
     $$("[data-rm]", el).forEach(b => b.onclick = () => { S.cmp = S.cmp.filter(c => c !== b.dataset.rm); store.set("radar.finCmp", S.cmp); sh.go("karsilastir", { param: S.cmp.join(","), push: false }); renderCompare(); });
-    $("#faCmpPick") && ($("#faCmpPick").onchange = e => { if (!e.target.value) return; S.cmp = [...S.cmp.filter(c => rowOf(c)), e.target.value].slice(0, 5); store.set("radar.finCmp", S.cmp); sh.go("karsilastir", { param: S.cmp.join(","), push: false }); renderCompare(); });
+    const inp = $("#faCmpQ"), list = $("#faCmpList");
+    if (!inp) return;
+    const add = codes => {
+      const ok = codes.filter(c => rowOf(c) && !S.cmp.includes(c));
+      if (!ok.length) return;
+      S.cmp = [...S.cmp.filter(c => rowOf(c)), ...ok].slice(0, 5); store.set("radar.finCmp", S.cmp);
+      sh.go("karsilastir", { param: S.cmp.join(","), push: false }); renderCompare();
+      setTimeout(() => $("#faCmpQ")?.focus(), 0);
+    };
+    // Türkçe büyük/küçük harf: "is" hem ISCTR'yi hem İŞ'i bulsun (I/ı/İ/i tek harf sayılır)
+    const low = t => (t || "").toLocaleLowerCase("tr").replace(/ı/g, "i").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let hits = [], cur = 0;
+    const show = () => {
+      const q = low(inp.value.split(",").pop().trim());
+      hits = !q ? [] : rows().filter(r => !S.cmp.includes(r.code))
+        .map(r => ({ r, k: low(r.code).startsWith(q) ? 0 : low(r.code).includes(q) ? 1 : low(r.title).includes(q) ? 2 : low(r.title).replace(/\s+/g, "").includes(q.replace(/\s+/g, "")) ? 3 : 9 }))
+        .filter(o => o.k < 9).sort((a, b) => a.k - b.k || a.r.code.localeCompare(b.r.code)).slice(0, 8).map(o => o.r);
+      cur = 0;
+      list.innerHTML = hits.map((r, i) => `<li role="option" id="faSug${i}" aria-selected="${i === cur}" data-code="${r.code}"><b class="mono">${r.code}</b> <span class="muted">${esc(trTitle(r.title))}</span> <small class="muted">${esc(r.sector || "")}</small></li>`).join("")
+        || (q ? `<li class="na">Eşleşen şirket yok</li>` : "");
+      list.hidden = !q; inp.setAttribute("aria-expanded", String(!list.hidden));
+      inp.setAttribute("aria-activedescendant", hits.length ? "faSug0" : "");
+    };
+    const mark = () => $$("li[role=option]", list).forEach((li, i) => { li.setAttribute("aria-selected", String(i === cur)); if (i === cur) { li.scrollIntoView({ block: "nearest" }); inp.setAttribute("aria-activedescendant", li.id); } });
+    inp.oninput = show;
+    inp.onkeydown = e => {
+      if (e.key === "ArrowDown" && hits.length) { cur = (cur + 1) % hits.length; mark(); e.preventDefault(); }
+      else if (e.key === "ArrowUp" && hits.length) { cur = (cur - 1 + hits.length) % hits.length; mark(); e.preventDefault(); }
+      else if (e.key === "Escape") { list.hidden = true; inp.setAttribute("aria-expanded", "false"); }
+      else if (e.key === "Enter") {
+        e.preventDefault();
+        // "THYAO, PGSUS" gibi birden çok kod; yoksa öneri listesindeki seçili şirket
+        const typed = inp.value.split(/[,\s]+/).map(t => t.trim().toUpperCase()).filter(t => rowOf(t));
+        add(typed.length > 1 || (typed.length === 1 && !hits.length) ? typed : hits[cur] ? [hits[cur].code] : typed);
+      }
+    };
+    list.onmousedown = e => { const li = e.target.closest("li[data-code]"); if (li) { e.preventDefault(); add([li.dataset.code]); } };
+    inp.onblur = () => setTimeout(() => { list.hidden = true; inp.setAttribute("aria-expanded", "false"); }, 120);
   }
 
 

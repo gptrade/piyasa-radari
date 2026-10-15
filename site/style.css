@@ -1094,3 +1094,10 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .doc-badge.deal-hi { background: var(--warn-soft); color: var(--warn); }
 .pf-corr td, .pf-corr th { padding: 6px 8px; min-width: 56px; }
 .pf-lt { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.fa-pick { position: relative; flex: 1 1 280px; max-width: 420px; }
+.fa-pick .search { width: 100%; }
+.fa-sug { position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; right: 0; margin: 0; padding: 4px; list-style: none;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-2); max-height: 320px; overflow: auto; }
+.fa-sug li { padding: 7px 10px; border-radius: 6px; cursor: pointer; display: flex; gap: 8px; align-items: baseline; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fa-sug li[aria-selected="true"], .fa-sug li[data-code]:hover { background: var(--surface-2); }
+.fa-sug li.na { cursor: default; color: var(--text-3); }
