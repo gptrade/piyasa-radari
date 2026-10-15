@@ -1,0 +1,22 @@
+{
+ "https://piyasa-radari.pages.dev/": [
+  302,
+  "https://lyracube.cloudflareaccess.com/cdn-cgi/access/login/piyasa-radari.pages.d",
+  143
+ ],
+ "https://piyasa-radari.pages.dev/data/feed.json": [
+  302,
+  "https://lyracube.cloudflareaccess.com/cdn-cgi/access/login/piyasa-radari.pages.d",
+  143
+ ],
+ "https://radar.lyracube.com/": [
+  302,
+  "https://lyracube.cloudflareaccess.com/cdn-cgi/access/login/radar.lyracube.com?ki",
+  143
+ ],
+ "https://radar.lyracube.com/data/feed.json": [
+  302,
+  "https://lyracube.cloudflareaccess.com/cdn-cgi/access/login/radar.lyracube.com?ki",
+  143
+ ]
+}
