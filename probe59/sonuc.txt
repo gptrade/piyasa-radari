@@ -1,0 +1,29 @@
+eurostat 28
+  2026-10-01 11:00 2 Euro Bölgesi işsizlik August 2026
+  2026-10-02 11:00 3 Euro Bölgesi enflasyon (öncü) September 2026
+  2026-10-05 11:00 1 Euro Bölgesi ÜFE August 2026
+  2026-10-06 11:00 1 Euro Bölgesi perakende satışlar August 2026
+  2026-10-15 11:00 1 Euro Bölgesi sanayi üretimi August 2026
+  2026-10-16 11:00 2 Euro Bölgesi enflasyon (kesin) September 2026
+  2026-10-16 11:00 1 Euro Bölgesi dış ticaret August 2026
+  2026-10-20 11:00 1 Euro Bölgesi GSYH (ayrıntılı) Q2/2026
+  2026-10-29 11:00 2 AB ekonomik güven endeksi October 2026
+  2026-10-30 11:00 3 Euro Bölgesi GSYH (öncü) Q3/2026
+  2026-10-30 11:00 2 Euro Bölgesi işsizlik September 2026
+  2026-11-04 11:00 3 Euro Bölgesi enflasyon (öncü) October 2026
+  2026-11-05 11:00 1 Euro Bölgesi ÜFE September 2026
+  2026-11-06 11:00 1 Euro Bölgesi perakende satışlar September 2026
+  2026-11-13 11:00 2 Euro Bölgesi GSYH ve istihdam Q3/2026
+  2026-11-13 11:00 1 Euro Bölgesi dış ticaret September 2026
+  2026-11-16 11:00 1 Euro Bölgesi sanayi üretimi September 2026
+  2026-11-18 11:00 2 Euro Bölgesi enflasyon (kesin) October 2026
+  2026-11-27 11:00 2 AB ekonomik güven endeksi November 2026
+  2026-12-01 11:00 3 Euro Bölgesi enflasyon (öncü) November 2026
+  2026-12-02 11:00 2 Euro Bölgesi işsizlik October 2026
+  2026-12-03 11:00 1 Euro Bölgesi ÜFE October 2026
+  2026-12-04 11:00 1 Euro Bölgesi perakende satışlar October 2026
+  2026-12-07 11:00 1 Euro Bölgesi GSYH (ayrıntılı) Q3/2026
+  2026-12-15 11:00 1 Euro Bölgesi sanayi üretimi October 2026
+  2026-12-16 11:00 1 Euro Bölgesi dış ticaret October 2026
+  2026-12-17 11:00 2 Euro Bölgesi enflasyon (kesin) November 2026
+  2026-12-17 11:00 1 Euro Bölgesi işgücü maliyeti Q3/2026
