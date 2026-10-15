@@ -68,7 +68,14 @@ export function pick(mail) {
   if (!files.length) {
     const text = (mail.text || String(mail.html || "").replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, "")
       .replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ")).replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
-    if (text.length >= MIN_TEXT) files.push({ ext: "md", data: new TextEncoder().encode(`# ${mail.subject || ""}\n\n${text}`) });
+    const links = (text.match(/https?:\/\/\S+/g) || []).length + (String(mail.html || "").match(/<a\s[^>]*href=/gi) || []).length;
+    const prose = text.replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
+    // Uzun gövde = bültenin kendisi; kısa gövde + bağlantı = rapor indirme bağlantısıyla gönderilmiş (okunamaz)
+    if (prose.length >= MIN_TEXT * 2 || (prose.length >= MIN_TEXT && !links)) {
+      files.push({ ext: "md", data: new TextEncoder().encode(`# ${mail.subject || ""}\n\n${text}`) });
+    } else if (links) {
+      files.linkOnly = true;
+    }
   }
   return files;
 }
@@ -114,7 +121,10 @@ export default {
     const mail = await PostalMime.parse(message.raw);
     const files = pick(mail);
     if (!files.length) {
-      await tg(env, `📭 rapor@: "${mail.subject || ""}" geldi ama ek ya da bülten metni yok, atlandı.`);
+      const who = mail.from?.name || mail.from?.address || "";
+      await tg(env, files.linkOnly
+        ? `📎 rapor@: "${mail.subject || ""}" (${who}) — ek yok, rapor bağlantıda. PDF'i indirip ek olarak iletirsen işlenir.`
+        : `📭 rapor@: "${mail.subject || ""}" geldi ama ek ya da bülten metni yok, atlandı.`);
       return;
     }
     const day = new Date().toISOString().slice(0, 10);

@@ -179,7 +179,7 @@ def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict
 DEFAULT_QUERIES = ['"hedef fiyatını"', '"hedef fiyat" Yatırım hisse', '"tavsiyesini" hisse', '"model portföy" Yatırım',
                    'site:foreks.com "HİSSE DEĞERLENDİRMESİ"']
 PENDING: list[dict] = []
-PRIVATE: dict = {"records": [], "notes": [], "drop": []}   # gizli rapor kutusundan bu turda gelenler (private_reports.process)      # izleme listesi dışı notlar (akışa girmez, update() research.json'a yazar)
+PRIVATE: dict = {"records": [], "notes": []}   # gizli rapor kutusundan bu turda gelenler (private_reports.process)      # izleme listesi dışı notlar (akışa girmez, update() research.json'a yazar)
 
 
 def note_row(n: dict, id_: str, ts: str, src: str, url: str, title: str, px: dict | None = None) -> dict:
@@ -439,11 +439,6 @@ def synthesize(analyzer, store: dict, items: list[dict], watch: list) -> dict | 
 def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dict:
     """Kurum notlarını ve görünümleri research.json'a yazar; günde bir sentez üretir."""
     store = load()
-    drop = tuple(PRIVATE.get("drop") or [])       # yeniden okunacak raporların eski kayıtları
-    if drop:
-        store["notes"] = [n for n in store["notes"] if not str(n.get("id", "")).startswith(drop)]
-        store["reports"] = [r for r in store.get("reports", []) if r["id"] not in drop]
-        PRIVATE["drop"] = []
     # Aynı not aynı gün birden çok kaynaktan gelebilir (biri hedefli, biri hedefsiz): kurum + hisse + gün aynıysa
     # yeni kayıt açılmaz, eksik alanlar (hedef, tavsiye, önceki hedef) mevcut kayda tamamlanır.
     key = lambda n: (n["broker"].lower()[:10], n.get("t") or (n.get("name") or "").lower()[:12], n["ts"][:10])

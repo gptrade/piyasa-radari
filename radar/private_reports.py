@@ -341,32 +341,12 @@ def grounded(x: dict, text: str, names: dict | None = None) -> dict:
 
 def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path = DONE) -> dict:
     """Yeni raporları okur. Döner: {records, notes, items, status}."""
-    res = {"records": [], "notes": [], "items": [], "drop": [], "status": {"count": 0}}
+    res = {"records": [], "notes": [], "items": [], "status": {"count": 0}}
     if not root.is_dir():
         res["status"] = {"disabled": True}
         return res
     done = _known(done_path)
     tries = _tries(done_path)
-    # Ayarlarda "reprocess" ile verilen rapor kimlikleri bir kez yeniden okunur (ör. hatalı ayrıştırılmış rapor)
-    redo_path = done_path.with_name("private_reports_redo.json")
-    try:
-        handled = set(json.loads(redo_path.read_text(encoding="utf-8")))
-    except (FileNotFoundError, ValueError):
-        handled = set()
-    res["drop"] = []
-    for rid in cfg.get("reprocess") or []:
-        if rid in handled or not str(rid).startswith("rapor-"):
-            continue
-        prefix = rid[len("rapor-"):]
-        done = {sha for sha in done if not sha.startswith(prefix)}
-        handled.add(rid)
-        res["drop"].append(rid)
-    for rid in cfg.get("ignore") or []:              # rapor değil (ör. yalnız indirme bağlantısı olan posta): kaydı sil
-        if f"ignore:{rid}" not in handled:
-            handled.add(f"ignore:{rid}")
-            res["drop"].append(rid)
-    if res["drop"]:
-        redo_path.write_text(json.dumps(sorted(handled)), encoding="utf-8")
     todo = [u for u in units(root) if u["sha"] not in done]
     res["status"]["waiting"] = len(todo)
     limit = int(cfg.get("max_per_run", 2))
