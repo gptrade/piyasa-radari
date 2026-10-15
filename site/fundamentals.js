@@ -49,6 +49,11 @@
     current: ["Cari oran", x, 1, "Likidite"], quick: ["Asit-test oranı", x, 1, "Likidite"], cash_ratio: ["Nakit oranı", x, 1, "Likidite"],
     cfo_ni: ["İşletme nakdi / net kar", x, 1, "Nakit akışı"], fcf_margin: ["Serbest nakit akışı marjı", pct, 1, "Nakit akışı"],
     accruals: ["Tahakkuk oranı", pct, -1, "Nakit akışı"],
+    fcf_conv: ["Serbest nakit / FAVÖK", pct, 1, "Nakit akışı"],
+    mon_share: ["Parasal kazancın vergi öncesi kardaki payı", v => v != null && v > 1 ? "%100+ (onsuz zarar)" : pct(v), -1, "Nakit akışı"],
+    pbt_ex_mon_margin: ["Parasal kazanç hariç vergi öncesi kar marjı", pct, 1, "Karlılık"],
+    rule40: ["Reel satış büyümesi + FAVÖK marjı (Rule of 40)", pct, 1, "Reel büyüme"],
+    ccc_chg: ["Nakit dönüşüm süresi değişimi (1 yıl, gün)", v => v == null ? "—" : `${v > 0 ? "+" : ""}${fmt.num(v, 0)} gün`, -1, "Verimlilik"],
     asset_turnover: ["Aktif devir hızı", x, 1, "Verimlilik"], inv_days: ["Stok süresi", days, -1, "Verimlilik"],
     rec_days: ["Alacak tahsil süresi", days, -1, "Verimlilik"], pay_days: ["Borç ödeme süresi", days, 1, "Verimlilik"],
     ccc: ["Nakit dönüşüm süresi", days, -1, "Verimlilik"],
@@ -72,8 +77,8 @@
   };
   const MET_T = {
     sanayi: ["gross_margin", "ebitda_margin", "op_margin", "core_margin", "net_margin", "roe", "roa", "roic", "rev_growth", "ebitda_growth", "net_growth", "asset_growth",
-      "net_debt_ebitda", "debt_equity", "fin_debt_equity", "liab_assets", "interest_cov", "current", "quick", "cash_ratio", "cfo_ni", "fcf_margin", "accruals",
-      "asset_turnover", "inv_days", "rec_days", "pay_days", "ccc", "pe", "pb", "ev_ebitda", "ev_sales", "ps", "peg", "earnings_yield", "fcf_yield", "div_yield"],
+      "net_debt_ebitda", "debt_equity", "fin_debt_equity", "liab_assets", "interest_cov", "current", "quick", "cash_ratio", "cfo_ni", "fcf_margin", "accruals", "fcf_conv", "mon_share", "pbt_ex_mon_margin", "rule40",
+      "asset_turnover", "inv_days", "rec_days", "pay_days", "ccc", "ccc_chg", "pe", "pb", "ev_ebitda", "ev_sales", "ps", "peg", "earnings_yield", "fcf_yield", "div_yield"],
     banka: ["roe", "real_roe", "roa", "inflation", "tax_rate", "nim", "fee_share", "cost_income", "fee_cover", "cost_of_risk", "ldr", "equity_assets",
       "loan_growth", "deposit_growth", "net_growth", "rev_growth", "pe", "pb", "peg", "earnings_yield", "div_yield"],
     sigorta: ["roe", "real_roe", "roa", "inflation", "loss_ratio", "expense_ratio", "combined", "tech_margin", "retention", "equity_assets", "reserves_cover",
@@ -424,6 +429,13 @@
     add(r.net_growth != null && r.net_growth < -0.2, weak, `Reel net kar düşüşü (${pctS(r.net_growth)})`);
     add(ttm("fcf") != null && ttm("fcf") < 0, weak, `Negatif serbest nakit akışı (${tl(ttm("fcf"))})`);
     add(r.ccc != null && r.ccc > 180, weak, `Uzun nakit dönüşüm süresi (${days(r.ccc)})`);
+    add(r.mon_share != null && r.mon_share >= 0.5, weak, r.mon_share > 1 ? "Parasal kazanç olmasa vergi öncesi zarar var (nakit yaratmayan enflasyon karı)" : `Vergi öncesi karın ${pct(r.mon_share)}'i parasal kazanç (nakit yaratmayan enflasyon karı)`);
+    add(r.mon_share != null && r.mon_share >= 0.25 && r.mon_share < 0.5, weak, `Karın belirgin kısmı parasal kazanç (${pct(r.mon_share)})`);
+    add(r.fcf_conv != null && r.fcf_conv >= 0.5, strong, `FAVÖK'ün ${pct(r.fcf_conv)}'i serbest nakde dönüyor`);
+    add(r.fcf_conv != null && r.fcf_conv < 0, weak, `FAVÖK serbest nakde dönmüyor (SNA/FAVÖK ${pct(r.fcf_conv)})`);
+    add(r.ccc_chg != null && r.ccc_chg <= -15, strong, `Nakit dönüşüm süresi bir yılda ${fmt.num(-r.ccc_chg, 0)} gün kısaldı`);
+    add(r.ccc_chg != null && r.ccc_chg >= 30, weak, `Nakit dönüşüm süresi bir yılda ${fmt.num(r.ccc_chg, 0)} gün uzadı`);
+    add(r.rule40 != null && r.rule40 >= 0.4, strong, `Büyüme + marj güçlü (Rule of 40: ${pct(r.rule40)})`);
     add(r.asset_turnover != null && r.asset_turnover < 0.3, weak, `Düşük aktif devir hızı (${x(r.asset_turnover)})`);
     const view = m.overall == null ? "—" : m.overall >= 65 ? "Olumlu" : m.overall >= 50 ? "Nötr / Karışık" : "Zayıf";
     const viewCls = m.overall == null ? "" : m.overall >= 65 ? "up" : m.overall >= 50 ? "warn-t" : "down";
@@ -468,7 +480,9 @@
         mini("Karlılık", "son 12 ay", [["ROE", pct(r.roe), q(fmt.num(dpt("roe"), 1) + " puan", dpt("roe"))], ["FAVÖK marjı", pct(r.ebitda_margin), q(fmt.num(dpt("ebitda_margin"), 1) + " puan", dpt("ebitda_margin"))], ["Net kar marjı", pct(r.net_margin), q(fmt.num(dpt("net_margin"), 1) + " puan", dpt("net_margin"))]]),
         mini("Büyüme", "reel, yıllık", [["Hasılat", pctS(r.rev_growth)], ["FAVÖK", pctS(r.ebitda_growth)], ["Net kar", pctS(r.net_growth)]]),
         mini("Borçluluk", "", [["Net borç / FAVÖK", (se.bs.net_debt?.[i] ?? 0) < 0 ? "Net nakit" : x(r.net_debt_ebitda)], ["Borç / özkaynak", x(r.debt_equity)], ["Cari oran", x(r.current)]]),
-        mini("Nakit akışı", "son 12 ay", [["Serbest nakit akışı", tl(ttm("fcf"))], ["İşletme nakdi / kar", x(r.cfo_ni)], ["SNA marjı", pct(r.fcf_margin)]])].join("")}
+        mini("Nakit akışı", "son 12 ay", [["Serbest nakit akışı", tl(ttm("fcf"))], ["İşletme nakdi / kar", x(r.cfo_ni)], ["SNA / FAVÖK", pct(r.fcf_conv)]]),
+        mini("Enflasyon muhasebesi", "TMS 29 · son 12 ay", [["Net parasal pozisyon", tl(ttm("monetary")), ttm("monetary") ? `<span class="muted">${ttm("monetary") > 0 ? "kazanç" : "kayıp"}</span>` : ""],
+          ["Vergi öncesi kardaki payı", MET.mon_share[1](r.mon_share)], ["Parasal kalem hariç VÖK", ttm("pretax") != null && ttm("monetary") != null ? tl(ttm("pretax") - ttm("monetary")) : "—"]])].join("")}
         ${mini("Değerleme", "", [["F/K · PD/DD", `${x(v.pe)} · ${x(v.pb)}`], tmpl === "sanayi" ? ["FD/FAVÖK", x(v.ev_ebitda)] : ["Kazanç getirisi", pct(v.earnings_yield)], ["İçsel değer", m.intrinsic ? fmt.num(m.intrinsic, 2) + " ₺" : "—", m.potential != null ? q(pctS(m.potential, 1), m.potential) : ""]])}
         ${(() => { const dv = row?.div;
           if (dv && dv.status !== "yok") return mini("Temettü", dv.status === "kesin" ? "KAP · kesin" : "KAP · öneri", [["Brüt / net (pay başı)", `${fmt.num(dv.gross, 2)} · ${fmt.num(dv.net, 2)} ₺`], ["Verim (brüt)", pct(dv.yield)], [dv.next_ex ? "Hak kullanım" : "Son hak kullanım", dv.next_ex || dv.ex?.[dv.ex.length - 1] || "genel kurul bekleniyor"]]);
@@ -774,7 +788,7 @@
       ["Reel Büyüme", "12A satış −%10→+%20, FAVÖK −%20→+%25, net kar −%30→+%30 (bir yıl önceye göre, TÜFE ile)"],
       ["Finansal Yapı", "Net borç/FAVÖK 4→0 (net nakit = en iyi), finansal borç/özkaynak 1,5→0,2, FAVÖK/finansman gideri 1→8, yükümlülük/varlık %80→%30"],
       ["Likidite", "Cari oran 0,8→2, asit-test 0,5→1,5, nakit oranı 0,1→0,8"],
-      ["Nakit Akışı & Kar Kalitesi", "İşletme nakdi/net kar 0→1,2, serbest nakit akışı marjı −%5→+%12, tahakkuk oranı %10→−%5"],
+      ["Nakit Akışı & Kar Kalitesi", "İşletme nakdi/net kar 0→1,2, serbest nakit akışı marjı −%5→+%12, tahakkuk oranı %10→−%5, serbest nakit/FAVÖK −%20→%60, parasal kazancın vergi öncesi kardaki payı %60→%0"],
       ["Verimlilik", "Aktif devir hızı 0,2→1,5, nakit dönüşüm süresi 180→30 gün, ROIC %0→%25"],
     ];
     el.innerHTML = `<div class="fa-two">
@@ -801,6 +815,10 @@
           <li><b>Serbest nakit akışı</b> = işletme faaliyetlerinden nakit + maddi/maddi olmayan duran varlık ve yatırım amaçlı gayrimenkul alımları.</li>
           <li><b>Firma değeri</b> = piyasa değeri + net borç + kontrol gücü olmayan paylar. Çarpanlar piyasa değeri / 12A.</li>
           <li><b>ROIC</b> = esas faaliyet karı × (1 − %25) / (özkaynak + finansal borç − nakit ve KV yatırımlar).</li>
+          <li><b>Parasal kazanç payı</b> = 12A net parasal pozisyon kazancı (kaybı) / 12A vergi öncesi kar. TMS 29'da parasal borcu yüksek şirketler kağıt üzerinde "enflasyon karı" yazar; bu kar nakit yaratmaz. <b>Parasal kalem hariç VÖK</b> = vergi öncesi kar − net parasal pozisyon.</li>
+          <li><b>Serbest nakit / FAVÖK</b> = 12A serbest nakit akışı / 12A FAVÖK. <b>Tahakkuk oranı</b> = (net kar − işletme nakdi) / ortalama aktif (Sloan).</li>
+          <li><b>Nakit dönüşüm süresi</b> = stok süresi + alacak süresi − borç süresi (gün); <b>değişim</b> bir yıl önceki aynı döneme göre.</li>
+          <li><b>Rule of 40</b> = reel satış büyümesi + FAVÖK marjı; %40 ve üstü büyüme ile karlılığın birlikte güçlü olduğunu gösterir.</li>
         </ul>
       </section>
       <section class="card fa-method"><h2 class="card-title">Puanlar</h2>
@@ -816,7 +834,7 @@
           <li><b>Piotroski F (0–9):</b> ROA > 0, işletme nakdi > 0, ROA arttı, nakit > net kar, UV borç/varlık azaldı, cari oran arttı, sermaye artırımı yok, brüt marj arttı, aktif devir hızı arttı (bir yıl öncesine göre).</li>
           <li><b>Altman Z'':</b> 6,56·(net işletme sermayesi/varlık) + 3,26·(birikmiş karlar/varlık) + 6,72·(esas faaliyet karı/varlık) + 1,05·(özkaynak/yükümlülük). > 2,6 güvenli, 1,1–2,6 gri, < 1,1 riskli.</li>
           <li><b>Beneish M:</b> 8 değişkenli model; −1,78 üstü kazanç manipülasyonu riski işaretidir.</li>
-          <li><b>Kriter setleri:</b> Graham, Buffett, Lynch ve Greenblatt kurallarının BIST'e ve enflasyon muhasebesine uyarlanmış hâlleri; eşikler her kriterin adında yazar. Uzun geçmiş gerektirenler mevcut yıllık dönemlerle sınanır.</li>
+          <li><b>Kriter setleri:</b> Graham, Buffett, Lynch, Greenblatt ve "Enflasyon muhasebesi & nakit kalitesi" kurallarının BIST'e ve enflasyon muhasebesine uyarlanmış hâlleri; eşikler her kriterin adında yazar. Uzun geçmiş gerektirenler mevcut yıllık dönemlerle sınanır.</li>
         </ul>
         <h2 class="card-title">Bankalar ve sigorta şirketleri</h2>
         <ul>

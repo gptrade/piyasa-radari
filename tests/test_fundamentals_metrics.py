@@ -86,3 +86,14 @@ def test_finalize_peer_valuation_and_grade(trgyo):
 
 def test_bank_out_of_scope():
     assert M.company({"template": "finansal", "series": {"periods": ["2026/06"]}}, 10) is None
+
+
+def test_tms29_and_cash_quality(trgyo):
+    r = M.company(trgyo, 92.70)["ratios"]
+    # TRGYO'nun 12A parasal pozisyonu zarar (−5,4 mr ₺): pay negatif, zarar hariç VÖK daha yüksek
+    assert approx(r["mon_share"], -0.284, 0.001) and r["pbt_ex_mon_margin"] > r["net_margin"]
+    assert approx(r["fcf_conv"], 0.661, 0.001)                       # SNA 9,48 / FAVÖK 14,34 mr ₺
+    assert approx(r["rule40"], 0.074 + 0.686, 0.002)
+    assert approx(r["ccc_chg"], -30.0, 0.1) and r["ccc"] > 0
+    c = M.company(trgyo, 92.70)["criteria"]["Enflasyon Muhasebesi & Nakit Kalitesi"]
+    assert (c["pass"], c["total"]) == (6, 6)

@@ -113,11 +113,28 @@ def ratios(view: View, pk: str) -> dict:
     r["inv_days"] = _div(b("inventories"), cogs) * 365 if _div(b("inventories"), cogs) is not None else None
     r["rec_days"] = _div(b("receivables"), rev) * 365 if _div(b("receivables"), rev) is not None else None
     r["pay_days"] = _div(b("payables"), cogs) * 365 if _div(b("payables"), cogs) is not None else None
-    if None not in (r["inv_days"], r["rec_days"], r["pay_days"]):
-        r["ccc"] = r["inv_days"] + r["rec_days"] - r["pay_days"]
-    else:
-        r["ccc"] = None
+    r["ccc"] = _ccc(view, pk)
+    # TMS 29: vergi öncesi karın ne kadarı net parasal pozisyon kazancından (nakit yaratmayan enflasyon karı)
+    pbt, mon = t("pretax"), t("monetary")
+    r["mon_share"] = _div(mon, pbt) if mon is not None and (pbt or 0) > 0 else None
+    r["pbt_ex_mon_margin"] = _div(pbt - mon, rev) if pbt is not None and mon is not None else None
+    # FAVÖK'ün serbest nakde dönüşümü
+    r["fcf_conv"] = _div(t("fcf"), t("ebitda")) if (t("ebitda") or 0) > 0 else None
+    # Büyüme + kalite (Rule of 40): reel satış büyümesi + FAVÖK marjı
+    r["rule40"] = (r["rev_growth"] + r["ebitda_margin"]) if None not in (r["rev_growth"], r["ebitda_margin"]) else None
+    # Nakit dönüşüm süresinin bir yıldaki değişimi (gün; eksi = kısaldı)
+    old_ccc = _ccc(view, _year_ago(pk)) if _year_ago(pk) in view.pos else None
+    r["ccc_chg"] = (r["ccc"] - old_ccc) if None not in (r["ccc"], old_ccc) else None
     return r
+
+
+def _ccc(view: View, pk: str):
+    rev, cogs = view.v("ttm", "revenue", pk), view.v("ttm", "cogs", pk)
+    inv, rec, pay = view.v("bs", "inventories", pk), view.v("bs", "receivables", pk), view.v("bs", "payables", pk)
+    cogs = abs(cogs) if cogs else None
+    if None in (rev, cogs, inv, rec, pay) or not rev or not cogs:
+        return None
+    return (inv / cogs + rec / rev - pay / cogs) * 365
 
 
 def _invested(view: View, pk: str):
@@ -256,7 +273,8 @@ CATEGORIES = {
     "Finansal Yapı": [("net_debt_ebitda", 4.0, 0.0), ("fin_debt_equity", 1.5, 0.2),
                       ("interest_cov", 1.0, 8.0), ("liab_assets", 0.8, 0.3)],
     "Likidite": [("current", 0.8, 2.0), ("quick", 0.5, 1.5), ("cash_ratio", 0.1, 0.8)],
-    "Nakit Akışı & Kar Kalitesi": [("cfo_ni", 0.0, 1.2), ("fcf_margin", -0.05, 0.12), ("accruals", 0.10, -0.05)],
+    "Nakit Akışı & Kar Kalitesi": [("cfo_ni", 0.0, 1.2), ("fcf_margin", -0.05, 0.12), ("accruals", 0.10, -0.05),
+                                   ("fcf_conv", -0.2, 0.6), ("mon_share", 0.6, 0.0)],
     "Verimlilik": [("asset_turnover", 0.2, 1.5), ("ccc", 180.0, 30.0), ("roic", 0.0, 0.25)],
 }
 
@@ -309,7 +327,7 @@ def criteria(view: View, pk: str, r: dict, val: dict, z, f, m) -> dict:
     def chk(cond):
         try:
             return bool(cond())
-        except TypeError:
+        except (TypeError, ZeroDivisionError):
             return None
 
     sets = {
@@ -358,6 +376,14 @@ def criteria(view: View, pk: str, r: dict, val: dict, z, f, m) -> dict:
             ("Reel net kar büyümesi ≥ %10", chk(lambda: r["net_growth"] >= 0.10)),
             ("Net nakit ya da stok artışı satıştan yavaş", chk(lambda: b("net_debt") < 0 or _inv_slower(view, pk))),
         ],
+        "Enflasyon Muhasebesi & Nakit Kalitesi": [
+            ("Parasal kazanç vergi öncesi karın %25'inden az", chk(lambda: r["mon_share"] < 0.25)),
+            ("Parasal kazanç hariç vergi öncesi kar pozitif", chk(lambda: r["pbt_ex_mon_margin"] > 0)),
+            ("FAVÖK'ün en az %30'u serbest nakde dönüyor", chk(lambda: r["fcf_conv"] >= 0.30)),
+            ("Tahakkuk oranı ≤ %5 (kar nakitle destekli)", chk(lambda: r["accruals"] <= 0.05)),
+            ("Nakit dönüşüm süresi bir yılda kısaldı", chk(lambda: r["ccc_chg"] < 0)),
+            ("Reel satış büyümesi + FAVÖK marjı ≥ %40 (Rule of 40)", chk(lambda: r["rule40"] >= 0.40)),
+        ],
         "Joel Greenblatt — Sihirli Formül": [
             ("Kazanç getirisi (FVÖK/FD) ≥ %10", chk(lambda: val.get("earnings_yield") >= 0.10)),
             ("Sermaye getirisi (ROIC) ≥ %20", chk(lambda: r["roic"] >= 0.20)),
@@ -388,7 +414,7 @@ def _inv_slower(view: View, pk: str) -> bool:
 # ---------- şirket bazında toplam ----------
 
 HISTORY_KEYS = ["roe", "roa", "net_margin", "ebitda_margin", "gross_margin", "current", "net_debt_ebitda",
-                "debt_equity", "rev_growth", "net_growth", "asset_growth", "cfo_ni", "asset_turnover"]
+                "debt_equity", "rev_growth", "net_growth", "asset_growth", "cfo_ni", "asset_turnover", "ccc", "mon_share"]
 
 
 def company(doc: dict, price: float | None) -> dict | None:
@@ -606,7 +632,7 @@ def fin_criteria(view: View, pk: str, r: dict, val: dict, tmpl: str) -> dict:
     def chk(cond):
         try:
             return bool(cond())
-        except TypeError:
+        except (TypeError, ZeroDivisionError):
             return None
     if tmpl == "banka":
         items = [
