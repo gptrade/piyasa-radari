@@ -8,8 +8,13 @@ analysis:
   providers: [claude, gemini]
   gemini_model: gemini-3.8-flash
   # Model yoğun (503) ya da kotada (429) ise sırayla bunlar denenir
-  gemini_fallback_models: [gemini-3.7-flash, gemini-flash-latest, gemini-3.5-flash-lite]
+  # Ücretsiz katman günlük sınırları küçük (3.8-flash ~20, flash-lite ~500 istek): bunlar raporlar, günlük özet ve
+  # sentez için saklanır. Bunlar da bitince Gemma'ya düşülür.
+  gemini_fallback_models: [gemini-3.7-flash, gemini-flash-latest, gemini-3.5-flash-lite, gemma-4-31b-it, gemma-4-26b-a4b-it]
+  # Haber yorumları (günün AI çağrılarının çoğu): ücretsiz ve kotası geniş Gemma önce, gerekirse flash-lite.
+  gemini_news_models: [gemma-4-26b-a4b-it, gemma-4-31b-it, gemini-3.5-flash-lite]
   gemini_min_interval_s: 4.5   # istekler arası en az bekleme (ücretsiz katman dakika sınırı için)
+  gemma_min_interval_s: 6      # Gemma'nın dakika başı token sınırı daha dar
   max_items_per_run: 40        # her çalıştırmada en fazla kaç yeni habere AI yorumu yapılsın (maliyet freni)
   language: tr                 # yorumlar hangi dilde yazılsın
 

@@ -177,3 +177,37 @@ def test_gemini_pacing(monkeypatch):
     g = GeminiProvider(["m1"], "k", min_interval=4.5)
     g.assess("s", "p"); t[0] += 1.0; g.assess("s", "p")
     assert slept == [3.5]
+
+
+def test_news_go_to_gemma_reports_to_flash(monkeypatch):
+    """Haber yorumu önce ücretsiz Gemma'ya (düşünme en az), rapor/özet önce flash'a; belgeli istek Gemma'ya gitmez."""
+    import requests
+    monkeypatch.setattr(analyze.time, "sleep", lambda s: None)
+    calls = []
+
+    def post(url, json=None, **kw):
+        calls.append((url.split("/models/")[1].split(":")[0], json["generationConfig"].get("thinkingConfig")))
+        return gemini_ok([GOOD])                     # Gemma bazen nesneyi listeyle döndürüyor
+    monkeypatch.setattr(requests, "post", post)
+    g = GeminiProvider(["flash", "lite2", "gemma-x"], "k", news_models=["gemma-x", "lite"])
+    assert g.assess("s", "p")["sentiment"] == "bullish"
+    assert calls[-1] == ("gemma-x", {"thinkingLevel": "minimal"})
+    g.ask("s", "p", analyze.TOOL)
+    assert calls[-1] == ("flash", None)
+    g.dead.add("flash")
+    g.ask("s", "p", analyze.TOOL, media=[("application/pdf", b"x")])
+    assert calls[-1][0] == "lite2"
+
+
+def test_news_quota_does_not_block_reports(monkeypatch):
+    import requests
+    monkeypatch.setenv("GEMINI_API_KEY", "g")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setattr(analyze.time, "sleep", lambda s: None)
+    daily = FakeResp(429, {"error": {"message": "quota", "details": [
+        {"violations": [{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}]}})
+    monkeypatch.setattr(requests, "post", lambda url, **kw: gemini_ok(GOOD) if "/flash:" in url else daily)
+    a = Analyzer({"analysis": {"providers": ["gemini"], "gemini_model": "flash", "gemini_fallback_models": [],
+                               "gemini_news_models": ["gemma-x", "lite"]}})
+    assert a.assess(ITEM) is None and "Gemini (haber)" in a.down
+    assert a.ask_json("s", "p", analyze.TOOL, "")["sentiment"] == "bullish"

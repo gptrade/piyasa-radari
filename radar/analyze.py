@@ -207,6 +207,13 @@ Yanıtını SADECE aşağıdaki alanlara sahip tek bir JSON nesnesi olarak ver (
 
 
 def parse_json_text(text: str) -> dict | None:
+    out = _parse_json_text(text)
+    if isinstance(out, list):                  # bazı modeller nesneyi tek elemanlı listeyle döndürüyor
+        out = next((x for x in out if isinstance(x, dict)), None)
+    return out if isinstance(out, dict) else None
+
+
+def _parse_json_text(text: str):
     t = text.strip()
     t = re.sub(r"^```(?:json)?\s*|\s*```$", "", t)
     try:
@@ -250,25 +257,36 @@ def _quota_info(r) -> tuple[bool, float | None]:
 class GeminiProvider:
     name = "Gemini"
 
-    def __init__(self, models: list[str], key: str, min_interval: float = 0.0, max_wait: float = 65.0):
-        self.models = [m for m in models if m]
+    def __init__(self, models: list[str], key: str, min_interval: float = 0.0, max_wait: float = 65.0,
+                 news_models: list[str] | None = None, gemma_interval: float = 6.0):
+        self.models = [m for m in models if m]                     # rapor, özet, sentez: önce güçlü modeller
+        self.news_models = [m for m in (news_models or []) if m] or self.models   # haber yorumu: ücretsiz Gemma önce
         self.model = self.models[0]
         self.key = key
         self.min_interval = min_interval      # ücretsiz katmanın dakika başı sınırına takılmamak için
+        self.gemma_interval = gemma_interval  # Gemma'nın dakika başı token sınırı daha dar
         self.max_wait = max_wait
+        self.dead: set[str] = set()           # bu tur kotası biten / bulunamayan modeller
         self._last = 0.0
 
-    def _pace(self) -> None:
-        wait = self._last + self.min_interval - time.monotonic()
+    def _drop(self, model: str) -> None:
+        """Kotası biten/bulunamayan modeli bu tur için iki listeden de çıkarır."""
+        self.dead.add(model)
+        for lst in (self.models, self.news_models):
+            if model in lst and len(lst) > 1:
+                lst.remove(model)
+
+    def _pace(self, gemma: bool = False) -> None:
+        wait = self._last + (self.gemma_interval if gemma else self.min_interval) - time.monotonic()
         if wait > 0:
             time.sleep(wait)
         self._last = time.monotonic()
 
     def assess(self, system: str, prompt: str, max_tokens: int = 1200) -> dict | None:
-        return self.ask(system, prompt, TOOL, GEMINI_FORMAT, max_tokens=max_tokens)
+        return self.ask(system, prompt, TOOL, GEMINI_FORMAT, max_tokens=max_tokens, news=True)
 
     def ask(self, system: str, prompt: str, tool: dict, fmt: str = "", max_tokens: int = 1200,
-            media: list | None = None) -> dict | None:
+            media: list | None = None, news: bool = False) -> dict | None:
         import base64
         import requests
         parts = [{"inline_data": {"mime_type": mime, "data": base64.b64encode(data).decode()}} for mime, data in (media or [])]
@@ -279,11 +297,19 @@ class GeminiProvider:
                                  "maxOutputTokens": max_tokens},
         }
         last = ""
-        for model in list(self.models):
+        order = [m for m in (self.news_models if news else self.models) if m not in self.dead]
+        if media:                                   # Gemma PDF okumuyor: belgeli istekler yalnız Gemini'ye
+            order = [m for m in order if not m.startswith("gemma")]
+        for model in order:
+            gemma = model.startswith("gemma")
+            gc = dict(body["generationConfig"])
+            if gemma:                               # Gemma 4: uzun "düşünme" kotayı ve süreyi yer; en aza indir
+                gc["thinkingConfig"] = {"thinkingLevel": "minimal"}
+            req = {**body, "generationConfig": gc}
             for attempt in range(3):
-                self._pace()
+                self._pace(gemma)
                 try:
-                    r = requests.post(GEMINI_URL.format(model=model), json=body, timeout=45,
+                    r = requests.post(GEMINI_URL.format(model=model), json=req, timeout=60 if gemma else 45,
                                       headers={"x-goog-api-key": self.key,
                                                "Content-Type": "application/json"})
                 except requests.RequestException as e:
@@ -292,21 +318,22 @@ class GeminiProvider:
                     continue
                 if r.status_code == 200:
                     self.model = model
-                    if self.models[0] != model:       # çalışan modeli bu tur için başa al (tekrar beklemesin)
-                        self.models.remove(model)
-                        self.models.insert(0, model)
+                    lst = self.news_models if news else self.models
+                    if model in lst and lst[0] != model:   # çalışan modeli bu tur için başa al (tekrar beklemesin)
+                        lst.remove(model)
+                        lst.insert(0, model)
                     data = r.json()
                     parts = ((data.get("candidates") or [{}])[0].get("content") or {}).get("parts") or []
                     text = "".join(p.get("text", "") for p in parts if not p.get("thought"))
                     return parse_json_text(text)
                 last = f"{model} HTTP {r.status_code}: {_gemini_msg(r)}"
-                if r.status_code == 404:              # model adı yok/emekli: listeden çıkar, sıradakini dene
-                    self.models.remove(model)
+                if r.status_code == 404:              # model adı yok/emekli: bu tur atla, sıradakini dene
+                    self._drop(model)
                     break
                 if r.status_code == 429:
                     daily, delay = _quota_info(r)
-                    if daily:                         # bu modelin günlük kotası bitti: bu tur çıkar, sıradakini dene
-                        self.models.remove(model)
+                    if daily:                         # bu modelin günlük kotası bitti: bu tur atla, sıradakini dene
+                        self._drop(model)
                         break
                     if attempt < 2:                   # dakikalık kota: Google'ın önerdiği kadar bekle
                         time.sleep(min(self.max_wait, (delay or 10) + 1))
@@ -344,7 +371,9 @@ class Analyzer:
                 models = [cfg.get("gemini_model", "gemini-3.8-flash"),
                           *(cfg.get("gemini_fallback_models") or ["gemini-3.7-flash", "gemini-flash-latest"])]
                 self.providers.append(GeminiProvider(models, os.environ["GEMINI_API_KEY"],
-                                                     float(cfg.get("gemini_min_interval_s", 4.5))))
+                                                     float(cfg.get("gemini_min_interval_s", 4.5)),
+                                                     news_models=cfg.get("gemini_news_models"),
+                                                     gemma_interval=float(cfg.get("gemma_min_interval_s", 6.0))))
         self.down: dict[str, str] = {}
         if not self.providers:
             log.info("AI anahtarı yok ya da analiz kapalı: değerlendirme atlanacak")
@@ -389,13 +418,15 @@ class Analyzer:
         self.used += 1
         system, prompt = SYSTEM.format(language=self.language), self.prompt(item, context)
         for p in self.providers:
-            if p.name in self.down:
+            # Ayrı haber modelleri olan sağlayıcıda (Gemini → Gemma) haber kotası bitse de raporlar için güçlü modeller kalsın
+            key = f"{p.name} (haber)" if getattr(p, "news_models", None) not in (None, getattr(p, "models", None)) else p.name
+            if p.name in self.down or key in self.down:
                 continue
             try:
                 out = normalize(p.assess(system, prompt, max_tokens=1600) if item.extra.get("doc")
                                 else p.assess(system, prompt))
             except ProviderDown as e:
-                self.down[p.name] = str(e)[:200]
+                self.down[key] = str(e)[:200]
                 self._err(f"{p.name} devre dışı: {e}")
                 log.warning("%s bu tur devre dışı, sıradaki sağlayıcıya geçiliyor: %s", p.name, e)
                 continue
