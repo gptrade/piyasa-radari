@@ -83,3 +83,19 @@ def test_refresh_uses_cache_on_failure(tmp_path, monkeypatch):
     monkeypatch.setattr(gc, "fetch_us", lambda w: None)
     cache2, st2 = gc.refresh(set(), force=True)
     assert st2["us"]["ok"] and st2["us"]["cached"] and cache2["us"]["rows"][0]["s"] == "AAPL"
+
+
+def test_empty_result_is_retried_later(tmp_path, monkeypatch):
+    monkeypatch.setattr(gc, "CACHE", tmp_path / "g.json")
+    for k in ("fetch_us", "fetch_ecb"):
+        monkeypatch.setattr(gc, k, lambda *a: None)
+    monkeypatch.setattr(gc, "fetch_eurostat", lambda lo, hi: None)
+    calls = []
+    monkeypatch.setattr(gc, "fetch_eu", lambda: calls.append(1) or None)
+    _, st = gc.refresh(set())
+    assert not st["eu"]["ok"] and len(calls) == 1
+    _, st = gc.refresh(set())                                   # 2 saat dolmadan yeniden denenmez
+    assert len(calls) == 1 and "yeniden" in st["eu"]["error"]
+    monkeypatch.setattr(gc, "fetch_eu", lambda: [{"s": "SAP.DE", "n": "SAP", "c": "DE", "big": True, "d": "2026-10-21", "e": 1.8}])
+    _, st = gc.refresh(set(), force=True)
+    assert st["eu"]["n"] == 1

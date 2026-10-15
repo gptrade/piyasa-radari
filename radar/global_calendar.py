@@ -38,6 +38,7 @@ ECB_URL = "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
 EUROSTAT_PAGE = "https://ec.europa.eu/eurostat/news/release-calendar"
 EUROSTAT_JSON = "https://ec.europa.eu/eurostat/o/calendars/eventsJson"
 REFRESH_H = 20
+RETRY_H = 2
 
 US_MEGA = {"AAPL", "MSFT", "NVDA", "GOOGL", "GOOG", "AMZN", "META", "AVGO", "TSLA", "BRK.B", "JPM", "LLY", "V", "MA",
            "WMT", "XOM", "UNH", "ORCL", "COST", "NFLX", "HD", "PG", "JNJ", "ABBV", "BAC", "KO", "CRM", "AMD", "PLTR",
@@ -156,8 +157,11 @@ def fetch_eu() -> list[dict] | None:
             ne = None
         if ne:
             out.append({"s": sym, "n": name, "c": cc, "big": big, "d": ne["date"], "e": ne.get("eps_est")})
+        elif ok >= 10 and not out:                          # ilk 10'dan hiç tarih yok: Yahoo kısıtlıyor, sonra dene
+            log.warning("Avrupa bilançoları: Yahoo yanıt vermiyor, %d saat sonra yeniden denenecek", RETRY_H)
+            return None
         _time.sleep(0.4)
-    return out if ok else None
+    return out or None                  # hiç tarih gelmediyse (Yahoo kısıtlaması) başarısız say
 
 
 # ------------------------------------------------------------------ ECB
@@ -239,9 +243,13 @@ def refresh(watch_us: set[str], force: bool = False) -> tuple[dict, dict]:
     changed = False
     for k, fn in jobs.items():
         part = cache.get(k) or {}
-        at = part.get("at")
-        if not force and at and now - datetime.fromisoformat(at.replace("Z", "+00:00")) < timedelta(hours=REFRESH_H):
-            status[k] = {"ok": True, "n": len(part.get("rows") or []), "cached": True}
+        at, fail = part.get("at"), part.get("fail_at")
+        age = lambda t: now - datetime.fromisoformat(t.replace("Z", "+00:00"))  # noqa: E731
+        if not force and at and part.get("rows") and age(at) < timedelta(hours=REFRESH_H):
+            status[k] = {"ok": True, "n": len(part["rows"]), "cached": True}
+            continue
+        if not force and fail and age(fail) < timedelta(hours=RETRY_H):      # başarısız denemeden sonra bekle
+            status[k] = {"ok": bool(part.get("rows")), "n": len(part.get("rows") or []), "cached": True, "error": "alınamadı, yeniden denenecek"}
             continue
         try:
             rows = fn()
@@ -249,6 +257,8 @@ def refresh(watch_us: set[str], force: bool = False) -> tuple[dict, dict]:
             log.warning("Küresel takvim (%s) hatası: %s", k, e)
             rows = None
         if rows is None:
+            cache[k] = {**part, "fail_at": iso(now)}
+            changed = True
             status[k] = {"ok": bool(part.get("rows")), "n": len(part.get("rows") or []), "cached": True, "error": "alınamadı"}
             continue
         cache[k] = {"at": iso(now), "rows": rows}
