@@ -1,0 +1,52 @@
+== .com kayıt (delegasyon)
+== GoDaddy NS hâlâ cevap veriyor mu
+ns21.domaincontrol.com. dns.jomax.net. 2024070101 28800 7200 604800 600
+== 8.8.8.8
+104.21.27.189
+172.67.143.117
+troy.ns.cloudflare.com.
+dawn.ns.cloudflare.com.
+== 1.1.1.1
+104.21.27.189
+172.67.143.117
+dawn.ns.cloudflare.com.
+troy.ns.cloudflare.com.
+== 9.9.9.9
+104.21.27.189
+172.67.143.117
+dawn.ns.cloudflare.com.
+troy.ns.cloudflare.com.
+== 208.67.222.222
+104.21.27.189
+172.67.143.117
+dawn.ns.cloudflare.com.
+troy.ns.cloudflare.com.
+== Cloudflare NS
+172.67.143.117
+104.21.27.189
+== GoDaddy SOA negatif TTL
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> SOA lyracube.com @ns21.domaincontrol.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 8038
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;lyracube.com.			IN	SOA
+
+;; ANSWER SECTION:
+lyracube.com.		3600	IN	SOA	ns21.domaincontrol.com. dns.jomax.net. 2024070101 28800 7200 604800 600
+
+;; AUTHORITY SECTION:
+lyracube.com.		3600	IN	NS	ns21.domaincontrol.com.
+lyracube.com.		3600	IN	NS	ns22.domaincontrol.com.
+
+;; Query time: 64 msec
+;; SERVER: 97.74.100.11#53(ns21.domaincontrol.com) (UDP)
+;; WHEN: Thu Oct 15 17:16:51 UTC 2026
+;; MSG SIZE  rcvd: 142
+
