@@ -1,0 +1,9 @@
+# rapor@lyracube.com adresine gelen postaları işleyen Cloudflare Email Worker.
+# Kurulum: .github/workflows/eposta-kurulum.yml (elle çalıştırılır). Gizli değerler Worker secret'ı olarak yüklenir.
+name = "rapor-posta"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = false
+
+[vars]
+RAPOR_REPO = "gptrade/piyasa-radari-raporlar"

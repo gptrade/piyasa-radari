@@ -1,0 +1,57 @@
+name: eposta-kurulum
+
+# Rapor e-posta kutusu (elle tetiklenir, tekrar çalıştırılabilir): rapor@<alan adı> → rapor-posta Worker → gizli
+# rapor reposunun gelen/ klasörü. Radar iş akışı oradan okur ve özetler (siteye yalnız yapılandırılmış alanlar).
+# Gerekli secret'lar: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, RAPOR_YAZMA_TOKEN (gizli repoya yazma),
+# CF_ACCESS_EMAILS (izinli göndericiler), isteğe bağlı RAPOR_GONDERENLER ("@kurum.com.tr, bulten@x.com").
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  kur:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install --no-audit --no-fund
+        working-directory: workers/rapor-posta
+      - name: Worker'ı yükle
+        uses: cloudflare/wrangler-action@v3
+        env:
+          GH_TOKEN: ${{ secrets.RAPOR_YAZMA_TOKEN }}
+          GONDERENLER: ${{ secrets.CF_ACCESS_EMAILS }},${{ secrets.RAPOR_GONDERENLER }}
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/rapor-posta
+          command: deploy
+          secrets: |
+            GH_TOKEN
+            GONDERENLER
+      - uses: actions/setup-python@v5
+        if: always()
+        with:
+          python-version: "3.12"
+      - name: Email Routing ve kural
+        if: always()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_DOMAIN: lyracube.com
+          RAPOR_ADRES: rapor
+          RAPOR_WORKER: rapor-posta
+        run: pip install -q requests && python tools/email_setup.py /tmp/eposta.json
+      - name: Durumu kaydet
+        if: always()
+        run: |
+          [ -f /tmp/eposta.json ] || exit 0
+          cat /tmp/eposta.json
+          git fetch -q origin arastirma-bist-veri && git checkout -q arastirma-bist-veri
+          mkdir -p kurulum && cp /tmp/eposta.json kurulum/eposta.json
+          git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
+          git add kurulum && git commit -qm "E-posta kurulum durumu" && git push -q || true

@@ -1,7 +1,7 @@
 """Gizli rapor kutusu: kullanıcının gizli GitHub reposuna (gptrade/piyasa-radari-raporlar) yüklediği aracı kurum
 raporları. İş akışı repoyu RAPOR_REPO_TOKEN ile `_raporlar/` klasörüne çeker (site/ dışında: yayımlanmaz).
 
-Klasörler: sirket/ · sektor/ · strateji/. Her biri altında
+Klasörler: sirket/ · sektor/ · strateji/ · gelen/ (rapor@ e-posta adresine gelenler, türü AI belirler). Her biri altında
 - tek dosya = bir rapor: .pdf .txt .md .jpg .jpeg .png
 - alt klasör = çok sayfalı rapor (sayfalar ada göre sıralanır: 1.jpg, 2.jpg …)
 
@@ -32,6 +32,7 @@ log = logging.getLogger("radar.private_reports")
 ROOT = Path(os.environ.get("RAPOR_DIR", "_raporlar"))
 DONE = DATA / "private_reports_done.json"         # yalnız sha1 listesi (dosya adı yok)
 KINDS = {"sirket": "Şirket raporu", "sektor": "Sektör raporu", "strateji": "Strateji / model portföy"}
+INBOX = "gelen"          # rapor@ adresine gelen postalar (workers/rapor-posta): türü AI belirler
 TEXT_EXT = {".txt", ".md"}
 IMG_EXT = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
 MAX_IMAGES = 12
@@ -45,7 +46,7 @@ def available() -> bool:
 def units(root: Path = ROOT) -> list[dict]:
     """Rapor birimleri: {kind, path, files:[Path], sha}. Gizli/README dosyaları atlanır."""
     out = []
-    for folder, kind in KINDS.items():
+    for folder in [*KINDS, INBOX]:
         base = root / folder
         if not base.is_dir():
             continue
@@ -327,7 +328,9 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
             done.add(u["sha"])
             continue
         hints = name_hints(u["path"])
-        prompt = (f"Klasör: {KINDS[u['kind']]}\nDosya adı ipuçları: tarih={hints['date'] or '?'}, konu={hints['subject'] or '?'}, "
+        where = (KINDS[u["kind"]] if u["kind"] in KINDS else
+                 "E-postayla geldi; türü sen belirle (günlük/haftalık bülten ve piyasa yorumu = strateji)")
+        prompt = (f"Klasör: {where}\nDosya adı ipuçları: tarih={hints['date'] or '?'}, konu={hints['subject'] or '?'}, "
                   f"kurum={hints['broker'] or '?'}\nİzleme listesi: {', '.join(sorted(watch))}\n\n"
                   + (f"RAPOR METNİ:\n{text}" if text else "RAPOR: ekteki sayfa görüntülerinde."))
         x = analyzer.ask_json(REPORT_SYSTEM, prompt, REPORT_TOOL, REPORT_FMT, max_tokens=3000, media=media or None)
@@ -343,7 +346,7 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
             else:
                 log.warning("Rapor okunamadı (%s): AI yanıtı yok", u["kind"])
             continue                                  # AI yok/kota: sonraki turda yeniden denenir
-        r = public_record(x, u["sha"], u["kind"], hints, iso(now_utc()))
+        r = public_record(x, u["sha"], u["kind"] if u["kind"] in KINDS else "strateji", hints, iso(now_utc()))
         res["records"].append(r)
         res["notes"] += notes_from_record(r)
         it = feed_item(r, x, watch)

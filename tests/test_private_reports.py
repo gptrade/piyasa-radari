@@ -130,3 +130,22 @@ def test_missing_broker_falls_back(tmp_path, monkeypatch):
             return {**X, "broker": None}
     res = pr.process(NoBroker(), set(), {"max_per_run": 1}, root=root, done_path=tmp_path / "d.json")
     assert res["status"]["count"] == 1 and res["records"][0]["broker"]
+
+
+def test_inbox_folder_type_from_ai(tmp_path, monkeypatch):
+    """rapor@ adresinden gelen dosyalar gelen/ klasörüne düşer; türü AI belirler, yoksa strateji sayılır."""
+    r = tmp_path / "_raporlar"
+    (r / "gelen").mkdir(parents=True)
+    (r / "gelen" / "2026-10-15_gunluk-bulten-a1b2c3d4e5.md").write_text("# Günlük bülten\n\n" + "BIST 100 yorum " * 80)
+    u = pr.units(r)
+    assert [x["kind"] for x in u] == ["gelen"]
+    assert pr.name_hints(u[0]["path"])["broker"] is None             # özet kodu kurum adı sanılmaz
+    monkeypatch.setattr(pr, "telegram", lambda r, x: True)
+
+    class NoType(FakeAI):
+        def ask_json(self, system, prompt, *a, **k):
+            self.calls.append(prompt)
+            return {**X, "type": None, "tickers": []}
+    ai = NoType()
+    res = pr.process(ai, set(), {}, root=r, done_path=tmp_path / "d.json")
+    assert "E-postayla geldi" in ai.calls[0] and res["records"][0]["type"] == "strateji"
