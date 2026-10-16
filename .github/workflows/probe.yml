@@ -1,4 +1,4 @@
-name: probe-bist  # p63b
+name: probe-bist  # p64
 on:
   push:
     branches: [arastirma-bist-veri]
@@ -8,20 +8,17 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - uses: actions/checkout@v4
-        with: { ref: onizleme-gyo-pddd, path: app, fetch-depth: 0 }
-      - name: GYO PD/DD
+      - name: BoE BoJ
         run: |
-          mkdir -p probe63; pip install -q -r app/requirements.txt
-          git -C app fetch -q origin fin
-          python probe63.py > probe63/sonuc.txt 2>&1 || true
+          mkdir -p probe64; pip install -q requests
+          python probe64.py > probe64/sonuc.txt 2>&1 || true
       - name: kaydet
         if: always()
         run: |
           git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add -A probe63; git commit -qm "probe63 sonuçları" || true; git push -q
+          git add -A probe64; git commit -qm "probe64 sonuçları" || true; git push -q
