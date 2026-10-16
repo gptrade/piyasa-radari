@@ -19,6 +19,7 @@ PRE = re.sub(r"^rapor-", "", RID)[:16]
 if not re.fullmatch(r"[0-9a-f]{6,16}", PRE):
     sys.exit("geçersiz kimlik")
 API = f"https://api.github.com/repos/{os.environ['REPO']}"
+START = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 H = {"Authorization": f"Bearer {os.environ['GH_TOKEN']}", "Accept": "application/vnd.github+json"}
 
 
@@ -39,10 +40,12 @@ def apply() -> bool:
     sh("git", "checkout", "-q", "-B", "data", "origin/data")
     done = json.load(open("private_reports_done.json"))
     kept = [s for s in done if not s.startswith(PRE)]
-    if len(kept) == len(done):
-        return False                                    # zaten okundu listesinde değil
-    json.dump(kept, open("private_reports_done.json", "w"))
     res = json.load(open("research.json"))
+    if len(kept) == len(done):
+        return False                                    # okundu listesinde değil: sırada, radar okuyacak
+    if any(r["id"].startswith("rapor-" + PRE) and r.get("ts", "") > START for r in res.get("reports", [])):
+        return False                                    # bu iş akışı başladıktan sonra yeniden okunmuş
+    json.dump(kept, open("private_reports_done.json", "w"))
     res["reports"] = [r for r in res.get("reports", []) if not r["id"].startswith("rapor-" + PRE)]
     res["notes"] = [n for n in res.get("notes", []) if not str(n.get("id", "")).startswith("rapor-" + PRE)]
     json.dump(res, open("research.json", "w"), ensure_ascii=False, separators=(",", ":"))
@@ -63,7 +66,7 @@ for attempt in range(8):
             break
         time.sleep(10)
     if not apply():
-        print("Rapor okundu listesinde değil: sırada ya da yeniden okunmuş.")
+        print("Tamam: rapor sırada ya da yeniden okundu.")
         sys.exit(0)
     print(f"Deneme {attempt + 1}: okundu listesinden çıkarıldı; radar turu bekleniyor")
     time.sleep(90)                                      # sonraki tur başlasın; bitince kontrol et
