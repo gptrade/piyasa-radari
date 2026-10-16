@@ -77,6 +77,8 @@ def test_refresh_uses_cache_on_failure(tmp_path, monkeypatch):
     monkeypatch.setattr(gc, "fetch_us", lambda w: [{"s": "AAPL", "n": "A", "d": "2026-11-02", "t": "amc", "e": 1.0}])
     monkeypatch.setattr(gc, "fetch_eu", lambda: None)
     monkeypatch.setattr(gc, "fetch_ecb", lambda: ["2026-10-29"])
+    monkeypatch.setattr(gc, "fetch_boe", lambda: None)
+    monkeypatch.setattr(gc, "fetch_boj", lambda: None)
     monkeypatch.setattr(gc, "fetch_eurostat", lambda lo, hi: [])
     cache, st = gc.refresh(set(), force=True)
     assert st["us"]["n"] == 1 and st["ecb"]["ok"] and not st["eu"]["ok"]
@@ -87,7 +89,7 @@ def test_refresh_uses_cache_on_failure(tmp_path, monkeypatch):
 
 def test_empty_result_is_retried_later(tmp_path, monkeypatch):
     monkeypatch.setattr(gc, "CACHE", tmp_path / "g.json")
-    for k in ("fetch_us", "fetch_ecb"):
+    for k in ("fetch_us", "fetch_ecb", "fetch_boe", "fetch_boj"):
         monkeypatch.setattr(gc, k, lambda *a: None)
     monkeypatch.setattr(gc, "fetch_eurostat", lambda lo, hi: None)
     calls = []
@@ -99,3 +101,15 @@ def test_empty_result_is_retried_later(tmp_path, monkeypatch):
     monkeypatch.setattr(gc, "fetch_eu", lambda: [{"s": "SAP.DE", "n": "SAP", "c": "DE", "big": True, "d": "2026-10-21", "e": 1.8}])
     _, st = gc.refresh(set(), force=True)
     assert st["eu"]["n"] == 1
+
+
+def test_boe_boj_parse_and_events():
+    boe = gc.parse_boe((FIX / "boe_mpc.html").read_text(encoding="utf-8"))
+    boj = gc.parse_boj((FIX / "boj_mpm.html").read_text(encoding="utf-8"))
+    assert {"d": "2026-11-05", "mpr": True} in boe and {"d": "2026-12-17", "mpr": False} in boe and len(boe) == 16
+    assert {"d": "2026-10-30", "outlook": True} in boj and {"d": "2027-03-18", "outlook": False} in boj   # 2. gün
+    evs = gc.events({"boe": {"rows": boe}, "boj": {"rows": boj}}, "2026-10-14", "2026-12-31", watch_us=set())
+    b = next(e for e in evs if e["src"] == "boe")
+    assert b["date"] == "2026-11-05" and b["when"] == "2026-11-05T15:00+03:00" and b["region"] == "UK" and b["market"] == "ALL"
+    j = next(e for e in evs if e["src"] == "boj")
+    assert j["date"] == "2026-10-30" and j["when"] == "2026-10-30T06:00+03:00" and j["region"] == "JP" and "Görünüm" in j["detail"]

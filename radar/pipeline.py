@@ -427,7 +427,7 @@ def run() -> dict:
             entry["error" if not trs.get("ok") else "warnings"] = trs["error"] if not trs.get("ok") else [trs["error"]]
         status.append(entry)
         ws = cal.get("world_status") or {}
-        names = {"us": "ABD bilanço takvimi", "eu": "Avrupa bilanço takvimi", "ecb": "ECB takvimi", "eurostat": "Eurostat takvimi"}
+        names = {"us": "ABD bilanço takvimi", "eu": "Avrupa bilanço takvimi", "ecb": "ECB takvimi", "boe": "BoE takvimi", "boj": "BoJ takvimi", "eurostat": "Eurostat takvimi"}
         for k, nm in names.items():
             st = ws.get(k) or {}
             if st:

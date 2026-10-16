@@ -33,6 +33,10 @@ SP500 = ROOT / "config" / "sp500.csv"
 IST = ZoneInfo("Europe/Istanbul")
 NY = ZoneInfo("America/New_York")
 CET = ZoneInfo("Europe/Brussels")
+LON = ZoneInfo("Europe/London")
+TOKYO = ZoneInfo("Asia/Tokyo")
+BOE_URL = "https://www.bankofengland.co.uk/monetary-policy/upcoming-mpc-dates"
+BOJ_URL = "https://www.boj.or.jp/en/mopo/mpmsche_minu/index.htm"
 AV_URL = "https://www.alphavantage.co/query"
 ECB_URL = "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
 EUROSTAT_PAGE = "https://ec.europa.eu/eurostat/news/release-calendar"
@@ -185,6 +189,54 @@ def fetch_ecb() -> list[str] | None:
     return dates or None
 
 
+# ------------------------------------------------------------------ BoE / BoJ
+MONTHS = {"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10,
+          "nov": 11, "dec": 12}
+
+
+def _strip(h: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>|&nbsp;", " ", h)).strip()
+
+
+def parse_boe(html: str) -> list[dict]:
+    """BoE MPC karar günleri: [{'d': ISO, 'mpr': Para Politikası Raporu ile mi}]. Bölüm başlığı: '2026 confirmed dates'."""
+    out = []
+    for year, body in re.findall(r"<h2>\s*(\d{4})[^<]*dates\s*</h2>(.*?)</table>", html, re.S | re.I):
+        for a, b in re.findall(r"<tr>\s*<td>(.*?)</td>\s*<td>(.*?)</td>", body, re.S):
+            m = re.search(r"(\d{1,2})\s+([A-Za-z]+)", _strip(a))
+            mo = MONTHS.get(m.group(2)[:3].lower()) if m else None
+            if mo:
+                out.append({"d": f"{year}-{mo:02d}-{int(m.group(1)):02d}", "mpr": "Monetary Policy Report" in b})
+    return sorted({r["d"]: r for r in out}.values(), key=lambda r: r["d"])
+
+
+def parse_boj(html: str) -> list[dict]:
+    """BoJ para politikası toplantıları: karar günü toplantının son günü; Görünüm Raporu olan toplantılar işaretli."""
+    out = []
+    for year, body in re.findall(r'<h2 id="p(\d{4})">.*?<tbody>(.*?)</tbody>', html, re.S):
+        for row in re.findall(r"<tr>(.*?)</tr>", body, re.S):
+            cells = [_strip(c) for c in re.findall(r"<td>(.*?)</td>", row, re.S)]
+            if not cells:
+                continue
+            m = re.match(r"([A-Za-z]+)\.?\s+(\d{1,2})\s*\([^)]*\)(?:,\s*(\d{1,2})\s*\()?", cells[0])
+            mo = MONTHS.get(m.group(1)[:3].lower()) if m else None
+            if not mo:
+                continue
+            day = int(m.group(3) or m.group(2))
+            out.append({"d": f"{year}-{mo:02d}-{day:02d}", "outlook": len(cells) > 1 and cells[1] not in ("-", "")})
+    return sorted({r["d"]: r for r in out}.values(), key=lambda r: r["d"])
+
+
+def fetch_boe() -> list[dict] | None:
+    r = http.get(BOE_URL, timeout=60)
+    return (parse_boe(r.text) or None) if r is not None else None
+
+
+def fetch_boj() -> list[dict] | None:
+    r = http.get(BOJ_URL, timeout=60)
+    return (parse_boj(r.text) or None) if r is not None else None
+
+
 # ------------------------------------------------------------------ Eurostat
 EN_TR = {"January": "Ocak", "February": "Şubat", "March": "Mart", "April": "Nisan", "May": "Mayıs", "June": "Haziran",
          "July": "Temmuz", "August": "Ağustos", "September": "Eylül", "October": "Ekim", "November": "Kasım", "December": "Aralık"}
@@ -238,7 +290,7 @@ def refresh(watch_us: set[str], force: bool = False) -> tuple[dict, dict]:
     now = now_utc()
     status = {}
     today = now.astimezone(IST).date()
-    jobs = {"us": lambda: fetch_us(watch_us), "eu": fetch_eu, "ecb": fetch_ecb,
+    jobs = {"us": lambda: fetch_us(watch_us), "eu": fetch_eu, "ecb": fetch_ecb, "boe": fetch_boe, "boj": fetch_boj,
             "eurostat": lambda: fetch_eurostat(today - timedelta(days=14), today + timedelta(days=75))}
     changed = False
     for k, fn in jobs.items():
@@ -309,6 +361,19 @@ def events(cache: dict, lo: str, hi: str, watch_us: set[str]) -> list[dict]:
                            title="ECB faiz kararı", importance=3, src="ecb",
                            detail="Karar 14:15 CET'te, basın toplantısı 14:45 CET'te",
                            assets=["EUR/USD", "Avrupa tahvil faizleri", "Avrupa bankaları"], url=ECB_URL))
+    for r in (cache.get("boe") or {}).get("rows") or []:
+        if lo <= r["d"] <= hi:
+            out.append(_ev(kind="cb", date=r["d"], when=_at(r["d"], "12:00", LON), timed=True, market="ALL", region="UK",
+                           title="BoE faiz kararı", importance=3, src="boe", inst="İngiltere Merkez Bankası",
+                           detail="Karar ve toplantı özeti 12:00'de (Londra)" + (" · Para Politikası Raporu ile" if r.get("mpr") else ""),
+                           assets=["GBP/USD", "İngiltere tahvil faizleri", "FTSE 100"], url=BOE_URL))
+    for r in (cache.get("boj") or {}).get("rows") or []:
+        if lo <= r["d"] <= hi:
+            out.append(_ev(kind="cb", date=r["d"], when=_at(r["d"], "12:00", TOKYO), timed=True, market="ALL", region="JP",
+                           title="BoJ faiz kararı", importance=3, src="boj", inst="Japonya Merkez Bankası",
+                           detail="Toplantının 2. günü; saat yaklaşık: BoJ sabit saat ilan etmez, karar genelde Tokyo öğle saatlerinde açıklanır"
+                                  + (" · Ekonomik Görünüm Raporu ile" if r.get("outlook") else ""),
+                           assets=["USD/JPY", "Japon tahvil faizleri", "küresel taşıma (carry) işlemleri"], url=BOJ_URL))
     for r in (cache.get("eurostat") or {}).get("rows") or []:
         if lo <= r["d"] <= hi:
             out.append(_ev(kind="macro" if r["imp"] >= 2 else "data", date=r["d"], when=_at(r["d"], r["hm"], CET), timed=True,
