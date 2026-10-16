@@ -1,8 +1,7 @@
 name: rapor-yeniden-oku
 
-# Rapor kutusundaki bir raporu yeniden okutur (elle tetiklenir): data dalındaki "okundu" listesinden çıkarır ve
-# varsa eski kaydını siler; radarın bir sonraki turu raporu baştan okur. Kimlik: research.json'daki "rapor-…"
-# (sitede rapor kaydının kimliği) ya da onun ilk 16 hanesi. Radarla aynı kilidi kullanır: veri dalına aynı anda yazılmaz.
+# Rapor kutusundaki bir raporu yeniden okutur (elle tetiklenir). Kimlik: sitedeki rapor kaydının "rapor-…" kimliği.
+# Radar her turda data dalını yeniden yazdığı için betik, değişiklik kalıcı olana dek radar turlarını bekleyip tekrarlar.
 on:
   workflow_dispatch:
     inputs:
@@ -12,49 +11,22 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   duzelt:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    concurrency:
-      group: radar
-      cancel-in-progress: false
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: data
-      - name: Okundu listesinden çıkar
+          fetch-depth: 1
+      - name: Yeniden okut
         env:
           RID: ${{ inputs.id }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
-          python3 - <<'PY'
-          import json, os, re
-          rid = os.environ["RID"].strip()
-          pre = re.sub(r"^rapor-", "", rid)[:16]
-          assert re.fullmatch(r"[0-9a-f]{6,16}", pre), "geçersiz kimlik"
-          done = json.load(open("private_reports_done.json"))
-          kept = [s for s in done if not s.startswith(pre)]
-          json.dump(kept, open("private_reports_done.json", "w"))
-          try:
-              tries = json.load(open("private_reports_tries.json"))
-              json.dump({k: v for k, v in tries.items() if not k.startswith(pre)}, open("private_reports_tries.json", "w"))
-          except FileNotFoundError:
-              pass
-          res = json.load(open("research.json"))
-          n0 = len(res.get("reports", []))
-          res["reports"] = [r for r in res.get("reports", []) if not r["id"].startswith("rapor-" + pre)]
-          res["notes"] = [n for n in res.get("notes", []) if not str(n.get("id", "")).startswith("rapor-" + pre)]
-          json.dump(res, open("research.json", "w"), ensure_ascii=False, separators=(",", ":"))
-          feed = json.load(open("feed.json"))
-          feed["items"] = [i for i in feed.get("items", []) if not str(i.get("id", "")).startswith("rapor-" + pre)]
-          json.dump(feed, open("feed.json", "w"), ensure_ascii=False, separators=(",", ":"))
-          st = json.load(open("state.json"))
-          st["seen"] = [x for x in st.get("seen", []) if not str(x).startswith("rapor-" + pre)]
-          json.dump(st, open("state.json", "w"), ensure_ascii=False, separators=(",", ":"))
-          print(f"okundu listesinden çıkan: {len(done) - len(kept)} · silinen kayıt: {n0 - len(res['reports'])}")
-          PY
-      - name: Kaydet
-        run: |
+          cp tools/rapor_yeniden.py /tmp/r.py
           git config user.name "radar-bot"; git config user.email "radar-bot@users.noreply.github.com"
-          git commit -qam "Rapor yeniden okunacak: ${{ inputs.id }}" && git push -q || echo "değişiklik yok"
+          pip install -q requests && python3 /tmp/r.py
