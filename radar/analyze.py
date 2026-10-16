@@ -446,7 +446,9 @@ class Analyzer:
     def ask_json(self, system: str, prompt: str, tool: dict, fmt: str, max_tokens: int = 1500,
                  media: list | None = None) -> dict | None:
         """Genel amaçlı yapılandırılmış istek (ör. dönemsel özet, rapor okuma); aynı sağlayıcı sırası ve yedekleme.
-        media: [(mime, bytes)] görsel/PDF ekleri (sağlayıcı görüntüden okur)."""
+        media: [(mime, bytes)] görsel/PDF ekleri (sağlayıcı görüntüden okur).
+        `last_blocked`: hiçbir sağlayıcı yanıt veremediyse (kota/erişim) True; çağıran bunu "okunamadı" saymamalı."""
+        self.last_blocked = True
         for p in self.providers:
             # Belgeli istek yalnız güçlü modellere gider; onların kotası bitti diye haber/özet işleri durmasın
             key = f"{p.name} (belge)" if media and getattr(p, "news_models", None) is not None else p.name
@@ -459,8 +461,10 @@ class Analyzer:
                 self._err(f"{p.name} devre dışı: {e}")
                 continue
             except Exception as e:
+                self.last_blocked = False
                 self._err(f"{p.name}: {type(e).__name__}: {str(e)[:140]}")
                 continue
+            self.last_blocked = False
             if isinstance(out, dict):
                 out["_provider"], out["_model"] = p.name, p.model
                 return out

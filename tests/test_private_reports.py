@@ -159,3 +159,19 @@ def test_grounded_drops_tickers_not_in_text():
     assert g["tickers"] == ["THYAO", "TTKOM"] and [p["ticker"] for p in g["top_picks"]] == ["THYAO.IS"]
     assert g["model_portfolio"] == {"added": ["ASELS"], "removed": []}
 
+
+
+def test_quota_block_does_not_count_as_failure(tmp_path, monkeypatch):
+    root = make_root(tmp_path)
+    done = tmp_path / "done.json"
+    monkeypatch.setattr(pr, "telegram", lambda r, x: True)
+
+    class Blocked(FakeAI):
+        last_blocked = True                 # belge modellerinin kotası bitti: hiçbir sağlayıcı yanıt vermedi
+        def ask_json(self, *a, **k):
+            self.calls.append(1)
+            return None
+    ai = Blocked()
+    for _ in range(pr.MAX_TRIES + 2):
+        res = pr.process(ai, set(), {"max_per_run": 99}, root=root, done_path=done)
+    assert res["status"].get("failed") is None and res["status"]["waiting"] == len(pr.units(root))

@@ -367,7 +367,7 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
         if isinstance(x, dict) and not x.get("broker") and (x.get("thesis") or x.get("tickers") or x.get("sector")):
             x["broker"] = hints.get("broker") or "Kurum belirtilmemiş"     # içerik var, kurum adı okunamadı
         if not isinstance(x, dict) or not x.get("broker"):
-            if analyzer.enabled:                                  # sağlayıcı ayakta ama rapor çıkmadı (kota değil)
+            if analyzer.enabled and not getattr(analyzer, "last_blocked", False):   # sağlayıcı yanıt verdi ama rapor çıkmadı (kota değil)
                 tries[u["sha"]] = tries.get(u["sha"], 0) + 1      # AI yanıt verdi ama rapor çıkaramadı
             if tries.get(u["sha"], 0) >= MAX_TRIES:
                 log.warning("Rapor %d denemede okunamadı, bırakıldı (%s)", MAX_TRIES, u["kind"])
