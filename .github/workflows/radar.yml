@@ -77,6 +77,15 @@ jobs:
             git archive FETCH_HEAD fin | tar -x -C site/data || true
           fi
 
+      # Enerji kurulu güç verisi ayrı iş akışında (enerji.yml, haftalık) üretilir, enerji dalından okunur
+      - name: Enerji verisini geri yükle
+        run: |
+          rm -rf site/data/enerji && mkdir -p site/data/enerji
+          if git ls-remote --exit-code --heads origin enerji >/dev/null 2>&1; then
+            git fetch --depth 1 origin enerji
+            git archive FETCH_HEAD | tar -x -C site/data/enerji
+          fi
+
       # Gizli rapor kutusu: kullanıcının gizli reposu, site/ DIŞINA çekilir (Pages'e ve data dalına girmez)
       - name: Gizli rapor kutusunu çek
         if: ${{ env.HAS_RAPOR == 'true' }}
@@ -111,8 +120,8 @@ jobs:
           git init -q -b data
           git config user.name "radar-bot"
           git config user.email "radar-bot@users.noreply.github.com"
-          # temel analiz verisi kendi (fin) dalında; o dal oluşana dek (geçiş) data dalında kalır
-          if [ "${HAS_FIN:-}" = "1" ]; then git add -A -- . ':!fin'; else git add -A; fi
+          # temel analiz (fin) ve enerji verisi kendi dallarında; o dal oluşana dek (geçiş) data dalında kalır
+          if [ "${HAS_FIN:-}" = "1" ]; then git add -A -- . ':!fin' ':!enerji'; else git add -A -- . ':!enerji'; fi
           git commit -qm "data $(date -u +%FT%TZ)"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
           rm -rf .git
