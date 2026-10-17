@@ -48,6 +48,7 @@
   // ─────────────────────────────── durum
   const ROUTES = {
     makro: { title: "Makro Veri", sub: "Haftalık makroekonomik göstergeler · ALCO paneli", view: "#view-makro", market: false },
+    bankalar: { title: "Türk Bankaları", sub: "BDDK solo verileriyle bilanço yapısı, fonlama, likidite ve kredi portföyü · ayrı panel", view: "#view-bankalar", market: false },
     takvim: { title: "Takvim", sub: "Faiz kararları, enflasyon verileri, bilançolar, temettü ve vade sonları · İstanbul saati", view: "#view-takvim", market: true },
     sinyal: { title: "Sinyal Takip", sub: "BIST ve ABD haber, bildirim ve sosyal medya sinyalleri", view: "#view-sinyal", market: true },
     arastirma: { title: "Araştırma", sub: "Aracı kurum notları, kurum görünümleri ve AI sentezi · raporların kendisi değil, kamuya duyurulan özetleri", view: "#view-arastirma", market: true },
@@ -59,7 +60,7 @@
     metodoloji: { title: "Metodoloji", sub: "Temel analiz verileri, hesaplar ve puanlar nasıl üretiliyor", view: "#view-metodoloji", market: false },
     karsilastir: { title: "Karşılaştır", sub: "Seçtiğin şirketlerin kategori puanları, oranları ve eğilimleri", view: "#view-karsilastir", market: false },
   };
-  const ALIAS = { "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
+  const ALIAS = { "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", bankalar: "bankalar", banka: "bankalar", "türk-bankaları": "bankalar", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
   const H = {};                                   // route → işleyiciler {refresh, exports, onShow, onHide, onMarket}
   const updatedAt = {};                           // route → {t, label, staleMin}
   const S = { route: null, param: "", market: store.get("radar.market", "ALL") };
@@ -380,6 +381,28 @@
     exportNote: "Makro Veri ayrı bir uygulamada; dışa aktarma o panelin içinden yapılır",
   });
   addEventListener("themechange", () => { if (frame.getAttribute("src")) loadAlco(); });
+
+  // ─────────────────────────────── Türk Bankaları (ayrı site; iframe). Üst çubuğu dönem/banka seçicilerini taşıdığı
+  // için kırpılmaz; koyu temada ALCO gibi renkleri çevrilir (style.css).
+  const bankFrame = $("#bankFrame");
+  let bankTimer;
+  function loadBanks() {
+    $("#bankSkel").hidden = false;
+    clearTimeout(bankTimer);
+    return new Promise(res => {
+      const done = () => { $("#bankSkel").hidden = true; shell.setUpdated("bankalar", new Date(), { label: "Panel yüklendi" }); res(); };
+      bankFrame.onload = done;
+      bankTimer = setTimeout(done, 15000);
+      const u = new URL(bankFrame.dataset.src); u.searchParams.set("embed", "1"); u.searchParams.set("theme", shell.isDark() ? "dark" : "light");
+      bankFrame.src = u.href;
+    });
+  }
+  shell.register("bankalar", {
+    onShow() { if (!bankFrame.getAttribute("src")) loadBanks(); },
+    refresh: loadBanks,
+    exports: () => [],
+    exportNote: "Türk Bankaları ayrı bir uygulamada; dışa aktarma o panelin içinden yapılır",
+  });
 
   // ─────────────────────────────── başlangıç: sekmeler kaydolduktan sonra
   addEventListener("DOMContentLoaded", () => {

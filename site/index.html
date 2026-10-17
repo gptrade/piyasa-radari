@@ -8,8 +8,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="tokens.css?v=20261016d">
-<link rel="stylesheet" href="style.css?v=20261016d">
+<link rel="stylesheet" href="tokens.css?v=20261018a">
+<link rel="stylesheet" href="style.css?v=20261018a">
 <script>
   // Kayıtlı tema ve kenar çubuğu durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
   (function () {
@@ -35,6 +35,10 @@
       <a class="nav-item" href="#makro" data-route="makro">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 16.5h14M5.5 13.5v-4M9 13.5v-7M12.5 13.5v-5M16 13.5V4.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
         <span>Makro Veri</span>
+      </a>
+      <a class="nav-item" href="#bankalar" data-route="bankalar">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8 10 3.5 17 8M4.5 8v7M8 8v7M12 8v7M15.5 8v7M3 16.5h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Türk Bankaları</span>
       </a>
       <a class="nav-item" href="#takvim" data-route="takvim">
         <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -140,6 +144,19 @@
             <div class="skeleton sk-block" style="height:260px"></div>
           </div>
           <iframe id="alcoFrame" title="Makro Veri (ALCO paneli)" data-src="https://alco-dashboard.vercel.app/"
+            referrerpolicy="no-referrer-when-downgrade" allow="clipboard-write; fullscreen"></iframe>
+        </div>
+      </section>
+
+      <!-- ─────────── Türk Bankaları (ayrı uygulama: turk-bankalari-dashboard.vercel.app) ─────────── -->
+      <section class="view view-makro" id="view-bankalar" aria-labelledby="pageTitle" hidden>
+        <div class="card embed-card">
+          <div class="embed-skel" id="bankSkel" aria-label="Türk Bankaları paneli yükleniyor">
+            <div class="skeleton sk-line lg w40"></div>
+            <div class="row3"><div class="skeleton sk-block"></div><div class="skeleton sk-block"></div><div class="skeleton sk-block"></div><div class="skeleton sk-block"></div></div>
+            <div class="skeleton sk-block" style="height:260px"></div>
+          </div>
+          <iframe id="bankFrame" title="Türk Bankaları paneli" data-src="https://turk-bankalari-dashboard.vercel.app/"
             referrerpolicy="no-referrer-when-downgrade" allow="clipboard-write; fullscreen"></iframe>
         </div>
       </section>
@@ -311,13 +328,13 @@
   <div class="sp-body" id="spBody"></div>
 </aside>
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="shell.js?v=20261016d"></script>
-<script src="app.js?v=20261016d"></script>
-<script src="calendar.js?v=20261016d"></script>
-<script src="portfolio.js?v=20261016d"></script>
-<script src="research.js?v=20261016d"></script>
-<script src="fundamentals.js?v=20261016d"></script>
-<script src="buybacks.js?v=20261016d"
+<script src="shell.js?v=20261018a"></script>
+<script src="app.js?v=20261018a"></script>
+<script src="calendar.js?v=20261018a"></script>
+<script src="portfolio.js?v=20261018a"></script>
+<script src="research.js?v=20261018a"></script>
+<script src="fundamentals.js?v=20261018a"></script>
+<script src="buybacks.js?v=20261018a"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>
