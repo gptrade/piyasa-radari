@@ -7,6 +7,10 @@ on:
   schedule:
     - cron: "17 3 * * 1"
   workflow_dispatch: {}
+  # kod ya da grup eşleştirmesi değişince de yeniden üret
+  push:
+    branches: [main]
+    paths: ["radar/energy.py", "config/energy_groups.yml", ".github/workflows/enerji.yml"]
 
 permissions:
   contents: write

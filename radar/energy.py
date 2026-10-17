@@ -101,7 +101,8 @@ class Epias:
         r = self.s.post(LOGIN, data={"username": self.user, "password": self.password},
                         headers={"Accept": "text/plain", "Content-Type": "application/x-www-form-urlencoded"}, timeout=40)
         if r.status_code not in (200, 201) or not r.text.strip().startswith("TGT-"):
-            raise RuntimeError(f"EPİAŞ girişi başarısız: HTTP {r.status_code}")
+            raise RuntimeError(f"EPİAŞ girişi başarısız (HTTP {r.status_code}): kullanıcı adı/şifre reddedildi ya da hesap "
+                               "henüz e-postadan etkinleştirilmedi. EPIAS_USERNAME / EPIAS_PASSWORD secret'larını kontrol et.")
         self.tgt, self.tgt_at = r.text.strip(), time.monotonic()
 
     def post(self, path: str, body: dict, retries: int = 3) -> dict | None:
