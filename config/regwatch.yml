@@ -1,0 +1,118 @@
+# Uluslararası Regülasyon Takip: risk yönetimi ve model validasyonu düzenlemeleri.
+# Kaynaklar kurumların kendi yayın sayfalarıdır (sunucudan her gün okunur):
+#   rss   — RSS akışı
+#   html  — tarihli bağlantı listesi (duyuru/yayın sayfası); "table" türü tablo satırlarından okur (başlık, tarih, link)
+#   sp    — SharePoint liste servisi (sayfanın kendi kullandığı herkese açık uç nokta)
+# blocked: kurum sitesi yurt dışı sunuculara kapalı ya da bot korumalı; aşmaya çalışılmaz, panelde "erişilemiyor" görünür.
+regulators:
+  - id: bcbs
+    name: "Basel Komitesi (BCBS / BIS)"
+    country: Uluslararası
+    sources:
+      - { type: html, url: "https://www.bis.org/committees/bcbs/publications" }
+      - { type: rss, url: "https://www.bis.org/doclist/bis_fsi_publs.rss" }
+      - { type: rss, url: "https://www.bis.org/doclist/all_pressrels.rss" }
+  - id: tcmb
+    name: "TCMB"
+    country: Türkiye
+    sources:
+      - { type: rss, url: "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/Basin+Duyurulari" }
+      - { type: rss, url: "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Bottom+Menu/Diger/RSS/Yayinlar" }
+  - id: bddk
+    name: "BDDK"
+    country: Türkiye
+    sources:
+      - { type: html, url: "https://www.bddk.org.tr/Duyuru/Liste/39" }
+  - id: sama
+    name: "Suudi Arabistan Merkez Bankası (SAMA)"
+    country: Suudi Arabistan
+    sources:
+      - { type: table, url: "https://rulebook.sama.gov.sa/en/banking-sector-circulars" }
+  - id: cbuae
+    name: "BAE Merkez Bankası (CBUAE)"
+    country: BAE
+    sources:
+      - { type: html, url: "https://rulebook.centralbank.ae/en/view-revision-updates?f_days=on&changed=-365%20day" }
+    note: "Ana site (haberler, yayınlar) bot korumalı; yalnız Rulebook güncellemeleri okunuyor"
+  - id: dfsa
+    name: "Dubai Finansal Hizmetler Otoritesi (DFSA)"
+    country: BAE
+    sources:
+      - { type: rss, url: "https://www.dfsa.ae/rss" }
+  - id: qcb
+    name: "Katar Merkez Bankası"
+    country: Katar
+    sources:
+      - { type: sp, url: "https://www.qcb.gov.qa/en/news/_api/web/lists/getbytitle('Pages')/items?$select=Title,FileRef,ArticleStartDate&$orderby=ArticleStartDate%20desc&$top=60",
+          base: "https://www.qcb.gov.qa", title: Title, date: ArticleStartDate, path: FileRef }
+  - id: cbk
+    name: "Kuveyt Merkez Bankası"
+    country: Kuveyt
+    sources:
+      - { type: html, url: "https://www.cbk.gov.kw/en/cbk-news/announcements-and-press-releases/announcements" }
+      - { type: html, url: "https://www.cbk.gov.kw/en/cbk-news/announcements-and-press-releases/press-releases" }
+  - id: cbb
+    name: "Bahreyn Merkez Bankası"
+    country: Bahreyn
+    blocked: "Site sunucu isteklerine 403 veriyor"
+    sources: []
+  - id: cbo
+    name: "Umman Merkez Bankası"
+    country: Umman
+    sources:
+      - { type: html, url: "https://cbo.gov.om/Pages/Circulars.aspx" }
+      - { type: html, url: "https://cbo.gov.om/" }
+  - id: cbe
+    name: "Mısır Merkez Bankası"
+    country: Mısır
+    sources:
+      - { type: html, url: "https://www.cbe.org.eg/en/news-publications/news" }
+      - { type: html, url: "https://www.cbe.org.eg/en/laws-regulations/regulations" }
+  - id: cbj
+    name: "Ürdün Merkez Bankası"
+    country: Ürdün
+    sources:
+      - { type: rss, url: "https://www.cbj.gov.jo/RSSFeeds/RSSNewsAR.aspx" }
+  - id: boi
+    name: "İsrail Merkez Bankası"
+    country: İsrail
+    blocked: "Site bot korumalı (doğrulama sayfası)"
+    sources: []
+  - id: bdl
+    name: "Lübnan Merkez Bankası"
+    country: Lübnan
+    blocked: "Site bot korumalı (Cloudflare doğrulaması)"
+    sources: []
+  - id: cbiq
+    name: "Irak Merkez Bankası"
+    country: Irak
+    sources:
+      - { type: html, url: "https://cbi.iq/news/section/77" }
+      - { type: rss, url: "https://cbi.iq/rss/news" }
+  - id: cbir
+    name: "İran Merkez Bankası"
+    country: İran
+    sources:
+      - { type: html, url: "https://www.cbi.ir/default_en.aspx" }
+  - id: cbar
+    name: "Azerbaycan Merkez Bankası"
+    country: Azerbaycan
+    blocked: "Site yurt dışı sunuculardan bağlantı kabul etmiyor"
+    sources: []
+
+# Konular (AI sınıflandırmasının kullandığı anahtarlar)
+topics:
+  - { key: mrm, label: "Model riski / validasyon" }
+  - { key: irb, label: "IRB" }
+  - { key: aiml, label: "AI/ML yönetişimi" }
+  - { key: backtest, label: "Geriye dönük test" }
+  - { key: ecl, label: "IFRS 9 / ECL" }
+  - { key: stress, label: "Stres testi" }
+  - { key: icaap, label: "ICAAP / ILAAP" }
+  - { key: alm, label: "ALM / likidite / faiz riski" }
+  - { key: basel, label: "Basel III / sermaye / RWA" }
+  - { key: credit, label: "Kredi riski" }
+  - { key: market, label: "Piyasa riski / FRTB" }
+  - { key: oprisk, label: "Operasyonel risk / dayanıklılık" }
+  - { key: climate, label: "İklim riski" }
+  - { key: gov, label: "Risk yönetişimi / denetim" }
