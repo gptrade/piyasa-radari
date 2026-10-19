@@ -1146,3 +1146,8 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .en-ents { margin: 0 0 var(--s-2); }
 .en-add td.en-own { max-width: 260px; font-size: var(--fs-sm); }
 .en-add td.en-own .en-code { font-size: var(--fs-xs); }
+.en-seg { flex-wrap: wrap; }
+.en-add td.en-note-c { max-width: 340px; font-size: var(--fs-sm); }
+.en-add td.en-note-c a { color: var(--text-2); text-decoration: none; }
+.en-add td.en-note-c a:hover { text-decoration: underline; }
+.en-tbl .up { color: var(--up); font-weight: var(--fw-semibold); }

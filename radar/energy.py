@@ -223,8 +223,69 @@ def epias_context(today: dt.date | None = None) -> dict | None:
 
 
 # ─────────────────────────────── panel verisi
+MONTHS = {m: i for i, m in enumerate(["january", "february", "march", "april", "may", "june", "july", "august", "september",
+                                       "october", "november", "december"], 1)}
+TRACKER_SRC = {"solar": ["gunes"], "wind": ["ruzgar"], "hydro": ["hidro"], "nuclear": ["nukleer"], "geothermal": ["jeotermal"],
+               "ownership": ["komur", "dogalgaz", "diger"]}
+KAP_SRC = {"gunes": "gunes", "ruzgar": "ruzgar", "hidro": "hidro", "jeotermal": "jeotermal", "dogalgaz": "dogalgaz", "komur": "komur",
+           "biyokutle": "diger", "depolama": "gunes", "hibrit": "gunes", "diger": "diger"}
+ADDED = {"devreye_alma", "kapasite_artisi"}
+PIPE_EVENTS = {"lisans", "onlisans", "ced", "yeka", "yatirim_karari"}
+
+
+def tracker_asof(sources: dict | None) -> dict[str, str]:
+    """GEM dosya adlarındaki aydan kaynak bazında veri tarihi: 'Global-Solar-Power-Tracker-February-2026.xlsx' → gunes: 2026-02-28."""
+    out = {}
+    for k, name in (sources or {}).items():
+        m = re.search(r"(January|February|March|April|May|June|July|August|September|October|November|December)-(\d{4})", name or "", re.I)
+        if not m:
+            continue
+        y, mo = int(m.group(2)), MONTHS[m.group(1).lower()]
+        last = (dt.date(y + (mo == 12), mo % 12 + 1, 1) - dt.timedelta(days=1)).isoformat()
+        for src in TRACKER_SRC.get(k, []):
+            out[src] = last
+    return out
+
+
+def kap_overlay(kap: dict | None, groups_out: list[dict], groups_cfg: list[dict], asof: dict[str, str]) -> list[dict]:
+    """KAP olaylarını gruplara bağlar; GEM tarihinden sonraki devreye almaları ve proje hattını gruba yazar."""
+    by_ticker = {g["ticker"]: g["key"] for g in groups_cfg if g.get("ticker")}
+    parents = {}
+    for g in groups_cfg:
+        if g.get("parent") and not g.get("ticker"):
+            parents.setdefault(g["parent"], []).append(g["key"])
+    gidx = {g["key"]: g for g in groups_out}
+    rows, latest_pipe = [], {}
+    for it in (kap or {}).get("items") or []:
+        key = next((by_ticker[t] for t in it.get("tickers") or [] if t in by_ticker), None)
+        if key is None:
+            key = next((parents[t][0] for t in it.get("tickers") or [] if len(parents.get(t, [])) == 1), None)
+        for e in it.get("events") or []:
+            tr = (e.get("country") or "TR").upper() in ("TR", "TÜRKİYE", "TURKIYE", "TURKEY")
+            src = KAP_SRC.get(e.get("source"), "diger")
+            mw = e.get("mw") or e.get("mwp")
+            after = bool(it.get("date")) and it["date"] > asof.get(src, "9999")
+            rows.append({"date": it.get("date"), "tickers": it.get("tickers"), "company": it.get("company"), "group": key,
+                         "type": e["type"], "plant": e.get("plant"), "src": src, "raw_src": e.get("source"), "mw": e.get("mw"),
+                         "mwp": e.get("mwp"), "storage": e.get("storage_mw"), "prov": e.get("province"), "tr": tr,
+                         "note": e.get("note"), "url": it.get("url"), "after_gem": after, "rule": e.get("_rule") or None})
+            g = gidx.get(key)
+            if not g or not tr or not mw:
+                continue
+            if e["type"] in ADDED and after:
+                g["kap_added"] = round(g.get("kap_added", 0) + mw, 1)
+            elif e["type"] in PIPE_EVENTS:
+                pk = (key, fold(e.get("plant") or ""))
+                if pk not in latest_pipe or (it.get("date") or "") > latest_pipe[pk][0]:
+                    latest_pipe[pk] = (it.get("date") or "", mw)
+    for (key, _), (_, mw) in latest_pipe.items():
+        gidx[key]["kap_pipe"] = round(gidx[key].get("kap_pipe", 0) + mw, 1)
+    rows.sort(key=lambda r: r["date"] or "", reverse=True)
+    return rows
+
+
 def build(gem: dict, groups: list[dict], epias: dict | None = None, now: dt.datetime | None = None,
-          exclude: re.Pattern | None = None) -> dict:
+          exclude: re.Pattern | None = None, kap: dict | None = None) -> dict:
     now = now or dt.datetime.now(dt.timezone.utc)
     units = [u for u in gem["units"] if not (exclude and exclude.search(fold(u["n"] + " " + " ".join(u.get("paths") or []))))]
     gmeta = {g["key"]: g for g in groups}
@@ -278,9 +339,15 @@ def build(gem: dict, groups: list[dict], epias: dict | None = None, now: dt.date
                      if U[i]["st"] == "operating" and (U[i]["y"] or 0) >= year - 2], key=lambda r: (-(r["y"] or 0), -r["mw"]))
     pipeline = sorted([dict(i=i, **{k: U[i][k] for k in ("n", "s", "mw", "st", "y", "p")}) for i in range(len(U)) if U[i]["st"] in PIPE],
                       key=lambda r: -r["mw"])
+    asof = tracker_asof(gem.get("sources"))
+    kap_rows = kap_overlay(kap, grp, groups, asof)
     return {
         "generated": now.isoformat(timespec="seconds"),
-        "gem": {"imported": gem.get("imported"), "sources": gem.get("sources"), "license": gem.get("license")},
+        "gem": {"imported": gem.get("imported"), "sources": gem.get("sources"), "license": gem.get("license"), "asof": asof},
+        "kap": kap_rows[:600], "kap_updated": (kap or {}).get("updated"),
+        "kap_types": {"devreye_alma": "Devreye alma", "kapasite_artisi": "Kapasite artışı", "lisans": "Üretim lisansı", "onlisans": "Önlisans",
+                      "ced": "ÇED", "yeka": "YEKA", "yatirim_karari": "Yatırım kararı", "sozlesme": "Sözleşme", "satin_alma": "Satın alma",
+                      "satis": "Satış", "diger": "Diğer"},
         "national": {"src": {s: round(v, 1) for s, v in nat_op.items()}, "total": round(sum(nat_op.values()), 1),
                      "pipe": {s: round(v, 1) for s, v in nat_pipe.items()}, "pipe_total": round(sum(nat_pipe.values()), 1),
                      "unowned": unowned},
@@ -311,7 +378,26 @@ def append_history(doc: dict, path=None, keep: int = 120) -> list[dict]:
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     gem = json.loads(GEM.read_text(encoding="utf-8"))
-    doc = build(gem, load_groups(), epias_context(), exclude=load_exclude())
+    groups = load_groups()
+    kap = None
+    try:
+        from . import energy_kap
+        uni_path = DATA / "fin" / "_universe.json"
+        universe = json.loads(uni_path.read_text(encoding="utf-8")) if uni_path.exists() else {}
+        analyzer = None
+        try:
+            from .analyze import Analyzer
+            from .config import load_settings
+            analyzer = Analyzer(load_settings())
+        except Exception as e:                                               # noqa: BLE001
+            log.warning("AI yok: %s", e)
+        extra = {g["ticker"] for g in groups if g.get("ticker")} | {g["parent"] for g in groups if g.get("parent")}
+        kap = energy_kap.update(universe, extra, analyzer) if universe else energy_kap.load_state()
+    except Exception as e:                                                   # noqa: BLE001
+        log.warning("KAP enerji olayları güncellenemedi: %s", e)
+        from .energy_kap import load_state
+        kap = load_state()
+    doc = build(gem, groups, epias_context(), exclude=load_exclude(), kap=kap)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "kurulu_guc.json").write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     append_history(doc)

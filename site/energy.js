@@ -11,7 +11,7 @@
   const KINDS = { all: "Tümü", listed: "Borsada", private: "Borsa dışı", kamu: "Kamu" };
 
   const S = { doc: null, loaded: false, loading: false, error: null, missing: false,
-    q: "", kind: "all", src: "", sort: "total", dir: -1, open: new Set(), limit: PAGE, recLimit: 12, pipeLimit: 12 };
+    q: "", kind: "all", src: "", kapType: "", kapLimit: 15, sort: "total", dir: -1, open: new Set(), limit: PAGE, recLimit: 12, pipeLimit: 12 };
 
   // ─────────────────────────────── birimler
   const mw = v => v == null ? "—" : fmt.num(v, v >= 100 ? 0 : 1);
@@ -111,9 +111,9 @@
   function table(rows) {
     const d = S.doc;
     const COLS = [["rank", "#", 1], ["name", "Grup / şirket"], ["code", "Kod"], ["total", S.src ? `${d.source_names[S.src]} (MW)` : "Kurulu güç (MW)", 1], ["share", "Türkiye payı", 1],
-      ["mix", "Kaynak dağılımı"], ["renew", "Yenilenebilir", 1], ["cons", "Konsolide (MW)", 1], ["pipe_total", "Yatırım hattı (MW)", 1], ["n", "Ünite", 1]];
+      ["mix", "Kaynak dağılımı"], ["renew", "Yenilenebilir", 1], ["cons", "Konsolide (MW)", 1], ["pipe_total", "Yatırım hattı (MW)", 1], ["kap_added", "KAP: GEM sonrası (MW)", 1], ["n", "Ünite", 1]];
     const TIPS = { total: "Ortaklık payı oranında işletmedeki kurulu güç", share: "Grubun kapasitesi ÷ izlenen Türkiye toplamı", cons: "%50 ve üzeri payla kontrol edilen ünitelerin tam gücü",
-      pipe_total: "Yapım, izin/finansman ve duyurulmuş aşamadaki üniteler (pay oranıyla)", n: "İşletmedeki ünite / faz sayısı", code: "Borsa kodu; santral şirketi borsada değilse borsadaki ortağın kodu (↳)" };
+      pipe_total: "Yapım, izin/finansman ve duyurulmuş aşamadaki üniteler (pay oranıyla)", kap_added: "GEM verisinin tarihinden sonra KAP'ta bildirilen devreye alma ve kapasite artışları (MWe; yalnız MWp verilmişse MWp)", n: "İşletmedeki ünite / faz sayısı", code: "Borsa kodu; santral şirketi borsada değilse borsadaki ortağın kodu (↳)" };
     const head = COLS.map(([c, l, num]) => c === "mix" || c === "rank" ? `<th scope="col" class="${num ? "num" : ""}">${l}</th>` :
       `<th scope="col" class="${num ? "num" : ""}" aria-sort="${c === S.sort ? (S.dir > 0 ? "ascending" : "descending") : "none"}"><button type="button" class="th-sort" data-c="${c}" ${TIPS[c] ? `data-tip="${esc(TIPS[c])}"` : ""}>${l}<span class="arr" aria-hidden="true">${c === S.sort ? (S.dir > 0 ? "▲" : "▼") : "▼"}</span></button></th>`).join("");
     const shown = rows.slice(0, S.limit);
@@ -133,6 +133,7 @@
         <td class="num">${pct(g.renew, 0)}</td>
         <td class="num">${g.cons ? mw(g.cons) : "—"}</td>
         <td class="num">${g.srcPipe ? mw(g.srcPipe) : "—"}</td>
+        <td class="num">${g.kap_added ? `<span class="up" data-tip="${esc(`KAP'ta GEM sonrası devreye alınan: ${mw(g.kap_added)} MW${g.kap_pipe ? ` · KAP'ta lisans/ÇED/YEKA aşamasında: ${mw(g.kap_pipe)} MW` : ""}`)}">+${mw(g.kap_added)}</span>` : g.kap_pipe ? `<span class="meta" data-tip="KAP'ta lisans/önlisans/ÇED/YEKA aşamasındaki projeler">(${mw(g.kap_pipe)})</span>` : "—"}</td>
         <td class="num">${g.n}</td>
       </tr>${open ? `<tr class="drawer"><td colspan="${COLS.length}">${drawer(g)}</td></tr>` : ""}`;
     }).join("");
@@ -154,8 +155,38 @@
   function drawer(g) {
     const us = g.units.filter(([i]) => !S.src || S.doc.units[i].s === S.src);
     const ents = g.entities.length > 1 || g.auto ? `<p class="meta en-ents">Sahiplik zincirinde eşleşen şirketler: ${g.entities.map(esc).join(" · ")}</p>` : "";
-    return `<div class="en-drawer1">${ents}<table class="tx"><thead><tr><th>Santral / ünite</th><th>Kaynak</th><th class="num">MW</th><th class="num">Pay</th><th class="num">Başlangıç</th><th>İl</th></tr></thead><tbody>
+    const ke = (S.doc.kap || []).filter(r => r.group === g.key).slice(0, 15);
+    const kapT = ke.length ? `<h3 class="en-h3" style="margin-top:var(--s-3)">KAP bildirimleri</h3><table class="tx"><thead><tr><th>Tarih</th><th>Olay</th><th>Santral</th><th class="num">MW</th><th>Not</th></tr></thead><tbody>${ke.map(kapRow).join("")}</tbody></table>` : "";
+    return `<div class="en-drawer1">${ents}${kapT}<h3 class="en-h3" style="margin-top:var(--s-3)">Santraller (GEM)</h3><table class="tx"><thead><tr><th>Santral / ünite</th><th>Kaynak</th><th class="num">MW</th><th class="num">Pay</th><th class="num">Başlangıç</th><th>İl</th></tr></thead><tbody>
       ${us.slice(0, 80).map(([i, s]) => unitRow(i, s)).join("")}</tbody></table>${us.length > 80 ? `<p class="meta">+${us.length - 80} ünite daha (CSV'de tamamı)</p>` : ""}</div>`;
+  }
+  const kapMw = r => r.mw ? mw(r.mw) + (r.mwp ? ` <span class="meta">(${mw(r.mwp)} MWp)</span>` : "") : r.mwp ? mw(r.mwp) + ` <span class="meta">MWp</span>` : "—";
+  function kapRow(r) {
+    const d = S.doc;
+    return `<tr><td class="en-date">${r.date ? fmt.date(r.date + "T12:00:00Z", { day: "numeric", month: "short", year: "2-digit" }) : "—"}</td>
+      <td><span class="tag ${["devreye_alma", "kapasite_artisi"].includes(r.type) ? "up" : ""}">${esc(d.kap_types[r.type] || r.type)}</span>${r.after_gem && ["devreye_alma", "kapasite_artisi"].includes(r.type) ? ` <span class="meta" data-tip="GEM verisinin tarihinden sonra">yeni</span>` : ""}</td>
+      <td><i class="en-dot" style="background:${color(r.src)}"></i>${esc(r.plant || "")}${r.prov ? ` <span class="meta">${esc(r.prov)}</span>` : ""}${r.tr ? "" : ` <span class="tag">yurt dışı</span>`}</td>
+      <td class="num">${kapMw(r)}${r.storage ? ` <span class="meta">+${mw(r.storage)} depolama</span>` : ""}</td>
+      <td class="en-note-c"><a href="${esc(r.url)}" target="_blank" rel="noopener" data-tip="${esc(r.note || "")}">${esc((r.note || "KAP").slice(0, 90))}${(r.note || "").length > 90 ? "…" : ""} ↗</a>${r.rule ? ` <span class="meta" data-tip="AI kullanılamadı; kurallarla çıkarıldı, kontrol et">⚑</span>` : ""}</td></tr>`;
+  }
+  function kapCard() {
+    const d = S.doc;
+    let rows = (d.kap || []).filter(r => (!S.src || r.src === S.src) && (!S.kapType || r.type === S.kapType));
+    if (!(d.kap || []).length) return "";
+    const counts = {}; (d.kap || []).forEach(r => { counts[r.type] = (counts[r.type] || 0) + 1; });
+    const gname = new Map(d.groups.map(g => [g.key, g]));
+    const shown = rows.slice(0, S.kapLimit);
+    const chips = [["", "Tümü", d.kap.length], ...Object.keys(d.kap_types).filter(k => counts[k]).map(k => [k, d.kap_types[k], counts[k]])]
+      .map(([k, l, n]) => `<button type="button" role="radio" data-t="${k}" aria-checked="${S.kapType === k}">${esc(l)} <span class="n">${n}</span></button>`).join("");
+    return `<section class="card card-flush" aria-labelledby="enKapT">
+      <div class="card-head"><h2 class="card-title" id="enKapT">KAP'ta enerji yatırım bildirimleri</h2><span class="card-meta">borsa şirketleri · lisans, ÇED, YEKA, devreye alma${d.kap_updated ? " · " + fmt.dt(d.kap_updated) : ""}</span></div>
+      <div style="padding:0 var(--s-4) var(--s-3)"><div class="seg en-seg" role="radiogroup" aria-label="Olay türü" id="enKapSeg">${chips}</div></div>
+      <div class="tbl-scroll"><table class="tbl en-add"><thead><tr><th scope="col">Tarih</th><th scope="col">Şirket</th><th scope="col">Olay</th><th scope="col">Santral</th><th scope="col" class="num">MW</th><th scope="col">Bildirim</th></tr></thead><tbody>
+      ${shown.map(r => { const g = gname.get(r.group); const tk = (r.tickers || [])[0];
+        return kapRow(r).replace("<td><span class=\"tag", `<td class="en-nm"><span>${esc(g ? g.name : (r.company || ""))}</span>${tk ? ` <a href="#hisse/${esc(tk)}" class="en-code">${esc(tk)}</a>` : ""}</td><td><span class="tag`); }).join("")}
+      </tbody></table>
+      ${rows.length > shown.length ? `<div class="tbl-foot"><span>${shown.length} / ${rows.length}</span><button type="button" class="link-btn" id="enKapMore">Daha fazla</button></div>` : ""}
+      ${rows.length ? "" : sh.stateHTML({ kind: "empty", title: "Bu süzgeçte bildirim yok", compact: true })}</div></section>`;
   }
   function unitList(id, title, rows, limit, moreId, meta) {
     if (!rows.length) return "";
@@ -179,20 +210,23 @@
     if (!S.loaded) return S.error ? renderError() : renderLoading();
     const d = S.doc;
     $("#enSrcSel").innerHTML = `<option value="">Tüm kaynaklar</option>` + d.sources.filter(s => d.national.src[s] || d.national.pipe[s]).map(s => `<option value="${s}" ${S.src === s ? "selected" : ""}>${d.source_names[s]}</option>`).join("");
-    $("#enSrcLine").innerHTML = `Kaynak: <a href="https://globalenergymonitor.org" target="_blank" rel="noopener">Global Energy Monitor</a> santral ve sahiplik izleyicileri (CC BY 4.0, aktarım ${esc(d.gem.imported || "")})${d.epias ? ` · <a href="https://seffaflik.epias.com.tr" target="_blank" rel="noopener">EPİAŞ Şeffaflık</a> (YEKDEM)` : ""} · ${fmt.int(d.units.length)} ünite · ${fmt.int(d.groups.length)} sahip/grup`;
+    $("#enSrcLine").innerHTML = `Kaynak: <a href="https://globalenergymonitor.org" target="_blank" rel="noopener">Global Energy Monitor</a> santral ve sahiplik izleyicileri (CC BY 4.0, aktarım ${esc(d.gem.imported || "")})${d.epias ? ` · <a href="https://seffaflik.epias.com.tr" target="_blank" rel="noopener">EPİAŞ Şeffaflık</a> (YEKDEM)` : ""}${(d.kap || []).length ? ` · KAP bildirimleri` : ""} · ${fmt.int(d.units.length)} ünite · ${fmt.int(d.groups.length)} sahip/grup`;
     const rows = filtered();
     const bySrc = r => !S.src || r.s === S.src;
     const sc = $(".en-scroll")?.scrollTop || 0;
     body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis()}${national()}${table(rows)}
+      ${kapCard()}
       ${unitList("enRecT", `Son yıllarda devreye girenler (${d.year - 2}–${d.year})`, d.recent.filter(bySrc), S.recLimit, "enRecMore", "başlangıç yılına göre")}
       ${unitList("enPipeT", "Yapım ve planlama aşamasındakiler", d.pipeline.filter(bySrc), S.pipeLimit, "enPipeMore", "büyükten küçüğe")}
-      <p class="en-note">Santraller ve sahiplik <b>Global Energy Monitor</b> izleyicilerinden gelir (yılda yaklaşık iki kez güncellenir). Grup kapasitesi <b>pay oranına göredir</b>: ortak girişimlerde her ortağa payı kadar MW yazılır; “Konsolide” %50 ve üzeri payla kontrol edilen ünitelerin tam gücüdür. Kömür, doğalgaz ve biyoenerjide tam sahiplik zinciri kullanılır ve santrale en yakın eşleşen şirket esas alınır (ör. Aksa Enerji, Kazancı Holding değil). Kapsam dışı: jeotermal, 1 MW altı güneş ve izleyici eşiğinin altındaki küçük HES'ler; sahibi bilinmeyen üniteler (çoğu lisanssız güneş) Türkiye toplamında var, grup tablosunda yok. “Eşleşmedi” işaretli satırlar grup listesine henüz bağlanmadı.</p></div>`;
+      <p class="en-note">Santraller ve sahiplik <b>Global Energy Monitor</b> izleyicilerinden gelir (yılda yaklaşık iki kez güncellenir). Grup kapasitesi <b>pay oranına göredir</b>: ortak girişimlerde her ortağa payı kadar MW yazılır; “Konsolide” %50 ve üzeri payla kontrol edilen ünitelerin tam gücüdür. Kömür, doğalgaz ve biyoenerjide tam sahiplik zinciri kullanılır ve santrale en yakın eşleşen şirket esas alınır (ör. Aksa Enerji, Kazancı Holding değil). Kapsam dışı: jeotermal, 1 MW altı güneş ve izleyici eşiğinin altındaki küçük HES'ler; sahibi bilinmeyen üniteler (çoğu lisanssız güneş) Türkiye toplamında var, grup tablosunda yok. “Eşleşmedi” işaretli satırlar grup listesine henüz bağlanmadı. <b>KAP sütunu</b>, GEM verisinin tarihinden (${esc(Object.entries(d.gem.asof || {}).map(([k, v]) => `${d.source_names[k] || k} ${v.slice(0, 7)}`).join(", "))}) sonra borsa şirketlerinin KAP'ta bildirdiği devreye alma ve kapasite artışlarıdır; bildirimler AI ile okunur, kesin değer için bildirime bak.</p></div>`;
     if ($(".en-scroll")) $(".en-scroll").scrollTop = sc;
     $("#enMore")?.addEventListener("click", () => { S.limit += PAGE; render(); });
     $("#enAll")?.addEventListener("click", () => { S.limit = 1e9; render(); });
     $("#enLess")?.addEventListener("click", () => { S.limit = PAGE; render(); $("#enTblT")?.scrollIntoView({ block: "start" }); });
     $("#enRecMore")?.addEventListener("click", () => { S.recLimit += 30; render(); });
     $("#enPipeMore")?.addEventListener("click", () => { S.pipeLimit += 30; render(); });
+    $("#enKapMore")?.addEventListener("click", () => { S.kapLimit += 30; render(); });
+    $$("#enKapSeg button").forEach(b => b.onclick = () => { S.kapType = b.dataset.t; S.kapLimit = 15; render(); $(`#enKapSeg button[data-t="${b.dataset.t}"]`)?.focus(); });
     $$("#enBody .th-sort").forEach(b => b.onclick = () => {
       const c = b.dataset.c;
       S.dir = S.sort === c ? -S.dir : (["name", "code"].includes(c) ? 1 : -1); S.sort = c; S.limit = PAGE;

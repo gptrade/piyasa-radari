@@ -5,7 +5,7 @@ name: enerji
 # Veri tek commit'lik `enerji` dalında tutulur, radar iş akışı yayımlarken bu daldan okur.
 on:
   schedule:
-    - cron: "17 3 * * 1"
+    - cron: "17 4 * * *"          # her gün: KAP enerji bildirimleri; GEM aynı kalır
   workflow_dispatch: {}
   # GEM aktarımı, grup eşleştirmesi ya da kod değişince yeniden üret
   push:
@@ -22,7 +22,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -41,8 +41,17 @@ jobs:
             git archive FETCH_HEAD | tar -x -C site/data/enerji
           fi
 
+      - name: Şirket listesi (KAP üye kimlikleri, fin dalından)
+        run: |
+          mkdir -p site/data/fin
+          if git ls-remote --exit-code --heads origin fin >/dev/null 2>&1; then
+            git fetch --depth 1 origin fin
+            git archive FETCH_HEAD _universe.json | tar -x -C site/data/fin || true
+          fi
+
       - name: Kurulu güç envanteri
         env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.PIYASA_RADARI }}
           EPIAS_USERNAME: ${{ secrets.EPIAS_USERNAME }}
           EPIAS_PASSWORD: ${{ secrets.EPIAS_PASSWORD }}
         run: python -m radar.energy

@@ -444,18 +444,25 @@ class Analyzer:
         return None
 
     def ask_json(self, system: str, prompt: str, tool: dict, fmt: str, max_tokens: int = 1500,
-                 media: list | None = None) -> dict | None:
+                 media: list | None = None, light: bool = False) -> dict | None:
         """Genel amaçlı yapılandırılmış istek (ör. dönemsel özet, rapor okuma); aynı sağlayıcı sırası ve yedekleme.
         media: [(mime, bytes)] görsel/PDF ekleri (sağlayıcı görüntüden okur).
         `last_blocked`: hiçbir sağlayıcı yanıt veremediyse (kota/erişim) True; çağıran bunu "okunamadı" saymamalı."""
         self.last_blocked = True
         for p in self.providers:
             # Belgeli istek yalnız güçlü modellere gider; onların kotası bitti diye haber/özet işleri durmasın
-            key = f"{p.name} (belge)" if media and getattr(p, "news_models", None) is not None else p.name
+            # light: kısa çıkarım işleri (ör. KAP enerji bildirimleri) haber modellerinin (Gemma, ayrı ücretsiz kota) sırasıyla
+            scoped = getattr(p, "news_models", None) is not None
+            key = f"{p.name} (belge)" if media and scoped else f"{p.name} (haber)" if light and scoped and not media else p.name
             if p.name in self.down or key in self.down:
                 continue
             try:
-                out = p.ask(system, prompt, tool, fmt, max_tokens, media=media) if media else p.ask(system, prompt, tool, fmt, max_tokens)
+                if media:
+                    out = p.ask(system, prompt, tool, fmt, max_tokens, media=media)
+                elif light and scoped:
+                    out = p.ask(system, prompt, tool, fmt, max_tokens, news=True)
+                else:
+                    out = p.ask(system, prompt, tool, fmt, max_tokens)
             except ProviderDown as e:
                 self.down[key] = str(e)[:200]
                 self._err(f"{p.name} devre dışı: {e}")
