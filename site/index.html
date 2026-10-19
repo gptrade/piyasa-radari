@@ -44,10 +44,6 @@
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M11 2.5 4.5 11h5l-1 6.5L15.5 9h-5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
         <span>Enerji Kurulu Güç</span>
       </a>
-      <a class="nav-item" href="#regulasyon" data-route="regulasyon">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3 4 5.5V9c0 4 2.6 6.6 6 8 3.4-1.4 6-4 6-8V5.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m7.5 10 1.8 1.8L12.8 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span>Uluslararası Regülasyon Takip</span>
-      </a>
       <a class="nav-item" href="#takvim" data-route="takvim">
         <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
         <span>Takvim</span>
@@ -308,27 +304,6 @@
       <section class="view fa-view" id="view-karsilastir" aria-labelledby="pageTitle" hidden></section>
       <section class="view fa-view" id="view-metodoloji" aria-labelledby="pageTitle" hidden></section>
 
-      <!-- ─────────── Uluslararası Regülasyon Takip (veri: regulasyon dalı) ─────────── -->
-      <section class="view" id="view-regulasyon" aria-labelledby="pageTitle" hidden>
-        <div class="toolbar">
-          <div class="search">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <input id="rgQ" type="search" placeholder="Başlık ya da özette ara…" autocomplete="off" aria-label="Regülasyon dokümanlarında ara">
-          </div>
-          <div class="seg" role="radiogroup" aria-label="Dönem" id="rgPeriod">
-            <button type="button" role="radio" data-d="30" aria-checked="false">30G</button>
-            <button type="button" role="radio" data-d="90" aria-checked="true">90G</button>
-            <button type="button" role="radio" data-d="180" aria-checked="false">6A</button>
-            <button type="button" role="radio" data-d="365" aria-checked="false">1Y</button>
-          </div>
-          <select id="rgReg" class="en-select" aria-label="Kurum"><option value="">Tüm kurumlar</option></select>
-          <select id="rgTopic" class="en-select" aria-label="Konu"><option value="">Tüm konular</option></select>
-          <select id="rgType" class="en-select" aria-label="Tür"><option value="">Tüm türler</option></select>
-        </div>
-        <p class="src-line" id="rgSrc"></p>
-        <div id="rgBody"></div>
-      </section>
-
       <!-- ─────────── Enerji kurulu güç (veri: enerji dalı, EPİAŞ) ─────────── -->
       <section class="view" id="view-enerji" aria-labelledby="pageTitle" hidden>
         <div class="toolbar">
@@ -383,7 +358,6 @@
 <script src="research.js?v=20261019b"></script>
 <script src="fundamentals.js?v=20261019b"></script>
 <script src="energy.js?v=20261019b"></script>
-<script src="regwatch.js?v=20261019b"></script>
 <script src="buybacks.js?v=20261019b"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
