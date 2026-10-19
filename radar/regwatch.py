@@ -145,7 +145,7 @@ def from_rss(text: str, base: str) -> list[dict]:
     for block in re.findall(r"<item\b.*?</item>", text, re.S | re.I):
         t = re.search(r"<title[^>]*>(.*?)</title>", block, re.S | re.I)
         link = re.search(r"<link[^>]*>(.*?)</link>", block, re.S | re.I)
-        d = re.search(r"<(?:pubDate|dc:date|date)[^>]*>(.*?)</", block, re.S | re.I)
+        d = re.search(r"<(?:pubDate|dc:date|date|NewsDate)[^>]*>(.*?)</", block, re.S | re.I)
         desc = re.search(r"<description[^>]*>(.*?)</description>", block, re.S | re.I)
         title = clean(re.sub(r"<!\[CDATA\[|\]\]>", "", t.group(1))) if t else ""
         url = clean(re.sub(r"<!\[CDATA\[|\]\]>", "", link.group(1))) if link else ""
@@ -261,8 +261,7 @@ def collect(cfg: dict, f: Fetcher | None = None) -> tuple[list[dict], dict]:
             text = r.text
             got = (from_rss(text, src["url"]) if src["type"] == "rss" else from_table(text, src["url"]) if src["type"] == "table"
                    else from_sp(text, src) if src["type"] == "sp" else from_html(text, src["url"]))
-            if src["type"] in ("html", "table"):
-                got = [g for g in got if g["date"]]               # tarihsiz bağlantılar çoğunlukla menü/gezinme
+            got = [g for g in got if g["date"]]                   # tarihsiz bağlantılar çoğunlukla menü/gezinme ya da arşiv
             for it in got:
                 it["reg"] = reg["id"]
                 items.append(tidy(reg["id"], it))
@@ -285,7 +284,9 @@ iç denetim/iç kontrol düzenlemeleri, banka denetim rehberleri ve istişare me
 İLGİSİZ (relevant=false): faiz kararları, enflasyon/ödeme dengesi/rezerv/döviz likiditesi/istatistik bültenleri, swap ve iş birliği
 anlaşmaları, ihale/mezat sonuçları, tatil ve kurumsal etkinlik haberleri, ziyaretler, konuşma ve röportajlar, atama, tek bir kuruma
 lisans verme/iptal/vesayet, yaptırım listeleri, tüketici kampanyaları, ödeme sistemi ve ürün tanıtımları, destek/garanti programları,
-genel finansal istikrar raporları (yalnız risk metodolojisi değişikliği içeriyorsa ilgili), menü ve bölüm adları.
+genel finansal istikrar raporları (yalnız risk metodolojisi değişikliği içeriyorsa ilgili), menü ve bölüm adları, dolandırıcılık
+ve siber saldırı uyarıları, mutabakat zaptı imzaları, fintek/inovasyon/dijital kimlik lansmanları, eğitim, çalıştay ve tatbikat
+haberleri, ödeme sistemi çalışma saatleri, forum ve ödül haberleri, AML/CFT bülten ve uyarıları (yalnız risk yönetimi düzenlemesiyse ilgili).
 Emin değilsen relevant=false. relevant=true yalnız bankaların risk yönetimini, sermaye/likidite hesaplamasını, modellerini ya da
 denetim beklentilerini doğrudan etkileyen düzenleme, rehber, istişare, sirküler ve Basel standartları için.
 Her başlık için SADECE şu JSON dizisini döndür (aynı sırayla, i numarasıyla):
