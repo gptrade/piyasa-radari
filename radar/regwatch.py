@@ -42,9 +42,18 @@ DATE_RX = re.compile(rf"\b(\d{{1,2}}[/.\-]\d{{1,2}}[/.\-]20\d\d|20\d\d[/.\-]\d{{
 
 
 # ─────────────────────────────── yardımcılar
+TR_MON = {"oca": 1, "şub": 2, "mar": 3, "nis": 4, "may": 5, "haz": 6, "tem": 7, "ağu": 8, "eyl": 9, "eki": 10, "kas": 11, "ara": 12}
+
+
 def parse_date(s: str | None, dayfirst: bool = True) -> str | None:
-    """'16.10.2026', '01/10/2026', '2026-10-16', '19 Oct 2026', 'September 16, 2026', RFC822 → 'YYYY-AA-GG'."""
+    """'16.10.2026', '01/10/2026', '2026-10-16', '19 Oct 2026', 'September 16, 2026', RFC822, '6 Eki 2026' → 'YYYY-AA-GG'."""
     s = (s or "").strip()
+    m = re.search(r"(\d{1,2})\s+(Oca|Şub|Mar|Nis|May|Haz|Tem|Ağu|Eyl|Eki|Kas|Ara)[a-zçğıöşü]*\.?\s+(20\d\d)", s)
+    if m and not re.search(rf"\b({MON})\b", s):
+        try:
+            return dt.date(int(m.group(3)), TR_MON[m.group(2).lower()], int(m.group(1))).isoformat()
+        except ValueError:
+            return None
     if not s:
         return None
     m = re.search(r"(20\d\d)[/.\-](\d{1,2})[/.\-](\d{1,2})", s)
@@ -126,6 +135,13 @@ class Fetcher:
 # ─────────────────────────────── çıkarıcılar
 def from_rss(text: str, base: str) -> list[dict]:
     out = []
+    for block in re.findall(r"<entry\b.*?</entry>", text, re.S | re.I):          # Atom (ör. TCMB)
+        t = re.search(r"<title[^>]*>(.*?)</title>", block, re.S | re.I)
+        link = re.search(r"<link[^>]*href=\"([^\"]+)\"", block, re.S | re.I)
+        d = re.search(r"<(?:published|updated)[^>]*>(.*?)</", block, re.S | re.I)
+        title = clean(re.sub(r"<!\[CDATA\[|\]\]>", "", t.group(1))) if t else ""
+        if title and link:
+            out.append({"title": title, "url": urljoin(base, link.group(1).strip()), "date": parse_date(clean(d.group(1)) if d else None), "desc": ""})
     for block in re.findall(r"<item\b.*?</item>", text, re.S | re.I):
         t = re.search(r"<title[^>]*>(.*?)</title>", block, re.S | re.I)
         link = re.search(r"<link[^>]*>(.*?)</link>", block, re.S | re.I)
@@ -245,6 +261,8 @@ def collect(cfg: dict, f: Fetcher | None = None) -> tuple[list[dict], dict]:
             text = r.text
             got = (from_rss(text, src["url"]) if src["type"] == "rss" else from_table(text, src["url"]) if src["type"] == "table"
                    else from_sp(text, src) if src["type"] == "sp" else from_html(text, src["url"]))
+            if src["type"] in ("html", "table"):
+                got = [g for g in got if g["date"]]               # tarihsiz bağlantılar çoğunlukla menü/gezinme
             for it in got:
                 it["reg"] = reg["id"]
                 items.append(tidy(reg["id"], it))
@@ -264,9 +282,12 @@ CLS_FMT = """
 ALM, likidite (LCR/NSFR), faiz oranı riski (IRRBB), Basel III / sermaye yeterliliği / RWA / büyük riskler / kaldıraç, kredi riski,
 piyasa riski / FRTB / CVA, operasyonel risk / operasyonel dayanıklılık / BT-siber risk yönetimi, iklim riski, risk yönetişimi ve
 iç denetim/iç kontrol düzenlemeleri, banka denetim rehberleri ve istişare metinleri, makro ihtiyati düzenlemeler.
-İLGİSİZ (relevant=false): faiz kararları, enflasyon/ödeme dengesi/rezerv/istatistik bültenleri, ihale/mezat sonuçları, tatil ve
-kurumsal etkinlik haberleri, ziyaretler, konuşma ve röportajlar, atama, lisans verme/iptal (tek kurum için), yaptırım listeleri,
-tüketici kampanyaları, kart/ödeme ürünü tanıtımları.
+İLGİSİZ (relevant=false): faiz kararları, enflasyon/ödeme dengesi/rezerv/döviz likiditesi/istatistik bültenleri, swap ve iş birliği
+anlaşmaları, ihale/mezat sonuçları, tatil ve kurumsal etkinlik haberleri, ziyaretler, konuşma ve röportajlar, atama, tek bir kuruma
+lisans verme/iptal/vesayet, yaptırım listeleri, tüketici kampanyaları, ödeme sistemi ve ürün tanıtımları, destek/garanti programları,
+genel finansal istikrar raporları (yalnız risk metodolojisi değişikliği içeriyorsa ilgili), menü ve bölüm adları.
+Emin değilsen relevant=false. relevant=true yalnız bankaların risk yönetimini, sermaye/likidite hesaplamasını, modellerini ya da
+denetim beklentilerini doğrudan etkileyen düzenleme, rehber, istişare, sirküler ve Basel standartları için.
 Her başlık için SADECE şu JSON dizisini döndür (aynı sırayla, i numarasıyla):
 {"items": [{"i": 0, "relevant": true, "topics": ["mrm","irb","aiml","backtest","ecl","stress","icaap","alm","basel","credit","market","oprisk","climate","gov"],
 "type": "taslak|nihai|rehber|duyuru", "title_tr": "Türkçe başlık", "summary_tr": "1 cümle: ne düzenleniyor, kimi etkiliyor"}]}
@@ -297,7 +318,7 @@ SADECE JSON: {"trends": [{"title": "kısa başlık", "detail": "2-3 cümle; somu
 
 def summarize(analyzer, items: list[dict], regs: dict, today: dt.date) -> dict | None:
     since = (today - dt.timedelta(days=90)).isoformat()
-    recent = [i for i in items if i.get("relevant") and (i.get("date") or i.get("first_seen", "")[:10]) >= since][:80]
+    recent = [i for i in items if i.get("relevant") and (i.get("date") or "") >= since][:80]
     if len(recent) < 3:
         return None
     docs = "\n".join(f"- {regs[i['reg']]['name']} | {i.get('date') or '?'} | {i['title']} | {TYPES.get(i.get('type'), '')} | {i.get('summary') or ''}"
@@ -347,7 +368,11 @@ def run(today: dt.date | None = None, analyzer=None, fetcher: Fetcher | None = N
         from .config import load_settings
         analyzer = Analyzer(load_settings())
     pending = [i for i in st["items"] if "relevant" not in i]
+    t0 = time.monotonic()
+    pending.sort(key=lambda i: i.get("date") or "", reverse=True)        # en yeniler önce
     for b in range(0, min(len(pending), max_batches * 20), 20):
+        if time.monotonic() - t0 > 18 * 60:
+            break
         batch = pending[b:b + 20]
         res = classify(analyzer, batch, regs) if getattr(analyzer, "providers", None) else None
         if res is None:
