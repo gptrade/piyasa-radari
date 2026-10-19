@@ -1,0 +1,39 @@
+# Uluslararası Regülasyon Takip: risk yönetimi ve model validasyonu düzenlemeleri.
+# feeds: kurumun kendi RSS / yayın listesi (doğrudan okunur). search: Google araması (Gemini, kaynak gösteren arama) ile
+# o kurumun alan adında yeni doküman aranır; siteleri yurt dışından erişime kapalı kurumlar için tek yol budur.
+# domains: arama sonuçlarında kabul edilen alan adları (başka sitelerin linkleri alınmaz).
+regulators:
+  - { id: bcbs, name: "Basel Komitesi (BCBS / BIS)", country: Uluslararası, cc: INT, domains: [bis.org],
+      feeds: [], search: true }
+  - { id: cbar, name: "Azerbaycan Merkez Bankası", country: Azerbaycan, cc: AZ, domains: [cbar.az], search: true }
+  - { id: tcmb, name: "TCMB", country: Türkiye, cc: TR, domains: [tcmb.gov.tr], search: true }
+  - { id: bddk, name: "BDDK", country: Türkiye, cc: TR, domains: [bddk.org.tr], search: true }
+  - { id: sama, name: "Suudi Arabistan Merkez Bankası (SAMA)", country: Suudi Arabistan, cc: SA, domains: [sama.gov.sa], search: true }
+  - { id: cbuae, name: "BAE Merkez Bankası (CBUAE)", country: BAE, cc: AE, domains: [centralbank.ae, rulebook.centralbank.ae], search: true }
+  - { id: dfsa, name: "Dubai Finansal Hizmetler Otoritesi (DFSA)", country: BAE, cc: AE, domains: [dfsa.ae], search: true }
+  - { id: qcb, name: "Katar Merkez Bankası", country: Katar, cc: QA, domains: [qcb.gov.qa], search: true }
+  - { id: cbk, name: "Kuveyt Merkez Bankası", country: Kuveyt, cc: KW, domains: [cbk.gov.kw], search: true }
+  - { id: cbb, name: "Bahreyn Merkez Bankası", country: Bahreyn, cc: BH, domains: [cbb.gov.bh, cbben.thomsonreuters.com], search: true }
+  - { id: cbo, name: "Umman Merkez Bankası", country: Umman, cc: OM, domains: [cbo.gov.om], search: true }
+  - { id: cbe, name: "Mısır Merkez Bankası", country: Mısır, cc: EG, domains: [cbe.org.eg], search: true }
+  - { id: cbj, name: "Ürdün Merkez Bankası", country: Ürdün, cc: JO, domains: [cbj.gov.jo], search: true }
+  - { id: boi, name: "İsrail Merkez Bankası", country: İsrail, cc: IL, domains: [boi.org.il], search: true }
+  - { id: bdl, name: "Lübnan Merkez Bankası", country: Lübnan, cc: LB, domains: [bdl.gov.lb], search: true }
+  - { id: cbiq, name: "Irak Merkez Bankası", country: Irak, cc: IQ, domains: [cbi.iq], search: true }
+  - { id: cbir, name: "İran Merkez Bankası", country: İran, cc: IR, domains: [cbi.ir], search: true }
+
+# Konular: (anahtar, etiket, arama terimleri)
+topics:
+  - { key: mrm, label: "Model riski / validasyon", terms: ["model validation", "model risk management", "model risk", "model validasyon", "model riski"] }
+  - { key: irb, label: "IRB", terms: ["internal ratings-based", "IRB approach", "içsel derecelendirme"] }
+  - { key: aiml, label: "AI/ML yönetişimi", terms: ["artificial intelligence", "machine learning", "AI governance", "yapay zeka"] }
+  - { key: backtest, label: "Geriye dönük test", terms: ["backtesting", "back-testing", "geriye dönük test"] }
+  - { key: ecl, label: "IFRS 9 / ECL", terms: ["IFRS 9", "TFRS 9", "expected credit loss", "ECL", "beklenen kredi zararı"] }
+  - { key: stress, label: "Stres testi", terms: ["stress test", "stres test"] }
+  - { key: icaap, label: "ICAAP / ILAAP", terms: ["ICAAP", "ILAAP", "internal capital adequacy", "içsel sermaye"] }
+  - { key: alm, label: "ALM / likidite / faiz riski", terms: ["liquidity", "IRRBB", "interest rate risk", "asset liability", "likidite", "faiz riski", "LCR", "NSFR"] }
+  - { key: basel, label: "Basel III / RWA", terms: ["Basel III", "Basel IV", "risk-weighted", "RWA", "capital adequacy", "sermaye yeterliliği", "output floor"] }
+  - { key: credit, label: "Kredi riski", terms: ["credit risk", "kredi riski", "concentration risk"] }
+  - { key: market, label: "Piyasa riski / FRTB", terms: ["market risk", "FRTB", "piyasa riski", "CVA"] }
+  - { key: oprisk, label: "Operasyonel risk", terms: ["operational risk", "operational resilience", "operasyonel risk"] }
+  - { key: climate, label: "İklim riski", terms: ["climate", "climate-related financial risk", "iklim"] }

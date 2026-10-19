@@ -55,8 +55,12 @@ Yanıtın SADECE şu JSON olsun: {"events": [{"type": "devreye_alma|kapasite_art
 "plant": "santral adı", "source": "gunes|ruzgar|hidro|jeotermal|dogalgaz|komur|biyokutle|depolama|hibrit|diger",
 "mw": elektriksel/mekanik kurulu güç MW (MWe/MWm) ya da null, "mwp": güneşte DC MWp ya da null, "storage_mw": depolama MW ya da null,
 "province": "il" ya da null, "country": "TR" ya da ülke, "note": "tek cümle Türkçe özet"}]}
-Kurallar: devreye_alma = geçici kabul / işletmeye alma / üretime başlama; kapasite_artisi = mevcut santrale ek kapasite (lisans tadili onayı
-dahil); lisans = EPDK üretim lisansı; onlisans = önlisans; ced = ÇED başvurusu/olumlu kararı/gerekli değildir kararı; yeka = YEKA yarışması.
+Kurallar: devreye_alma = geçici kabul / işletmeye alma / üretime başlama (mw = devreye giren güç); kapasite_artisi = mevcut santrale
+FİİLEN eklenen ya da onaylanan ek kurulu güç: mw = ARTIŞ MİKTARI (ör. "13 MWe'den 21,4 MWe'ye" → 8.4), toplam değil. Lisans birleştirme,
+süre uzatma, dava, katkı payı iadesi, ruhsat/arazi alımı gibi kapasite değiştirmeyen olaylar "diger" (ya da satin_alma) olsun ve mw null.
+lisans = EPDK üretim lisansı; onlisans = önlisans (verilmesi; süre uzatması "diger"); ced = ÇED başvurusu / olumlu / gerekli değildir kararı;
+yeka = YEKA yarışması başvurusu ya da kazanımı. source: santralin ana kaynağı (depolamalı RES → ruzgar, depolamalı GES → gunes, müstakil
+depolama → depolama). country: santral Türkiye'deyse "TR"; KKTC, Gana vb. ise o ülke.
 Enerji santraliyle ilgisi yoksa {"events": []} döndür."""
 
 
