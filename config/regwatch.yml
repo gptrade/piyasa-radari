@@ -10,7 +10,6 @@ regulators:
     country: Uluslararası
     sources:
       - { type: html, url: "https://www.bis.org/committees/bcbs/publications" }
-      - { type: rss, url: "https://www.bis.org/doclist/bis_fsi_publs.rss" }
       - { type: rss, url: "https://www.bis.org/doclist/all_pressrels.rss" }
   - id: tcmb
     name: "TCMB"
