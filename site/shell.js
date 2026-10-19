@@ -49,7 +49,7 @@
   const ROUTES = {
     makro: { title: "Makro Veri", sub: "Haftalık makroekonomik göstergeler · ALCO paneli", view: "#view-makro", market: false },
     bankalar: { title: "Türk Bankaları", sub: "BDDK solo verileriyle bilanço yapısı, fonlama, likidite ve kredi portföyü · ayrı panel", view: "#view-bankalar", market: false },
-    enerji: { title: "Enerji Kurulu Güç", sub: "Türkiye elektrik üretim şirketlerinin kaynak bazında kurulu gücü · EPİAŞ, haftalık", view: "#view-enerji", market: false },
+    enerji: { title: "Enerji Kurulu Güç", sub: "Türkiye elektrik üretim şirketleri ve grupları: kaynak bazında kurulu güç, sahiplik ve yatırım hattı · GEM + EPİAŞ", view: "#view-enerji", market: false },
     takvim: { title: "Takvim", sub: "Faiz kararları, enflasyon verileri, bilançolar, temettü ve vade sonları · İstanbul saati", view: "#view-takvim", market: true },
     sinyal: { title: "Sinyal Takip", sub: "BIST ve ABD haber, bildirim ve sosyal medya sinyalleri", view: "#view-sinyal", market: true },
     arastirma: { title: "Araştırma", sub: "Aracı kurum notları, kurum görünümleri ve AI sentezi · raporların kendisi değil, kamuya duyurulan özetleri", view: "#view-arastirma", market: true },

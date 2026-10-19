@@ -1,12 +1,16 @@
 name: enerji
 
-# Enerji sekmesi: EPİAŞ Şeffaflık Platformu'ndan şirket bazında kurulu güç (EAK) ve yeni devreye alınan santraller.
-# Haftalık; veri tek commit'lik `enerji` dalında tutulur, radar iş akışı yayımlarken bu daldan okur.
-# EPIAS_USERNAME / EPIAS_PASSWORD secret'ları yoksa hiçbir şey yapmadan biter.
-# GEÇİCİ OLARAK KAPALI: EAK verisi santralleri sahibine değil piyasa katılımcısına (çoğu zaman toplayıcıya)
-# yazıyor ve lisanslı gücün ~yarısını kapsıyor; yöntem yeniden tasarlanana dek yalnız elle çalıştırılır.
+# Enerji sekmesi: santral envanteri ve sahiplik Global Energy Monitor'den (config/enerji/gem_tr.json, tools/gem_import.py);
+# EPİAŞ'tan YEKDEM lisanslı/lisanssız kurulu güç bağlamı (EPIAS_USERNAME / EPIAS_PASSWORD; yoksa atlanır).
+# Veri tek commit'lik `enerji` dalında tutulur, radar iş akışı yayımlarken bu daldan okur.
 on:
+  schedule:
+    - cron: "17 3 * * 1"
   workflow_dispatch: {}
+  # GEM aktarımı, grup eşleştirmesi ya da kod değişince yeniden üret
+  push:
+    branches: [main]
+    paths: ["radar/energy.py", "config/energy_groups.yml", "config/enerji/**", ".github/workflows/enerji.yml"]
 
 permissions:
   contents: write
@@ -18,7 +22,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 

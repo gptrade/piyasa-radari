@@ -1,18 +1,18 @@
-"""Türkiye elektrik üretim şirketlerinin kurulu güç envanteri (EPİAŞ Şeffaflık Platformu).
+"""Türkiye elektrik üretim şirketlerinin kurulu güç envanteri.
 
-`python -m radar.energy` — enerji.yml iş akışı (haftalık). Çıktı: site/data/enerji/kurulu_guc.json (+ _history.json).
+`python -m radar.energy` — enerji.yml iş akışı. Çıktı: site/data/enerji/kurulu_guc.json (+ _history.json).
 
-Yöntem
-- Şirketler: EPİAŞ organizasyon listesi (piyasa katılımcısı tüzel kişiler; borsada olan ya da olmayan hepsi).
-- Kurulu güç: her şirket için Emre Amade Kapasite (EAK) — santralin sisteme verebileceği aktif güç, kaynak bazında,
-  saatlik. Son 7 günün kaynak bazında en yüksek değeri o şirketin kapasitesi sayılır (bakım/arıza düşüşlerini eler).
-  EAK lisanslı santralleri kapsar; lisanssız (çoğunlukla ≤5 MW dağıtık güneş) santraller bu veride yoktur.
-- Yeni devreye alınanlar: Enerji İşleri Genel Müdürlüğü'nün geçici kabul listesi (lisanslı santral yatırımları):
-  tarih, şirket, santral, yakıt, ilave kurulu güç.
-- Gruplama: config/energy_groups.yml unvan önekleriyle gruba ve borsa koduna bağlar; listede olmayanlar unvanın
-  ilk ayırt edici kelimesiyle otomatik gruplanır.
+Kaynaklar
+- Santral envanteri ve sahiplik: Global Energy Monitor (GEM) izleyicileri, config/enerji/gem_tr.json
+  (tools/gem_import.py ile üretilir; CC BY 4.0). Güneş ≥1 MW, rüzgâr ≥10 MW, hidro (eşik altı dahil), kömür,
+  doğalgaz, biyoenerji, nükleer; işletmede ve yapım/planlama aşamasındaki üniteler; kömür/gaz/biyoenerjide tam
+  sahiplik zinciri ve paylar.
+- Türkiye bağlamı (isteğe bağlı): EPİAŞ Şeffaflık Platformu — YEKDEM lisanslı/lisanssız kurulu güç. EPIAS_USERNAME /
+  EPIAS_PASSWORD yoksa atlanır.
 
-Kimlik: EPİAŞ Şeffaflık hesabı (ücretsiz). EPIAS_USERNAME / EPIAS_PASSWORD secret'ları; TGT bileti 2 saat geçerli.
+Gruplama: config/energy_groups.yml. Sahiplik zincirinde santrale en yakın eşleşen şirket esas alınır; eşleşmeyen
+sahipler kendi adlarıyla görünür. Grup MW'ı PAY ORANINA GÖREdir (ortaklık payı × ünite gücü); ayrıca kontrol edilen
+(pay ≥ %50) ünitelerin tam gücü "konsolide" olarak verilir.
 """
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ import os
 import re
 import sys
 import time
+import unicodedata
 
 import requests
 import yaml
@@ -31,292 +32,291 @@ from .config import CONFIG, DATA
 
 log = logging.getLogger("radar.energy")
 
+GEM = CONFIG / "enerji" / "gem_tr.json"
+OUT = DATA / "enerji"
 BASE = "https://seffaflik.epias.com.tr/electricity-service"
 LOGIN = "https://giris.epias.com.tr/cas/v1/tickets"
-OUT = DATA / "enerji"
 UA = "piyasa-radari/1.0 (+https://github.com/gptrade/piyasa-radari)"
 TZ = dt.timezone(dt.timedelta(hours=3))
 
-# EAK alanı → (kaynak, alt kaynak). Kaynaklar panelde 7 renkle; alt kaynaklar şirket ayrıntısında.
-EAK_FIELDS = {
-    "barajli": ("hidro", "Barajlı"), "akarsu": ("hidro", "Akarsu"),
-    "ruzgar": ("ruzgar", "Rüzgâr"), "gunes": ("gunes", "Güneş"), "jeotermal": ("jeotermal", "Jeotermal"),
-    "dogalgaz": ("dogalgaz", "Doğalgaz"),
-    "linyit": ("komur", "Linyit"), "ithalKomur": ("komur", "İthal kömür"), "tasKomur": ("komur", "Taş kömürü"),
-    "biokutle": ("diger", "Biyokütle"), "fuelOil": ("diger", "Fuel oil"), "nafta": ("diger", "Nafta"), "diger": ("diger", "Diğer"),
-}
-SOURCES = ["hidro", "ruzgar", "gunes", "jeotermal", "dogalgaz", "komur", "diger"]
-RENEWABLE = {"hidro", "ruzgar", "gunes", "jeotermal"}
-
-# Otomatik gruplamada tek başına grup adı olamayacak kadar genel ilk kelimeler (o zaman ilk iki kelime alınır)
-GENERIC = set("""ANADOLU AKDENİZ EGE KARADENİZ MARMARA TRAKYA DOĞU BATI KUZEY GÜNEY ORTA TÜRKİYE TÜRK YENİ YEŞİL GÜNEŞ
-RÜZGAR RÜZGÂR RES GES HES JES MAVİ BÜYÜK İSTANBUL ANKARA İZMİR ELEKTRİK ENERJİ ÜRETİM ALTERNATİF TEMİZ GLOBAL
-ULUSLARARASI ENERJİSA ARMA ADA ALTIN BEYAZ KIRMIZI AK KARA""".split())
+KIND_SRC = {"hydro": "hidro", "wind": "ruzgar", "solar": "gunes", "geothermal": "jeotermal", "gas": "dogalgaz",
+            "coal": "komur", "nuclear": "nukleer", "bio": "diger"}
+SOURCES = ["hidro", "ruzgar", "gunes", "jeotermal", "dogalgaz", "komur", "nukleer", "diger"]
+SOURCE_NAMES = {"hidro": "Hidro", "ruzgar": "Rüzgâr", "gunes": "Güneş", "jeotermal": "Jeotermal", "dogalgaz": "Doğalgaz",
+                "komur": "Kömür", "nukleer": "Nükleer", "diger": "Biyokütle/diğer"}
+RENEWABLE = {"hidro", "ruzgar", "gunes", "jeotermal", "diger"}
+PIPE = {"construction", "pre-construction", "announced", "pre-permit", "permitted"}
+STATUS_NAMES = {"operating": "işletmede", "construction": "yapım", "pre-construction": "izin/finansman", "pre-permit": "izin öncesi",
+                "permitted": "izinli", "announced": "duyuruldu", "mothballed": "atıl"}
+NOT_CORP = re.compile(r"^(NATURAL PERSON|SMALL SHAREHOLDER|UNKNOWN|GOVERNMENT OF|MINISTRY OF)", re.I)
 
 
-# ─────────────────────────────── ad normalleştirme ve gruplama
-def norm(s: str) -> str:
-    """Türkçe büyük harf, noktalama boşluk: 'Zorlu Enerji Elektrik Üretim A.Ş.' → 'ZORLU ENERJİ ELEKTRİK ÜRETİM A Ş'."""
-    s = (s or "").replace("i", "İ").replace("ı", "I").upper()
-    s = re.sub(r"[^\wÇĞİÖŞÜÂÎÛ]+", " ", s)
+# ─────────────────────────────── ad sadeleştirme ve gruplama
+def fold(s: str) -> str:
+    """'Aksa Enerji Üretim A.Ş.' → 'AKSA ENERJI URETIM A S' (Türkçe harfler sadeleşir, noktalama boşluk)."""
+    s = (s or "").replace("ı", "i").replace("İ", "I").replace("ş", "s").replace("Ş", "S").replace("ğ", "g").replace("Ğ", "G")
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c)).upper()
+    s = re.sub(r"[^A-Z0-9]+", " ", s)
     return re.sub(r"\s+", " ", s).strip()
 
 
 def load_groups(path=None) -> list[dict]:
-    raw = yaml.safe_load(((path or CONFIG / "energy_groups.yml")).read_text(encoding="utf-8")) or {}
+    raw = yaml.safe_load((path or CONFIG / "energy_groups.yml").read_text(encoding="utf-8")) or {}
     out = []
     for g in raw.get("groups") or []:
         g = dict(g)
-        g["key"] = g.get("ticker") or norm(g["name"]).replace(" ", "-")
-        g["_rx"] = re.compile(r"^(?:" + "|".join(re.escape(norm(m)) for m in g["match"]) + r")\b")
+        g["key"] = g.get("ticker") or fold(g["name"]).replace(" ", "-")
+        g["_rx"] = re.compile(r"^(?:" + "|".join(re.escape(fold(m)) for m in g["match"]) + r")(?:\s|$)")
         out.append(g)
     return out
 
 
-def auto_key(name: str) -> str:
-    w = [x for x in norm(name).split() if len(x) > 1]
-    if not w:
-        return norm(name)
-    return " ".join(w[:2]) if w[0] in GENERIC and len(w) > 1 else w[0]
+def load_exclude(path=None) -> re.Pattern | None:
+    raw = yaml.safe_load((path or CONFIG / "energy_groups.yml").read_text(encoding="utf-8")) or {}
+    ex = raw.get("exclude") or []
+    return re.compile(r"\b(?:" + "|".join(re.escape(fold(x)) for x in ex) + r")\b") if ex else None
 
 
-def classify(name: str, groups: list[dict]) -> tuple[str, dict | None]:
-    n = norm(name)
-    for g in groups:
-        if g["_rx"].search(n):
-            return g["key"], g
-    return "auto:" + auto_key(name), None
+def match_group(name: str, groups: list[dict]) -> dict | None:
+    n = fold(name)
+    return next((g for g in groups if g["_rx"].search(n)), None)
 
 
-# ─────────────────────────────── EPİAŞ istemcisi
-class Epias:
-    def __init__(self, user: str, password: str, gap: float = 0.25):
-        self.user, self.password, self.gap = user, password, gap
-        self.s = requests.Session()
-        self.s.headers.update({"User-Agent": UA, "Accept": "application/json"})
-        self.tgt, self.tgt_at, self.last = None, 0.0, 0.0
-        self.calls = 0
-
-    def login(self) -> None:
-        r = self.s.post(LOGIN, data={"username": self.user, "password": self.password},
-                        headers={"Accept": "text/plain", "Content-Type": "application/x-www-form-urlencoded"}, timeout=40)
-        if r.status_code not in (200, 201) or not r.text.strip().startswith("TGT-"):
-            raise RuntimeError(f"EPİAŞ girişi başarısız (HTTP {r.status_code}): kullanıcı adı/şifre reddedildi ya da hesap "
-                               "henüz e-postadan etkinleştirilmedi. EPIAS_USERNAME / EPIAS_PASSWORD secret'larını kontrol et.")
-        self.tgt, self.tgt_at = r.text.strip(), time.monotonic()
-
-    def post(self, path: str, body: dict, retries: int = 3) -> dict | None:
-        for attempt in range(retries + 1):
-            if not self.tgt or time.monotonic() - self.tgt_at > 100 * 60:      # bilet 2 saat geçerli
-                self.login()
-            wait = self.gap - (time.monotonic() - self.last)
-            if wait > 0:
-                time.sleep(wait)
-            self.last = time.monotonic()
-            self.calls += 1
-            try:
-                r = self.s.post(BASE + path, json=body, headers={"TGT": self.tgt}, timeout=90)
-            except requests.RequestException as e:
-                log.warning("%s %s", path, e)
-                time.sleep(3 * (attempt + 1))
-                continue
-            if r.status_code == 200:
-                return r.json()
-            if r.status_code == 401 and attempt < retries:
-                self.tgt = None
-                continue
-            if r.status_code in (429, 500, 502, 503, 504) and attempt < retries:
-                time.sleep(5 * (attempt + 1))
-                continue
-            log.warning("%s HTTP %s %s", path, r.status_code, r.text[:200])
-            return None
-        return None
-
-    def paged(self, path: str, body: dict, size: int = 1000, limit: int = 50) -> list[dict]:
-        out = []
-        for n in range(1, limit + 1):
-            d = self.post(path, {**body, "page": {"number": n, "size": size}}) or {}
-            items = d.get("items") or []
-            out += items
-            total = (d.get("page") or {}).get("total")
-            if len(items) < size or (total is not None and len(out) >= total):
-                break
-        return out
-
-
-def iso(d: dt.date) -> str:
-    return f"{d.isoformat()}T00:00:00+03:00"
-
-
-# ─────────────────────────────── hesap
-def capacity(rows: list[dict]) -> dict[str, float]:
-    """Saatlik EAK satırları → alan bazında en yüksek değer (MW). Sıfırlar atlanır."""
-    out: dict[str, float] = {}
-    for r in rows:
-        for f in EAK_FIELDS:
-            v = r.get(f)
-            if isinstance(v, (int, float)) and v > out.get(f, 0):
-                out[f] = float(v)
-    return {k: round(v, 1) for k, v in out.items() if v > 0}
-
-
-def by_source(fields: dict[str, float]) -> dict[str, float]:
-    out: dict[str, float] = {}
-    for f, v in fields.items():
-        src = EAK_FIELDS[f][0]
-        out[src] = round(out.get(src, 0) + v, 1)
+def parse_owners(s: str | None) -> list[tuple[str, float | None]]:
+    """'A [60%]; B [40%]' → [('A', .6), ('B', .4)]; payı yazmayanlara kalan pay eşit bölünür."""
+    out = []
+    for part in (s or "").split(";"):
+        part = part.strip()
+        if not part:
+            continue
+        m = re.search(r"\[\s*([\d.,]+)\s*%\s*\]\s*$", part)
+        name = re.sub(r"\s*\[[^\]]*\]\s*$", "", part).strip()
+        out.append((name, float(m.group(1).replace(",", ".")) / 100 if m else None))
+    known = sum(p for _, p in out if p is not None)
+    unk = [i for i, (_, p) in enumerate(out) if p is None]
+    if unk:
+        rest = max(0.0, 1 - known) / len(unk)
+        out = [(n, p if p is not None else rest) for n, p in out]
     return out
 
 
-FUEL_RX = [("ruzgar", r"RÜZGAR|RÜZGÂR|WIND"), ("gunes", r"GÜNEŞ|SOLAR"), ("jeotermal", r"JEOTERM"),
-           ("hidro", r"BARAJ|HİDRO|AKARSU|KANAL|REGÜLATÖR|NEHİR"), ("dogalgaz", r"DOĞAL ?GAZ|LNG"),
-           ("komur", r"LİNYİT|KÖMÜR|ASFALTİT"), ("diger", r".")]
+def parse_path(path: str) -> tuple[list[str], list[float | None]]:
+    """'A -> B [80%] -> Santral [100%]' → (['A','B','Santral'], [None, .8, 1.0]); pct[i] = nodes[i-1]'in nodes[i]'deki payı."""
+    nodes, pcts = [], []
+    for i, tok in enumerate(path.split("->")):
+        tok = tok.strip()
+        m = re.search(r"\[\s*([\d.,]+|unknown)\s*%?\s*\]\s*$", tok)
+        name = re.sub(r"\s*\[[^\]]*\]\s*$", "", tok).strip()
+        nodes.append(name)
+        pcts.append(None if i == 0 else (float(m.group(1).replace(",", ".")) / 100 if m and m.group(1) != "unknown" else 1.0))
+    return nodes, pcts
 
 
-def fuel_source(s: str) -> str:
-    n = norm(s)
-    return next(k for k, rx in FUEL_RX if re.search(rx, n))
+def _share_from(pcts: list, k: int) -> float:
+    s = 1.0
+    for p in pcts[k + 1:]:
+        s *= p if p is not None else 1.0
+    return s
 
 
-def _num(v) -> float | None:
-    if isinstance(v, (int, float)):
-        return float(v)
-    try:
-        return float(str(v).replace(".", "").replace(",", ".")) if v not in (None, "") else None
-    except ValueError:
+def assign(unit: dict, groups: list[dict]) -> list[dict]:
+    """Ünite → [{key, name, g, share, node}]: payı olan sahipler/gruplar."""
+    out: dict[tuple, dict] = {}
+
+    def add(node, share, g):
+        key = g["key"] if g else "own:" + fold(node)
+        k = (key, fold(node))
+        if k not in out:
+            out[k] = {"key": key, "name": g["name"] if g else node.strip(), "g": g, "share": 0.0, "node": node.strip()}
+        out[k]["share"] = max(out[k]["share"], share)        # aynı düğümden geçen farklı zincirler aynı payı taşır
+
+    if unit.get("paths"):
+        chains = [parse_path(p) for p in unit["paths"]]
+        by_imm: dict[str, list] = {}
+        for nodes, pcts in chains:
+            if len(nodes) >= 2:
+                by_imm.setdefault(fold(nodes[-2]), []).append((nodes, pcts))
+        for imm, cs in by_imm.items():
+            imm_share = _share_from(cs[0][1], len(cs[0][0]) - 2)
+            covered, rest = 0.0, []
+            hits = {}
+            for nodes, pcts in cs:
+                hit = None
+                for k in range(len(nodes) - 2, -1, -1):                      # santrale en yakından yukarı
+                    g = match_group(nodes[k], groups)
+                    if g:
+                        hit = (nodes[k], _share_from(pcts, k), g)
+                        break
+                if hit:
+                    hits[fold(hit[0])] = hit
+                else:
+                    rest.append((nodes, pcts))
+            for node, share, g in hits.values():
+                add(node, share, g)
+                covered += share
+            left = imm_share - covered
+            if rest and left > 0.001:
+                # eşleşmeyen zincirler: hepsinde ortak olan en üst kurumsal düğüm
+                common = None
+                for nodes, _ in rest:
+                    s = [fold(n) for n in nodes[:-1]]
+                    common = s if common is None else [n for n in common if n in s]
+                nodes, pcts = rest[0]
+                top = next((k for k in range(len(nodes) - 1) if fold(nodes[k]) in (common or []) and not NOT_CORP.search(nodes[k].strip())), len(nodes) - 2)
+                add(nodes[top], min(left, _share_from(pcts, top)), None)
+    else:
+        for name, share in parse_owners(unit.get("own")):
+            add(name, share, match_group(name, groups))
+    return list(out.values())
+
+
+# ─────────────────────────────── EPİAŞ (isteğe bağlı bağlam)
+class Epias:
+    def __init__(self, user: str, password: str):
+        self.s = requests.Session()
+        self.s.headers.update({"User-Agent": UA, "Accept": "application/json"})
+        r = self.s.post(LOGIN, data={"username": user, "password": password},
+                        headers={"Accept": "text/plain", "Content-Type": "application/x-www-form-urlencoded"}, timeout=40)
+        if r.status_code not in (200, 201) or not r.text.strip().startswith("TGT-"):
+            raise RuntimeError(f"EPİAŞ girişi başarısız (HTTP {r.status_code})")
+        self.tgt = r.text.strip()
+
+    def post(self, path: str, body: dict) -> dict | None:
+        for attempt in range(3):
+            try:
+                r = self.s.post(BASE + path, json=body, headers={"TGT": self.tgt}, timeout=90)
+                if r.status_code == 200:
+                    return r.json()
+                log.warning("%s HTTP %s", path, r.status_code)
+            except requests.RequestException as e:
+                log.warning("%s %s", path, e)
+            time.sleep(3 * (attempt + 1))
         return None
 
 
-def build(orgs: list[dict], caps: dict[int, dict], adds: list[dict], national: dict, groups: list[dict],
-          window: tuple[dt.date, dt.date], now: dt.datetime | None = None) -> dict:
-    """Ham EPİAŞ verisinden panel JSON'u."""
+YEKDEM_SRC = {"Güneş": "gunes", "Rüzgar": "ruzgar", "Rezarvuarlı": "hidro", "Kanal Tipi": "hidro", "Nehir Tipi": "hidro",
+              "Jeotermal": "jeotermal", "Biyokütle": "diger", "LFG-Çöp Gazı": "diger", "Biyogaz": "diger"}
+
+
+def epias_context(today: dt.date | None = None) -> dict | None:
+    user, pw = os.environ.get("EPIAS_USERNAME"), os.environ.get("EPIAS_PASSWORD")
+    if not (user and pw):
+        return None
+    today = today or dt.datetime.now(TZ).date()
+    try:
+        cl = Epias(user, pw)
+    except Exception as e:                                                   # noqa: BLE001
+        log.warning("%s", e)
+        return None
+    period = (today.replace(day=1) - dt.timedelta(days=1)).replace(day=1)
+    d = cl.post("/v1/renewables/data/new-installed-capacity", {"period": f"{period.isoformat()}T00:00:00+03:00"}) or {}
+    rows = d.get("installedCapacities") or []
+    if not rows:
+        return None
+    lic, unlic = {}, {}
+    for r in rows:
+        s = YEKDEM_SRC.get(r.get("renewableEnergyType"), "diger")
+        lic[s] = round(lic.get(s, 0) + (r.get("licencedCapacity") or 0), 1)
+        unlic[s] = round(unlic.get(s, 0) + (r.get("unlicencedCapacity") or 0), 1)
+    return {"period": period.isoformat(), "yekdem_licensed": lic, "yekdem_unlicensed": unlic}
+
+
+# ─────────────────────────────── panel verisi
+def build(gem: dict, groups: list[dict], epias: dict | None = None, now: dt.datetime | None = None,
+          exclude: re.Pattern | None = None) -> dict:
     now = now or dt.datetime.now(dt.timezone.utc)
+    units = [u for u in gem["units"] if not (exclude and exclude.search(fold(u["n"] + " " + " ".join(u.get("paths") or []))))]
     gmeta = {g["key"]: g for g in groups}
-    org_rows, G = [], {}
-    name_to_org = {}
-    for o in orgs:
-        oid = o.get("organizationId")
-        f = caps.get(oid) or {}
-        if not f:
+    U, G = [], {}
+    nat_op, nat_pipe = {}, {}
+    for i, u in enumerate(units):
+        src = KIND_SRC.get(u["k"], "diger")
+        op = u["st"] == "operating"
+        pipe = u["st"] in PIPE
+        if op:
+            nat_op[src] = nat_op.get(src, 0) + u["mw"]
+        elif pipe:
+            nat_pipe[src] = nat_pipe.get(src, 0) + u["mw"]
+        owners = assign(u, groups)
+        U.append({"n": u["n"] + (f" {u['ph']}" if u.get("ph") and str(u["ph"]) not in u["n"] else ""), "s": src, "mw": u["mw"], "st": u["st"],
+                  "y": u.get("y"), "p": u.get("prov"), "u": u.get("url"), "o": u.get("own") or (u.get("paths") or [None])[0],
+                  "lic": u.get("lic")})
+        for ow in owners:
+            gr = G.setdefault(ow["key"], {"key": ow["key"], "name": ow["name"], "g": ow["g"], "op": {}, "pipe": {}, "cons": 0.0,
+                                          "units": [], "nodes": set()})
+            gr["nodes"].add(ow["node"])
+            eq = u["mw"] * ow["share"]
+            if op:
+                gr["op"][src] = gr["op"].get(src, 0) + eq
+                if ow["share"] >= 0.5:
+                    gr["cons"] += u["mw"]
+            elif pipe:
+                gr["pipe"][src] = gr["pipe"].get(src, 0) + eq
+            gr["units"].append([i, round(ow["share"], 4)])
+    nat_total = sum(nat_op.values()) or 1.0
+    year = now.year
+    grp = []
+    for k, gr in G.items():
+        g = gr["g"] or {}
+        op = {s: round(v, 1) for s, v in gr["op"].items() if v >= 0.05}
+        pipe = {s: round(v, 1) for s, v in gr["pipe"].items() if v >= 0.05}
+        total = round(sum(op.values()), 1)
+        if total < 1 and sum(pipe.values()) < 1:
             continue
-        name = (o.get("organizationName") or o.get("organizationShortName") or "").strip()
-        key, g = classify(name, groups)
-        src = by_source(f)
-        row = {"id": oid, "name": name, "short": o.get("organizationShortName"), "eic": o.get("organizationEtsoCode"),
-               "group": key, "fields": f, "src": src, "total": round(sum(f.values()), 1)}
-        org_rows.append(row)
-        name_to_org[norm(name)] = row
-        G.setdefault(key, []).append(row)
-
-    one_year = (now.date() - dt.timedelta(days=365)).isoformat()
-    add_rows = []
-    for a in adds:
-        mw = _num(a.get("ilaveKuruluGuc"))
-        if not mw:
-            continue
-        comp = (a.get("sirketAdi") or "").strip()
-        key, _ = classify(comp, groups)
-        org = name_to_org.get(norm(comp))
-        if org:
-            key = org["group"]
-        add_rows.append({"date": (a.get("geciciKabulTarihi") or "")[:10], "company": comp, "plant": (a.get("santralAdi") or "").strip(),
-                         "fuel": (a.get("yakitCinsi") or "").strip(), "src": fuel_source(a.get("yakitCinsi") or ""),
-                         "mw": round(mw, 2), "city": (a.get("il") or "").strip(), "group": key, "org": org["id"] if org else None})
-    add_rows.sort(key=lambda r: r["date"], reverse=True)
-
-    tr_total = sum(national.values()) or sum(r["total"] for r in org_rows) or 1.0
-    grp_rows = []
-    for key, rows in G.items():
-        g = gmeta.get(key)
-        src: dict[str, float] = {}
-        for r in rows:
-            for s, v in r["src"].items():
-                src[s] = round(src.get(s, 0) + v, 1)
-        total = round(sum(src.values()), 1)
-        adds12 = round(sum(a["mw"] for a in add_rows if a["group"] == key and a["date"] >= one_year), 1)
-        if g:
-            name, auto = g["name"], False
-        else:
-            rows.sort(key=lambda r: -r["total"])
-            name, auto = (rows[0]["name"] if len(rows) == 1 else key[5:].title()), True
-        ren = sum(v for s, v in src.items() if s in RENEWABLE)
-        grp_rows.append({"key": key, "name": name, "auto": auto, "ticker": (g or {}).get("ticker"), "parent": (g or {}).get("parent"),
-                         "kind": (g or {}).get("kind", "ozel"), "total": total, "share": round(total / tr_total, 5),
-                         "src": src, "renew": round(ren / total, 4) if total else None, "adds12": adds12,
-                         "orgs": [r["id"] for r in sorted(rows, key=lambda r: -r["total"])]})
-    grp_rows.sort(key=lambda g: -g["total"])
-    listed = sum(g["total"] for g in grp_rows if g["ticker"] or g["parent"])
+        ren = sum(v for s, v in op.items() if s in RENEWABLE)
+        recent = round(sum(U[i]["mw"] * sh for i, sh in gr["units"] if U[i]["st"] == "operating" and (U[i]["y"] or 0) >= year - 2), 1)
+        grp.append({"key": k, "name": gr["name"], "auto": not gr["g"], "ticker": g.get("ticker"), "parent": g.get("parent"),
+                    "kind": g.get("kind", "ozel"), "total": total, "cons": round(gr["cons"], 1), "share": round(total / nat_total, 5),
+                    "src": op, "pipe": pipe, "pipe_total": round(sum(pipe.values()), 1), "renew": round(ren / total, 4) if total else None,
+                    "recent": recent, "n": sum(1 for i, _ in gr["units"] if U[i]["st"] == "operating"),
+                    "entities": sorted(gr["nodes"])[:30], "units": sorted(gr["units"], key=lambda x: -U[x[0]]["mw"] * x[1])})
+    grp.sort(key=lambda g: (-g["total"], -g["pipe_total"]))
+    listed = sum(g["total"] for g in grp if g["ticker"] or g["parent"])
+    unowned = round(sum(U[i]["mw"] for i, u in enumerate(units) if u["st"] == "operating" and not u.get("own") and not u.get("paths")), 1)
+    recent = sorted([dict(i=i, **{k: U[i][k] for k in ("n", "s", "mw", "y", "p")}) for i in range(len(U))
+                     if U[i]["st"] == "operating" and (U[i]["y"] or 0) >= year - 2], key=lambda r: (-(r["y"] or 0), -r["mw"]))
+    pipeline = sorted([dict(i=i, **{k: U[i][k] for k in ("n", "s", "mw", "st", "y", "p")}) for i in range(len(U)) if U[i]["st"] in PIPE],
+                      key=lambda r: -r["mw"])
     return {
         "generated": now.isoformat(timespec="seconds"),
-        "window": [window[0].isoformat(), window[1].isoformat()],
-        "method": "EAK: son 7 günün kaynak bazında en yüksek emre amade kapasitesi (MW), lisanslı santraller",
-        "national": {"src": by_source(national), "fields": national, "total": round(sum(national.values()), 1)},
-        "listed_share": round(listed / tr_total, 4),
-        "groups": grp_rows,
-        "orgs": sorted(org_rows, key=lambda r: -r["total"]),
-        "additions": add_rows,
-        "sources": SOURCES,
-        "source_names": {"hidro": "Hidro", "ruzgar": "Rüzgâr", "gunes": "Güneş", "jeotermal": "Jeotermal",
-                         "dogalgaz": "Doğalgaz", "komur": "Kömür", "diger": "Diğer"},
-        "field_names": {k: v[1] for k, v in EAK_FIELDS.items()},
+        "gem": {"imported": gem.get("imported"), "sources": gem.get("sources"), "license": gem.get("license")},
+        "national": {"src": {s: round(v, 1) for s, v in nat_op.items()}, "total": round(sum(nat_op.values()), 1),
+                     "pipe": {s: round(v, 1) for s, v in nat_pipe.items()}, "pipe_total": round(sum(nat_pipe.values()), 1),
+                     "unowned": unowned},
+        "epias": epias,
+        "listed_share": round(listed / nat_total, 4),
+        "groups": grp,
+        "units": U,
+        "recent": recent[:300],
+        "pipeline": pipeline[:300],
+        "year": year,
+        "sources": SOURCES, "source_names": SOURCE_NAMES, "status_names": STATUS_NAMES,
     }
 
 
-def append_history(doc: dict, path=None, keep: int = 260) -> list[dict]:
+def append_history(doc: dict, path=None, keep: int = 120) -> list[dict]:
     path = path or OUT / "_history.json"
     try:
         hist = json.loads(path.read_text(encoding="utf-8"))
     except (FileNotFoundError, ValueError):
         hist = []
-    day = doc["window"][1]
+    day = (doc.get("gem") or {}).get("imported") or doc["generated"][:10]
     snap = {"d": day, "tr": doc["national"]["src"], "g": {g["key"]: g["total"] for g in doc["groups"][:150]}}
     hist = [h for h in hist if h.get("d") != day] + [snap]
-    hist = hist[-keep:]
-    path.write_text(json.dumps(hist, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    path.write_text(json.dumps(hist[-keep:], ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     return hist
-
-
-# ─────────────────────────────── çalıştırma
-def collect(cl: Epias, today: dt.date | None = None, since: str = "2015-01-01") -> tuple:
-    today = today or dt.datetime.now(TZ).date()
-    end = today - dt.timedelta(days=1)
-    start = end - dt.timedelta(days=6)
-    body = {"startDate": iso(start), "endDate": iso(end), "region": "TR1"}
-    national = capacity(cl.paged("/v1/generation/data/aic", body, size=500))
-    orgs = (cl.post("/v1/generation/data/organization-list", {"startDate": iso(start), "endDate": iso(end)}) or {}).get("items") or []
-    log.info("EPİAŞ: %d organizasyon, Türkiye EAK %.0f MW", len(orgs), sum(national.values()))
-    caps = {}
-    for i, o in enumerate(orgs, 1):
-        oid = o.get("organizationId")
-        if oid is None:
-            continue
-        rows = cl.paged("/v1/generation/data/aic", {**body, "organizationId": oid}, size=500, limit=3)
-        c = capacity(rows)
-        if c:
-            caps[oid] = c
-        if i % 200 == 0:
-            log.info("EAK %d/%d (%d üretici)", i, len(orgs), len(caps))
-    adds = cl.paged("/v1/generation/data/licensed-powerplant-investment-list",
-                    {"startDate": f"{since}T00:00:00+03:00", "endDate": iso(today)}, size=1000)
-    return orgs, caps, adds, national, (start, end)
 
 
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
-    user, pw = os.environ.get("EPIAS_USERNAME"), os.environ.get("EPIAS_PASSWORD")
-    if not (user and pw):
-        log.warning("EPIAS_USERNAME / EPIAS_PASSWORD tanımlı değil: enerji verisi güncellenmedi")
-        return 0
-    cl = Epias(user, pw)
-    orgs, caps, adds, national, window = collect(cl)
-    if not caps:
-        log.error("EAK verisi gelmedi (%d çağrı); önceki veri korunuyor", cl.calls)
-        return 1
-    doc = build(orgs, caps, adds, national, load_groups(), window)
+    gem = json.loads(GEM.read_text(encoding="utf-8"))
+    doc = build(gem, load_groups(), epias_context(), exclude=load_exclude())
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "kurulu_guc.json").write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     append_history(doc)
-    log.info("Enerji: %d şirket, %d grup, %d devreye alma, %d çağrı", len(doc["orgs"]), len(doc["groups"]), len(doc["additions"]), cl.calls)
+    log.info("Enerji: %d ünite, %d sahip/grup, Türkiye %.0f MW (EPİAŞ bağlamı: %s)", len(doc["units"]), len(doc["groups"]),
+             doc["national"]["total"], "var" if doc["epias"] else "yok")
     return 0
 
 

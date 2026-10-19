@@ -1106,9 +1106,9 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .fa-sug li.na { cursor: default; color: var(--text-3); }
 
 /* ───────────── Enerji kurulu güç ───────────── */
-:root { --en-hidro: #2a78d6; --en-ruzgar: #1baf7a; --en-gunes: #eda100; --en-jeotermal: #d4513a; --en-dogalgaz: #8a63d2; --en-komur: #4a4f55; --en-diger: #b9a58a; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --en-hidro: #3987e5; --en-ruzgar: #199e70; --en-gunes: #c98500; --en-jeotermal: #e0674f; --en-dogalgaz: #9b7ae0; --en-komur: #8b949a; --en-diger: #7d6f5c; } }
-:root[data-theme="dark"] { --en-hidro: #3987e5; --en-ruzgar: #199e70; --en-gunes: #c98500; --en-jeotermal: #e0674f; --en-dogalgaz: #9b7ae0; --en-komur: #8b949a; --en-diger: #7d6f5c; }
+:root { --en-hidro: #2a78d6; --en-ruzgar: #1baf7a; --en-gunes: #eda100; --en-jeotermal: #d4513a; --en-dogalgaz: #8a63d2; --en-komur: #4a4f55; --en-diger: #b9a58a; --en-nukleer: #c2185b; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --en-hidro: #3987e5; --en-ruzgar: #199e70; --en-gunes: #c98500; --en-jeotermal: #e0674f; --en-dogalgaz: #9b7ae0; --en-komur: #8b949a; --en-diger: #7d6f5c; --en-nukleer: #e0528a; } }
+:root[data-theme="dark"] { --en-hidro: #3987e5; --en-ruzgar: #199e70; --en-gunes: #c98500; --en-jeotermal: #e0674f; --en-dogalgaz: #9b7ae0; --en-komur: #8b949a; --en-diger: #7d6f5c; --en-nukleer: #e0528a; }
 .en-mix { display: flex; width: 100%; min-width: 90px; border-radius: 3px; overflow: hidden; background: var(--surface-2); }
 .en-mix > span { display: block; height: 100%; min-width: 2px; }
 .en-mix > span + span { box-shadow: -1px 0 0 var(--surface); }
@@ -1141,3 +1141,8 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
   .en-tbl td.en-mixc { min-width: 90px; }
 }
 .en-add td.en-date { white-space: nowrap; font: var(--fs-sm) var(--font-mono); color: var(--text-2); }
+.en-ctx { margin: var(--s-3) 0 0; font-size: var(--fs-sm); color: var(--text-2); }
+.en-drawer1 .meta, .en-own .meta { color: var(--text-3); font-size: var(--fs-xs); }
+.en-ents { margin: 0 0 var(--s-2); }
+.en-add td.en-own { max-width: 260px; font-size: var(--fs-sm); }
+.en-add td.en-own .en-code { font-size: var(--fs-xs); }

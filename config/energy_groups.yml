@@ -1,56 +1,91 @@
-# Enerji sekmesi: EPİAŞ'taki tüzel kişileri (santral şirketlerini) gruplara ve borsa kodlarına bağlar.
+# Enerji sekmesi: santral sahiplerini gruplara ve borsa kodlarına bağlar.
 #
-# match: şirket unvanının BAŞINA uyan ifadeler (büyük harf, Türkçe karakterli; noktalama yok sayılır).
-#        Ör. "ZORLU" → "ZORLU ENERJİ ELEKTRİK ÜRETİM A.Ş.", "ZORLU JEOTERMAL ENERJİ ..." vb.
-# ticker: grubun ya da şirketin kendisinin borsa kodu; parent: santral şirketi borsada değilse borsadaki ortağı.
-# kind: ozel | kamu.  Listede olmayan şirketler unvanlarının ilk ayırt edici kelimesiyle otomatik gruplanır
-# (panelde "otomatik" işaretli). İlk gerçek veri gelince bu liste EPİAŞ unvanlarına göre genişletilecek.
+# match: şirket adının BAŞINA uyan ifadeler. Karşılaştırma Türkçe karakterler sadeleştirilerek, büyük harfle ve
+#        noktalama yok sayılarak yapılır ("Aksa Enerji Uretim AŞ" = "AKSA ENERJİ ÜRETİM A.Ş."). GEM adları çoğu zaman
+#        İngilizce ya da ASCII yazımlı olduğu için iki yazım da verilebilir.
+# Sahiplik zincirinde (ör. Kişiler → Kazancı Holding → Aksa Enerji → Santral) santrale EN YAKIN eşleşen şirket esas
+# alınır: Aksa'nın santrali Aksa Enerji'ye (AKSEN) yazılır, Kazancı Holding'e değil.
+# ticker: grubun ya da şirketin borsa kodu; parent: santral şirketi borsada değilse borsadaki ortağı. kind: ozel | kamu.
+# Listede olmayan sahipler kendi adlarıyla görünür (panelde "eşleşmedi" işaretli).
+# exclude: Ownership Tracker'da santralin ülkesi yok (Türk şirketinin sahibi olduğu santraller alınıyor); yurt dışındaki
+# santraller ada göre dışarıda bırakılır. GEM kömür/gaz santral izleyicileri eklenince ülke alanı kullanılacak.
+exclude: [Ghana, Bishkek, Bukhara, Sirdaryo, Tashkent, Congo, Jizzakh, Kalecik, Powership, Talimercan, Yangiaryk,
+          Ecuador, Indonesia, Mozambique, Senegal, Guyana, Iraq, Kosovo, Mali, Sudan, Lebanon, Cuba]
 groups:
   # ── kamu
-  - { name: EÜAŞ, kind: kamu, match: ["ELEKTRİK ÜRETİM A Ş", "ELEKTRİK ÜRETİM ANONİM ŞİRKETİ", "EÜAŞ"] }
+  - { name: EÜAŞ, kind: kamu, match: ["Elektrik Üretim A.Ş.", "Elektrik Uretim AS", "Elektrik Üretim AŞ", "Elektrik Uretim AŞ", "EÜAŞ"] }
+  - { name: DSİ, kind: kamu, match: ["General Directorate of State Hydraulic Works", "Devlet Su İşleri", "DSİ"] }
+  - { name: Diğer kamu, kind: kamu, match: ["Government of Türkiye", "Eti Maden"] }
   # ── borsadaki üretim şirketleri
-  - { name: Aksa Enerji, ticker: AKSEN, match: ["AKSA ENERJİ", "AKSA GÖYNÜK"] }
-  - { name: Zorlu Enerji, ticker: ZOREN, match: ["ZORLU ENERJİ", "ZORLU JEOTERMAL", "ZORLU RÜZGAR", "ZORLU DOĞAL"] }
-  - { name: Odaş Elektrik, ticker: ODAS, match: ["ODAŞ"] }
-  - { name: Çan2 Termik, ticker: CANTE, parent: ODAS, match: ["ÇAN2 TERMİK", "ÇAN 2 TERMİK"] }
-  - { name: Aydem Yenilenebilir, ticker: AYDEM, match: ["AYDEM YENİLENEBİLİR", "AYDEM ENERJİ"] }
-  - { name: Galata Wind, ticker: GWIND, match: ["GALATA WIND"] }
-  - { name: Naturel Yenilenebilir, ticker: NATEN, match: ["NATUREL"] }
-  - { name: Margün Enerji, ticker: MAGEN, match: ["MARGÜN"] }
-  - { name: Biotrend Enerji, ticker: BIOEN, match: ["BİOTREND", "BIOTREND"] }
-  - { name: IC Enterra Yenilenebilir, ticker: ENTRA, match: ["IC ENTERRA", "İC ENTERRA"] }
-  - { name: Akfen Yenilenebilir, ticker: AKFYE, match: ["AKFEN YENİLENEBİLİR", "AKFEN ENERJİ"] }
-  - { name: Akenerji, ticker: AKENR, match: ["AKENERJİ"] }
-  - { name: Esenboğa Elektrik, ticker: ESEN, match: ["ESENBOĞA ELEKTRİK"] }
-  - { name: Ayen Enerji, ticker: AYEN, match: ["AYEN ENERJİ"] }
-  - { name: Zedur Enerji, ticker: ZEDUR, match: ["ZEDUR"] }
-  - { name: Tatlıpınar Enerji, ticker: TATEN, match: ["TATLIPINAR"] }
-  - { name: Pamel Yenilenebilir, ticker: PAMEL, match: ["PAMEL"] }
-  - { name: Hun Yenilenebilir, ticker: HUNER, match: ["HUN YENİLENEBİLİR"] }
-  - { name: İzdemir Enerji, ticker: IZENR, match: ["İZDEMİR ENERJİ"] }
-  - { name: Mogan Enerji, ticker: MOGAN, match: ["MOGAN"] }
-  - { name: A1 Yenilenebilir, ticker: A1YEN, match: ["A1 YENİLENEBİLİR"] }
-  - { name: Smart Güneş, ticker: SMRTG, match: ["SMART GÜNEŞ", "SMART ENERJİ"] }
-  - { name: CW Enerji, ticker: CWENE, match: ["CW ENERJİ"] }
-  - { name: YEO Teknoloji, ticker: YEOTK, match: ["YEO TEKNOLOJİ"] }
-  - { name: Alfa Solar, ticker: ALFAS, match: ["ALFA SOLAR"] }
+  - { name: Aksa Enerji, ticker: AKSEN, match: ["Aksa Enerji", "Aksa Göynük"] }
+  - { name: Zorlu Enerji, ticker: ZOREN, match: ["Zorlu Enerji", "Zorlu Jeotermal", "Zorlu Rüzgar", "Zorlu Doğal", "Zorlu Elektrik"] }
+  - { name: Odaş Elektrik, ticker: ODAS, match: ["Odaş"] }
+  - { name: Çan2 Termik, ticker: CANTE, parent: ODAS, match: ["Çan2 Termik", "Çan 2 Termik"] }
+  - { name: Aydem Yenilenebilir, ticker: AYDEM, match: ["Aydem Yenilenebilir", "Aydem Enerji", "Aydem Renewable"] }
+  - { name: Galata Wind, ticker: GWIND, match: ["Galata Wind"] }
+  - { name: Naturel Yenilenebilir, ticker: NATEN, match: ["Naturel"] }
+  - { name: Margün Enerji, ticker: MAGEN, match: ["Margün"] }
+  - { name: Biotrend Enerji, ticker: BIOEN, match: ["Biotrend"] }
+  - { name: IC Enterra Yenilenebilir, ticker: ENTRA, match: ["IC Enterra"] }
+  - { name: Akfen Yenilenebilir, ticker: AKFYE, match: ["Akfen Yenilenebilir", "Akfen Renewable", "Akfen Enerji"] }
+  - { name: Akenerji, ticker: AKENR, match: ["Akenerji"] }
+  - { name: Esenboğa Elektrik, ticker: ESEN, match: ["Esenboğa Elektrik"] }
+  - { name: Ayen Enerji, ticker: AYEN, match: ["Ayen Enerji"] }
+  - { name: Zedur Enerji, ticker: ZEDUR, match: ["Zedur"] }
+  - { name: Tatlıpınar Enerji, ticker: TATEN, match: ["Tatlıpınar"] }
+  - { name: Pamel Yenilenebilir, ticker: PAMEL, match: ["Pamel"] }
+  - { name: Hun Yenilenebilir, ticker: HUNER, match: ["Hun Yenilenebilir"] }
+  - { name: İzdemir Enerji, ticker: IZENR, match: ["İzdemir Enerji", "Izdem Enerji"] }
+  - { name: Mogan Enerji, ticker: MOGAN, match: ["Mogan"] }
+  - { name: A1 Yenilenebilir, ticker: A1YEN, match: ["A1 Yenilenebilir"] }
+  - { name: Smart Güneş, ticker: SMRTG, match: ["Smart Güneş", "Smart Enerji"] }
+  - { name: CW Enerji, ticker: CWENE, match: ["CW Enerji"] }
+  - { name: YEO Teknoloji, ticker: YEOTK, match: ["YEO Teknoloji"] }
+  - { name: Alfa Solar, ticker: ALFAS, match: ["Alfa Solar"] }
+  - { name: ENKA İnşaat, ticker: ENKAI, match: ["ENKA İnşaat", "ENKA Elektrik"] }
+  - { name: Global Yatırım Holding, ticker: GLYHO, match: ["Global Yatırım Holding", "Consus Enerji"] }
+  - { name: Doğan Holding, ticker: DOHOL, match: ["Doğan Holding", "Doğan Enerji"] }
+  - { name: Park Elektrik, ticker: PRKME, match: ["Park Elektrik", "Park Termik"] }
+  - { name: Ereğli Demir Çelik (otoprodüktör), ticker: EREGL, match: ["Ereğli Demir", "İskenderun Demir"] }
+  - { name: Kardemir (otoprodüktör), ticker: KRDMD, match: ["Kardemir", "Karabük Demir"] }
+  - { name: Tüpraş (otoprodüktör), ticker: TUPRS, match: ["Tüpraş", "Türkiye Petrol Rafinerileri"] }
+  - { name: Şişecam (otoprodüktör), ticker: SISE, match: ["Türkiye Şişe", "Türkiye Sise", "Şişecam"] }
+  - { name: Petkim (otoprodüktör), ticker: PETKM, match: ["Petkim"] }
+  - { name: Aksa Akrilik (otoprodüktör), ticker: AKSA, match: ["Aksa Akrilik"] }
+  - { name: Turcas Petrol, ticker: TRCAS, match: ["Turcas"] }
+  - { name: İzmir Demir Çelik (otoprodüktör), ticker: IZMDC, match: ["İzmir Demir", "Izmir Demir"] }
   # ── borsada olmayan santral şirketi, borsadaki ortak
-  - { name: Enerjisa Üretim, parent: SAHOL, match: ["ENERJİSA ÜRETİM"] }
-  - { name: Entek (Koç), parent: KCHOL, match: ["ENTEK ELEKTRİK"] }
+  - { name: Enerjisa Üretim, parent: SAHOL, match: ["Enerjisa Üretim", "Enerjisa Enerji Üretim", "Enerjisa Uretim"] }
+  - { name: Entek (Koç), parent: KCHOL, match: ["Entek Elektrik"] }
   # ── borsada olmayan büyük gruplar
-  - { name: Limak, match: ["LİMAK"] }
-  - { name: Cengiz Enerji, match: ["CENGİZ"] }
-  - { name: Kalyon, match: ["KALYON"] }
-  - { name: IC İçtaş, match: ["İÇTAŞ", "IC İÇTAŞ", "İC İÇTAŞ"] }
-  - { name: Eren Enerji, match: ["EREN ENERJİ"] }
-  - { name: Bereket Enerji, match: ["BEREKET ENERJİ"] }
-  - { name: Borusan EnBW, match: ["BORUSAN ENBW", "BORUSAN EnBW"] }
-  - { name: Kolin, match: ["KOLİN"] }
-  - { name: Sanko Enerji, match: ["SANKO ENERJİ"] }
-  - { name: Polat Enerji, match: ["POLAT ENERJİ"] }
-  - { name: Gama Enerji, match: ["GAMA ENERJİ"] }
-  - { name: Rönesans Enerji, match: ["RÖNESANS ENERJİ"] }
-  - { name: Cenal Elektrik, match: ["CENAL"] }
-  - { name: Bilgin Enerji, match: ["BİLGİN"] }
-  - { name: Statkraft, match: ["STATKRAFT"] }
-  - { name: Yeşil Enerji, match: ["YEŞİL ENERJİ ELEKTRİK"] }
+  - { name: Limak, match: ["Limak"] }
+  - { name: Cengiz Holding, match: ["Cengiz", "Eti Alüminyum"] }
+  - { name: Kalyon, match: ["Kalyon"] }
+  - { name: IC İçtaş, match: ["IC İçtaş", "İçtaş", "IC Holding", "IC Ictas"] }
+  - { name: Özaltın, match: ["Özaltın"] }
+  - { name: Eren Holding, match: ["Eren Enerji", "Eren Holding"] }
+  - { name: Bereket Enerji, match: ["Bereket Enerji"] }
+  - { name: Borusan EnBW, match: ["Borusan"] }
+  - { name: Kolin, match: ["Kolin"] }
+  - { name: Sanko Enerji, match: ["Sanko"] }
+  - { name: Polat Enerji, match: ["Polat Enerji"] }
+  - { name: Gama Enerji, match: ["Gama Enerji"] }
+  - { name: Rönesans Enerji, match: ["Rönesans"] }
+  - { name: Cenal Elektrik, match: ["Cenal"] }
+  - { name: Bilgin Enerji, match: ["Bilgin"] }
+  - { name: Statkraft, match: ["Statkraft"] }
+  - { name: Doğuş Enerji, match: ["Doğuş"] }
+  - { name: Koloğlu Holding, match: ["Koloğlu"] }
+  - { name: Energo-Pro, match: ["Energo-Pro", "Energo Pro"] }
+  - { name: EDF Renewables, match: ["EDF Renewables", "EDF"] }
+  - { name: Eksim Enerji, match: ["Eksim"] }
+  - { name: Türkerler, match: ["Türkerler", "RT Enerji"] }
+  - { name: Fina Enerji, match: ["Fina Enerji"] }
+  - { name: Habaş, match: ["Habas", "Habaş"] }
+  - { name: Karadeniz Holding (Karpowership), match: ["Karadeniz Holding", "Karpowership"] }
+  - { name: İçdaş, match: ["İçdaş", "Icdas"] }
+  - { name: OYAK Enerji, match: ["OYAK"] }
+  - { name: Ciner Grubu, match: ["Ciner"] }
+  - { name: Palmet Enerji, match: ["Palmet"] }
+  - { name: Konya Şeker / Anadolu Birlik, match: ["Konya Şeker", "Anadolu Birlik"] }
+  - { name: Çolakoğlu, match: ["Çolakoğlu"] }
