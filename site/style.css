@@ -1151,3 +1151,26 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .en-add td.en-note-c a { color: var(--text-2); text-decoration: none; }
 .en-add td.en-note-c a:hover { text-decoration: underline; }
 .en-tbl .up { color: var(--up); font-weight: var(--fw-semibold); }
+
+/* ───────────── Uluslararası Regülasyon Takip ───────────── */
+.rg-trends { margin: 0; padding-left: var(--s-5); display: grid; gap: var(--s-3); }
+.rg-trends li b { font-size: var(--fs-md); }
+.rg-trends p { margin: var(--s-1) 0 0; color: var(--text-2); font-size: var(--fs-sm); line-height: 1.55; }
+.rg-trends .rg-tr { color: var(--text); }
+.rg-meta { font-size: var(--fs-xs); color: var(--text-3); }
+.rg-tbl td { vertical-align: top; }
+.rg-tbl td.rg-reg { min-width: 170px; }
+.rg-tbl td.rg-reg b { display: block; font-weight: var(--fw-semibold); font-size: var(--fs-sm); }
+.rg-tbl td.rg-reg .meta, .rg-tbl .meta { color: var(--text-3); font-size: var(--fs-xs); }
+.rg-tbl td.rg-date { white-space: nowrap; font: var(--fs-sm) var(--font-mono); color: var(--text-2); }
+.rg-tbl td.rg-title { min-width: 320px; }
+.rg-tbl td.rg-title a { color: var(--text); text-decoration: none; font-weight: var(--fw-medium); }
+.rg-tbl td.rg-title a:hover { text-decoration: underline; }
+.rg-tr-title { display: block; font-size: var(--fs-xs); color: var(--text-3); margin-top: 2px; }
+.rg-s { margin: var(--s-1) 0 0; font-size: var(--fs-sm); color: var(--text-2); line-height: 1.5; }
+.rg-topics { min-width: 150px; }
+.rg-chip { display: inline-block; margin: 0 4px 4px 0; padding: 1px 6px; border-radius: var(--r-xs); background: var(--surface-2); color: var(--text-2); font-size: var(--fs-2xs); white-space: nowrap; }
+.rg-cov { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--s-2) var(--s-4); }
+.rg-cov-i { display: flex; flex-direction: column; font-size: var(--fs-sm); padding: var(--s-1) 0; border-top: 1px solid var(--border); }
+.rg-cov-i .meta { font-size: var(--fs-xs); color: var(--text-3); }
+.rg-cov-i.bad .meta { color: var(--warn); }

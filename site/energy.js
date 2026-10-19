@@ -188,6 +188,16 @@
       ${rows.length > shown.length ? `<div class="tbl-foot"><span>${shown.length} / ${rows.length}</span><button type="button" class="link-btn" id="enKapMore">Daha fazla</button></div>` : ""}
       ${rows.length ? "" : sh.stateHTML({ kind: "empty", title: "Bu süzgeçte bildirim yok", compact: true })}</div></section>`;
   }
+  function newPlants() {
+    const d = S.doc, np = (d.epias?.new_plants || []).filter(n => !S.src || n.src === S.src);
+    if (!np.length) return "";
+    return `<section class="card card-flush" aria-labelledby="enNpT"><div class="card-head"><h2 class="card-title" id="enNpT">EPİAŞ'ta yeni görünen santraller</h2>
+      <span class="card-meta">lisanslı santral listesine eklenenler · son 7 günün en yüksek saatlik üretimi</span></div>
+      <div class="tbl-scroll"><table class="tbl en-add"><thead><tr><th scope="col">İlk görülme</th><th scope="col">Santral</th><th scope="col">Kaynak</th><th scope="col" class="num">En yüksek saatlik üretim (MW)</th><th scope="col" class="num">7 günlük üretim (MWh)</th></tr></thead><tbody>
+      ${np.slice(0, 30).map(n => `<tr><td class="en-date">${esc(fmt.date(n.first_seen + "T12:00:00Z", { day: "numeric", month: "short", year: "2-digit" }))}</td><td>${esc(n.name)}</td>
+        <td>${n.src ? `<i class="en-dot" style="background:${color(n.src)}"></i>${esc(d.source_names[n.src] || n.src)}` : `<span class="meta">üretim yok</span>`}</td>
+        <td class="num">${n.peak_mw ? mw(n.peak_mw) : "—"}</td><td class="num">${n.mwh_7d ? fmt.int(n.mwh_7d) : "—"}</td></tr>`).join("")}</tbody></table></div></section>`;
+  }
   function unitList(id, title, rows, limit, moreId, meta) {
     if (!rows.length) return "";
     const d = S.doc, shown = rows.slice(0, limit);
@@ -210,12 +220,13 @@
     if (!S.loaded) return S.error ? renderError() : renderLoading();
     const d = S.doc;
     $("#enSrcSel").innerHTML = `<option value="">Tüm kaynaklar</option>` + d.sources.filter(s => d.national.src[s] || d.national.pipe[s]).map(s => `<option value="${s}" ${S.src === s ? "selected" : ""}>${d.source_names[s]}</option>`).join("");
-    $("#enSrcLine").innerHTML = `Kaynak: <a href="https://globalenergymonitor.org" target="_blank" rel="noopener">Global Energy Monitor</a> santral ve sahiplik izleyicileri (CC BY 4.0, aktarım ${esc(d.gem.imported || "")})${d.epias ? ` · <a href="https://seffaflik.epias.com.tr" target="_blank" rel="noopener">EPİAŞ Şeffaflık</a> (YEKDEM)` : ""}${(d.kap || []).length ? ` · KAP bildirimleri` : ""} · ${fmt.int(d.units.length)} ünite · ${fmt.int(d.groups.length)} sahip/grup`;
+    const newer = (d.gem.newer || []);
+    $("#enSrcLine").innerHTML = (newer.length ? `<span class="tag warn" data-tip="${esc(newer.map(n => `${n.tracker}: ${n.release}`).join(", "))}">GEM'de yeni sürüm var</span> ` : "") + `Kaynak: <a href="https://globalenergymonitor.org" target="_blank" rel="noopener">Global Energy Monitor</a> santral ve sahiplik izleyicileri (CC BY 4.0, aktarım ${esc(d.gem.imported || "")})${d.epias ? ` · <a href="https://seffaflik.epias.com.tr" target="_blank" rel="noopener">EPİAŞ Şeffaflık</a> (YEKDEM)` : ""}${(d.kap || []).length ? ` · KAP bildirimleri` : ""} · ${fmt.int(d.units.length)} ünite · ${fmt.int(d.groups.length)} sahip/grup`;
     const rows = filtered();
     const bySrc = r => !S.src || r.s === S.src;
     const sc = $(".en-scroll")?.scrollTop || 0;
     body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis()}${national()}${table(rows)}
-      ${kapCard()}
+      ${kapCard()}${newPlants()}
       ${unitList("enRecT", `Son yıllarda devreye girenler (${d.year - 2}–${d.year})`, d.recent.filter(bySrc), S.recLimit, "enRecMore", "başlangıç yılına göre")}
       ${unitList("enPipeT", "Yapım ve planlama aşamasındakiler", d.pipeline.filter(bySrc), S.pipeLimit, "enPipeMore", "büyükten küçüğe")}
       <p class="en-note">Santraller ve sahiplik <b>Global Energy Monitor</b> izleyicilerinden gelir (yılda yaklaşık iki kez güncellenir). Grup kapasitesi <b>pay oranına göredir</b>: ortak girişimlerde her ortağa payı kadar MW yazılır; “Konsolide” %50 ve üzeri payla kontrol edilen ünitelerin tam gücüdür. Kömür, doğalgaz ve biyoenerjide tam sahiplik zinciri kullanılır ve santrale en yakın eşleşen şirket esas alınır (ör. Aksa Enerji, Kazancı Holding değil). Kapsam dışı: jeotermal, 1 MW altı güneş ve izleyici eşiğinin altındaki küçük HES'ler; sahibi bilinmeyen üniteler (çoğu lisanssız güneş) Türkiye toplamında var, grup tablosunda yok. “Eşleşmedi” işaretli satırlar grup listesine henüz bağlanmadı. <b>KAP sütunu</b>, GEM verisinin tarihinden (${esc(Object.entries(d.gem.asof || {}).map(([k, v]) => `${d.source_names[k] || k} ${v.slice(0, 7)}`).join(", "))}) sonra borsa şirketlerinin KAP'ta bildirdiği devreye alma ve kapasite artışlarıdır; bildirimler AI ile okunur, kesin değer için bildirime bak.</p></div>`;

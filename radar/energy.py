@@ -219,7 +219,59 @@ def epias_context(today: dt.date | None = None) -> dict | None:
         s = YEKDEM_SRC.get(r.get("renewableEnergyType"), "diger")
         lic[s] = round(lic.get(s, 0) + (r.get("licencedCapacity") or 0), 1)
         unlic[s] = round(unlic.get(s, 0) + (r.get("unlicencedCapacity") or 0), 1)
-    return {"period": period.isoformat(), "yekdem_licensed": lic, "yekdem_unlicensed": unlic}
+    out = {"period": period.isoformat(), "yekdem_licensed": lic, "yekdem_unlicensed": unlic}
+    try:
+        out["new_plants"] = new_plants(cl, today)
+    except Exception as e:                                                   # noqa: BLE001
+        log.warning("EPİAŞ yeni santral kontrolü: %s", e)
+    return out
+
+
+RT_KEYS = {"sun": "gunes", "wind": "ruzgar", "dammedHydro": "hidro", "river": "hidro", "geothermal": "jeotermal", "naturalGas": "dogalgaz",
+           "lng": "dogalgaz", "lignite": "komur", "importCoal": "komur", "blackCoal": "komur", "asphaltiteCoal": "komur",
+           "biomass": "diger", "wasteheat": "diger", "fueloil": "diger", "naphta": "diger"}
+PLANTS = OUT / "_epias_plants.json"
+
+
+def new_plants(cl: Epias, today: dt.date) -> list[dict]:
+    """EPİAŞ lisanslı santral listesine yeni eklenenler (ilk görüldüğü gün) ve son 7 günün en yüksek saatlik üretimi."""
+    r = cl.s.get(BASE + "/v1/generation/data/powerplant-list", headers={"TGT": cl.tgt}, timeout=90)
+    items = (r.json().get("items") if r.status_code == 200 else None) or []
+    if not items:
+        return []
+    try:
+        st = json.loads(PLANTS.read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        st = {"known": {}, "new": []}
+    first_run = not st["known"]
+    for p in items:
+        pid = str(p.get("id"))
+        if pid in st["known"]:
+            continue
+        st["known"][pid] = today.isoformat()
+        if not first_run:
+            st["new"].append({"id": p.get("id"), "name": (p.get("shortName") or p.get("name") or "").strip(), "eic": p.get("eic"),
+                              "first_seen": today.isoformat()})
+    # yeni santrallerin son 7 günlük üretimi: kaynak ve gözlenen en yüksek saatlik güç
+    for n in st["new"]:
+        if n.get("checked") == today.isoformat() or n.get("first_seen", "") < (today - dt.timedelta(days=60)).isoformat():
+            continue
+        g = cl.post("/v1/generation/data/realtime-generation", {"startDate": f"{(today - dt.timedelta(days=8)).isoformat()}T00:00:00+03:00",
+                                                                  "endDate": f"{(today - dt.timedelta(days=1)).isoformat()}T00:00:00+03:00",
+                                                                  "powerPlantId": n["id"], "page": {"number": 1, "size": 500}}) or {}
+        peak, src, mwh = 0.0, {}, 0.0
+        for h in g.get("items") or []:
+            peak = max(peak, h.get("total") or 0)
+            mwh += h.get("total") or 0
+            for k, s_ in RT_KEYS.items():
+                if h.get(k):
+                    src[s_] = src.get(s_, 0) + h[k]
+        n["peak_mw"], n["mwh_7d"], n["src"] = round(peak, 1), round(mwh), max(src, key=src.get) if src else None
+        n["checked"] = today.isoformat()
+    st["new"] = st["new"][-300:]
+    PLANTS.parent.mkdir(parents=True, exist_ok=True)
+    PLANTS.write_text(json.dumps(st, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    return sorted(st["new"], key=lambda x: x["first_seen"], reverse=True)[:100]
 
 
 # ─────────────────────────────── panel verisi
@@ -362,6 +414,66 @@ def build(gem: dict, groups: list[dict], epias: dict | None = None, now: dt.date
     }
 
 
+GEM_PAGES = {"solar": "global-solar-power-tracker", "wind": "global-wind-power-tracker", "hydro": "global-hydropower-tracker",
+             "nuclear": "global-nuclear-power-tracker", "geothermal": "global-geothermal-power-tracker", "ownership": "global-energy-ownership-tracker",
+             "coal": "global-coal-plant-tracker", "gas": "global-oil-gas-plant-tracker"}
+RELEASE = re.compile(r"(?:release|released|update|updated|version|latest data)[^.<]{0,60}?\b(January|February|March|April|May|June|July|August|"
+                     r"September|October|November|December)\s+(20\d\d)|\b(January|February|March|April|May|June|July|August|September|"
+                     r"October|November|December)\s+(20\d\d)\s+(?:release|update|version|data)", re.I)
+
+
+def gem_watch(gem: dict, today: dt.date | None = None) -> list[dict]:
+    """GEM izleyici sayfalarında bizdekinden yeni sürüm var mı (herkese açık proje sayfaları, haftada bir).
+    Yeni sürüm bulunursa Telegram'a bir kez haber verir; dosyalar form ile indirildiği için içe aktarma elle yapılır."""
+    today = today or dt.date.today()
+    path = OUT / "_gem_watch.json"
+    try:
+        st = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        st = {}
+    if st.get("checked", "") > (today - dt.timedelta(days=7)).isoformat():
+        return st.get("newer") or []
+    have = {}
+    for k, name in (gem.get("sources") or {}).items():
+        m = re.search(r"(January|February|March|April|May|June|July|August|September|October|November|December)-(\d{4})", name or "", re.I)
+        if m:
+            have[k] = (int(m.group(2)), MONTHS[m.group(1).lower()])
+    newer = []
+    for k, slug in GEM_PAGES.items():
+        try:
+            r = requests.get(f"https://globalenergymonitor.org/projects/{slug}/", timeout=40, headers={"User-Agent": UA})
+        except requests.RequestException:
+            continue
+        if r.status_code != 200:
+            continue
+        found = []
+        for m in RELEASE.finditer(re.sub(r"<[^>]+>", " ", r.text)):
+            mon, yr = (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(4))
+            ym = (int(yr), MONTHS[mon.lower()])
+            if ym <= (today.year, today.month):
+                found.append(ym)
+        if found and (k not in have or max(found) > have[k]):
+            y, mo = max(found)
+            newer.append({"tracker": k, "release": f"{y}-{mo:02d}", "have": f"{have[k][0]}-{have[k][1]:02d}" if k in have else None,
+                          "url": f"https://globalenergymonitor.org/projects/{slug}/"})
+    told = set(st.get("told") or [])
+    fresh = [n for n in newer if f"{n['tracker']}:{n['release']}" not in told]
+    token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    if fresh and token and chat:
+        lines = "\n".join(f"• {n['tracker']}: {n['release']}" + (f" (bizdeki {n['have']})" if n["have"] else " (bizde yok)") for n in fresh)
+        try:
+            requests.post(f"https://api.telegram.org/bot{token}/sendMessage", timeout=30, json={"chat_id": chat, "disable_web_page_preview": True,
+                          "text": "⚡ Global Energy Monitor'de yeni izleyici sürümü var:\n" + lines +
+                                  "\nDosyaları indirip Claude'a gönderirsen enerji sekmesi güncellenir."})
+            told |= {f"{n['tracker']}:{n['release']}" for n in fresh}
+        except requests.RequestException:
+            pass
+    st = {"checked": today.isoformat(), "newer": newer, "told": sorted(told)}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(st, ensure_ascii=False), encoding="utf-8")
+    return newer
+
+
 def append_history(doc: dict, path=None, keep: int = 120) -> list[dict]:
     path = path or OUT / "_history.json"
     try:
@@ -398,6 +510,10 @@ def main() -> int:
         from .energy_kap import load_state
         kap = load_state()
     doc = build(gem, groups, epias_context(), exclude=load_exclude(), kap=kap)
+    try:
+        doc["gem"]["newer"] = gem_watch(gem)
+    except Exception as e:                                                   # noqa: BLE001
+        log.warning("GEM sürüm kontrolü: %s", e)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "kurulu_guc.json").write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     append_history(doc)

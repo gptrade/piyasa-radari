@@ -52,6 +52,8 @@ jobs:
       - name: Kurulu güç envanteri
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.PIYASA_RADARI }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           EPIAS_USERNAME: ${{ secrets.EPIAS_USERNAME }}
           EPIAS_PASSWORD: ${{ secrets.EPIAS_PASSWORD }}
         run: python -m radar.energy

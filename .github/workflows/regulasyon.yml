@@ -1,0 +1,60 @@
+name: regulasyon
+
+# Uluslararası Regülasyon Takip: BCBS/BIS, Türkiye, Azerbaycan, Körfez ve Orta Doğu bankacılık düzenleyicilerinin risk yönetimi ve
+# model validasyonu yayınları (kaynak gösteren Google araması, Gemini). Her gün birkaç kurum; ~5 günde bir tam tur.
+# Veri tek commit'lik `regulasyon` dalında; radar iş akışı yayımlarken bu daldan okur.
+on:
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+    inputs:
+      kurum_sayisi: { description: "Bu turda taranacak kurum sayısı", required: false, default: "4" }
+  push:
+    branches: [main]
+    paths: ["radar/regwatch.py", "config/regwatch.yml", ".github/workflows/regulasyon.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regulasyon
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Önceki veriyi geri yükle
+        run: |
+          mkdir -p site/data/regulasyon
+          if git ls-remote --exit-code --heads origin regulasyon >/dev/null 2>&1; then
+            echo "HAS_PREV=1" >> "$GITHUB_ENV"
+            git fetch --depth 1 origin regulasyon
+            git archive FETCH_HEAD | tar -x -C site/data/regulasyon
+          fi
+      - name: Tarama
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.PIYASA_RADARI }}
+        run: |
+          N="${{ github.event.inputs.kurum_sayisi }}"
+          # ilk çalıştırmada tüm kurumlar
+          if [ -z "${HAS_PREV:-}" ]; then N=17; fi
+          python -m radar.regwatch "${N:-4}"
+      - name: Veriyi regulasyon dalına kaydet
+        run: |
+          cd site/data/regulasyon
+          [ -f regwatch.json ] || exit 0
+          git init -q -b regulasyon
+          git config user.name "radar-bot"
+          git config user.email "radar-bot@users.noreply.github.com"
+          git add -A
+          git commit -qm "regulasyon $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" regulasyon
+          rm -rf .git
