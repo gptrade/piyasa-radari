@@ -296,7 +296,7 @@
         this.fitted = key;
         if (S.group || S.q || S.scope !== "tr") {
           const b = this.layer.getBounds();
-          if (b.isValid()) m.fitBounds(b.pad(0.15), { maxZoom: 9 });
+          if (b.isValid()) m.fitBounds(b.pad(0.15), { maxZoom: S.group ? 8 : 9 });
         } else if (S.scope === "tr") m.fitBounds([[35.8, 25.6], [42.2, 44.8]]);
         else m.setView([30, 25], 3);
       }
@@ -666,17 +666,27 @@
     const box = $("#enSug"), inp = $("#enQ"), q = fold(raw);
     if (!S.loaded || q.length < 2) return closeSug();
     const d = S.doc;
-    const gs = d.groups.map(g => { const nm = fold(g.name), cd = fold(g.code);
-        const sc = nm.startsWith(q) || cd === q ? 3 : nm.split(" ").some(w => w.startsWith(q)) ? 2 : nm.includes(q) || cd.includes(q) ? 1.5 : g.entities.some(n => fold(n).includes(q)) ? 1 : 0;
-        return [g, sc]; }).filter(([, sc]) => sc).sort((a, b) => b[1] - a[1] || (b[0].total + b[0].abroad_total) - (a[0].total + a[0].abroad_total)).slice(0, 6).map(([g]) => g);
+    // Puan: kod tam eşleşme > ad başı > kelime başı > adda geçiyor > sahiplik zincirindeki şirket adında geçiyor
+    const score = g => { const nm = fold(g.name), cd = fold(g.code);
+      return cd === q ? 5 : nm.startsWith(q) ? 4 : nm.split(" ").some(w => w.startsWith(q)) ? 3 : nm.includes(q) || cd.startsWith(q) ? 2 : g.entities.some(n => fold(n).includes(q)) ? 1 : 0; };
+    const listed = g => !!(g.ticker || g.parent);
+    const hit = d.groups.map(g => [g, score(g)]).filter(([, sc]) => sc);
+    const ord = (a, b) => b[1] - a[1] || (b[0].total + b[0].abroad_total) - (a[0].total + a[0].abroad_total);
+    const gl = hit.filter(([g]) => listed(g)).sort((a, b) => (b[0].total + b[0].abroad_total) - (a[0].total + a[0].abroad_total) || b[1] - a[1]).slice(0, 25).map(([g]) => g);
+    const go = hit.filter(([g]) => !listed(g)).sort(ord).slice(0, gl.length ? 5 : 8).map(([g]) => g);
+    const more = hit.length - gl.length - go.length;
+    const gs = [...gl, ...go];
     const us = d.units.filter(u => fold(u.n).includes(q) || fold(u.en || "").includes(q)).sort((a, b) => b.mw - a.mw).slice(0, 6);
     Sug.items = [...gs.map(g => ({ g })), ...us.map(u => ({ u }))]; Sug.i = -1;
     if (!Sug.items.length) { box.innerHTML = `<div class="en-sug-e">Eşleşen grup ya da santral yok</div>`; box.hidden = false; inp.setAttribute("aria-expanded", "true"); return; }
     let k = 0;
-    box.innerHTML = (gs.length ? `<div class="en-sug-h">Gruplar ve şirketler</div>` + gs.map(g => `<div class="en-sug-i" role="option" id="enSug${k}" data-n="${k++}">
-        <span class="en-sug-n">${hl(g.name, q)}${g.code ? ` <span class="en-code">${esc(g.code)}</span>` : ""}${g.kind === "kamu" ? ` <span class="tag na">kamu</span>` : ""}</span>
+    const gRow = g => `<div class="en-sug-i" role="option" id="enSug${k}" data-n="${k++}">
+        <span class="en-sug-n">${hl(g.name, q)}${g.code ? ` <span class="en-code">${esc(g.code)}</span>` : ""}${g.kind === "kamu" ? ` <span class="tag na">kamu</span>` : ""}${!fold(g.name).includes(q) && !fold(g.code).includes(q) ? (n => n ? ` <span class="en-sug-e2">↳ ${hl(n, q)}</span>` : "")(g.entities.find(n => fold(n).includes(q))) : ""}</span>
         <span class="en-sug-m">${g.total ? gw(g.total) : ""}${g.abroad_total ? `${g.total ? " · " : ""}yurt dışı ${gw(g.abroad_total)}` : ""}${!g.total && !g.abroad_total && g.pipe_total ? `yatırım hattı ${gw(g.pipe_total)}` : ""}</span>
-        <span class="en-sug-x">${mixBar(g.total ? g.src : g.abroad, g.total || g.abroad_total, { h: 4 })}</span></div>`).join("") : "") +
+        <span class="en-sug-x">${mixBar(g.total ? g.src : g.abroad, g.total || g.abroad_total, { h: 4 })}</span></div>`;
+    box.innerHTML = (gl.length ? `<div class="en-sug-h">Borsa şirketleri (${gl.length})</div>` + gl.map(gRow).join("") : "") +
+      (go.length ? `<div class="en-sug-h">${gl.length ? "Diğer şirketler" : "Gruplar ve şirketler"}</div>` + go.map(gRow).join("") : "") +
+      (more > 0 ? `<button type="button" class="en-sug-all" data-all="1">+${fmt.int(more)} şirket daha · Gruplar sekmesinde tümünü gör</button>` : "") +
       (us.length ? `<div class="en-sug-h">Santraller</div>` + us.map(u => `<div class="en-sug-i" role="option" id="enSug${k}" data-n="${k++}">
         <span class="en-sug-n"><i class="en-dot" style="background:${color(u.s)}"></i>${hl(u.n, q)}</span>
         <span class="en-sug-m">${mw(u.mw)} MW · ${u.ab ? esc(u.cn) : esc(u.p || "")}${u.st !== "operating" ? " · " + esc(d.status_names[u.st] || u.st) : ""}</span></div>`).join("") : "") +
@@ -708,7 +718,11 @@
     else if (e.key === "Escape") { e.preventDefault(); closeSug(); }
   });
   $("#enQ").addEventListener("focus", e => { if (e.target.value.trim().length >= 2) suggest(e.target.value.trim()); });
-  $("#enSug").addEventListener("mousedown", e => { const it = e.target.closest(".en-sug-i"); if (it) { e.preventDefault(); pickSug(+it.dataset.n); } });
+  $("#enSug").addEventListener("mousedown", e => {
+    const it = e.target.closest(".en-sug-i");
+    if (it) { e.preventDefault(); return pickSug(+it.dataset.n); }
+    if (e.target.closest("[data-all]")) { e.preventDefault(); closeSug(); S.q = $("#enQ").value.trim(); S.limit = PAGE; tab() === "gruplar" ? render() : sh.go("enerji", { param: "gruplar" }); }
+  });
   document.addEventListener("mousedown", e => { if (!e.target.closest("#enSug, #enQ")) closeSug(); });
   $("#enBody").addEventListener("click", e => {
     const sc = e.target.closest(".en-sc");

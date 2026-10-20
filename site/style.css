@@ -1350,6 +1350,9 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .en-sug-n mark { background: var(--accent-soft); color: inherit; border-radius: 2px; padding: 0 1px; }
 .en-sug-m { grid-area: m; font: var(--fs-xs) var(--font-mono); color: var(--text-3); white-space: nowrap; align-self: center; }
 .en-sug-x { grid-area: x; } .en-sug-x .en-mix { min-width: 0; max-width: 220px; }
+.en-sug-e2 { font-size: var(--fs-xs); color: var(--text-3); }
+.en-sug-all { display: block; width: 100%; text-align: left; padding: 6px var(--s-3); font-size: var(--fs-sm); color: var(--accent-ink); }
+.en-sug-all:hover { background: var(--row-hover); }
 .en-sug-e, .en-sug-f { padding: var(--s-2) var(--s-3); font-size: var(--fs-xs); color: var(--text-3); }
 .en-sug-f { border-top: 1px solid var(--border); margin-top: var(--s-1); }
 .en-cho { display: inline-flex; gap: var(--s-2); align-items: center; }
