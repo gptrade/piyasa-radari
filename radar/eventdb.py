@@ -442,12 +442,12 @@ def fetch_buybacks() -> list[dict]:
         return []
 
 
-def update_px(symbols: list[str], old: pd.DataFrame | None, full: bool) -> pd.DataFrame | None:
+def update_px(symbols: list[str], old: pd.DataFrame | None, full: bool, us: set[str] | frozenset = frozenset()) -> pd.DataFrame | None:
     try:
         import yfinance as yf
     except ImportError:
         return old
-    yfs = {s: YF.get(s, s if s.startswith("^") or "." in s else f"{s}.IS") for s in symbols}
+    yfs = {s: YF.get(s, s if s in us or s.startswith("^") or "." in s else f"{s}.IS") for s in symbols}
     frames = _download(yf, yfs, full)
     got = {f.sym.iloc[0] for f in frames}
     for size, wait in ((25, 20), (8, 60)):               # Yahoo hız sınırı: eksikleri küçük parçalarla, bekleyerek yeniden dene
@@ -609,7 +609,7 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
 
     # 3) fiyat: günde bir (İstanbul 18:45 sonrası) ya da ilk kurulumda tam geçmiş
     px = pd.read_parquet(PX) if PX.exists() else None
-    us = sorted({s for s in ev.loc[ev.market == "US", "sym"].dropna() if s and s.isascii() and len(s) <= 6})
+    us = sorted({s for s in ev.loc[ev.market == "US", "sym"].dropna() if s and s.isascii() and len(s) <= 6} - useq)
     wl = sorted({s for s in ev.loc[ev.market == "BIST", "sym"].dropna() if s})
     syms = list(YF) + sorted(set(useq) | set(wl) | set(us))           # endeksler önce: takvim ve getiri onlara bağlı
     loc = now_ts.tz_convert(IST)
@@ -617,9 +617,9 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
     if due:
         full = px is None or px_force
         missing = [] if px is None else sorted(set(syms) - set(px.sym.unique()))
-        px = update_px(syms, px, full=full)
+        px = update_px(syms, px, full=full, us=set(us))
         if missing and not full:
-            px = _merge_new_syms(px, missing)
+            px = _merge_new_syms(px, missing, set(us))
         if px is not None:
             px.to_parquet(PX, index=False, compression="zstd")
             st["px_day"] = loc.date().isoformat()
@@ -665,9 +665,9 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
     return summary
 
 
-def _merge_new_syms(px: pd.DataFrame | None, syms: list[str]) -> pd.DataFrame | None:
+def _merge_new_syms(px: pd.DataFrame | None, syms: list[str], us: set[str]) -> pd.DataFrame | None:
     """Evrene yeni giren semboller için tam geçmiş (artımlı turda yalnız 1 ay gelirdi)."""
-    add = update_px(syms, None, full=True)
+    add = update_px(syms, None, full=True, us=us)
     if add is None:
         return px
     return pd.concat([px, add], ignore_index=True).drop_duplicates(["sym", "date"], keep="last").sort_values(["sym", "date"]).reset_index(drop=True)
