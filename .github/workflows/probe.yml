@@ -20,16 +20,16 @@ jobs:
         run: |
           mkdir -p probe
           pip install -q -r requirements.txt
-          python - > probe/log4.txt 2>&1 <<'PY' || true
-          import os, requests
+          python - > probe/log5.txt 2>&1 <<'PY' || true
+          import os, requests, json
           key = os.environ.get("EVDS_API_KEY")
           base = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
-          for g in ["bie_pkauo", "bie_enfbek"]:
-              r = requests.get(base + f"serieList/type=json&code={g}", headers={"key": key}, timeout=40)
-              for x in r.json():
-                  n = x.get("SERIE_NAME", "")
-                  if any(w in n for w in ("12 Ay", "Yıllık", "Yıl Sonu", "24 Ay")):
-                      print(g, x["SERIE_CODE"], "|", n, "|", x.get("START_DATE"), x.get("END_DATE"))
+          for codes, extra in [("TP.APIFON4", ""), ("TP.PKAUO.S04.D.U-TP.PKAUO.S01.E.U", "&frequency=5")]:
+              r = requests.get(base + f"series={codes}&startDate=01-10-2022&endDate=20-10-2026&type=json{extra}", headers={"key": key}, timeout=60)
+              js = r.json(); items = js.get("items") or []
+              print("==", codes, r.status_code, len(items))
+              json.dump(items, open(f"probe/evds_{codes.split('-')[0]}.json", "w"))
+              print(items[:2], items[-2:])
           PY
       - name: kaydet
         if: always()
