@@ -7,7 +7,7 @@
   const sh = window.shell;
   const { $, $$, esc, fmt, fold } = sh;
   const PAGES = [["bugun", "Bugün"], ["sinyal", "Sinyal Takip"], ["takvim", "Takvim"], ["arastirma", "Araştırma"], ["geri-alim", "Şirket Geri Alım"],
-    ["temel", "Temel Analiz · Genel Bakış"], ["tarama", "Tarama"], ["karsilastir", "Karşılaştır"], ["bankalar", "Türk Bankaları"],
+    ["temel", "Temel Analiz · Genel Bakış"], ["tarama", "Tarama"], ["karsilastir", "Karşılaştır"], ["bankalar", "Türk Bankaları"], ["banka-faiz", "Banka Faiz Duyarlılığı · NIM"],
     ["enerji", "Enerji Kurulu Güç"], ["enerji/harita", "Enerji · Harita"], ["enerji/degerleme", "Enerji · Değerleme"], ["makro", "Makro Veri"],
     ["regulasyon", "Uluslararası Regülasyon Takip"], ["portfoy", "Portföy"], ["metodoloji", "Metodoloji"]];
   const P = { el: null, items: [], i: 0, open: false, from: null };

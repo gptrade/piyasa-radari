@@ -998,6 +998,8 @@
     wrap.append(px, head);
     const fa = faSection(sym, fin);
     if (fa) wrap.append(fa);
+    const br = window.radarBankRate;
+    if (br && fin) { const s = br.section(sym); if (s) wrap.append(s); else if (!br.loaded && /BANK|^(ISCTR|GARAN|TSKB|ICBCT|HALKB|QNBTR)$/.test(sym)) br.ensure(); }
     const vs = valuationSection(sym, p);
     if (vs) wrap.append(vs);
     const an = analystSection(sym, p);
@@ -1590,6 +1592,7 @@
     exportInfo: () => state.feed ? `Filtrelenmiş görünüm: ${fmt.int(filtered().length)} kayıt` : "",
   });
   addEventListener("minechange", () => { if (state.feed) { state.limit = PAGE; render(); } });
+  addEventListener("radar:bankrate", () => { if (state.panel === "ticker" && state.panelTk && !$("#sidePanel").hidden && window.radarBankRate?.forTicker(state.panelTk)) openTicker(state.panelTk, state.panelFrom); });
   addEventListener("radar:bb", () => { if (state.panel === "ticker" && state.panelTk && !$("#sidePanel").hidden) openTicker(state.panelTk, state.panelFrom); });
   window.radar = { get state() { return state; }, ready: null, poll: () => poll(), openTicker: (sym, from) => openTicker(sym, from), openItem: (id, back) => openItem(id, back),
     focusTicker(sym) { if (!state.feed) return; state.ticker = sym; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE;

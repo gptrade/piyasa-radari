@@ -1505,3 +1505,33 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .tr-px { position: absolute; top: 0; width: 3px; height: 22px; margin-left: -1.5px; background: var(--text); border-radius: 1px; }
 .tr-leg { display: flex; flex-wrap: wrap; gap: 2px var(--s-3); font-size: var(--fs-xs); }
 @media (max-width: 767px) { .fa-mini { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ─────────────── Banka faiz duyarlılığı */
+#brBody { display: grid; gap: var(--s-4); }
+.br-sl { display: flex; align-items: center; gap: var(--s-3); }
+.br-sl input { flex: 1; accent-color: var(--accent); }
+.br-sl output { min-width: 96px; text-align: right; font-weight: var(--fw-semibold); }
+.br-grid2 { display: grid; gap: var(--s-4); grid-template-columns: minmax(0, 1fr); }
+.br-tbl td { white-space: nowrap; }
+.br-tbl tbody tr { cursor: pointer; }
+.br-tbl tbody tr.is-sel > td { background: var(--accent-soft); }
+.br-nm { display: block; font-size: var(--fs-2xs); max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.br-dn { min-width: 150px; }
+.br-dn > span:first-child { font-weight: var(--fw-semibold); }
+.br-ci { position: relative; display: block; height: 8px; margin: 4px 0 2px; }
+.br-ci0 { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--border-strong); }
+.br-cir { position: absolute; top: 2px; height: 4px; border-radius: 2px; background: var(--surface-2); outline: 1px solid var(--border-strong); }
+.br-cid { position: absolute; top: 0; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: currentColor; }
+.br-rg { display: block; font-size: var(--fs-2xs); }
+.br-ch { width: 100%; height: auto; display: block; }
+.br-grid { stroke: var(--border); stroke-width: 1; }
+.br-ax { font: 11px var(--font-mono); fill: var(--text-3); }
+.br-ch { max-height: 320px; }
+.br-leg { display: flex; flex-wrap: wrap; gap: var(--s-3); font-size: var(--fs-xs); color: var(--text-2); margin-top: var(--s-2); }
+.br-leg i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.br-leg i.dash { background: repeating-linear-gradient(90deg, var(--text-3) 0 4px, transparent 4px 7px); }
+.br-meth summary { cursor: pointer; }
+.br-meth ul { margin: var(--s-3) 0 0; padding-left: 1.1em; display: grid; gap: var(--s-2); font-size: var(--fs-sm); color: var(--text-2); line-height: 1.5; }
+.br-foot { padding: 0 var(--s-4) var(--s-4); }
+.seg-sm button { min-height: 24px; height: 24px; padding: 0 8px; font-size: var(--fs-2xs); }
+.br-warn { margin: 0 var(--s-4) var(--s-3); padding: var(--s-2) var(--s-3); border-radius: var(--r-md); background: var(--warn-soft); border: 1px solid var(--warn-line); font-size: var(--fs-xs); color: var(--text-2); }
