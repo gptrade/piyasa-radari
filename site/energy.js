@@ -118,8 +118,23 @@
   }
   const srcDot = s => `<i class="en-dot" style="background:${color(s)}"></i>${esc(S.doc.source_names[s] || s)}`;
   const stTag = u => u.st === "operating" ? "" : ` <span class="tag ${u.st === "construction" ? "up" : ""}">${esc(S.doc.status_names[u.st] || u.st)}</span>`;
-  const seg = (id, label, opts, cur) => `<div class="seg en-seg" role="radiogroup" aria-label="${label}" id="${id}">${opts.map(([k, l, n]) =>
-    `<button type="button" role="radio" data-v="${k}" aria-checked="${cur === k}">${l}${n != null ? ` <span class="n">${n}</span>` : ""}</button>`).join("")}</div>`;
+  const seg = (id, label, opts, cur) => `<div class="seg en-seg" role="radiogroup" aria-label="${label}" id="${id}">${opts.map(([k, l, n, tip]) =>
+    `<button type="button" role="radio" data-v="${k}" aria-checked="${cur === k}"${n === 0 && cur !== k ? ` disabled aria-disabled="true"` : ""}${tip ? ` data-tip="${esc(tip)}"` : ""}>${l}${n != null ? ` <span class="n">${fmt.int(n)}</span>` : ""}</button>`).join("")}</div>`;
+  // Kapsam düğmelerindeki sayılar o anki süzgeçlere (grup, kaynak, durum, arama) göre: seçili grubun yurt dışı santrali yoksa 0 ve pasif
+  const scopeCount = sc => { const keep = S.scope; S.scope = sc; const n = unitsFiltered().length; S.scope = keep; return n; };
+  const scopeOpts = labels => { const g = S.group && S.doc.byKey.get(S.group);
+    return labels.map(([k, l]) => { const n = scopeCount(k);
+      return [k, l, n, n ? "" : g ? `${g.name}: bu kapsamda santral yok` : "Bu süzgeçlerle santral yok"]; }); };
+  function emptyNote() {
+    const n = unitsFiltered().length;
+    if (n) return "";
+    const g = S.group && S.doc.byKey.get(S.group);
+    const where = S.scope === "ab" ? "yurt dışında" : S.scope === "tr" ? "Türkiye'de" : "";
+    const st = S.st === "op" ? "işletmede" : S.st === "pipe" ? "yatırım hattında" : "";
+    return `<div class="en-map-empty" role="status"><b>${g ? esc(g.name) + " için " : ""}${[where, st].filter(Boolean).join(" ")} santral yok</b>
+      <span>${g && S.scope === "ab" ? "Bu grubun GEM verisinde Türkiye dışında santrali bulunmuyor." : "Süzgeçleri değiştir."}</span>
+      ${S.scope !== "tr" && scopeCount("tr") ? `<button type="button" class="link-btn" data-scope="tr">Türkiye'yi göster</button>` : ""}</div>`;
+  }
   function groupChip() {
     const g = S.group && S.doc.byKey.get(S.group);
     return g ? `<div class="en-chip-row"><span class="en-gchip">Grup: <b>${esc(g.name)}</b><button type="button" class="en-x" id="enGroupClear" aria-label="Grup süzgecini kaldır">×</button></span></div>` : "";
@@ -338,15 +353,15 @@
       <div class="en-pop-f">${u.u ? `<a href="${esc(u.u)}" target="_blank" rel="noopener">GEM.wiki ↗</a>` : ""}${os[0] ? `<button type="button" class="link-btn" data-grp="${esc(os[0][0].key)}">${esc(os[0][0].name)} santralleri</button>` : ""}</div></div>`;
   }
   function mapTab() {
-    const d = S.doc, ab = d.units.filter(u => u.ab).length;
+    const d = S.doc;
     return `${groupChip()}<section class="card card-flush en-mapcard" aria-labelledby="enMapT">
       <div class="card-head"><h2 class="card-title" id="enMapT">Santral haritası</h2><span class="card-meta" id="enMapN"></span></div>
       <div class="en-map-ctl">
-        ${seg("enScope", "Kapsam", [["tr", "Türkiye"], ["ab", "Yurt dışı yatırımlar", ab], ["all", "Dünya"]], S.scope)}
+        ${seg("enScope", "Kapsam", scopeOpts([["tr", "Türkiye"], ["ab", "Yurt dışı yatırımlar"], ["all", "Dünya"]]), S.scope)}
         ${seg("enSt", "Durum", [["op", "İşletmede"], ["pipe", "Yatırım hattı"], ["all", "Tümü"]], S.st)}
         ${S.scope === "tr" ? seg("enView", "Görünüm", [["units", "Santraller"], ["prov", "İl toplamı"]], S.mapView) : ""}
       </div>
-      <div id="enMap" class="en-map" role="region" aria-label="Santral haritası; ayrıntı için Santraller sekmesindeki tabloyu kullan"></div>
+      <div class="en-map-wrap"><div id="enMapEmpty">${emptyNote()}</div><div id="enMap" class="en-map" role="region" aria-label="Santral haritası; ayrıntı için Santraller sekmesindeki tabloyu kullan"></div></div>
       <div class="en-map-leg">${d.sources.filter(s => d.national.src[s] || d.national.pipe[s]).map(s => `<span>${srcDot(s)}</span>`).join("")}
         <span class="en-leg-sz"><i style="width:7px;height:7px"></i><i style="width:14px;height:14px"></i><i style="width:24px;height:24px"></i>boyut = MW</span><span><i class="en-ring"></i>içi boş = yapım/planlama</span><span id="enProvLeg"></span></div>
     </section>
@@ -456,7 +471,7 @@
     const th = (c, l, num) => `<th scope="col" class="${num ? "num" : ""}" aria-sort="${c === k ? (dir > 0 ? "ascending" : "descending") : "none"}"><button type="button" class="th-sort" data-uc="${c}">${l}<span class="arr" aria-hidden="true">${c === k ? (dir > 0 ? "▲" : "▼") : "▼"}</span></button></th>`;
     return `${groupChip()}<section class="card card-flush" aria-labelledby="enUT">
       <div class="card-head"><h2 class="card-title" id="enUT">Santraller ve üniteler (${fmt.int(all.length)})</h2><span class="card-meta">${mw(tot)} MW · satıra tıkla: haritada aç</span></div>
-      <div class="en-map-ctl">${seg("enScope", "Kapsam", [["tr", "Türkiye"], ["ab", "Yurt dışı"], ["all", "Tümü"]], S.scope)}${seg("enSt", "Durum", [["op", "İşletmede"], ["pipe", "Yatırım hattı"], ["all", "Tümü"]], S.st)}</div>
+      <div class="en-map-ctl">${seg("enScope", "Kapsam", scopeOpts([["tr", "Türkiye"], ["ab", "Yurt dışı"], ["all", "Tümü"]]), S.scope)}${seg("enSt", "Durum", [["op", "İşletmede"], ["pipe", "Yatırım hattı"], ["all", "Tümü"]], S.st)}</div>
       <div style="padding:0 var(--s-4) var(--s-3)">${mixBar(bySrc, tot)}</div>
       <div class="tbl-scroll en-scroll"><table class="tbl en-add en-units"><thead><tr>${th("n", "Santral / ünite")}<th scope="col">Sahipler</th>${th("s", "Kaynak")}${th("mw", "MW", 1)}${th("st", "Durum")}${th("y", "Başlangıç", 1)}${th("p", "İl / ülke")}</tr></thead><tbody>
       ${shown.map(u => `<tr class="row" data-u="${u.i}" tabindex="0"><td class="en-nm"><span>${esc(u.n)}</span></td><td class="en-own">${ownerLabel(u.i)}</td><td>${srcDot(u.s)}</td>
@@ -570,6 +585,7 @@
     if (keepMap) {                                                   // haritayı yeniden kurma: yalnız işaretleri ve kontrolleri yenile
       const ctl = $(".en-map-ctl"), tmp = document.createElement("div"); tmp.innerHTML = mapTab();
       ctl.replaceWith(tmp.querySelector(".en-map-ctl"));
+      $("#enMapEmpty").innerHTML = emptyNote();
       const chip = $("#enBody .en-chip-row"), nchip = tmp.querySelector(".en-chip-row");
       if (chip) chip.remove(); if (nchip) $(".en-mapcard").before(nchip);
       Map_.draw();
@@ -734,6 +750,8 @@
     if (gb) { e.preventDefault(); return showOnMap({ group: gb.dataset.grp }); }
     const gu = e.target.closest("[data-grpu]");
     if (gu) { S.group = gu.dataset.grpu; S.st = "all"; S.scope = "all"; S.ulimit = UPAGE; return sh.go("enerji", { param: "santraller" }); }
+    const sb = e.target.closest("[data-scope]");
+    if (sb) { S.scope = sb.dataset.scope; return render(); }
     const ab = e.target.closest("[data-abroad]");
     if (ab) { e.preventDefault(); S.scope = "ab"; S.group = ""; return sh.go("enerji", { param: "harita" }); }
     const ul = e.target.closest(".en-ulink");

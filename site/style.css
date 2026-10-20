@@ -1358,3 +1358,9 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .en-cho { display: inline-flex; gap: var(--s-2); align-items: center; }
 .en-cho span { display: inline-flex; align-items: center; gap: 4px; }
 .en-cho i { width: 14px; height: 10px; border-radius: 2px; border: 1px solid var(--border); }
+
+.en-map-wrap { position: relative; }
+.en-map-empty { position: absolute; z-index: 500; top: 50%; left: 50%; transform: translate(-50%, -50%); display: grid; gap: 4px; justify-items: center; text-align: center;
+  max-width: min(420px, 86%); padding: var(--s-4) var(--s-5); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow-2); font-size: var(--fs-sm); }
+.en-map-empty span { color: var(--text-3); }
+.seg button:disabled { opacity: .45; cursor: not-allowed; }
