@@ -54,6 +54,7 @@
     bugun: { title: "Bugün", sub: "Günün öne çıkanları · sinyaller, takvim, portföy ve aracı kurum notları", view: "#view-bugun", market: false },
     makro: { title: "Makro Veri", sub: "Haftalık makroekonomik göstergeler · ALCO paneli", view: "#view-makro", market: false },
     bankalar: { title: "Türk Bankaları", sub: "BDDK solo verileriyle bilanço yapısı, fonlama, likidite ve kredi portföyü · ayrı panel", view: "#view-bankalar", market: false },
+    "banka-faiz": { title: "Banka Faiz Duyarlılığı", sub: "Politika faizindeki değişimin bankaların net faiz marjına ve kârına 12 aylık etkisi · KAP tabloları + TCMB EVDS", view: "#view-banka-faiz", market: false },
     regulasyon: { title: "Uluslararası Regülasyon Takip", sub: "Risk yönetimi ve model validasyonu düzenlemeleri · BCBS, Türkiye, Azerbaycan, Körfez ve Orta Doğu", view: "#view-regulasyon", market: false },
     enerji: { title: "Enerji Kurulu Güç", sub: "Türkiye elektrik üretim şirketleri ve grupları: kaynak bazında kurulu güç, sahiplik ve yatırım hattı · GEM + EPİAŞ", view: "#view-enerji", market: false },
     takvim: { title: "Takvim", sub: "Faiz kararları, enflasyon verileri, bilançolar, temettü ve vade sonları · İstanbul saati", view: "#view-takvim", market: true },
@@ -67,7 +68,7 @@
     metodoloji: { title: "Metodoloji", sub: "Temel analiz verileri, hesaplar ve puanlar nasıl üretiliyor", view: "#view-metodoloji", market: false },
     karsilastir: { title: "Karşılaştır", sub: "Seçtiğin şirketlerin kategori puanları, oranları ve eğilimleri", view: "#view-karsilastir", market: false },
   };
-  const ALIAS = { "bugün": "bugun", today: "bugun", ozet: "bugun", "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", bankalar: "bankalar", banka: "bankalar", "türk-bankaları": "bankalar", enerji: "enerji", energy: "enerji", "regülasyon": "regulasyon", regulation: "regulasyon", "kurulu-guc": "enerji", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
+  const ALIAS = { "bugün": "bugun", today: "bugun", ozet: "bugun", "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", bankalar: "bankalar", banka: "bankalar", "türk-bankaları": "bankalar", "faiz-duyarliligi": "banka-faiz", nim: "banka-faiz", enerji: "enerji", energy: "enerji", "regülasyon": "regulasyon", regulation: "regulasyon", "kurulu-guc": "enerji", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
   const badgeIds = {};                            // route → rozetteki kayıt kimlikleri
   function markBadgeSeen(route) {
     if (!badgeIds[route]) return;

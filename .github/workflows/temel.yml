@@ -48,6 +48,13 @@ jobs:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python -m radar.fundamentals 240 3 390
 
+      - name: Banka faiz duyarlılığı
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python -m radar.fundamentals.bankrate
+
       - name: Veriyi fin dalına kaydet
         if: always()
         run: |
