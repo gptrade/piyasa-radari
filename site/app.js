@@ -29,7 +29,7 @@
     open: new Set(), saved: new Set(store.get("saved", [])), limit: PAGE, sel: null, tkSort: { k: "n", d: -1 }, stripAll: false,
     panel: null, panelTk: null, panelFrom: null,
     seenBefore: null, reasons: new Map(),
-    card: null, karne: Object.assign({ h: 1, w: "90", dim: "kind" }, store.get("radar.karne", {})),
+    card: null, karne: Object.assign({ h: 1, w: "90", dim: "kind", ev: "strong" }, store.get("radar.karne", {})),
   };
   const market = () => sh.market;
 
@@ -839,6 +839,25 @@
     c.dataset.tip = act ? "Tüm filtreleri, aramayı ve hisse odağını temizle" : "";
     $("#hideNoise").setAttribute("aria-pressed", String(state.hideNoise));
   }
+  // Duygu sayaçları: o anki süzgeçlerle (yön süzgeci hariç) olumlu / olumsuz / nötr / AI yok; tıklayınca yöne süzer
+  function sentBar() {
+    const box = $("#sentBar");
+    if (!box) return;
+    if (state.view === "karne" || state.view === "tickers") { box.hidden = true; return; }
+    const keep = state.col.dir; state.col.dir = null;
+    const its = filtered(false); state.col.dir = keep;
+    const c = { bullish: 0, bearish: 0, neutral: 0, none: 0 };
+    its.forEach(it => { const s = it.analysis?.sentiment; c[s in c ? s : "none"]++; });
+    const tot = its.length || 1, dirN = c.bullish + c.bearish, net = dirN ? (c.bullish - c.bearish) / dirN : null;
+    const B = [["bullish", "Olumlu", "up", "▲"], ["bearish", "Olumsuz", "down", "▼"], ["neutral", "Nötr", "flat", "—"], ["none", "AI yok", "na", "·"]];
+    box.hidden = false;
+    box.innerHTML = `<span class="sb-l">Duygu</span>
+      ${B.filter(([k]) => c[k] || keep === k).map(([k, l, cls, g]) => `<button type="button" class="chip sb-chip ${cls}" data-dir="${k}" aria-pressed="${keep === k}" data-tip="${esc(`${l}: ${fmt.int(c[k])} kayıt (%${fmt.num(c[k] / tot * 100, 0)}) · tıkla: yalnız bunları göster`)}">
+        <span class="sb-g" aria-hidden="true">${g}</span>${l} <span class="n">${fmt.int(c[k])}</span></button>`).join("")}
+      <span class="sb-bar" role="img" aria-label="${esc(B.map(([k, l]) => `${l} ${c[k]}`).join(", "))}">${B.filter(([k]) => c[k]).map(([k, , cls]) => `<span class="${cls}" style="flex:${c[k]}"></span>`).join("")}</span>
+      ${net != null ? `<span class="sb-net" data-tip="Net duygu = (olumlu − olumsuz) ÷ (olumlu + olumsuz), görünen kayıtlarda">net <b class="${net > 0.05 ? "up" : net < -0.05 ? "down" : "flat"}">${net > 0 ? "+" : net < 0 ? "−" : ""}%${fmt.num(Math.abs(net) * 100, 0)}</b></span>` : ""}`;
+    $$(".sb-chip", box).forEach(b => b.onclick = () => { const k = b.dataset.dir; state.col.dir = state.col.dir === k ? null : k; state.limit = PAGE; render(); $(`#sentBar .sb-chip[data-dir="${k}"]`)?.focus(); });
+  }
   function clearAll() {
     state.types.clear(); state.col = {}; state.q = ""; $("#q").value = "";
     state.ticker = null; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE;
@@ -1245,6 +1264,40 @@
       <span class="hb-ci" style="left:${lo}%;width:${hi - lo}%"></span><span class="hb-fill ${h >= 50 ? "up" : "down"}" style="left:${l}%;width:${w}%"></span><span class="hb-mid"></span></span>
       <span class="hb-v">%${fmt.num(h, 0)}</span>`;
   }
+  // Olay çalışması: sinyalden sonra 0…20 seans ortalama fazla getiri yolu (yöne göre), %95 güven aralığı
+  function eventChart(ev) {
+    const K = state.karne, e = ev?.[K.ev === "all" ? "all" : "strong"];
+    const ctl = `<div class="seg" role="radiogroup" aria-label="Sinyal kümesi" data-k="ev">${[["strong", "Güçlü sinyaller"], ["all", "Tüm yönlü sinyaller"]].map(([v, l]) =>
+      `<button type="button" role="radio" data-v="${v}" aria-checked="${(K.ev || "strong") === v}">${l}</button>`).join("")}</div>`;
+    const head = `<div class="k-ev-h"><h3 class="d-sub k-sub" style="margin:0">Sinyalden sonra ne oldu? · ortalama fazla getiri yolu</h3>${ctl}</div>`;
+    if (!e || (e.bull.m.length < 3 && e.bear.m.length < 3))
+      return `<section class="k-ev">${head}<p class="k-note">Yol grafiği için yeterli notlanmış sinyal yok (her seans için en az 3 sinyal gerekir).</p></section>`;
+    const W = 860, H = 272, P = { l: 48, r: 96, t: 14, b: 44 }, N = 20;
+    const vals = [...e.bull.lo, ...e.bull.hi, ...e.bear.lo, ...e.bear.hi, 0];
+    let y0 = Math.min(...vals), y1 = Math.max(...vals); const pad = (y1 - y0) * 0.08 || 1; y0 -= pad; y1 += pad;
+    const X = k => P.l + k / N * (W - P.l - P.r), Y = v => P.t + (y1 - v) / (y1 - y0) * (H - P.t - P.b);
+    const step = (y1 - y0) > 8 ? 2 : (y1 - y0) > 4 ? 1 : 0.5, ticks = []; for (let t = Math.ceil(y0 / step) * step; t <= y1; t += step) ticks.push(+t.toFixed(2));
+    const line = a => a.map((v, k) => `${k ? "L" : "M"}${X(k).toFixed(1)},${Y(v).toFixed(1)}`).join("");
+    const band = s => s.hi.length > 1 ? `M${s.hi.map((v, k) => `${X(k).toFixed(1)},${Y(v).toFixed(1)}`).join("L")}L${s.lo.map((v, k) => [k, v]).reverse().map(([k, v]) => `${X(k).toFixed(1)},${Y(v).toFixed(1)}`).join("L")}Z` : "";
+    const ser = [["bull", "Olumlu", "up"], ["bear", "Olumsuz", "down"]].filter(([k]) => e[k].m.length > 1);
+    const endLbl = ser.map(([k, l, c]) => { const m = e[k].m, last = m.length - 1;
+      return { y: Y(m[last]), x: X(last), t: `${l} ${m[last] > 0 ? "+" : ""}${fmt.num(m[last], 1)}%`, c }; }).sort((a, b) => a.y - b.y);
+    if (endLbl.length === 2 && endLbl[1].y - endLbl[0].y < 14) { endLbl[0].y -= 7; endLbl[1].y += 7; }
+    const hov = Array.from({ length: N + 1 }, (_, k) => { const tip = `<b>${k}. seans</b>` + ser.map(([key, l]) => e[key].m[k] != null ? `<br>${l}: ${e[key].m[k] > 0 ? "+" : ""}${fmt.num(e[key].m[k], 2)}% <span class='t3'>(%95: ${fmt.num(e[key].lo[k], 1)} … ${fmt.num(e[key].hi[k], 1)} · n=${e[key].n[k]})</span>` : "").join("");
+      return `<rect x="${X(k) - (W - P.l - P.r) / N / 2}" y="${P.t}" width="${(W - P.l - P.r) / N}" height="${H - P.t - P.b}" class="k-ev-hit" data-tip="${esc(tip)}"/>`; }).join("");
+    return `<section class="k-ev">${head}
+      <svg viewBox="0 0 ${W} ${H}" class="k-ev-svg" role="img" aria-label="Olumlu ve olumsuz sinyallerden sonraki 20 seans boyunca endekse göre ortalama fazla getiri">
+        ${ticks.map(t => `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(t)}" y2="${Y(t)}" class="${t === 0 ? "z" : "g"}"/><text x="${P.l - 6}" y="${Y(t) + 4}" text-anchor="end">${t > 0 ? "+" : ""}${fmt.num(t, step < 1 ? 1 : 0)}%</text>`).join("")}
+        ${[0, 1, 5, 10, 15, 20].map(k => `<text x="${X(k)}" y="${H - P.b + 16}" text-anchor="middle">${k}</text>`).join("")}
+        <text x="${(W - P.r + P.l) / 2}" y="${H - 4}" text-anchor="middle" class="ax">yayından sonraki seans</text>
+        ${ser.map(([k, , c]) => `<path d="${band(e[k])}" class="band ${c}"/>`).join("")}
+        ${ser.map(([k, , c]) => `<path d="${line(e[k].m)}" class="ln ${c}"/>`).join("")}
+        ${ser.map(([k, , c]) => [1, 5, 20].filter(i => e[k].m[i] != null).map(i => `<circle cx="${X(i)}" cy="${Y(e[k].m[i])}" r="3.5" class="pt ${c}"/>`).join("")).join("")}
+        ${endLbl.map(l => `<text x="${l.x + 8}" y="${l.y + 4}" class="lbl ${l.c}">${esc(l.t)}</text>`).join("")}
+        ${hov}
+      </svg>
+      <p class="k-note">Çizgi: o seansa kadar endekse göre ortalama fazla getiri (yön ayarı yok: olumlu sinyalde çizginin yukarı, olumsuzda aşağı gitmesi beklenir). Gölge: %95 güven aralığı; sıfırı kesiyorsa fark istatistiksel olarak belirsiz. Örnek: olumlu ${fmt.int(e.bull.n[0])}, olumsuz ${fmt.int(e.bear.n[0])} sinyal; uzak seanslarda örnek azalır.</p></section>`;
+  }
   function renderKarne() {
     const box = $("#karneWrap"), c = state.card, K = state.karne;
     if (!c) {
@@ -1255,7 +1308,7 @@
     const seg = (name, opts, cur, lbl) => `<div class="seg" role="radiogroup" aria-label="${lbl}" data-k="${name}">${Object.entries(opts).map(([v, l]) =>
       `<button type="button" role="radio" data-v="${v}" aria-checked="${String(v) === String(cur)}">${l}</button>`).join("")}</div>`;
     let html = `<div class="k-tools">
-        <div class="k-ctl"><span aria-hidden="true">Ufuk</span>${seg("h", { 1: "1 seans", 5: "5 seans" }, K.h, "Ufuk")}</div>
+        <div class="k-ctl"><span aria-hidden="true">Ufuk</span>${seg("h", { 1: "1 seans", 5: "5 seans", 20: "20 seans" }, K.h, "Ufuk")}</div>
         <div class="k-ctl"><span aria-hidden="true">Dönem</span>${seg("w", K_WIN, K.w, "Dönem")}</div>
         <label class="k-ctl">Kırılım <select id="kDim">${Object.entries(K_DIM).map(([k, l]) => `<option value="${k}"${k === K.dim ? " selected" : ""}>${l}</option>`).join("")}</select></label>
       </div>
@@ -1264,7 +1317,7 @@
         <div class="kpi"><span class="kpi-label">İsabet</span><span class="kpi-value">${tot.n ? `%${fmt.num(tot.hit, 0)}` : "—"}</span><span class="kpi-sub">${tot.n ? `±${fmt.num(tot.moe, 0)} puan · şans %50` : "şans %50"}</span></div>
         <div class="kpi"><span class="kpi-label">Ort. fazla getiri</span><span class="kpi-value">${tot.n ? kPct(tot.ex, 2) : "—"}</span><span class="kpi-sub" data-tip="Yön ayarlı: olumsuz sinyalde düşüş kazanç sayılır">endekse göre</span></div>
         <div class="kpi"><span class="kpi-label">Ort. ham getiri</span><span class="kpi-value">${tot.n ? kPct(tot.raw, 2) : "—"}</span><span class="kpi-sub">endeks düşülmeden</span></div>
-      </div>`;
+      </div>${eventChart(w.event)}`;
     const groups = (w.dims[K.dim] || []);
     const graded = groups.filter(g => g[hk]?.n), waiting = groups.filter(g => !g[hk]?.n);
     if (!tot.n) {
@@ -1285,14 +1338,14 @@
     }
     const recent = (c.recent || []).filter(r => market() === "ALL" || r.m === market()).slice(0, 12);
     if (recent.length) html += `<h3 class="d-sub k-sub">Son notlanan sinyaller</h3><div class="tbl-scroll"><table class="tbl k-tbl k-recent">
-      <thead><tr><th scope="col">Tarih</th><th scope="col">Hisse</th><th scope="col">Sinyal</th><th scope="col" class="num">1 seans</th><th scope="col" class="num">5 seans</th><th scope="col" class="num">Sonuç</th></tr></thead><tbody>
+      <thead><tr><th scope="col">Tarih</th><th scope="col">Hisse</th><th scope="col">Sinyal</th><th scope="col" class="num">1 seans</th><th scope="col" class="num">5 seans</th><th scope="col" class="num">20 seans</th><th scope="col" class="num">Sonuç</th></tr></thead><tbody>
       ${recent.map(r => { const x = r["x" + K.h], ok = x == null ? null : r.d * x > 0; return `<tr>
         <td class="k-d">${fmt.date(r.ts)}</td><td><button type="button" class="tk-link" data-sym="${esc(r.t)}">${esc(r.t)}</button></td>
         <td class="k-t"><span class="k-dir ${dirCls(r.d)}">${glyph(r.d)}</span>${esc(r.title)}<span class="k-meta">${esc(r.kind)}${r.c ? ` · güven %${r.c}` : ""}</span></td>
-        <td class="num">${r.x1 == null ? "—" : kPct(r.x1, 1)}</td><td class="num">${r.x5 == null ? "—" : kPct(r.x5, 1)}</td>
+        <td class="num">${r.x1 == null ? "—" : kPct(r.x1, 1)}</td><td class="num">${r.x5 == null ? "—" : kPct(r.x5, 1)}</td><td class="num">${r.x20 == null ? "—" : kPct(r.x20, 1)}</td>
         <td class="num">${ok == null ? `<span class="t3">bekliyor</span>` : ok ? `<span class="up" aria-label="isabetli">✓</span>` : `<span class="down" aria-label="isabetsiz">✕</span>`}</td></tr>`; }).join("")}
       </tbody></table></div>`;
-    html += `<p class="k-note">Yöntem: yönlü sinyaller (olumlu/olumsuz) yayın anındaki fiyatla arşivlenir; aynı hisse, olay ve yön 12 saat içinde bir kez sayılır. Getiri, yayından sonraki 1. ve 5. tam seans kapanışına kadar; fazla getiri aynı aralıkta ${market() === "US" ? "S&P 500" : market() === "BIST" ? "BIST 100" : "BIST 100 / S&P 500"} getirisi düşülerek hesaplanır. Son 180 gün tutulur. Geçmiş isabet gelecek getirinin garantisi değildir.</p>`;
+    html += `<p class="k-note">Yöntem: yönlü sinyaller (olumlu/olumsuz) yayın anındaki fiyatla arşivlenir; aynı hisse, olay ve yön 12 saat içinde bir kez sayılır. Getiri, yayından sonraki 1., 5. ve 20. tam seans kapanışına kadar; fazla getiri aynı aralıkta ${market() === "US" ? "S&P 500" : market() === "BIST" ? "BIST 100" : "BIST 100 / S&P 500"} getirisi düşülerek hesaplanır. Son 180 gün tutulur. Geçmiş isabet gelecek getirinin garantisi değildir.</p>`;
     box.innerHTML = html;
     $$(".seg", box).forEach(sg => sh.radioKeys(sg));
   }
@@ -1343,7 +1396,7 @@
   }
   function render() {
     if (!state.feed) return;
-    counts(); chips(); banner(); head(); renderTable();
+    counts(); chips(); sentBar(); banner(); head(); renderTable();
     if (sh.route === "sinyal") { renderDigest(); renderHeatmap(); renderBubbles(); sh.syncActions(); }
   }
   function renderLoading() {

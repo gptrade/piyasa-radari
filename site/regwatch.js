@@ -7,6 +7,8 @@
   const { $, $$, esc, fmt, fold } = sh;
   const SRC = "data/regulasyon/regwatch.json";
   const PERIODS = { 30: "30G", 90: "90G", 180: "6A", 365: "1Y" };
+  const STATUS = { yururlukte: "yürürlükte", degisti: "değiştirildi", kaldirildi: "yürürlükten kalktı" };
+  const today = () => new Date().toISOString().slice(0, 10);
   const S = { doc: null, loaded: false, loading: false, error: null, missing: false, days: 90, reg: "", topic: "", type: "", q: "", limit: 40 };
 
   async function load(force = false) {
@@ -47,11 +49,13 @@
     const d = S.doc, shown = rows.slice(0, S.limit);
     return `<section class="card card-flush" aria-labelledby="rgTblT"><div class="card-head"><h2 class="card-title" id="rgTblT">Detaylı bulgular (${rows.length})</h2>
       <span class="card-meta">yayın tarihine göre · başlık kurumun sayfasına gider</span></div>
-      <div class="tbl-scroll"><table class="tbl rg-tbl"><thead><tr><th scope="col">Kurum / ülke</th><th scope="col">Yayın tarihi</th><th scope="col">Doküman başlığı</th><th scope="col">Türü</th><th scope="col">Konular</th></tr></thead><tbody>
+      <div class="tbl-scroll"><table class="tbl rg-tbl"><thead><tr><th scope="col">Kurum / ülke</th><th scope="col">Yayın tarihi</th><th scope="col" data-tip="Kurumun sayfasında ya da başlıkta verilen yürürlük tarihi ya da durumu; yoksa boş">Yürürlük</th><th scope="col">Doküman başlığı</th><th scope="col">Türü</th><th scope="col">Konular</th></tr></thead><tbody>
       ${shown.map(it => { const r = d.regById[it.reg] || {}; return `<tr>
         <td class="rg-reg"><b>${esc(r.name || it.reg)}</b><span class="meta">${esc(r.country || "")}</span></td>
         <td class="rg-date">${it.date && !it.date_est ? esc(fmt.date(it.date + "T12:00:00Z", { day: "numeric", month: "short", year: "numeric" })) : `<span class="meta" data-tip="Sayfada yayın tarihi yok; ilk görüldüğü gün">${esc(fmt.date((it.date ? it.date + "T12:00:00Z" : it.first_seen), { day: "numeric", month: "short", year: "numeric" }))}*</span>`}
-          ${it.effective ? `<span class="rg-eff" data-tip="Kurumun sayfasında verilen yürürlük tarihi">yürürlük ${esc(fmt.date(it.effective + "T12:00:00Z", { day: "numeric", month: "short", year: "numeric" }))}</span>` : ""}</td>
+</td>
+        <td class="rg-date">${it.effective ? `<span class="${it.effective > today() ? "rg-eff" : ""}" data-tip="${it.effective > today() ? "Henüz yürürlükte değil" : "Yürürlüğe girdi"}">${esc(fmt.date(it.effective + "T12:00:00Z", { day: "numeric", month: "short", year: "numeric" }))}</span>` : ""}
+          ${it.status ? `<span class="tag ${it.status === "yururlukte" ? "up" : it.status === "kaldirildi" ? "down" : "warn"}">${esc(STATUS[it.status] || it.status)}</span>` : it.effective ? "" : `<span class="meta">—</span>`}</td>
         <td class="rg-title"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)} ↗</a>${it.title_tr && it.title_tr !== it.title ? `<span class="rg-tr-title">${esc(it.title_tr)}</span>` : ""}${it.summary ? `<p class="rg-s">${esc(it.summary)}</p>` : ""}</td>
         <td><span class="tag ${it.type === "taslak" ? "warn" : it.type === "nihai" ? "up" : ""}">${esc(d.types[it.type] || it.type)}</span></td>
         <td class="rg-topics">${(it.topics || []).map(k => `<span class="rg-chip">${esc(d.topicById[k] || k)}</span>`).join("")}</td></tr>`; }).join("")}
@@ -94,7 +98,7 @@
 
   function exportCSV() {
     const ex = window.radarExport, d = S.doc;
-    const rows = filtered().map(it => ({ kurum: d.regById[it.reg]?.name || it.reg, ulke: d.regById[it.reg]?.country || "", yayin_tarihi: it.date || "", tarih_tahmini: it.date_est ? "evet" : "", yururluk: it.effective || "", baslik: it.title,
+    const rows = filtered().map(it => ({ kurum: d.regById[it.reg]?.name || it.reg, ulke: d.regById[it.reg]?.country || "", yayin_tarihi: it.date || "", tarih_tahmini: it.date_est ? "evet" : "", yururluk: it.effective || "", durum: STATUS[it.status] || "", baslik: it.title,
       baslik_tr: it.title_tr || "", tur: d.types[it.type] || it.type, konular: (it.topics || []).map(k => d.topicById[k] || k).join("; "), ozet: it.summary || "", link: it.url, ilk_gorulme: it.first_seen }));
     ex.download(`regulasyon_${S.days}g_${ex.stamp()}.csv`, ex.toCSV(rows), "text/csv;charset=utf-8");
   }

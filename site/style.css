@@ -1433,4 +1433,30 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .en-ab-cn { display: block; margin-top: 2px; font-size: var(--fs-xs); color: var(--text-3); white-space: normal; line-height: 1.35; }
 .en-ab .en-mixc { min-width: 110px; }
 
-.rg-eff { display: block; margin-top: 2px; font-size: var(--fs-xs); color: var(--warn); white-space: nowrap; }
+.rg-eff { color: var(--warn); font-weight: var(--fw-semibold); }
+
+/* ── Karne: olay çalışması */
+.k-ev { margin: var(--s-4) 0; padding: var(--s-3) var(--s-4); border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface); }
+.k-ev-h { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-2); }
+.k-ev-svg { width: 100%; height: auto; display: block; font: var(--fs-2xs) var(--font-mono); }
+.k-ev-svg text { fill: var(--text-3); }
+.k-ev-svg .g { stroke: var(--grid); } .k-ev-svg .z { stroke: var(--axis); stroke-width: 1.2; }
+.k-ev-svg .ax { font: var(--fs-xs) var(--font-sans); fill: var(--text-2); }
+.k-ev-svg .ln { fill: none; stroke-width: 2.2; stroke-linejoin: round; }
+.k-ev-svg .ln.up, .k-ev-svg .pt.up { stroke: var(--up); } .k-ev-svg .ln.down, .k-ev-svg .pt.down { stroke: var(--down); }
+.k-ev-svg .pt { fill: var(--surface); stroke-width: 2; }
+.k-ev-svg .band.up { fill: var(--up); opacity: .12; } .k-ev-svg .band.down { fill: var(--down); opacity: .12; }
+.k-ev-svg .lbl { font: var(--fw-semibold) 11px var(--font-mono); fill: var(--text); }
+.k-ev-svg .k-ev-hit { fill: transparent; } .k-ev-svg .k-ev-hit:hover { fill: var(--row-hover); opacity: .5; }
+
+/* ── Sinyal Takip: duygu sayaçları */
+.sent-bar { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; margin: var(--s-2) 0 0; }
+.sb-l { font-size: var(--fs-xs); color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; margin-right: 2px; }
+.sb-chip .sb-g { font-size: 10px; }
+.sb-chip.up .sb-g { color: var(--up); } .sb-chip.down .sb-g { color: var(--down); } .sb-chip.flat .sb-g, .sb-chip.na .sb-g { color: var(--text-3); }
+.sb-bar { display: inline-flex; flex: 1 1 160px; max-width: 320px; height: 8px; border-radius: 4px; overflow: hidden; background: var(--surface-2); gap: 2px; }
+.sb-bar > span { display: block; min-width: 2px; }
+.sb-bar .up { background: var(--up); } .sb-bar .down { background: var(--down); } .sb-bar .flat { background: var(--neutral); opacity: .55; } .sb-bar .na { background: var(--border-strong); }
+.sb-net { font-size: var(--fs-xs); color: var(--text-2); white-space: nowrap; }
+.sb-net b { font-family: var(--font-mono); }
+.sb-net b.up { color: var(--up); } .sb-net b.down { color: var(--down); }

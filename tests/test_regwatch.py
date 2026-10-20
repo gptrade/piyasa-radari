@@ -83,3 +83,11 @@ def test_future_date_is_effective_not_publication():
     ok = {"date": "2026-10-18", "first_seen": "2026-10-19T19:31:00+00:00"}
     regwatch.future_date(ok, dt.date(2026, 10, 20))
     assert ok["date"] == "2026-10-18" and "effective" not in ok
+
+
+def test_table_status_column_parsed():
+    from radar import regwatch
+    html = """<table><tr><td>4820</td><td><a href="/en/x">Rules on Credit Risk Management for banks</a></td><td>01/10/2026</td><td>In- Force</td></tr>
+    <tr><td>4821</td><td><a href="/en/y">Old Liquidity Rules for licensed banks</a></td><td>01/02/2013</td><td>Modified</td></tr></table>"""
+    rows = regwatch.from_table(html, "https://rulebook.sama.gov.sa/en/banking-sector-circulars")
+    assert [r.get("status") for r in rows] == ["yururlukte", "degisti"]

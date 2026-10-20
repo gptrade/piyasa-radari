@@ -82,3 +82,20 @@ def test_old_records_pruned(tmp_path, monkeypatch):
     import json
     (tmp_path / "s.json").write_text(json.dumps({"items": [old]}))
     assert sc.update([], {}, set())["total"] == 0
+
+
+def test_grade_stores_excess_path_for_event_study(monkeypatch):
+    px = px_with([100, 100, 100, 110, 110, 110, 121, 121], [10, 10, 10, 10.5, 10.5, 10.5, 10.5, 10.5])
+    monkeypatch.setattr(sc, "now_utc", lambda: datetime(2026, 10, 1, 12, tzinfo=IST))
+    r = sc.record(item("2026-09-23T11:00:00Z"), px, {"THYAO"})
+    sc.grade(r, px)
+    # 24, 25, 28, 29, 30 Eylül kapanışları: yol 5 seans; 20. seans henüz yok
+    assert r["xp"] == [5.0, 5.0, 5.0, 16.0, 16.0] and "x20" not in r
+
+
+def test_event_study_mean_and_band():
+    recs = [{"d": 1, "xp": [1.0, 2.0]}, {"d": 1, "xp": [3.0, 4.0]}, {"d": 1, "xp": [2.0, 3.0]}, {"d": -1, "xp": [-1.0]}]
+    ev = sc.event_study(recs)
+    assert ev["bull"]["m"] == [0.0, 2.0, 3.0] and ev["bull"]["n"] == [3, 3, 3]
+    assert ev["bull"]["lo"][1] < 2.0 < ev["bull"]["hi"][1]
+    assert ev["bear"]["m"] == [0.0]                     # 3'ten az örnek: yol çizilmez

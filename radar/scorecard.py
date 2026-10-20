@@ -1,7 +1,8 @@
 """Sinyal arşivi ve karnesi.
 
 Her turda yönlü (olumlu/olumsuz) sinyaller arşive yazılır; yayın anındaki hisse ve endeks fiyatı saklanır.
-Sonraki turlarda sinyal, yayından sonraki 1. ve 5. tam seans kapanışında notlanır:
+Sonraki turlarda sinyal, yayından sonraki 1., 5. ve 20. tam seans kapanışında notlanır (ayrıca 1…20. seans fazla getiri yolu
+"xp" saklanır; karnedeki olay çalışması grafiği bundan çizilir):
   getiri = kapanış / yayın anı fiyatı − 1, fazla getiri = getiri − aynı aralıkta endeks getirisi,
   isabet = sinyal yönü ile fazla getirinin işareti aynı.
 Karne (scorecard.json) piyasa × dönem × ufuk × boyut (kaynak türü, olay, güven, önem, hisse, kaynak, değerlendiren)
@@ -24,7 +25,8 @@ log = logging.getLogger("radar.scorecard")
 ARCHIVE = DATA / "signals.json"
 SCORE = DATA / "scorecard.json"
 KEEP_DAYS = 180
-HORIZONS = (1, 5)
+HORIZONS = (1, 5, 20)
+PATH = 20               # olay çalışması: yayından sonraki 1…20. seans kapanışında fazla getiri yolu
 WINDOWS = {"30": 30, "90": 90, "all": None}
 EX_TZ = {"BIST": ZoneInfo("Europe/Istanbul"), "US": ZoneInfo("America/New_York")}
 SENT = {"bullish": 1, "bearish": -1}
@@ -172,7 +174,51 @@ def grade(rec: dict, px: dict) -> bool:
         ic = _close_on(idx.get("daily") or [], day, tz) if idx and rec.get("i0") else None
         rec[f"x{h}"] = round(ret - (ic / rec["i0"] - 1) * 100, 2) if ic else rec[f"r{h}"]
         changed = True
+    if len(rec.get("xp") or []) < PATH:
+        xp = _path(rec, p, idx, pub, tz, today)
+        if len(xp) > len(rec.get("xp") or []):
+            rec["xp"] = xp
+            changed = True
     return changed
+
+
+def _path(rec: dict, p: dict, idx: dict | None, pub, tz, today) -> list[float]:
+    """Yayından sonraki tam seans kapanışlarında (en çok PATH) endekse göre fazla getiri yolu, %."""
+    ix = {datetime.fromtimestamp(b[0], tz).date(): b[1] for b in (idx or {}).get("daily") or []} if rec.get("i0") else {}
+    out = []
+    for b in p.get("daily") or []:
+        day = datetime.fromtimestamp(b[0], tz).date()
+        if day <= pub:
+            continue
+        if day >= today or len(out) >= PATH:
+            break
+        ret = (b[1] / rec["p0"] - 1) * 100
+        ic = ix.get(day)
+        out.append(round(ret - (ic / rec["i0"] - 1) * 100, 2) if ic else round(ret, 2))
+    return out
+
+
+def strong(r: dict) -> bool:
+    """Sitedeki "güçlü sinyal" tanımı: güven ≥ %70 ve önem düşük değil."""
+    return (r.get("c") or 0) >= 70 and r.get("mat") != "low"
+
+
+def event_study(recs: list[dict]) -> dict:
+    """Yöne göre ortalama fazla getiri yolu (0…20. seans) ve %95 güven aralığı."""
+    out = {}
+    for d, key in ((1, "bull"), (-1, "bear")):
+        g = [r["xp"] for r in recs if r["d"] == d and r.get("xp")]
+        m, lo, hi, n = [0.0], [0.0], [0.0], [len(g)]
+        for k in range(PATH):
+            xs = [x[k] for x in g if len(x) > k]
+            if len(xs) < 3:
+                break
+            mu = sum(xs) / len(xs)
+            sd = math.sqrt(sum((x - mu) ** 2 for x in xs) / (len(xs) - 1))
+            e = 1.96 * sd / math.sqrt(len(xs))
+            m.append(round(mu, 2)); lo.append(round(mu - e, 2)); hi.append(round(mu + e, 2)); n.append(len(xs))
+        out[key] = {"m": m, "lo": lo, "hi": hi, "n": n}
+    return out
 
 
 def _stats(recs: list[dict], h: int) -> dict:
@@ -217,10 +263,11 @@ def aggregate(recs: list[dict], now: datetime | None = None) -> dict:
                     groups.setdefault(key, []).append(r)
                 w["dims"][dk] = sorted(({"g": key, **{f"h{h}": _stats(g, h) for h in HORIZONS}, "count": len(g)}
                                         for key, g in groups.items()), key=lambda x: -x["count"])
+            w["event"] = {"all": event_study(rs), "strong": event_study([r for r in rs if strong(r)])}
             sc[wk] = w
         out["scopes"][scope] = sc
     graded = sorted((r for r in recs if "x1" in r and r.get("pv") not in EXTERNAL_PV), key=lambda r: r["ts"], reverse=True)[:60]
-    out["recent"] = [{k: r.get(k) for k in ("id", "t", "m", "ts", "title", "kind", "d", "c", "r1", "x1", "r5", "x5")}
+    out["recent"] = [{k: r.get(k) for k in ("id", "t", "m", "ts", "title", "kind", "d", "c", "r1", "x1", "r5", "x5", "r20", "x20")}
                      for r in graded]
     return out
 
@@ -252,7 +299,7 @@ def update(items: list[dict], px: dict, watch: set[str]) -> dict:
             ids.add(r["id"])
             seen.setdefault(r["k"], []).append(ts)
             added += 1
-    graded = sum(grade(r, px) for r in recs if "x5" not in r)
+    graded = sum(grade(r, px) for r in recs if "x20" not in r or len(r.get("xp") or []) < PATH)
     lo = iso(now_utc() - timedelta(days=KEEP_DAYS))
     recs = sorted((r for r in recs if r["ts"] >= lo), key=lambda r: r["ts"])
     ARCHIVE.write_text(json.dumps({"version": 1, "items": recs}, ensure_ascii=False, separators=(",", ":")),
