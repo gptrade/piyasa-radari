@@ -1337,3 +1337,21 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
   .en-tm { height: 520px; } .en-map { height: 62vh; } .en-tl { height: 200px; }
   .en-hb-grid { gap: 6px var(--s-2); } .en-hb-l { font-size: var(--fs-xs); }
 }
+
+/* ── Enerji: arama öneri listesi, il koropleti */
+#view-enerji .search { position: relative; }
+.en-sug { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 1200; max-height: min(70vh, 520px); overflow: auto; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow-3); padding: var(--s-1) 0; }
+.en-sug-h { padding: var(--s-2) var(--s-3) 2px; font-size: var(--fs-2xs); color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
+.en-sug-i { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "n m" "x x"; gap: 2px var(--s-3); padding: 6px var(--s-3); cursor: pointer; }
+.en-sug-i:hover, .en-sug-i.on { background: var(--row-hover); }
+.en-sug-i.on { box-shadow: inset 3px 0 0 var(--accent); }
+.en-sug-n { grid-area: n; font-size: var(--fs-sm); color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.en-sug-n mark { background: var(--accent-soft); color: inherit; border-radius: 2px; padding: 0 1px; }
+.en-sug-m { grid-area: m; font: var(--fs-xs) var(--font-mono); color: var(--text-3); white-space: nowrap; align-self: center; }
+.en-sug-x { grid-area: x; } .en-sug-x .en-mix { min-width: 0; max-width: 220px; }
+.en-sug-e, .en-sug-f { padding: var(--s-2) var(--s-3); font-size: var(--fs-xs); color: var(--text-3); }
+.en-sug-f { border-top: 1px solid var(--border); margin-top: var(--s-1); }
+.en-cho { display: inline-flex; gap: var(--s-2); align-items: center; }
+.en-cho span { display: inline-flex; align-items: center; gap: 4px; }
+.en-cho i { width: 14px; height: 10px; border-radius: 2px; border: 1px solid var(--border); }
