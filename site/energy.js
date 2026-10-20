@@ -203,9 +203,20 @@
       <p class="en-note">Santraller, konumlar ve sahiplik <b>Global Energy Monitor</b> Integrated Power ve Ownership izleyicilerinden gelir (yılda yaklaşık iki kez güncellenir; aktarım ${esc(d.gem.imported || "")}). Grup kapasitesi <b>pay oranına göredir</b>: ortak girişimlerde her ortağa payı kadar MW yazılır. Yurt dışı santraller yalnız sahibi ya da ana ortağı Türkiye'de kayıtlı bir şirketse alınır ve Türkiye toplamlarına katılmaz. Kapsam dışı: 1 MW altı güneş ve izleyici eşiğinin altındaki küçük santraller.</p>`;
   }
 
-  // ─────────────────────────────── Harita (Leaflet + OpenStreetMap/CARTO)
+  // ─────────────────────────────── Harita (Leaflet + kendi taban haritamız)
+  // Taban harita: Natural Earth ülke ve il sınırları (kamu malı), siteyle birlikte sunulur — harici karo sunucusu ya da API anahtarı yok.
+  const hex = c => { c = (c || "").trim(); const m = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (m) { let h = m[1]; if (h.length === 3) h = [...h].map(x => x + x).join(""); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); }
+    const r = c.match(/rgba?\(([^)]+)\)/); return r ? r[1].split(/[ ,]+/).slice(0, 3).map(Number) : [128, 128, 128]; };
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(",")})`; };
   const Map_ = {
-    map: null, tiles: null, layer: null, markers: [], loading: null, fitted: "",
+    map: null, base: null, prov: null, geo: null, layer: null, markers: [], loading: null, fitted: "",
+    async geodata() {
+      if (this.geo) return this.geo;
+      const get = async f => { const r = await fetch(`vendor/harita/${f}?v=1`); if (!r.ok) throw new Error("harita sınırları yüklenemedi"); return r.json(); };
+      const [world, il] = await Promise.all([get("world.geojson"), get("tr_il.geojson")]);
+      return (this.geo = { world, il });
+    },
     lib() {
       if (window.L) return Promise.resolve();
       return this.loading ||= new Promise((ok, no) => {
@@ -213,32 +224,45 @@
         const js = document.createElement("script"); js.src = "vendor/leaflet/leaflet.js?v=1.9.4"; js.onload = ok; js.onerror = () => no(new Error("harita kütüphanesi yüklenemedi")); document.head.append(js);
       });
     },
-    tileLayer() {
-      const dark = sh.isDark();
-      return L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? "dark_all" : "light_all"}/{z}/{x}/{y}{r}.png`, {
-        subdomains: "abcd", maxZoom: 18, attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> katkıcıları © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a> · santraller: GEM (CC BY 4.0)' });
+    colors() {
+      const v = n => sh.cssVar(n);
+      return { sea: v("--surface-2") || "#eef0f2", land: v("--surface") || "#fff", line: v("--border-strong") || "#bbb", soft: v("--border") || "#ddd",
+        tr: mix(v("--surface") || "#fff", v("--accent") || "#36c", sh.isDark() ? 0.10 : 0.06), acc: v("--accent") || "#36c" };
     },
-    reset() { this.layer?.remove(); this.layer = null; this.markers = []; this.fitted = ""; },
+    drawBase() {
+      const m = this.map, c = this.colors(), g = this.geo;
+      m.getContainer().style.background = c.sea;
+      this.base?.remove();
+      this.base = L.layerGroup([
+        L.geoJSON(g.world, { pane: "base", interactive: false, style: f => ({ color: c.line, weight: 0.6, fillColor: f.properties.iso === "TR" ? c.tr : c.land, fillOpacity: 1 }) }),
+        L.geoJSON(g.il, { pane: "base", interactive: false, style: { color: c.soft, weight: 0.7, fill: false } }),
+      ]).addTo(m);
+    },
+    reset() { this.layer?.remove(); this.layer = null; this.prov?.remove(); this.prov = null; this.markers = []; this.fitted = ""; },
     async mount(el) {
-      await this.lib();
+      await Promise.all([this.lib(), this.geodata()]);
       if (this.map && this.map.getContainer() !== el) { this.map.remove(); this.map = null; this.reset(); }
       if (!this.map) {
-        this.map = L.map(el, { preferCanvas: true, zoomSnap: 0.5, worldCopyJump: true, attributionControl: true }).fitBounds([[35.8, 25.6], [42.2, 44.8]]);
+        this.map = L.map(el, { preferCanvas: true, zoomSnap: 0.5, minZoom: 2, maxZoom: 12, worldCopyJump: false, maxBounds: [[-70, -200], [85, 200]], attributionControl: true })
+          .fitBounds([[35.8, 25.6], [42.2, 44.8]]);
         this.map.attributionControl.setPrefix(false);
-        this.tiles = this.tileLayer().addTo(this.map);
+        this.map.attributionControl.addAttribution('Sınırlar: <a href="https://www.naturalearthdata.com" target="_blank" rel="noopener">Natural Earth</a> · santraller: GEM (CC BY 4.0)');
+        this.map.createPane("base").style.zIndex = 250;
+        this.map.createPane("prov").style.zIndex = 350;
+        this.drawBase();
         this.map.on("zoomend", () => this.rescale());
       } else this.map.invalidateSize();
       this.draw();
     },
-    retheme() { if (!this.map) return; this.tiles.remove(); this.tiles = this.tileLayer().addTo(this.map); this.draw(); },
+    retheme() { if (!this.map) return; this.drawBase(); this.draw(); },
     // daire boyutu yakınlaştırmayla büyür (z 6 = Türkiye geneli); dar ekranda Türkiye ~z5 olduğundan küçük kalır
-    zk() { return Math.pow(2, ((this.map?.getZoom() ?? 6) - 6) * 0.4); },
+    zk() { return Math.max(0.55, Math.pow(2, ((this.map?.getZoom() ?? 6) - 6) * 0.4)); },
     radius(v) { return Math.min(30, Math.max(1.8, (1.2 + Math.sqrt(v) / 2.6) * this.zk())); },
     rescale() { this.markers.forEach((mk, i) => mk && mk.setRadius(this.radius(S.doc.units[i].mw))); },
     draw() {
       const d = S.doc, m = this.map;
       if (!m) return;
-      this.layer?.remove();
+      this.layer?.remove(); this.prov?.remove(); this.prov = null;
       this.layer = L.featureGroup().addTo(m);
       this.markers = [];
       const css = Object.fromEntries(d.sources.map(s => [s, sh.cssVar(`--en-${s}`) || "#888"]));
@@ -246,17 +270,18 @@
       const us = unitsFiltered().filter(u => u.la != null && u.lo != null);
       if (S.mapView === "prov" && S.scope === "tr") {
         const P = {};
-        us.filter(u => !u.ab).forEach(u => {
-          const p = P[u.p || "?"] ||= { p: u.p || "bilinmiyor", mw: 0, la: 0, lo: 0, n: 0, src: {} };
-          p.mw += u.mw; p.la += u.la * u.mw; p.lo += u.lo * u.mw; p.n++; p.src[u.s] = (p.src[u.s] || 0) + u.mw;
-        });
-        const acc = sh.cssVar("--accent") || "#36c";
-        Object.values(P).sort((a, b) => b.mw - a.mw).forEach(p => {
-          const top = Object.entries(p.src).sort((a, b) => b[1] - a[1])[0][0];
-          L.circleMarker([p.la / p.mw, p.lo / p.mw], { radius: Math.min(40, 4 + Math.sqrt(p.mw) / 3), color: ring, weight: 1.5, fillColor: css[top] || acc, fillOpacity: 0.72 })
-            .bindPopup(() => `<div class="en-pop"><b class="en-pop-n">${esc(p.p)}</b><div class="en-pop-k">${mw(p.mw)} MW · ${fmt.int(p.n)} ünite</div>${mixBar(p.src, p.mw)}${legend(p.src, p.mw)}</div>`, { maxWidth: 320 })
-            .bindTooltip(`${p.p}: ${mw(p.mw)} MW`, { direction: "top" }).addTo(this.layer);
-        });
+        us.filter(u => !u.ab).forEach(u => { const p = P[fold(u.p || "")] ||= { p: u.p || "bilinmiyor", mw: 0, n: 0, src: {} };
+          p.mw += u.mw; p.n++; p.src[u.s] = (p.src[u.s] || 0) + u.mw; });
+        const c = this.colors(), max = Math.max(...Object.values(P).map(p => p.mw), 1);
+        const lv = v => v ? Math.sqrt(v / max) : 0;                             // karekök ölçek: büyük iller öne çıkar, küçükler yine ayırt edilir
+        const fill = v => v ? mix(c.land, c.acc, 0.08 + 0.92 * lv(v)) : c.land;
+        this.prov = L.geoJSON(this.geo.il, { pane: "prov", style: f => { const p = P[fold(f.properties.il)]; return { color: c.line, weight: 0.8, fillColor: fill(p?.mw), fillOpacity: 1 }; },
+          onEachFeature: (f, lyr) => { const p = P[fold(f.properties.il)] || { p: f.properties.il, mw: 0, n: 0, src: {} };
+            lyr.bindTooltip(`${f.properties.il}: ${p.mw ? mw(p.mw) + " MW" : "kayıt yok"}`, { sticky: true });
+            lyr.bindPopup(() => `<div class="en-pop"><b class="en-pop-n">${esc(f.properties.il)}</b><div class="en-pop-k">${mw(p.mw)} MW · ${fmt.int(p.n)} ünite · Türkiye payı ${pct(p.mw / (S.doc.national.total || 1))}</div>${p.mw ? mixBar(p.src, p.mw) + legend(p.src, p.mw) : ""}</div>`, { maxWidth: 320 });
+            lyr.on("mouseover", () => lyr.setStyle({ weight: 2, color: c.acc })); lyr.on("mouseout", () => this.prov.resetStyle(lyr)); } }).addTo(m);
+        const steps = [0.02, 0.1, 0.35, 1].map(t => Math.round(max * t));
+        $("#enProvLeg") && ($("#enProvLeg").innerHTML = `<span class="en-cho">${steps.map(v => `<span><i style="background:${fill(v)}"></i>${v >= 1000 ? fmt.num(v / 1000, 1) + " GW" : fmt.int(v) + " MW"}</span>`).join("")}</span>`);
       } else {
         us.sort((a, b) => b.mw - a.mw).forEach(u => {
           const pipe = u.st !== "operating", c = css[u.s];
@@ -271,10 +296,11 @@
         this.fitted = key;
         if (S.group || S.q || S.scope !== "tr") {
           const b = this.layer.getBounds();
-          if (b.isValid()) m.fitBounds(b.pad(0.15), { maxZoom: 9 });
+          if (b.isValid()) m.fitBounds(b.pad(0.15), { maxZoom: S.group ? 8 : 9 });
         } else if (S.scope === "tr") m.fitBounds([[35.8, 25.6], [42.2, 44.8]]);
         else m.setView([30, 25], 3);
       }
+      if (S.mapView !== "prov" && $("#enProvLeg")) $("#enProvLeg").innerHTML = "";
       $("#enMapN") && ($("#enMapN").textContent = `${fmt.int(us.length)} ünite · ${gw(us.reduce((a, u) => a + u.mw, 0))}`);
     },
     open(i) {
@@ -322,9 +348,9 @@
       </div>
       <div id="enMap" class="en-map" role="region" aria-label="Santral haritası; ayrıntı için Santraller sekmesindeki tabloyu kullan"></div>
       <div class="en-map-leg">${d.sources.filter(s => d.national.src[s] || d.national.pipe[s]).map(s => `<span>${srcDot(s)}</span>`).join("")}
-        <span class="en-leg-sz"><i style="width:7px;height:7px"></i><i style="width:14px;height:14px"></i><i style="width:24px;height:24px"></i>boyut = MW</span><span><i class="en-ring"></i>içi boş = yapım/planlama</span></div>
+        <span class="en-leg-sz"><i style="width:7px;height:7px"></i><i style="width:14px;height:14px"></i><i style="width:24px;height:24px"></i>boyut = MW</span><span><i class="en-ring"></i>içi boş = yapım/planlama</span><span id="enProvLeg"></span></div>
     </section>
-    <p class="en-note">Taban harita © OpenStreetMap katkıcıları, © CARTO. Konumlar GEM'in verdiği koordinatlardır; “yaklaşık” işaretli santraller ilçe ya da il merkezine yerleştirilmiştir. Daire alanı kurulu güçle orantılıdır. Santrale tıkla: sahipler, paylar, sahiplik zinciri, lisans ve ilgili KAP bildirimleri.</p>`;
+    <p class="en-note">Taban harita: Natural Earth ülke ve il sınırları (kamu malı), sitenin kendi sunucusundan; harici harita servisi ya da anahtar kullanılmaz. “İl toplamı” görünümünde renk vurgulandıkça ildeki kurulu güç artar. Konumlar GEM'in verdiği koordinatlardır; “yaklaşık” işaretli santraller ilçe ya da il merkezine yerleştirilmiştir. Daire alanı kurulu güçle orantılıdır. Santrale tıkla: sahipler, paylar, sahiplik zinciri, lisans ve ilgili KAP bildirimleri.</p>`;
   }
 
   // ─────────────────────────────── Gruplar
@@ -584,7 +610,7 @@
   }
   function setSrc(s) { S.src = s; S.limit = PAGE; S.recLimit = 12; S.pipeLimit = 12; S.ulimit = UPAGE; render(); }
   function showOnMap({ unit = null, group = "" } = {}) {
-    if (group) { S.group = group; S.st = "all"; const g = S.doc.byKey.get(group); S.scope = g && !g.total && g.abroad_total ? "ab" : g && g.abroad_total ? "all" : "tr"; }
+    if (group) { S.group = group; S.st = "all"; S.mapView = "units"; const g = S.doc.byKey.get(group); S.scope = g && !g.total && g.abroad_total ? "ab" : g && g.abroad_total ? "all" : "tr"; }
     if (unit != null) { const u = S.doc.units[unit]; S.scope = u.ab ? "ab" : "tr"; if (!stOk(u)) S.st = "all"; if (S.src && u.s !== S.src) S.src = ""; S.focus = unit; S.mapView = "units"; }
     if (tab() === "harita") { render(); if (S.focus != null) { Map_.open(S.focus); S.focus = null; } }
     else sh.go("enerji", { param: "harita" });
@@ -633,7 +659,71 @@
   });
   sh.radioKeys($("#enKind"));
   $("#enSrcSel").onchange = e => setSrc(e.target.value);
-  let t; $("#enQ").oninput = e => { clearTimeout(t); t = setTimeout(() => { S.q = e.target.value.trim(); S.limit = PAGE; S.ulimit = UPAGE; render(); }, 200); };
+  // ─────────────────────────────── arama: yazarken kısa liste (gruplar + santraller)
+  const Sug = { items: [], i: -1 };
+  const hl = (txt, q) => { const f = fold(txt), k = f.indexOf(q); return k < 0 || !q ? esc(txt) : esc(txt.slice(0, k)) + "<mark>" + esc(txt.slice(k, k + q.length)) + "</mark>" + esc(txt.slice(k + q.length)); };
+  function suggest(raw) {
+    const box = $("#enSug"), inp = $("#enQ"), q = fold(raw);
+    if (!S.loaded || q.length < 2) return closeSug();
+    const d = S.doc;
+    // Puan: kod tam eşleşme > ad başı > kelime başı > adda geçiyor > sahiplik zincirindeki şirket adında geçiyor
+    const score = g => { const nm = fold(g.name), cd = fold(g.code);
+      return cd === q ? 5 : nm.startsWith(q) ? 4 : nm.split(" ").some(w => w.startsWith(q)) ? 3 : nm.includes(q) || cd.startsWith(q) ? 2 : g.entities.some(n => fold(n).includes(q)) ? 1 : 0; };
+    const listed = g => !!(g.ticker || g.parent);
+    const hit = d.groups.map(g => [g, score(g)]).filter(([, sc]) => sc);
+    const ord = (a, b) => b[1] - a[1] || (b[0].total + b[0].abroad_total) - (a[0].total + a[0].abroad_total);
+    const gl = hit.filter(([g]) => listed(g)).sort((a, b) => (b[0].total + b[0].abroad_total) - (a[0].total + a[0].abroad_total) || b[1] - a[1]).slice(0, 25).map(([g]) => g);
+    const go = hit.filter(([g]) => !listed(g)).sort(ord).slice(0, gl.length ? 5 : 8).map(([g]) => g);
+    const more = hit.length - gl.length - go.length;
+    const gs = [...gl, ...go];
+    const us = d.units.filter(u => fold(u.n).includes(q) || fold(u.en || "").includes(q)).sort((a, b) => b.mw - a.mw).slice(0, 6);
+    Sug.items = [...gs.map(g => ({ g })), ...us.map(u => ({ u }))]; Sug.i = -1;
+    if (!Sug.items.length) { box.innerHTML = `<div class="en-sug-e">Eşleşen grup ya da santral yok</div>`; box.hidden = false; inp.setAttribute("aria-expanded", "true"); return; }
+    let k = 0;
+    const gRow = g => `<div class="en-sug-i" role="option" id="enSug${k}" data-n="${k++}">
+        <span class="en-sug-n">${hl(g.name, q)}${g.code ? ` <span class="en-code">${esc(g.code)}</span>` : ""}${g.kind === "kamu" ? ` <span class="tag na">kamu</span>` : ""}${!fold(g.name).includes(q) && !fold(g.code).includes(q) ? (n => n ? ` <span class="en-sug-e2">↳ ${hl(n, q)}</span>` : "")(g.entities.find(n => fold(n).includes(q))) : ""}</span>
+        <span class="en-sug-m">${g.total ? gw(g.total) : ""}${g.abroad_total ? `${g.total ? " · " : ""}yurt dışı ${gw(g.abroad_total)}` : ""}${!g.total && !g.abroad_total && g.pipe_total ? `yatırım hattı ${gw(g.pipe_total)}` : ""}</span>
+        <span class="en-sug-x">${mixBar(g.total ? g.src : g.abroad, g.total || g.abroad_total, { h: 4 })}</span></div>`;
+    box.innerHTML = (gl.length ? `<div class="en-sug-h">Borsa şirketleri (${gl.length})</div>` + gl.map(gRow).join("") : "") +
+      (go.length ? `<div class="en-sug-h">${gl.length ? "Diğer şirketler" : "Gruplar ve şirketler"}</div>` + go.map(gRow).join("") : "") +
+      (more > 0 ? `<button type="button" class="en-sug-all" data-all="1">+${fmt.int(more)} şirket daha · Gruplar sekmesinde tümünü gör</button>` : "") +
+      (us.length ? `<div class="en-sug-h">Santraller</div>` + us.map(u => `<div class="en-sug-i" role="option" id="enSug${k}" data-n="${k++}">
+        <span class="en-sug-n"><i class="en-dot" style="background:${color(u.s)}"></i>${hl(u.n, q)}</span>
+        <span class="en-sug-m">${mw(u.mw)} MW · ${u.ab ? esc(u.cn) : esc(u.p || "")}${u.st !== "operating" ? " · " + esc(d.status_names[u.st] || u.st) : ""}</span></div>`).join("") : "") +
+      `<div class="en-sug-f">Enter: “${esc(raw)}” ile süz · ↑↓ seç · Esc kapat</div>`;
+    box.hidden = false; inp.setAttribute("aria-expanded", "true");
+  }
+  function closeSug() { const box = $("#enSug"); box.hidden = true; box.innerHTML = ""; Sug.items = []; Sug.i = -1; $("#enQ").setAttribute("aria-expanded", "false"); $("#enQ").removeAttribute("aria-activedescendant"); }
+  function pickSug(n) {
+    const it = Sug.items[n]; if (!it) return;
+    closeSug(); $("#enQ").value = ""; S.q = "";
+    if (it.u) return showOnMap({ unit: it.u.i });
+    const g = it.g, tb = tab();
+    if (tb === "gruplar") { S.open.add(g.key); const i = filtered().findIndex(x => x.key === g.key); if (i >= S.limit) S.limit = i + 1; render();
+      $(`#enBody tr.row[data-k="${CSS.escape(g.key)}"]`)?.scrollIntoView({ block: "center" }); return; }
+    if (tb === "santraller") { S.group = g.key; S.st = "all"; S.scope = "all"; S.ulimit = UPAGE; return render(); }
+    showOnMap({ group: g.key });
+  }
+  function moveSug(dx) {
+    if (!Sug.items.length) return;
+    Sug.i = (Sug.i + dx + Sug.items.length) % Sug.items.length;
+    $$("#enSug .en-sug-i").forEach((el, i) => el.classList.toggle("on", i === Sug.i));
+    const el = $(`#enSug${Sug.i}`); el?.scrollIntoView({ block: "nearest" }); $("#enQ").setAttribute("aria-activedescendant", `enSug${Sug.i}`);
+  }
+  let t; $("#enQ").oninput = e => { const v = e.target.value.trim(); suggest(v); clearTimeout(t); t = setTimeout(() => { S.q = v; S.limit = PAGE; S.ulimit = UPAGE; render(); }, 250); };
+  $("#enQ").addEventListener("keydown", e => {
+    if ($("#enSug").hidden) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); moveSug(e.key === "ArrowDown" ? 1 : -1); }
+    else if (e.key === "Enter") { e.preventDefault(); Sug.i >= 0 ? pickSug(Sug.i) : closeSug(); }
+    else if (e.key === "Escape") { e.preventDefault(); closeSug(); }
+  });
+  $("#enQ").addEventListener("focus", e => { if (e.target.value.trim().length >= 2) suggest(e.target.value.trim()); });
+  $("#enSug").addEventListener("mousedown", e => {
+    const it = e.target.closest(".en-sug-i");
+    if (it) { e.preventDefault(); return pickSug(+it.dataset.n); }
+    if (e.target.closest("[data-all]")) { e.preventDefault(); closeSug(); S.q = $("#enQ").value.trim(); S.limit = PAGE; tab() === "gruplar" ? render() : sh.go("enerji", { param: "gruplar" }); }
+  });
+  document.addEventListener("mousedown", e => { if (!e.target.closest("#enSug, #enQ")) closeSug(); });
   $("#enBody").addEventListener("click", e => {
     const sc = e.target.closest(".en-sc");
     if (sc) return setSrc(S.src === sc.dataset.s ? "" : sc.dataset.s);

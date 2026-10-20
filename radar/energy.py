@@ -24,6 +24,7 @@ import re
 import sys
 import time
 import unicodedata
+from pathlib import Path
 
 import requests
 import yaml
@@ -370,6 +371,59 @@ def kap_overlay(kap: dict | None, groups_out: list[dict], groups_cfg: list[dict]
     return rows
 
 
+IL_GEO = CONFIG.parent / "site" / "vendor" / "harita" / "tr_il.geojson"
+IL_ALIAS = {"AFYON": "Afyonkarahisar", "SANLIFURA": "Şanlıurfa", "ICEL": "Mersin", "K MARAS": "Kahramanmaraş"}
+
+
+class Provinces:
+    """İl adlarını tekleştirir; GEM'de il yoksa ya da ilçe/bölge yazılmışsa koordinattan (il sınırları, Natural Earth) bulur."""
+
+    def __init__(self, path=None):
+        path = path or IL_GEO
+        try:
+            feats = json.loads(Path(path).read_text(encoding="utf-8"))["features"]
+        except (OSError, ValueError, KeyError):
+            feats = []
+        self.names = {fold(f["properties"]["il"]): f["properties"]["il"] for f in feats}
+        self.polys = []                                           # (il, [halkalar], kutu)
+        for f in feats:
+            g = f["geometry"]
+            parts = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
+            for rings in parts:
+                xs = [x for x, _ in rings[0]]; ys = [y for _, y in rings[0]]
+                self.polys.append((f["properties"]["il"], rings, (min(xs), min(ys), max(xs), max(ys))))
+
+    @staticmethod
+    def _inside(x, y, ring):
+        c = False
+        for i in range(len(ring)):
+            x1, y1 = ring[i - 1]; x2, y2 = ring[i]
+            if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1:
+                c = not c
+        return c
+
+    def locate(self, lat, lon):
+        if lat is None or lon is None:
+            return None
+        best, bd = None, 1e9
+        for il, rings, (x0, y0, x1, y1) in self.polys:
+            if x0 <= lon <= x1 and y0 <= lat <= y1 and self._inside(lon, lat, rings[0]) and not any(self._inside(lon, lat, h) for h in rings[1:]):
+                return il
+            d = min((lon - x) ** 2 + (lat - y) ** 2 for x, y in rings[0][::4] or rings[0])   # kıyıda sadeleşme payı: en yakın il
+            if d < bd:
+                best, bd = il, d
+        return best if bd < 0.05 else None
+
+    def name(self, prov, lat=None, lon=None):
+        if prov:
+            k = fold(re.sub(r"\s+Province$", "", str(prov), flags=re.I))
+            if k in self.names:
+                return self.names[k]
+            if k in IL_ALIAS:
+                return IL_ALIAS[k]
+        return self.locate(lat, lon) or prov
+
+
 # Yurt dışı ülke adlarını Türkçeleştir (GEM İngilizce verir; listede olmayan ad olduğu gibi kalır)
 COUNTRY_TR = {"Brazil": "Brezilya", "Croatia": "Hırvatistan", "Cuba": "Küba", "Cyprus": "Kıbrıs", "Northern Cyprus": "KKTC", "Dominican Republic": "Dominik Cumhuriyeti",
               "Ecuador": "Ekvador", "Ghana": "Gana", "Guyana": "Guyana", "Indonesia": "Endonezya", "Iraq": "Irak", "Kyrgyzstan": "Kırgızistan",
@@ -390,11 +444,12 @@ COUNTRY_TR = {"Brazil": "Brezilya", "Croatia": "Hırvatistan", "Cuba": "Küba", 
 
 
 def build(gem: dict, groups: list[dict], epias: dict | None = None, now: dt.datetime | None = None,
-          exclude: re.Pattern | None = None, kap: dict | None = None) -> dict:
+          exclude: re.Pattern | None = None, kap: dict | None = None, provinces: "Provinces | None" = None) -> dict:
     now = now or dt.datetime.now(dt.timezone.utc)
     units = [u for u in gem["units"] if u.get("cc") or not (exclude and "gipt" not in (gem.get("sources") or {})
                                                             and exclude.search(fold(u["n"] + " " + " ".join(u.get("paths") or []))))]
     gmeta = {g["key"]: g for g in groups}
+    PV = Provinces() if provinces is None else provinces
     U, G = [], {}
     nat_op, nat_pipe = {}, {}
     for i, u in enumerate(units):
@@ -409,7 +464,7 @@ def build(gem: dict, groups: list[dict], epias: dict | None = None, now: dt.date
         owners = assign(u, groups)
         U.append({k: v for k, v in {
             "n": u["n"] + (f" {u['ph']}" if u.get("ph") and str(u["ph"]) not in u["n"] else ""), "en": u.get("en") if u.get("en") != u["n"] else None,
-            "s": src, "mw": u["mw"], "st": u["st"], "y": u.get("y"), "p": u.get("prov"), "ci": u.get("city"), "u": u.get("url"),
+            "s": src, "mw": u["mw"], "st": u["st"], "y": u.get("y"), "p": u.get("prov") if u.get("cc") else PV.name(u.get("prov"), u.get("lat"), u.get("lon")), "ci": u.get("city"), "u": u.get("url"),
             "o": u.get("own") or (u.get("paths") or [None])[0], "pa": u.get("par"), "path": (u.get("paths") or [None])[0], "lic": u.get("lic"),
             "c": u.get("iso") or (u.get("cc") and "??"), "cn": COUNTRY_TR.get(u.get("cc"), u.get("cc")), "la": u.get("lat"), "lo": u.get("lon"), "acc": u.get("acc"),
             "tech": u.get("tech") or u.get("fuel"), "k": u["k"]}.items() if v not in (None, "")})

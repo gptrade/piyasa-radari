@@ -122,3 +122,12 @@ def test_gem_watch_with_gipt_checks_only_gipt_and_ownership(tmp_path, monkeypatc
     gem = {"sources": {"gipt": "Global_Integrated_Power_September_2026_V2.xlsx", "ownership": "Global-Energy-Ownership-Tracker-September-2026-V2.xlsx"}}
     assert energy.gem_watch(gem, today=dt.date(2026, 10, 20)) == []
     assert sorted(u.split("/projects/")[1] for u in seen) == ["global-energy-ownership-tracker/", "global-integrated-power-tracker/"]
+
+
+def test_provinces_normalize_and_locate_from_coordinates():
+    pv = energy.Provinces()
+    assert len(pv.names) == 81
+    assert pv.name("Denizli Province") == "Denizli" and pv.name("Afyon") == "Afyonkarahisar"
+    assert pv.name(None, 39.92, 32.85) == "Ankara"            # il yok → koordinattan
+    assert pv.name("Karatay", 37.87, 32.49) == "Konya"        # ilçe yazılmış → koordinattan
+    assert pv.name(None, 48.85, 2.35) is None                 # Türkiye dışı nokta

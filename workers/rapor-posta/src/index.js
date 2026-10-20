@@ -129,10 +129,24 @@ export default {
     }
     const day = new Date().toISOString().slice(0, 10);
     const base = slug(mail.subject);
+    let ok = 0, dup = 0;
+    const errs = [];
     for (const f of files) {
       const h = await sha1(f.data);
-      await put(env, `gelen/${day}_${base}-${h.slice(0, 10)}.${f.ext}`, f.data, `Gelen rapor ${day}`);
+      try {
+        const r = await put(env, `gelen/${day}_${base}-${h.slice(0, 10)}.${f.ext}`, f.data, `Gelen rapor ${day}`);
+        r === "var" ? dup++ : ok++;
+      } catch (e) {
+        errs.push(String(e.message || e).slice(0, 160));
+      }
     }
-    await tg(env, `📥 rapor@: "${mail.subject || ""}" alındı (${files.length} dosya). Radar 15–30 dk içinde özetler.`);
+    // Kayıt hatası artık sessiz kalmaz (eskiden hata fırlatılıyor, posta kayboluyordu)
+    if (errs.length) {
+      await tg(env, `❌ rapor@: "${mail.subject || ""}" kaydedilemedi (${errs.length}/${files.length} dosya).\n${errs[0]}\nGitHub anahtarının süresi dolmuş olabilir: RAPOR_YAZMA_TOKEN'ı yenileyip eposta-kurulum iş akışını çalıştır.`);
+    }
+    if (ok || dup) {
+      await tg(env, ok ? `📥 rapor@: "${mail.subject || ""}" alındı (${ok} dosya${dup ? `, ${dup} tanesi zaten vardı` : ""}). Radar 15–30 dk içinde özetler.`
+                       : `♻️ rapor@: "${mail.subject || ""}" daha önce alınmış (aynı dosya), yeniden işlenmedi.`);
+    }
   },
 };
