@@ -226,12 +226,12 @@
     const byC = {}; us.forEach(u => { byC[u.cn] = (byC[u.cn] || 0) + u.mw; });
     const cs = Object.entries(byC).sort((a, b) => b[1] - a[1]);
     const ctry = g => { const c = [...new Set(g.units.map(([i]) => d.units[i]).filter(u => u.ab && (!src || u.s === src)).map(u => u.cn))];
-      return c.length > 3 ? `<span data-tip="${esc(c.join(", "))}">${c.slice(0, 3).map(esc).join(", ")} <span class="meta">+${c.length - 3}</span></span>` : c.map(esc).join(", "); };
+      return c.length > 4 ? `<span data-tip="${esc(c.join(", "))}">${c.slice(0, 4).map(esc).join(", ")} +${c.length - 4} ülke</span>` : c.map(esc).join(", "); };
     return `<section class="card card-flush" aria-labelledby="enAbT">${head}
       <span class="card-meta">${gw(us.reduce((a, u) => a + u.mw, 0))} işletmede · ${cs.length} ülke · Türkiye toplamına katılmaz · <a class="link-btn" href="#enerji/harita" data-abroad="1">Haritada gör →</a></span></div>
-      <div class="en-ab"><div class="tbl-scroll"><table class="tbl en-add"><thead><tr><th scope="col">Grup</th><th scope="col" class="num">İşletmede (MW)</th><th scope="col" class="num">Yatırım hattı (MW)</th><th scope="col">Kaynak</th><th scope="col">Ülkeler</th></tr></thead><tbody>
-      ${gs.slice(0, 12).map(([g, a, p]) => `<tr><td class="en-nm"><span>${esc(g.name)}</span>${g.code ? ` <a href="#hisse/${esc(g.code)}" class="en-code">${esc(g.code)}</a>` : ""}</td><td class="num"><b>${a ? mw(a) : "—"}</b></td>
-        <td class="num">${p ? mw(p) : "—"}</td><td class="en-mixc">${a ? mixBar(src ? { [src]: a } : g.abroad, a) : ""}</td><td class="en-cn">${ctry(g)}</td></tr>`).join("")}
+      <div class="en-ab"><div class="tbl-scroll"><table class="tbl en-add"><thead><tr><th scope="col">Grup</th><th scope="col" class="num">İşletmede (MW)</th><th scope="col" class="num">Yatırım hattı (MW)</th><th scope="col">Kaynak</th></tr></thead><tbody>
+      ${gs.slice(0, 12).map(([g, a, p]) => `<tr><td class="en-ab-g"><span class="en-ab-n">${esc(g.name)}</span>${g.code ? ` <a href="#hisse/${esc(g.code)}" class="en-code">${esc(g.code)}</a>` : ""}<span class="en-ab-cn">${ctry(g)}</span></td><td class="num"><b>${a ? mw(a) : "—"}</b></td>
+        <td class="num">${p ? mw(p) : "—"}</td><td class="en-mixc">${a ? mixBar(src ? { [src]: a } : g.abroad, a) : `<span class="meta">yalnız yatırım hattı</span>`}</td></tr>`).join("")}
       </tbody></table></div>
       <div class="en-ab-c"><h3 class="en-h3">Ülkelere göre (işletmede)</h3>${cs.length ? cs.slice(0, 10).map(([c, v]) => `<div class="en-ab-r"><span>${esc(c)}</span><span class="en-ab-b"><span style="width:${(v / cs[0][1] * 100).toFixed(1)}%"></span></span><b>${mw(v)}</b></div>`).join("") : `<p class="meta">İşletmede santral yok; yalnız yatırım hattında.</p>`}</div></div></section>`;
   }
