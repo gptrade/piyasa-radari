@@ -94,6 +94,15 @@ jobs:
             git archive FETCH_HEAD | tar -x -C site/data/regulasyon
           fi
 
+      # Olay karnesi (olay.yml, saatlik) olay dalında; panel yalnız karne.json'u okur (Parquet dosyaları yayımlanmaz)
+      - name: Olay karnesini geri yükle
+        run: |
+          rm -rf site/data/olay && mkdir -p site/data/olay
+          if git ls-remote --exit-code --heads origin olay >/dev/null 2>&1; then
+            git fetch --depth 1 origin olay
+            git archive FETCH_HEAD karne.json | tar -x -C site/data/olay || true
+          fi
+
       # Gizli rapor kutusu: kullanıcının gizli reposu, site/ DIŞINA çekilir (Pages'e ve data dalına girmez)
       - name: Gizli rapor kutusunu çek
         if: ${{ env.HAS_RAPOR == 'true' }}
@@ -129,7 +138,7 @@ jobs:
           git config user.name "radar-bot"
           git config user.email "radar-bot@users.noreply.github.com"
           # temel analiz (fin) ve enerji verisi kendi dallarında; o dal oluşana dek (geçiş) data dalında kalır
-          if [ "${HAS_FIN:-}" = "1" ]; then git add -A -- . ':!fin' ':!enerji' ':!regulasyon'; else git add -A -- . ':!enerji' ':!regulasyon'; fi
+          if [ "${HAS_FIN:-}" = "1" ]; then git add -A -- . ':!fin' ':!enerji' ':!regulasyon' ':!olay'; else git add -A -- . ':!enerji' ':!regulasyon' ':!olay'; fi
           git commit -qm "data $(date -u +%FT%TZ)"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
           rm -rf .git

@@ -58,6 +58,7 @@
     regulasyon: { title: "Uluslararası Regülasyon Takip", sub: "Risk yönetimi ve model validasyonu düzenlemeleri · BCBS, Türkiye, Azerbaycan, Körfez ve Orta Doğu", view: "#view-regulasyon", market: false },
     enerji: { title: "Enerji Kurulu Güç", sub: "Türkiye elektrik üretim şirketleri ve grupları: kaynak bazında kurulu güç, sahiplik ve yatırım hattı · GEM + EPİAŞ", view: "#view-enerji", market: false },
     takvim: { title: "Takvim", sub: "Faiz kararları, enflasyon verileri, bilançolar, temettü ve vade sonları · İstanbul saati", view: "#view-takvim", market: true },
+    "olay-karnesi": { title: "Olay Karnesi", sub: "Bütün BIST: olay tipine ve yöne göre olaydan sonraki 1, 5 ve 20 seans anormal getiri · KAP, haber, aracı kurum, geri alım", view: "#view-olay-karnesi", market: false },
     sinyal: { title: "Sinyal Takip", sub: "BIST ve ABD haber, bildirim ve sosyal medya sinyalleri", view: "#view-sinyal", market: true },
     arastirma: { title: "Araştırma", sub: "Aracı kurum notları, kurum görünümleri ve AI sentezi · raporların kendisi değil, kamuya duyurulan özetleri", view: "#view-arastirma", market: true },
     portfoy: { title: "Portföy", sub: "Pozisyonlar, kâr/zarar, risk ve pozisyonlarındaki gelişmeler · yalnız bu tarayıcıda", view: "#view-portfoy", market: false },
@@ -68,7 +69,7 @@
     metodoloji: { title: "Metodoloji", sub: "Temel analiz verileri, hesaplar ve puanlar nasıl üretiliyor", view: "#view-metodoloji", market: false },
     karsilastir: { title: "Karşılaştır", sub: "Seçtiğin şirketlerin kategori puanları, oranları ve eğilimleri", view: "#view-karsilastir", market: false },
   };
-  const ALIAS = { "bugün": "bugun", today: "bugun", ozet: "bugun", "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", bankalar: "bankalar", banka: "bankalar", "türk-bankaları": "bankalar", "faiz-duyarliligi": "banka-faiz", nim: "banka-faiz", enerji: "enerji", energy: "enerji", "regülasyon": "regulasyon", regulation: "regulasyon", "kurulu-guc": "enerji", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
+  const ALIAS = { "bugün": "bugun", today: "bugun", ozet: "bugun", "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", bankalar: "bankalar", banka: "bankalar", "türk-bankaları": "bankalar", "faiz-duyarliligi": "banka-faiz", nim: "banka-faiz", enerji: "enerji", energy: "enerji", "regülasyon": "regulasyon", regulation: "regulasyon", "kurulu-guc": "enerji", sinyaller: "sinyal", "olay": "olay-karnesi", karne: "olay-karnesi", "event-study": "olay-karnesi", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
   const badgeIds = {};                            // route → rozetteki kayıt kimlikleri
   function markBadgeSeen(route) {
     if (!badgeIds[route]) return;
@@ -81,7 +82,7 @@
   const updatedAt = {};                           // route → {t, label, staleMin}
   const S = { route: null, param: "", market: store.get("radar.market", "ALL"), mine: store.get("radar.mine", false) };
   // "Benimkiler" anahtarı: izleme listesi + portföy; açıkken bu sekmeler yalnız bu hisseleri gösterir
-  const MINE_ROUTES = new Set(["sinyal", "takvim", "arastirma", "geri-alim"]);
+  const MINE_ROUTES = new Set(["sinyal", "takvim", "arastirma", "geri-alim", "olay-karnesi"]);
   if (!["ALL", "BIST", "US"].includes(S.market)) S.market = "ALL";
 
   const shell = {

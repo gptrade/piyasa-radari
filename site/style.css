@@ -1535,3 +1535,29 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .br-foot { padding: 0 var(--s-4) var(--s-4); }
 .seg-sm button { min-height: 24px; height: 24px; padding: 0 8px; font-size: var(--fs-2xs); }
 .br-warn { margin: 0 var(--s-4) var(--s-3); padding: var(--s-2) var(--s-3); border-radius: var(--r-md); background: var(--warn-soft); border: 1px solid var(--warn-line); font-size: var(--fs-xs); color: var(--text-2); }
+
+/* ─────────────── Olay karnesi */
+#okBody { display: grid; gap: var(--s-4); }
+.ok-tb { flex-wrap: wrap; gap: var(--s-2); margin: 0; }
+.ok-tbl td, .ok-rc td { white-space: nowrap; }
+.ok-tbl tbody tr { cursor: pointer; }
+.ok-tbl tbody tr.is-sel > td { background: var(--accent-soft); }
+.ok-tbl tbody tr:first-child > td { border-bottom: 2px solid var(--border-strong); }
+.ok-sub { display: block; font-size: var(--fs-2xs); }
+.ok-c { min-width: 120px; }
+.ok-ci { position: relative; display: block; height: 8px; margin: 4px 0 2px; }
+.ok-ci0 { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--border-strong); }
+.ok-cir { position: absolute; top: 2px; height: 4px; border-radius: 2px; background: var(--surface-2); outline: 1px solid var(--border-strong); }
+.ok-cid { position: absolute; top: 0; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: var(--text-3); }
+.ok-cid.up { background: var(--up); } .ok-cid.down { background: var(--down); }
+.ok-n { display: block; font-size: var(--fs-2xs); }
+.ok-foot { padding: 0 var(--s-4) var(--s-4); }
+.ok-tt { white-space: normal !important; min-width: 280px; }
+.ok-tt a { color: inherit; } .ok-tt a:hover { color: var(--accent-ink); }
+.warn-t { color: var(--warn); }
+.k-ev-svg .ln.acc, .k-ev-svg .pt.acc { stroke: var(--accent); } .k-ev-svg .band.acc { fill: var(--accent); opacity: .1; }
+@media (max-width: 720px) {
+  .ok-tbl[data-h="1"] .hz5, .ok-tbl[data-h="1"] .hz20, .ok-tbl[data-h="5"] .hz1, .ok-tbl[data-h="5"] .hz20,
+  .ok-tbl[data-h="20"] .hz1, .ok-tbl[data-h="20"] .hz5 { display: none; }
+  .ok-tbl td:first-child { white-space: normal; }
+}
