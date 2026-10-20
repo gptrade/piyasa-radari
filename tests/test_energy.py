@@ -77,3 +77,48 @@ def test_real_gem_file_builds():
     assert doc["national"]["total"] > 80000
     keys = {g["key"] for g in doc["groups"][:30]}
     assert {"EUAS", "ENKAI", "AKSEN"} <= keys
+
+
+def test_assign_moves_unmatched_owner_share_to_matched_parent():
+    groups = energy.load_groups()
+    # sahip SPV eşleşmiyor, ana ortak (parent) eşleşiyor → pay ana ortağa geçer
+    unit = {"k": "wind", "n": "Bir RES", "mw": 100, "st": "operating",
+            "own": "Bilinmeyen Rüzgar Enerji AŞ [100%]", "par": "Aksa Enerji Uretim AŞ [100%]"}
+    out = energy.assign(unit, groups)
+    assert [(o["key"], round(o["share"], 3)) for o in out] == [("AKSEN", 1.0)]
+    # sahip doğrudan eşleşirse ana ortağa ayrıca yazılmaz (çift sayım yok)
+    unit2 = dict(unit, own="Aksa Enerji Uretim AŞ [100%]", par="Kazancı Holding [100%]")
+    out2 = energy.assign(unit2, groups)
+    assert round(sum(o["share"] for o in out2), 3) == 1.0 and out2[0]["key"] == "AKSEN"
+
+
+def test_abroad_units_kept_out_of_turkiye_totals():
+    groups = energy.load_groups()
+    gem = {"units": [
+        {"k": "gas", "n": "Yerli Santral", "mw": 500, "st": "operating", "own": "Aksa Enerji Uretim AŞ [100%]", "y": 2015},
+        {"k": "gas", "n": "Gana Santrali", "mw": 370, "st": "operating", "own": "Aksa Enerji Uretim AŞ [100%]", "cc": "Ghana", "iso": "GH", "lat": 5.6, "lon": -0.2},
+        {"k": "gas", "n": "Gana 2", "mw": 200, "st": "construction", "own": "Aksa Enerji Uretim AŞ [100%]", "cc": "Ghana", "iso": "GH"},
+    ], "sources": {"gipt": "Global_Integrated_Power_September_2026_V2.xlsx"}}
+    doc = energy.build(gem, groups, now=dt.datetime(2026, 10, 20, tzinfo=dt.timezone.utc))
+    assert doc["national"]["total"] == 500 and doc["national"]["pipe_total"] == 0
+    assert doc["abroad_total"] == 370
+    g = next(g for g in doc["groups"] if g["key"] == "AKSEN")
+    assert g["total"] == 500 and g["abroad_total"] == 370 and g["abroad_pipe"] == 200 and g["n"] == 1
+    assert g["countries"] == ["Gana"]
+    ab = doc["units"][1]
+    assert ab["cn"] == "Gana" and ab["c"] == "GH" and ab["la"] == 5.6
+    assert all(not doc["units"][r["i"]].get("cn") for r in doc["pipeline"] + doc["recent"])
+
+
+def test_gem_watch_with_gipt_checks_only_gipt_and_ownership(tmp_path, monkeypatch):
+    seen = []
+
+    class R:
+        status_code = 200
+        text = "<p>Latest data release: September 2026</p>"
+
+    monkeypatch.setattr(energy, "OUT", tmp_path)
+    monkeypatch.setattr(energy.requests, "get", lambda url, **k: (seen.append(url), R())[1])
+    gem = {"sources": {"gipt": "Global_Integrated_Power_September_2026_V2.xlsx", "ownership": "Global-Energy-Ownership-Tracker-September-2026-V2.xlsx"}}
+    assert energy.gem_watch(gem, today=dt.date(2026, 10, 20)) == []
+    assert sorted(u.split("/projects/")[1] for u in seen) == ["global-energy-ownership-tracker/", "global-integrated-power-tracker/"]

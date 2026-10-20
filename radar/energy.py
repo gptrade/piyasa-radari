@@ -40,10 +40,10 @@ UA = "piyasa-radari/1.0 (+https://github.com/gptrade/piyasa-radari)"
 TZ = dt.timezone(dt.timedelta(hours=3))
 
 KIND_SRC = {"hydro": "hidro", "wind": "ruzgar", "solar": "gunes", "geothermal": "jeotermal", "gas": "dogalgaz",
-            "coal": "komur", "nuclear": "nukleer", "bio": "diger"}
+            "coal": "komur", "nuclear": "nukleer", "bio": "diger", "oil": "diger"}
 SOURCES = ["hidro", "ruzgar", "gunes", "jeotermal", "dogalgaz", "komur", "nukleer", "diger"]
 SOURCE_NAMES = {"hidro": "Hidro", "ruzgar": "Rüzgâr", "gunes": "Güneş", "jeotermal": "Jeotermal", "dogalgaz": "Doğalgaz",
-                "komur": "Kömür", "nukleer": "Nükleer", "diger": "Biyokütle/diğer"}
+                "komur": "Kömür", "nukleer": "Nükleer", "diger": "Biyokütle / sıvı yakıt"}
 RENEWABLE = {"hidro", "ruzgar", "gunes", "jeotermal", "diger"}
 PIPE = {"construction", "pre-construction", "announced", "pre-permit", "permitted"}
 STATUS_NAMES = {"operating": "işletmede", "construction": "yapım", "pre-construction": "izin/finansman", "pre-permit": "izin öncesi",
@@ -166,8 +166,41 @@ def assign(unit: dict, groups: list[dict]) -> list[dict]:
                 top = next((k for k in range(len(nodes) - 1) if fold(nodes[k]) in (common or []) and not NOT_CORP.search(nodes[k].strip())), len(nodes) - 2)
                 add(nodes[top], min(left, _share_from(pcts, top)), None)
     else:
-        for name, share in parse_owners(unit.get("own")):
-            add(name, share, match_group(name, groups))
+        # sahipler (santral şirketi) önce; eşleşmeyen sahiplerin payı ana ortaklardan (holding) eşleşenlere aktarılır
+        owners = parse_owners(unit.get("own"))
+        parents = parse_owners(unit.get("par"))
+        unmatched = 0.0
+        pending = []
+        for name, share in owners:
+            g = match_group(name, groups)
+            if g:
+                add(name, share, g)
+            elif not NOT_CORP.search(name):
+                unmatched += share
+                pending.append((name, share))
+        if not owners and parents:
+            unmatched, pending = 1.0, []
+        if unmatched > 0.001 and parents:
+            taken = {x["key"] for x in out.values()}
+            moved = 0.0
+            for name, share in parents:
+                g = match_group(name, groups)
+                if g and g["key"] not in taken and moved + share <= unmatched + 1e-6:
+                    add(name, share, g)
+                    moved += share
+            rest = unmatched - moved
+            if rest > 0.001:
+                if pending:
+                    tot = sum(sh for _, sh in pending) or 1.0
+                    for name, share in pending:
+                        add(name, rest * share / tot, None)
+                else:                                                         # sahip yok: eşleşmeyen ana ortaklar kendi adıyla
+                    for name, share in parents:
+                        if not match_group(name, groups) and not NOT_CORP.search(name):
+                            add(name, min(share, rest), None)
+        else:
+            for name, share in pending:
+                add(name, share, None)
     return list(out.values())
 
 
@@ -278,7 +311,8 @@ def new_plants(cl: Epias, today: dt.date) -> list[dict]:
 MONTHS = {m: i for i, m in enumerate(["january", "february", "march", "april", "may", "june", "july", "august", "september",
                                        "october", "november", "december"], 1)}
 TRACKER_SRC = {"solar": ["gunes"], "wind": ["ruzgar"], "hydro": ["hidro"], "nuclear": ["nukleer"], "geothermal": ["jeotermal"],
-               "ownership": ["komur", "dogalgaz", "diger"]}
+               "ownership": ["komur", "dogalgaz", "diger"],
+               "gipt": ["hidro", "ruzgar", "gunes", "jeotermal", "dogalgaz", "komur", "nukleer", "diger"]}
 KAP_SRC = {"gunes": "gunes", "ruzgar": "ruzgar", "hidro": "hidro", "jeotermal": "jeotermal", "dogalgaz": "dogalgaz", "komur": "komur",
            "biyokutle": "diger", "depolama": "gunes", "hibrit": "gunes", "diger": "diger"}
 ADDED = {"devreye_alma", "kapasite_artisi"}
@@ -289,7 +323,7 @@ def tracker_asof(sources: dict | None) -> dict[str, str]:
     """GEM dosya adlarındaki aydan kaynak bazında veri tarihi: 'Global-Solar-Power-Tracker-February-2026.xlsx' → gunes: 2026-02-28."""
     out = {}
     for k, name in (sources or {}).items():
-        m = re.search(r"(January|February|March|April|May|June|July|August|September|October|November|December)-(\d{4})", name or "", re.I)
+        m = re.search(r"(January|February|March|April|May|June|July|August|September|October|November|December)[-_ ](\d{4})", name or "", re.I)
         if not m:
             continue
         y, mo = int(m.group(2)), MONTHS[m.group(1).lower()]
@@ -336,36 +370,62 @@ def kap_overlay(kap: dict | None, groups_out: list[dict], groups_cfg: list[dict]
     return rows
 
 
+# Yurt dışı ülke adlarını Türkçeleştir (GEM İngilizce verir; listede olmayan ad olduğu gibi kalır)
+COUNTRY_TR = {"Brazil": "Brezilya", "Croatia": "Hırvatistan", "Cuba": "Küba", "Cyprus": "Kıbrıs", "Northern Cyprus": "KKTC", "Dominican Republic": "Dominik Cumhuriyeti",
+              "Ecuador": "Ekvador", "Ghana": "Gana", "Guyana": "Guyana", "Indonesia": "Endonezya", "Iraq": "Irak", "Kyrgyzstan": "Kırgızistan",
+              "Madagascar": "Madagaskar", "Mozambique": "Mozambik", "Republic of the Congo": "Kongo Cumhuriyeti", "DR Congo": "Kongo DC", "Russia": "Rusya",
+              "Senegal": "Senegal", "Sudan": "Sudan", "Syria": "Suriye", "The Gambia": "Gambiya", "Uzbekistan": "Özbekistan", "Azerbaijan": "Azerbaycan",
+              "Georgia": "Gürcistan", "Kazakhstan": "Kazakistan", "Turkmenistan": "Türkmenistan", "Ukraine": "Ukrayna", "Albania": "Arnavutluk",
+              "Kosovo": "Kosova", "North Macedonia": "Kuzey Makedonya", "Serbia": "Sırbistan", "Bosnia and Herzegovina": "Bosna-Hersek", "Montenegro": "Karadağ",
+              "Bulgaria": "Bulgaristan", "Romania": "Romanya", "Greece": "Yunanistan", "Italy": "İtalya", "Spain": "İspanya", "Germany": "Almanya",
+              "Netherlands": "Hollanda", "United Kingdom": "Birleşik Krallık", "France": "Fransa", "Poland": "Polonya", "Hungary": "Macaristan",
+              "Egypt": "Mısır", "Libya": "Libya", "Algeria": "Cezayir", "Tunisia": "Tunus", "Morocco": "Fas", "Nigeria": "Nijerya", "Sierra Leone": "Sierra Leone",
+              "Guinea-Bissau": "Gine-Bissau", "Guinea": "Gine", "Liberia": "Liberya", "Côte d'Ivoire": "Fildişi Sahili", "Cameroon": "Kamerun", "Gabon": "Gabon",
+              "Angola": "Angola", "Zambia": "Zambiya", "South Africa": "Güney Afrika", "Kenya": "Kenya", "Ethiopia": "Etiyopya", "Somalia": "Somali",
+              "Tanzania": "Tanzanya", "Uganda": "Uganda", "Rwanda": "Ruanda", "Saudi Arabia": "Suudi Arabistan", "United Arab Emirates": "BAE", "Qatar": "Katar",
+              "Kuwait": "Kuveyt", "Oman": "Umman", "Jordan": "Ürdün", "Lebanon": "Lübnan", "Iran": "İran", "Pakistan": "Pakistan", "Afghanistan": "Afganistan",
+              "India": "Hindistan", "Bangladesh": "Bangladeş", "China": "Çin", "Mongolia": "Moğolistan", "Tajikistan": "Tacikistan", "Philippines": "Filipinler",
+              "Vietnam": "Vietnam", "Malaysia": "Malezya", "United States": "ABD", "Mexico": "Meksika", "Panama": "Panama", "Colombia": "Kolombiya",
+              "Venezuela": "Venezuela", "Argentina": "Arjantin", "Chile": "Şili", "Peru": "Peru", "Lithuania": "Litvanya", "Belarus": "Belarus", "Moldova": "Moldova"}
+
+
 def build(gem: dict, groups: list[dict], epias: dict | None = None, now: dt.datetime | None = None,
           exclude: re.Pattern | None = None, kap: dict | None = None) -> dict:
     now = now or dt.datetime.now(dt.timezone.utc)
-    units = [u for u in gem["units"] if not (exclude and exclude.search(fold(u["n"] + " " + " ".join(u.get("paths") or []))))]
+    units = [u for u in gem["units"] if u.get("cc") or not (exclude and "gipt" not in (gem.get("sources") or {})
+                                                            and exclude.search(fold(u["n"] + " " + " ".join(u.get("paths") or []))))]
     gmeta = {g["key"]: g for g in groups}
     U, G = [], {}
     nat_op, nat_pipe = {}, {}
     for i, u in enumerate(units):
         src = KIND_SRC.get(u["k"], "diger")
+        home = not u.get("cc")                                    # yurt dışı üniteler Türkiye toplamlarına girmez
         op = u["st"] == "operating"
         pipe = u["st"] in PIPE
-        if op:
+        if home and op:
             nat_op[src] = nat_op.get(src, 0) + u["mw"]
-        elif pipe:
+        elif home and pipe:
             nat_pipe[src] = nat_pipe.get(src, 0) + u["mw"]
         owners = assign(u, groups)
-        U.append({"n": u["n"] + (f" {u['ph']}" if u.get("ph") and str(u["ph"]) not in u["n"] else ""), "s": src, "mw": u["mw"], "st": u["st"],
-                  "y": u.get("y"), "p": u.get("prov"), "u": u.get("url"), "o": u.get("own") or (u.get("paths") or [None])[0],
-                  "lic": u.get("lic")})
+        U.append({k: v for k, v in {
+            "n": u["n"] + (f" {u['ph']}" if u.get("ph") and str(u["ph"]) not in u["n"] else ""), "en": u.get("en") if u.get("en") != u["n"] else None,
+            "s": src, "mw": u["mw"], "st": u["st"], "y": u.get("y"), "p": u.get("prov"), "ci": u.get("city"), "u": u.get("url"),
+            "o": u.get("own") or (u.get("paths") or [None])[0], "pa": u.get("par"), "path": (u.get("paths") or [None])[0], "lic": u.get("lic"),
+            "c": u.get("iso") or (u.get("cc") and "??"), "cn": COUNTRY_TR.get(u.get("cc"), u.get("cc")), "la": u.get("lat"), "lo": u.get("lon"), "acc": u.get("acc"),
+            "tech": u.get("tech") or u.get("fuel"), "k": u["k"]}.items() if v not in (None, "")})
         for ow in owners:
-            gr = G.setdefault(ow["key"], {"key": ow["key"], "name": ow["name"], "g": ow["g"], "op": {}, "pipe": {}, "cons": 0.0,
-                                          "units": [], "nodes": set()})
+            gr = G.setdefault(ow["key"], {"key": ow["key"], "name": ow["name"], "g": ow["g"], "op": {}, "pipe": {}, "ab": {}, "abp": {},
+                                          "cons": 0.0, "units": [], "nodes": set()})
             gr["nodes"].add(ow["node"])
             eq = u["mw"] * ow["share"]
             if op:
-                gr["op"][src] = gr["op"].get(src, 0) + eq
-                if ow["share"] >= 0.5:
+                bucket = gr["op"] if home else gr["ab"]
+                bucket[src] = bucket.get(src, 0) + eq
+                if home and ow["share"] >= 0.5:
                     gr["cons"] += u["mw"]
             elif pipe:
-                gr["pipe"][src] = gr["pipe"].get(src, 0) + eq
+                bucket = gr["pipe"] if home else gr["abp"]
+                bucket[src] = bucket.get(src, 0) + eq
             gr["units"].append([i, round(ow["share"], 4)])
     nat_total = sum(nat_op.values()) or 1.0
     year = now.year
@@ -374,23 +434,30 @@ def build(gem: dict, groups: list[dict], epias: dict | None = None, now: dt.date
         g = gr["g"] or {}
         op = {s: round(v, 1) for s, v in gr["op"].items() if v >= 0.05}
         pipe = {s: round(v, 1) for s, v in gr["pipe"].items() if v >= 0.05}
+        ab = {s: round(v, 1) for s, v in gr["ab"].items() if v >= 0.05}
+        abp = {s: round(v, 1) for s, v in gr["abp"].items() if v >= 0.05}
         total = round(sum(op.values()), 1)
-        if total < 1 and sum(pipe.values()) < 1:
+        if total < 1 and sum(pipe.values()) < 1 and sum(ab.values()) + sum(abp.values()) < 1:
             continue
         ren = sum(v for s, v in op.items() if s in RENEWABLE)
-        recent = round(sum(U[i]["mw"] * sh for i, sh in gr["units"] if U[i]["st"] == "operating" and (U[i]["y"] or 0) >= year - 2), 1)
+        recent = round(sum(U[i]["mw"] * sh for i, sh in gr["units"] if U[i]["st"] == "operating" and not U[i].get("c") and (U[i].get("y") or 0) >= year - 2), 1)
         grp.append({"key": k, "name": gr["name"], "auto": not gr["g"], "ticker": g.get("ticker"), "parent": g.get("parent"),
                     "kind": g.get("kind", "ozel"), "total": total, "cons": round(gr["cons"], 1), "share": round(total / nat_total, 5),
                     "src": op, "pipe": pipe, "pipe_total": round(sum(pipe.values()), 1), "renew": round(ren / total, 4) if total else None,
-                    "recent": recent, "n": sum(1 for i, _ in gr["units"] if U[i]["st"] == "operating"),
+                    "abroad": ab, "abroad_total": round(sum(ab.values()), 1), "abroad_pipe": round(sum(abp.values()), 1),
+                    "countries": sorted({U[i]["cn"] for i, _ in gr["units"] if U[i].get("cn")}),
+                    "recent": recent, "n": sum(1 for i, _ in gr["units"] if U[i]["st"] == "operating" and not U[i].get("c")),
                     "entities": sorted(gr["nodes"])[:30], "units": sorted(gr["units"], key=lambda x: -U[x[0]]["mw"] * x[1])})
     grp.sort(key=lambda g: (-g["total"], -g["pipe_total"]))
     listed = sum(g["total"] for g in grp if g["ticker"] or g["parent"])
-    unowned = round(sum(U[i]["mw"] for i, u in enumerate(units) if u["st"] == "operating" and not u.get("own") and not u.get("paths")), 1)
-    recent = sorted([dict(i=i, **{k: U[i][k] for k in ("n", "s", "mw", "y", "p")}) for i in range(len(U))
-                     if U[i]["st"] == "operating" and (U[i]["y"] or 0) >= year - 2], key=lambda r: (-(r["y"] or 0), -r["mw"]))
-    pipeline = sorted([dict(i=i, **{k: U[i][k] for k in ("n", "s", "mw", "st", "y", "p")}) for i in range(len(U)) if U[i]["st"] in PIPE],
+    unowned = round(sum(u["mw"] for u in units if u["st"] == "operating" and not u.get("cc") and not u.get("own") and not u.get("par")
+                        and not u.get("paths")), 1)
+    pick = lambda i, keys: dict(i=i, **{k: U[i].get(k) for k in keys})
+    recent = sorted([pick(i, ("n", "s", "mw", "y", "p")) for i in range(len(U))
+                     if U[i]["st"] == "operating" and not U[i].get("c") and (U[i].get("y") or 0) >= year - 2], key=lambda r: (-(r["y"] or 0), -r["mw"]))
+    pipeline = sorted([pick(i, ("n", "s", "mw", "st", "y", "p")) for i in range(len(U)) if U[i]["st"] in PIPE and not U[i].get("c")],
                       key=lambda r: -r["mw"])
+    abroad_tot = round(sum(u["mw"] for u in units if u.get("cc") and u["st"] == "operating"), 1)
     asof = tracker_asof(gem.get("sources"))
     kap_rows = kap_overlay(kap, grp, groups, asof)
     return {
@@ -400,6 +467,7 @@ def build(gem: dict, groups: list[dict], epias: dict | None = None, now: dt.date
         "kap_types": {"devreye_alma": "Devreye alma", "kapasite_artisi": "Kapasite artışı", "lisans": "Üretim lisansı", "onlisans": "Önlisans",
                       "ced": "ÇED", "yeka": "YEKA", "yatirim_karari": "Yatırım kararı", "sozlesme": "Sözleşme", "satin_alma": "Satın alma",
                       "satis": "Satış", "diger": "Diğer"},
+        "abroad_total": abroad_tot,
         "national": {"src": {s: round(v, 1) for s, v in nat_op.items()}, "total": round(sum(nat_op.values()), 1),
                      "pipe": {s: round(v, 1) for s, v in nat_pipe.items()}, "pipe_total": round(sum(nat_pipe.values()), 1),
                      "unowned": unowned},
@@ -414,7 +482,7 @@ def build(gem: dict, groups: list[dict], epias: dict | None = None, now: dt.date
     }
 
 
-GEM_PAGES = {"solar": "global-solar-power-tracker", "wind": "global-wind-power-tracker", "hydro": "global-hydropower-tracker",
+GEM_PAGES = {"gipt": "global-integrated-power-tracker", "solar": "global-solar-power-tracker", "wind": "global-wind-power-tracker", "hydro": "global-hydropower-tracker",
              "nuclear": "global-nuclear-power-tracker", "geothermal": "global-geothermal-power-tracker", "ownership": "global-energy-ownership-tracker",
              "coal": "global-coal-plant-tracker", "gas": "global-oil-gas-plant-tracker"}
 RELEASE = re.compile(r"(?:release|released|update|updated|version|latest data)[^.<]{0,60}?\b(January|February|March|April|May|June|July|August|"
@@ -431,15 +499,17 @@ def gem_watch(gem: dict, today: dt.date | None = None) -> list[dict]:
         st = json.loads(path.read_text(encoding="utf-8"))
     except (FileNotFoundError, ValueError):
         st = {}
-    if st.get("checked", "") > (today - dt.timedelta(days=7)).isoformat():
+    if st.get("checked", "") > (today - dt.timedelta(days=7)).isoformat() and st.get("sources") == gem.get("sources"):
         return st.get("newer") or []
     have = {}
     for k, name in (gem.get("sources") or {}).items():
-        m = re.search(r"(January|February|March|April|May|June|July|August|September|October|November|December)-(\d{4})", name or "", re.I)
+        m = re.search(r"(January|February|March|April|May|June|July|August|September|October|November|December)[-_ ](\d{4})", name or "", re.I)
         if m:
             have[k] = (int(m.group(2)), MONTHS[m.group(1).lower()])
+    # GIPT tek dosyada tüm kaynakları taşıdığından yalnız GIPT ve Ownership sayfaları izlenir; ayrı izleyici dosyaları yoksa onlara bakılmaz
+    pages = {k: v for k, v in GEM_PAGES.items() if k in have} if "gipt" in have else {k: v for k, v in GEM_PAGES.items() if k != "gipt"}
     newer = []
-    for k, slug in GEM_PAGES.items():
+    for k, slug in pages.items():
         try:
             r = requests.get(f"https://globalenergymonitor.org/projects/{slug}/", timeout=40, headers={"User-Agent": UA})
         except requests.RequestException:
@@ -468,7 +538,7 @@ def gem_watch(gem: dict, today: dt.date | None = None) -> list[dict]:
             told |= {f"{n['tracker']}:{n['release']}" for n in fresh}
         except requests.RequestException:
             pass
-    st = {"checked": today.isoformat(), "newer": newer, "told": sorted(told)}
+    st = {"checked": today.isoformat(), "sources": gem.get("sources"), "newer": newer, "told": sorted(told)}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(st, ensure_ascii=False), encoding="utf-8")
     return newer
