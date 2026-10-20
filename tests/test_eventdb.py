@@ -139,3 +139,14 @@ def test_event_returns_ew_benchmark_and_jump():
     # EW = (AAA %1 + BBB %0) / 2; BBB'nin sıçrama günleri ortalamaya girmez
     assert abs(out.loc["e", "e1"] - 0.5) < 1e-3 and abs(out.loc["e", "ae1"] - 0.5) < 1e-3
     assert bool(out.loc["j", "jump"]) and pd.notna(out.loc["j", "r1"]) and pd.isna(out.loc["j", "r5"])
+
+
+def test_annotate_earnings_same_day_rows():
+    rows = E.from_kap_rows([{"publishDate": "10.08.2026 18:30:00", "disclosureIndex": 100, "relatedStocks": "AAA", "subject": "Finansal Rapor"},
+                            {"publishDate": "10.08.2026 18:31:00", "disclosureIndex": 101, "relatedStocks": "AAA", "subject": "Faaliyet Raporu (Konsolide)"},
+                            {"publishDate": "10.08.2026 18:31:00", "disclosureIndex": 102, "relatedStocks": "AAA", "subject": "Özel Durum Açıklaması (Genel)"}])
+    df, _ = E.merge(None, rows, T("2026-08-11"))
+    df["cluster"] = df["id"]
+    out = E.annotate_earnings(df, {100: {"sym": "AAA", "period": "2026/06", "su": 0.8, "sue": None, "yoy": 0.3, "dir": 1, "rev_su": 0.1}}).set_index("id")
+    assert out.loc["kap:100", "dir"] == 1 and out.loc["kap:101", "dir"] == 1 and pd.isna(out.loc["kap:102", "dir"])
+    assert out.loc["kap:100", "mag"] == 0.8 and json.loads(out.loc["kap:101", "payload"])["period"] == "2026/06"
