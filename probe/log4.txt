@@ -1,0 +1,15 @@
+bie_pkauo TP.PKAUO.S01.D.U | Cari Yıl Sonu Yıllık TÜFE Beklentisi (% Değişim) | 01-01-2013 01-10-2026
+bie_pkauo TP.PKAUO.S01.E.U | 12 Ay Sonrasının Yıllık TÜFE Beklentisi (% Değişim) | 01-01-2013 01-10-2026
+bie_pkauo TP.PKAUO.S01.I.U | Gelecek Yıl Sonu Yıllık TÜFE Beklentisi (% Değişim) | 01-09-2021 01-10-2026
+bie_pkauo TP.PKAUO.S01.F.U | 24 Ay Sonrasının Yıllık TÜFE Beklentisi (% Değişim) | 01-01-2013 01-10-2026
+bie_pkauo TP.PKAUO.S01.G.U | 5 Yıl Sonrasının Yıllık TÜFE Beklentisi (% Değişim) | 01-11-2017 01-10-2026
+bie_pkauo TP.PKAUO.S04.H.U | Cari Yıl Sonu TCMB Politika Faiz Oranı Beklentisi (%) | 01-06-2025 01-10-2026
+bie_pkauo TP.PKAUO.S04.D.U | 12 Ay Sonrası TCMB Politika Faiz Oranı Beklentisi (%) | 01-01-2013 01-10-2026
+bie_pkauo TP.PKAUO.S04.I.U | Gelecek Yıl Sonu TCMB Politika Faiz Oranı Beklentisi (%) | 01-06-2025 01-10-2026
+bie_pkauo TP.PKAUO.S04.E.U | 24 Ay Sonrası TCMB Politika Faiz Oranı Beklentisi (%) | 01-01-2013 01-10-2026
+bie_pkauo TP.PKAUO.S05.B.U | Cari Yıl Sonu Bankalararası Döviz Piyasası ABD Dolar Kuru Beklentisi (TL) | 01-01-2013 01-10-2026
+bie_pkauo TP.PKAUO.S05.C.U | 12 Ay Sonrasının Bankalararası Döviz Piyasası ABD Dolar Kuru Beklentisi (TL) | 01-01-2013 01-10-2026
+bie_pkauo TP.PKAUO.S06.A.U | Cari Yılın Yıllık Cari İşlemler Dengesi Beklentisi | 01-01-2013 01-10-2026
+bie_pkauo TP.PKAUO.S06.B.U | Gelecek Yılın Yıllık Cari İşlemler Dengesi Beklentisi | 01-01-2013 01-10-2026
+bie_pkauo TP.PKAUO.S07.A.U | Cari Yılın Yıllık GSYH Büyüme Beklentisi (%) | 01-01-2013 01-10-2026
+bie_pkauo TP.PKAUO.S07.B.U | Gelecek Yılın Yıllık GSYH Büyüme Beklentisi (%) | 01-01-2013 01-10-2026
