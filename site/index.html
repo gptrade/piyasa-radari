@@ -35,6 +35,10 @@
       <div class="nav-sec" data-sec="gunluk">
         <button type="button" class="nav-group" aria-expanded="true" aria-controls="nav-gunluk"><span>Günlük akış</span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <div class="nav-sec-items" id="nav-gunluk">
+          <a class="nav-item" href="#bugun" data-route="bugun">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span>Bugün</span>
+          </a>
           <a class="nav-item" href="#sinyal" data-route="sinyal">
         <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="10" cy="10" r="2" fill="currentColor"/><path d="M10 10l4.5-4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
         <span>Sinyal Takip</span>
@@ -334,6 +338,12 @@
       <section class="view fa-view" id="view-karsilastir" aria-labelledby="pageTitle" hidden></section>
       <section class="view fa-view" id="view-metodoloji" aria-labelledby="pageTitle" hidden></section>
 
+      <!-- ─────────── Bugün (tüm sekmelerden özet) ─────────── -->
+      <section class="view" id="view-bugun" aria-labelledby="pageTitle" hidden>
+        <p class="src-line td-date" id="tdDate"></p>
+        <div id="tdBody"></div>
+      </section>
+
       <!-- ─────────── Uluslararası Regülasyon Takip (veri: regulasyon dalı) ─────────── -->
       <section class="view" id="view-regulasyon" aria-labelledby="pageTitle" hidden>
         <div class="toolbar">
@@ -410,6 +420,7 @@
 <script src="fundamentals.js?v=20261020a"></script>
 <script src="energy.js?v=20261020a"></script>
 <script src="regwatch.js?v=20261020a"></script>
+<script src="today.js?v=20261020a"></script>
 <script src="buybacks.js?v=20261020a"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>

@@ -51,6 +51,7 @@
 
   // ─────────────────────────────── durum
   const ROUTES = {
+    bugun: { title: "Bugün", sub: "Her sekmeden günün öne çıkanları · sinyaller, takvim, portföy, aracı kurum notları, enerji ve regülasyon", view: "#view-bugun", market: false },
     makro: { title: "Makro Veri", sub: "Haftalık makroekonomik göstergeler · ALCO paneli", view: "#view-makro", market: false },
     bankalar: { title: "Türk Bankaları", sub: "BDDK solo verileriyle bilanço yapısı, fonlama, likidite ve kredi portföyü · ayrı panel", view: "#view-bankalar", market: false },
     regulasyon: { title: "Uluslararası Regülasyon Takip", sub: "Risk yönetimi ve model validasyonu düzenlemeleri · BCBS, Türkiye, Azerbaycan, Körfez ve Orta Doğu", view: "#view-regulasyon", market: false },
@@ -66,7 +67,7 @@
     metodoloji: { title: "Metodoloji", sub: "Temel analiz verileri, hesaplar ve puanlar nasıl üretiliyor", view: "#view-metodoloji", market: false },
     karsilastir: { title: "Karşılaştır", sub: "Seçtiğin şirketlerin kategori puanları, oranları ve eğilimleri", view: "#view-karsilastir", market: false },
   };
-  const ALIAS = { "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", bankalar: "bankalar", banka: "bankalar", "türk-bankaları": "bankalar", enerji: "enerji", energy: "enerji", "regülasyon": "regulasyon", regulation: "regulasyon", "kurulu-guc": "enerji", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
+  const ALIAS = { "bugün": "bugun", today: "bugun", ozet: "bugun", "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", bankalar: "bankalar", banka: "bankalar", "türk-bankaları": "bankalar", enerji: "enerji", energy: "enerji", "regülasyon": "regulasyon", regulation: "regulasyon", "kurulu-guc": "enerji", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
   const badgeIds = {};                            // route → rozetteki kayıt kimlikleri
   function markBadgeSeen(route) {
     if (!badgeIds[route]) return;
@@ -176,7 +177,7 @@
     if (focus) $("#main").focus({ preventScroll: true });
   }
   // Geri/İleri: pushState kayıtlarında tarayıcı yalnız popstate yollar (hashchange gelmez); ikisi de aynı işleyici
-  const fromURL = () => { const p = parseHash(); go(p ? p.route : "sinyal", { push: false, param: p?.param || "" }); };
+  const fromURL = () => { const p = parseHash(); go(p ? p.route : "bugun", { push: false, param: p?.param || "" }); };
   addEventListener("hashchange", fromURL);
   addEventListener("popstate", fromURL);
   $$(".nav-item").forEach(a => a.addEventListener("click", e => { e.preventDefault(); go(a.dataset.route, { focus: true }); }));
@@ -458,6 +459,6 @@
   addEventListener("DOMContentLoaded", () => {
     const h = parseHash();
     if (h) go(h.route, { push: false, param: h.param });
-    else go(store.get("radar.route", "sinyal"), { push: false });
+    else go("bugun", { push: false });                                // site her açılışta Bugün ile başlar
   });
 })();

@@ -370,6 +370,7 @@
   function badge() {
     const n = rows().filter(r => r.alert && r.alert.k !== "near").length;
     sh.setBadge("portfoy", n, n ? `${n} pozisyonda stop ya da hedef seviyesi geçildi` : "");
+    dispatchEvent(new CustomEvent("radar:pf"));
   }
   // ─────────────────────────────── içe / dışa aktarma
   function exportJSON() {
@@ -417,5 +418,16 @@
     exportNote: "Portföy boş",
   });
   setTimeout(() => { if (!S.loaded && S.pf.positions.length) load(); }, 2000);   // rozet için arka planda
-  window.radarPortfolio = { held: () => new Set(S.pf.positions.map(p => p.sym)) };
+  window.radarPortfolio = {
+    held: () => new Set(S.pf.positions.map(p => p.sym)),
+    // Bugün sayfası için özet (fiyatlar yüklenmediyse yalnız pozisyon sayısı)
+    summary() {
+      const n = S.pf.positions.length;
+      if (!n || !S.loaded) return { n, value: null, dayPct: null, alerts: [], movers: [] };
+      const rs = rows(), value = rs.reduce((a, r) => a + (r.val || 0), 0), day = rs.reduce((a, r) => a + (r.day || 0), 0);
+      return { n, value: value || null, dayPct: value && value - day ? day / (value - day) * 100 : null,
+        alerts: rs.filter(r => r.alert).map(r => ({ sym: r.pos.sym, t: r.alert.t, c: r.alert.c, last: r.last })),
+        movers: rs.filter(r => r.q?.chg != null).sort((a, b) => Math.abs(b.q.chg) - Math.abs(a.q.chg)).slice(0, 4).map(r => ({ sym: r.pos.sym, chg: r.q.chg, w: r.w })) };
+    },
+  };
 })();
