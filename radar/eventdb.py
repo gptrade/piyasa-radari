@@ -634,6 +634,11 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
     ret = event_returns(ev, px, sorted(useq)) if px is not None else pd.DataFrame()
     if not ret.empty:
         ret.to_parquet(RET, index=False, compression="zstd")
+        try:
+            from . import eventstudy
+            eventstudy.write(OUT / "karne.json", eventstudy.build(ev, ret, px, sorted(useq), now_ts))
+        except Exception as e:                              # noqa: BLE001 — karne düşse de veritabanı kaydedilir
+            log.warning("Olay karnesi üretilemedi: %s", e)
 
     # 5) özet ve kabul ölçütleri
     since90 = (now_ts - pd.Timedelta(days=BACKFILL_DAYS))
