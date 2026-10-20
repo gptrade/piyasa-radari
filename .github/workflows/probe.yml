@@ -20,29 +20,16 @@ jobs:
         run: |
           mkdir -p probe
           pip install -q -r requirements.txt
-          python - > probe/log3.txt 2>&1 <<'PY' || true
-          import os, json, requests
+          python - > probe/log4.txt 2>&1 <<'PY' || true
+          import os, requests
           key = os.environ.get("EVDS_API_KEY")
-          print("key", bool(key))
           base = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
-          for path in ["datagroups/mode=2&code=bie_pkauo&type=json", "serieList/type=json&code=bie_pkauo",
-                       "datagroups/mode=0&type=json", "categories/type=json"]:
-              try:
-                  r = requests.get(base + path, headers={"key": key}, timeout=40)
-                  t = r.text
-                  print("==", path, r.status_code, len(t))
-                  if "categories" in path or "mode=0" in path:
-                      try:
-                          js = r.json()
-                          for x in js:
-                              s = json.dumps(x, ensure_ascii=False)
-                              if any(w in s.lower() for w in ("beklenti", "katılımcı", "katilimci", "expectation")):
-                                  print("  ", s[:300])
-                      except Exception as e: print("json?", e, t[:300])
-                  else:
-                      print(t[:3000])
-              except Exception as e:
-                  print("hata", path, e)
+          for g in ["bie_pkauo", "bie_enfbek"]:
+              r = requests.get(base + f"serieList/type=json&code={g}", headers={"key": key}, timeout=40)
+              for x in r.json():
+                  n = x.get("SERIE_NAME", "")
+                  if any(w in n for w in ("12 Ay", "Yıllık", "Yıl Sonu", "24 Ay")):
+                      print(g, x["SERIE_CODE"], "|", n, "|", x.get("START_DATE"), x.get("END_DATE"))
           PY
       - name: kaydet
         if: always()
