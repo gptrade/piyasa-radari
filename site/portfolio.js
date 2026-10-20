@@ -420,6 +420,20 @@
   setTimeout(() => { if (!S.loaded && S.pf.positions.length) load(); }, 2000);   // rozet için arka planda
   window.radarPortfolio = {
     held: () => new Set(S.pf.positions.map(p => p.sym)),
+    position: sym => S.pf.positions.find(p => p.sym === sym) || null,
+    // Hisse paletinden "Portföye ekle": form hisse ve piyasa dolu açılır; pozisyon varsa düzenleme açılır
+    startAdd(sym, market) {
+      const tryFill = (n = 0) => {
+        const f = $("#pfForm");
+        if (!f) { if (n < 40) setTimeout(() => tryFill(n + 1), 100); return; }
+        const pos = S.pf.positions.find(p => p.sym === sym);
+        if (pos) { S.editing = pos.id; render(); }
+        const g = $("#pfForm");
+        if (!pos) { g.sym.value = sym; if (market && g.market) g.market.value = market === "US" ? "US" : "BIST"; }
+        g.scrollIntoView({ block: "center" }); g.qty.focus();
+      };
+      tryFill();
+    },
     // Bugün sayfası için özet (fiyatlar yüklenmediyse yalnız pozisyon sayısı)
     summary() {
       const n = S.pf.positions.length;

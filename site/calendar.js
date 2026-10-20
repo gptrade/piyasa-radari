@@ -47,7 +47,9 @@
 
   const inMarket = e => sh.market === "ALL" || e.market === "ALL" || e.market === sh.market;
   const regionOf = e => e.region || ({ BIST: "TR", US: "US", EU: "EU" })[e.market] || "TR";
-  const passes = e => inMarket(e) && (!S.kinds.size || S.kinds.has(e.kind)) && (!S.regions.size || S.regions.has(regionOf(e)))
+  // "Benimkiler" açıkken şirket olayları (bilanço, temettü, genel kurul) yalnız izleme listesi + portföy hisseleri; makro olaylar kalır
+  const mineOk = e => !sh.mine || !e.ticker || sh.mineSet().has(e.ticker);
+  const passes = e => inMarket(e) && mineOk(e) && (!S.kinds.size || S.kinds.has(e.kind)) && (!S.regions.size || S.regions.has(regionOf(e)))
     && (!S.important || e.importance >= 3);
   // Düşük önemli bilançolar (S&P 500'ün geri kalanı) gün ve bölge başına tek kutuda toplanır
   function grouped(list) {
@@ -228,12 +230,12 @@
       ${e.items?.length > 1 ? `<div class="cal-dlg-sec"><span class="k-lbl">Bu yayındaki tablolar</span><ul class="cal-items">${e.items.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
       <div class="cal-dlg-sec cal-dlg-imp"><span class="k-lbl">Önem</span>${imp(e.importance)} ${e.importance === 3 ? "yüksek" : e.importance === 2 ? "orta" : "düşük"}</div>
       <div class="cal-dlg-act">
-        ${e.ticker ? `<button type="button" class="btn btn-sm" data-sym="${esc(e.ticker)}" id="calDlgTk">${esc(e.ticker)} sinyalleri</button>` : ""}
+        ${e.ticker ? `<button type="button" class="btn btn-sm" data-sym="${esc(e.ticker)}" id="calDlgTk">${esc(e.ticker)} hisse paneli</button>` : ""}
         ${e.url ? `<a class="btn btn-sm" href="${esc(e.url)}" target="_blank" rel="noopener">Kaynağa git ↗</a>` : ""}
       </div>`;
     S.opener = opener;
     dlg.showModal();
-    $("#calDlgTk")?.addEventListener("click", () => { dlg.close(); sh.go("sinyal"); setTimeout(() => window.radar?.openTicker?.(e.ticker), 60); });
+    $("#calDlgTk")?.addEventListener("click", () => { dlg.close(); window.radar?.openTicker?.(e.ticker, opener); });
   }
 
   function render() {
@@ -302,6 +304,7 @@
     dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener("close", () => S.opener?.isConnected && S.opener.focus());
     addEventListener("marketchange", () => { badge(); if (sh.route === "takvim") render(); });
+    addEventListener("minechange", () => { if (sh.route === "takvim") render(); });
   }
   function rangeRows() {
     if (S.view === "list") return visible();

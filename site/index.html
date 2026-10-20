@@ -8,8 +8,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="tokens.css?v=20261020g">
-<link rel="stylesheet" href="style.css?v=20261020g">
+<link rel="stylesheet" href="tokens.css?v=20261020h">
+<link rel="stylesheet" href="style.css?v=20261020h">
 <script>
   // Kayıtlı tema ve kenar çubuğu durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
   (function () {
@@ -152,6 +152,14 @@
         <p id="pageSub"></p>
       </div>
       <div class="actions" role="toolbar" aria-label="Sayfa eylemleri">
+        <button type="button" class="btn cmd-btn" id="cmdBtn" aria-haspopup="dialog" aria-label="Hisse ya da sayfa ara" data-tip="Her yerden ara · Ctrl/⌘ K ya da /">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m13.2 13.2 3.3 3.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <span class="btn-lbl">Ara</span><kbd class="cmd-kbd">⌘K</kbd>
+        </button>
+        <button type="button" class="btn mine-btn" id="mineBtn" aria-pressed="false" hidden>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 3 2.1 4.4 4.8.6-3.5 3.3.9 4.8L10 13.8 5.7 16.1l.9-4.8L3.1 8l4.8-.6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <span class="btn-lbl">Benimkiler</span>
+        </button>
         <span class="updated" id="updated"><span class="u-lbl">Son güncelleme: </span><time id="updatedTime">—</time></span>
         <button type="button" class="btn" id="refreshBtn">
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10a6 6 0 1 1-1.8-4.3M16 3.5v3.2h-3.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -415,16 +423,17 @@
   <div class="sp-body" id="spBody"></div>
 </aside>
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="shell.js?v=20261020g"></script>
-<script src="app.js?v=20261020g"></script>
-<script src="calendar.js?v=20261020g"></script>
-<script src="portfolio.js?v=20261020g"></script>
-<script src="research.js?v=20261020g"></script>
-<script src="fundamentals.js?v=20261020g"></script>
-<script src="energy.js?v=20261020g"></script>
-<script src="regwatch.js?v=20261020g"></script>
-<script src="today.js?v=20261020g"></script>
-<script src="buybacks.js?v=20261020g"
+<script src="shell.js?v=20261020h"></script>
+<script src="app.js?v=20261020h"></script>
+<script src="calendar.js?v=20261020h"></script>
+<script src="portfolio.js?v=20261020h"></script>
+<script src="research.js?v=20261020h"></script>
+<script src="fundamentals.js?v=20261020h"></script>
+<script src="energy.js?v=20261020h"></script>
+<script src="regwatch.js?v=20261020h"></script>
+<script src="palette.js?v=20261020h"></script>
+<script src="today.js?v=20261020h"></script>
+<script src="buybacks.js?v=20261020h"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>

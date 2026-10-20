@@ -78,7 +78,9 @@
   }
   const H = {};                                   // route → işleyiciler {refresh, exports, onShow, onHide, onMarket}
   const updatedAt = {};                           // route → {t, label, staleMin}
-  const S = { route: null, param: "", market: store.get("radar.market", "ALL") };
+  const S = { route: null, param: "", market: store.get("radar.market", "ALL"), mine: store.get("radar.mine", false) };
+  // "Benimkiler" anahtarı: izleme listesi + portföy; açıkken bu sekmeler yalnız bu hisseleri gösterir
+  const MINE_ROUTES = new Set(["sinyal", "takvim", "arastirma", "geri-alim"]);
   if (!["ALL", "BIST", "US"].includes(S.market)) S.market = "ALL";
 
   const shell = {
@@ -89,6 +91,13 @@
     register(route, h) { H[route] = h; if (S.route === route) { h.onShow?.(); syncActions(); } },
     setUpdated(route, t, opt = {}) { updatedAt[route] = t ? { t: new Date(t), ...opt } : null; if (route === S.route) syncActions(); },
     syncActions: () => syncActions(),
+    get mine() { return S.mine; },
+    mineSet() {
+      const wl = (window.radar?.state?.feed?.watchlist || []).map(w => w.symbol);
+      const held = window.radarPortfolio?.held?.() || new Set();
+      return new Set([...wl, ...held]);
+    },
+    setMine(v) { S.mine = !!v; store.set("radar.mine", S.mine); syncMine(); dispatchEvent(new CustomEvent("minechange", { detail: S.mine })); },
     // opt.ids: rozet yalnız sekme son açıldığından beri görülmemiş kayıtları sayar (sekme açılınca hepsi görüldü sayılır)
     // opt.tone: "info" = bilgi amaçlı sayaç (nötr renk); varsayılan = dikkat isteyen (vurgu rengi)
     setBadge(route, n, label, opt = {}) {
@@ -223,9 +232,19 @@
     exBtn.title = exBtn.disabled ? (h.exportNote || "Bu sekmede dışa aktarılacak veri yok") : "Görünümü dışa aktar";
     $("#refreshBtn").disabled = !h.refresh;
     syncUpdated();
+    syncMine();
+  }
+  function syncMine() {
+    const b = $("#mineBtn"); if (!b) return;
+    b.hidden = !MINE_ROUTES.has(S.route);
+    b.setAttribute("aria-pressed", String(S.mine));
+    const n = shell.mineSet().size;
+    b.dataset.tip = S.mine ? `Yalnız izleme listen ve portföyündeki ${n} hisse gösteriliyor · tıkla: tümü` : `Yalnız izleme listen ve portföyündeki ${n} hisseyi göster (Sinyal Takip, Takvim, Araştırma, Geri Alım)`;
   }
   setInterval(syncUpdated, 60 * 1000);
 
+  $("#mineBtn")?.addEventListener("click", () => shell.setMine(!S.mine));
+  addEventListener("radar:pf", () => syncMine());
   $("#refreshBtn").addEventListener("click", async () => {
     const h = H[S.route], b = $("#refreshBtn");
     if (!h?.refresh || b.classList.contains("spin")) return;

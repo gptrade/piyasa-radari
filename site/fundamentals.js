@@ -180,7 +180,7 @@
         <div class="tbl-scroll"><table class="tbl fa-tbl">
           <thead><tr>${COLS.map(([k, l]) => `<th scope="col" class="${k === "code" || k === "sector" ? "" : "num"}"><button type="button" class="th-sort" data-k="${k}" aria-sort="${S.sort[0] === k ? (S.sort[1] > 0 ? "ascending" : "descending") : "none"}">${l}${S.sort[0] === k ? (S.sort[1] > 0 ? " ▲" : " ▼") : ""}</button></th>`).join("")}</tr></thead>
           <tbody>${sorted(xs).map(r => `<tr class="row" tabindex="0" data-code="${r.code}">
-            <td><b class="mono">${r.code}</b>${r.t && r.t !== "sanayi" ? ` <span class="tag na">${TPL[r.t]}</span>` : ""} <span class="muted fa-name">${esc(trTitle(r.title))}</span></td>
+            <td><b class="mono">${r.code}</b><button type="button" class="tk-open tk-pi" data-sym="${r.code}" aria-label="${r.code} hisse paneli" data-tip="Hisse paneli">◧</button>${r.t && r.t !== "sanayi" ? ` <span class="tag na">${TPL[r.t]}</span>` : ""} <span class="muted fa-name">${esc(trTitle(r.title))}</span></td>
             <td class="muted"><span class="fa-sec-name" title="${esc(r.sector || "")}">${esc(r.sector || "—")}</span></td>
             <td class="num">${fmt.num(r.price, 2)}</td><td class="num">${tl(r.mcap)}</td>
             <td class="num">${x(r.v?.pe)}</td><td class="num">${x(r.v?.pb)}</td><td class="num">${x(r.v?.ev_ebitda)}</td>
@@ -685,7 +685,7 @@
           <div><h2 class="card-title">Kapsam</h2><div class="fa-scope">${ixSeg()}${secSel}</div><p class="card-meta">${all.length} hisse taranır</p></div></div></section>
         <section class="card card-flush"><div class="card-head"><h2 class="card-title">${xs.length} hisse · uyum oranına göre sıralı</h2><span class="card-meta">✓ sağlandı · ✗ sağlanmadı · — veri yok</span></div>
           <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Hisse</th><th class="num">Uyum</th>${lbl.map((l, i) => `<th class="num" data-tip="${esc(l)}">${i + 1}</th>`).join("")}</tr></thead>
-          <tbody>${xs.map(({ r, c }) => `<tr class="row" tabindex="0" data-code="${r.code}"><td><b class="mono">${r.code}</b> <span class="muted fa-name">${esc(r.sector || "")}</span></td>
+          <tbody>${xs.map(({ r, c }) => `<tr class="row" tabindex="0" data-code="${r.code}"><td><b class="mono">${r.code}</b><button type="button" class="tk-open tk-pi" data-sym="${r.code}" aria-label="${r.code} hisse paneli" data-tip="Hisse paneli">◧</button> <span class="muted fa-name">${esc(r.sector || "")}</span></td>
             <td class="num"><b>${c[0]}/${c[1]}</b> <small class="muted">%${Math.round(c[0] / c[1] * 100)}</small></td>
             ${c[3].map(v => `<td class="num ${v == null ? "muted" : v ? "up" : "down"}">${v == null ? "—" : v ? "✓" : "✗"}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${lbl.length + 2}">${sh.stateHTML({ title: "Tüm kriterleri sağlayan hisse yok", msg: "Filtreyi gevşetmek için kutunun işaretini kaldır.", compact: true })}</td></tr>`}</tbody></table></div>
           <div class="card-foot fa-legend-crit"><b>Kriterler</b><ol>${lbl.map(l => `<li>${esc(l)}</li>`).join("")}</ol></div></section>`;
@@ -701,7 +701,7 @@
             <button type="button" class="link-btn" id="faAddF">+ Filtre ekle</button></div></section>
         <section class="card card-flush"><div class="card-head"><h2 class="card-title">${xs.length} hisse</h2><span class="card-meta">genel skora göre</span></div>
           <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Hisse</th>${keys.map(k => `<th class="num">${MET[k][0]}</th>`).join("")}<th class="num">Genel</th></tr></thead>
-          <tbody>${xs.sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1)).map(r => `<tr class="row" tabindex="0" data-code="${r.code}"><td><b class="mono">${r.code}</b> <span class="muted fa-name">${esc(trTitle(r.title))}</span></td>
+          <tbody>${xs.sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1)).map(r => `<tr class="row" tabindex="0" data-code="${r.code}"><td><b class="mono">${r.code}</b><button type="button" class="tk-open tk-pi" data-sym="${r.code}" aria-label="${r.code} hisse paneli" data-tip="Hisse paneli">◧</button> <span class="muted fa-name">${esc(trTitle(r.title))}</span></td>
             ${keys.map(k => `<td class="num">${MET[k][1](mval(r, k))}</td>`).join("")}<td class="num">${r.overall ?? "—"} ${gradeTag(r.grade)}</td></tr>`).join("") || `<tr><td colspan="${keys.length + 2}">${sh.stateHTML({ title: "Eşleşen hisse yok", compact: true })}</td></tr>`}</tbody></table></div></section>`;
     }
     el.innerHTML = tabsH + body;
@@ -925,6 +925,16 @@
   reg("karsilastir", renderCompare);
   sh.register("metodoloji", { onShow: renderMethod, exports: () => [], exportNote: "Metodoloji metni" });
   addEventListener("themechange", () => { if (["hisse", "karsilastir"].includes(sh.route)) rerender(); });
-  window.radarFundamentals = { open: code => sh.go("hisse", { param: code }), has: code => !!rowOf(code), get rows() { return rows(); } };
+  window.radarFundamentals = { open: code => sh.go("hisse", { param: code }), has: code => !!rowOf(code), get rows() { return rows(); },
+    // hisse paleti ve evrensel hisse paneli için: süzgeçsiz evren satırı ve aynı sektörden piyasa değerine göre en yakın emsaller
+    row: code => (S.screen?.rows || []).find(r => r.code === code) || null,
+    get all() { return S.screen?.rows || []; },
+    peers(code, n = 2) {
+      const all = S.screen?.rows || [], me = all.find(r => r.code === code);
+      if (!me) return [];
+      return all.filter(r => r.code !== code && r.sector === me.sector && r.mcap).sort((a, b) => Math.abs(Math.log(a.mcap / (me.mcap || 1))) - Math.abs(Math.log(b.mcap / (me.mcap || 1)))).slice(0, n).map(r => r.code);
+    },
+    gradeTag: (g, l) => gradeTag(g, l),
+    ready: () => S.loaded ? Promise.resolve() : new Promise(r => addEventListener("fundamentalsloaded", r, { once: true })) };
   load();
 })();

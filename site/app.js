@@ -157,9 +157,10 @@
     return true;
   }
   function filtered(grouped = true) {
-    const q = state.q.toLocaleLowerCase("tr");
+    const q = state.q.toLocaleLowerCase("tr"), mine = sh.mine ? sh.mineSet() : null;
     let out = state.feed.items.filter(it => {
       if (!inMarket(it)) return false;
+      if (mine && !relTickers(it).some(t => mine.has(t))) return false;
       if (state.ids && !state.ids.has(it.id)) return false;
       if (state.ticker && !relTickers(it).includes(state.ticker)) return false;
       if (state.view === "saved" && !state.saved.has(it.id)) return false;
@@ -930,7 +931,8 @@
     state.panel = "ticker"; state.panelTk = sym; state.panelFrom = from; $("#sidePanel").dataset.mode = "ticker";
     $$("#sigBody tr.row.sel").forEach(r => { r.classList.remove("sel"); r.setAttribute("aria-expanded", "false"); });
     state.sel = null;
-    $("#spTitle").textContent = w ? `${sym} · ${w.name}` : sym;
+    const fr = !w && window.radarFundamentals?.row(sym);
+    $("#spTitle").textContent = w ? `${sym} · ${w.name}` : fr ? `${sym} · ${fr.title.replace(/\s+(A\.Ş\.|T\.A\.Ş\.|ANONİM ŞİRKETİ)$/i, "").slice(0, 40)}` : sym;
     const body = $("#spBody"); body.innerHTML = ""; body.append(tickerContent(sym)); body.scrollTop = 0;
     $("#sidePanel").hidden = false;
     $$("#heatmap .hm").forEach(b => b.classList.toggle("panel", b.dataset.sym === sym));
@@ -953,7 +955,10 @@
     const anm = anomFor(sym);
     head.innerHTML = `
       <div class="tp-acts">
-        <button type="button" class="btn" data-a="filter" aria-pressed="${state.ticker === sym}">${state.ticker === sym ? "✓ Akış bu hisseye süzülü" : "Akışı bu hisseye süz"}</button>
+        <button type="button" class="btn" data-a="filter" aria-pressed="${sh.route === "sinyal" && state.ticker === sym}">${sh.route === "sinyal" && state.ticker === sym ? "✓ Akış bu hisseye süzülü" : "Akışı bu hisseye süz"}</button>
+        ${window.radarFundamentals?.row(sym) ? `<a class="btn" href="#hisse/${esc(sym)}">Temel analiz →</a>` : ""}
+        ${(() => { const pe = window.radarFundamentals?.peers?.(sym, 2) || []; return pe.length ? `<a class="btn" href="#karsilastir/${esc([sym, ...pe].join(","))}" data-tip="Aynı sektör, piyasa değeri en yakın: ${esc(pe.join(", "))}">Emsallerle karşılaştır</a>` : ""; })()}
+        <button type="button" class="btn" data-a="pf">${window.radarPortfolio?.position?.(sym) ? "Portföyde ✓" : "Portföye ekle"}</button>
       </div>
       <p class="tp-sub">Haber (son 24 sa): ${n ? `<b>${fmt.int(n)}</b> · net <span class="${dirCls(nk)}">${glyph(nk)} ${nk > 0 ? "olumlu" : nk < 0 ? "olumsuz" : "nötr"}</span>
         <span class="tp-norm" data-tip="Haberler ve AI genelde iyimser yazar; olumlu haberden hissenin olağan iyimserlik payı düşülür. Ham ortalama ${netTxt(raw)}, normal seviye ${netTxt(base)} (son 1–7 gün), etkin yön ${netTxt(net)} (±0,15 üstü olumlu/olumsuz).">ham ${netTxt(raw)} · normal ${netTxt(base)}</span>` : "yok"}</p>
@@ -961,7 +966,9 @@
         <li><button type="button" data-id="${it.id}" class="${a?.materiality === "high" ? "hi" : ""}"><span class="dir ${dirCls(k)}">${a ? glyph(k) : "·"}</span>
           <span class="tp-t">${a?.materiality === "high" ? `<span class="tp-hi" title="Yüksek önemli">Önemli</span> ` : ""}${dealBadge(it)}${a?.event_label ? `<b>${esc(a.event_label)}</b> · ` : ""}${esc(a?.what || a?.headline_tr || it.title)}</span><span class="age">${fmt.ago(it.published)}</span></button></li>`; }).join("")}</ul>
         ${items.length > 5 ? `<p class="tp-more">+${items.length - 5} kayıt daha · “Akışı bu hisseye süz” ile hepsini gör</p>` : ""}` : `<p class="tp-empty">Son 14 günde bu hisse için haber yok. Teknik görünüm aşağıda.</p>`}`;
+    $('[data-a="pf"]', head).onclick = () => { closePanel(false); sh.go("portfoy"); setTimeout(() => window.radarPortfolio?.startAdd?.(sym, p?.market), 60); };
     $('[data-a="filter"]', head).onclick = () => {
+      if (sh.route !== "sinyal") { closePanel(false); sh.go("sinyal"); setTimeout(() => window.radar.focusTicker(sym), 60); return; }
       if (state.ticker === sym) { state.ticker = null; } else { state.ticker = sym; state.view = state.view === "tickers" ? "feed" : state.view; }
       state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE;
       $$("#viewSeg button").forEach(x => x.setAttribute("aria-checked", String(x.dataset.view === state.view)));
@@ -977,7 +984,9 @@
     $$(".tp-news button", head).forEach(b => b.onclick = () => openItem(b.dataset.id, sym));
     const px = document.createElement("div");
     px.className = "tp-sec";
+    const fin = window.radarFundamentals?.row(sym);
     if (p) px.append(pricePanelFor(sym, { market: p.market }));
+    else if (fin?.price) px.innerHTML = `<p class="tp-sub">Son kapanış <b class="mono">${fmt.num(fin.price, 2)} ₺</b> · piyasa değeri <b>${bigMoney(fin.mcap, "TRY")}</b> <span class="t3">· temel analiz verisinden, günlük. Teknik görünüm yalnız izleme listesindeki hisseler için.</span></p>`;
     else px.innerHTML = stateHTML({ kind: "info", compact: true, title: "Fiyat verisi yok", msg: "Teknik görünüm yalnızca izleme listesindeki hisseler için hesaplanır." });
     if (anm) {
       const call = document.createElement("div");
@@ -987,6 +996,8 @@
       wrap.append(call);
     }
     wrap.append(px, head);
+    const fa = faSection(sym, fin);
+    if (fa) wrap.append(fa);
     const vs = valuationSection(sym, p);
     if (vs) wrap.append(vs);
     const an = analystSection(sym, p);
@@ -995,7 +1006,9 @@
     if (bn) wrap.append(bn);
     const ss = shortSection(sym);
     if (ss) wrap.append(ss);
-    const bb = p?.market === "BIST" && window.radarBB?.forTicker(sym);
+    const isBist = (p?.market || (fin ? "BIST" : "")) === "BIST";
+    if (isBist && window.radarBB && !window.radarBB.loaded) window.radarBB.ensure?.();
+    const bb = isBist && window.radarBB?.forTicker(sym);
     if (bb && (bb.tx.length || bb.pg)) {
       const sec = document.createElement("div");
       sec.className = "tp-sec";
@@ -1051,6 +1064,36 @@
       <p class="tp-more">Kaynak: <a href="https://finance.yahoo.com/quote/${encodeURIComponent(p.yahoo || sym)}/key-statistics/" target="_blank" rel="noopener">Yahoo Finance</a>${v.updated ? ` · ${fmt.ago(v.updated)} güncellendi` : ""}${p.market === "BIST" ? " · BIST'te enflasyon muhasebesi (TMS 29) nedeniyle çarpanlar sapabilir" : ""}</p>`;
     return sec;
   }
+  // Temel analiz özeti (BIST Tüm evreni; KAP mali tabloları, günlük fiyat) · data/fin/_screen.json
+  function faSection(sym, f) {
+    if (!f) return null;
+    const v = f.v || {}, r = f.r || {}, gt = window.radarFundamentals.gradeTag;
+    const cell = (l, val, tip) => `<div class="fa-mini-c" ${tip ? `data-tip="${esc(tip)}"` : ""}><span class="t3">${l}</span><b class="mono">${val}</b></div>`;
+    const x = (n, d = 1) => n == null || !isFinite(n) ? "—" : fmt.num(n, d) + "x";
+    const sec = document.createElement("div");
+    sec.className = "tp-sec";
+    sec.innerHTML = `<p class="d-sub">Temel analiz <span class="t3">· ${esc(f.period || "")} bilanço</span></p>
+      <div class="fa-mini">${cell("Not", gt(f.grade, f.grade_label || ""), "Genel puan " + (f.overall ?? "—") + "/100")}${cell("Kalite", f.quality ?? "—", "Kârlılık, büyüme, borçluluk ve nakit kalitesi puanı (0–100)")}
+        ${cell("Değerleme", f.valuation_score ?? "—", "Çarpanların sektörüne ve geçmişine göre ucuzluk puanı (0–100)")}${cell("F/K", x(v.pe))}${cell("PD/DD", x(v.pb, 2))}${cell("FD/FAVÖK", x(v.ev_ebitda))}
+        ${cell("Özsermaye kârlılığı", r.roe == null ? "—" : fmt.pct(r.roe * 100, 0, false))}${cell("İçsel değere göre", f.potential == null ? "—" : `<span class="${f.potential > 0 ? "up" : "down"}">${fmt.pct(f.potential * 100, 0)}</span>`, f.intrinsic ? `İçsel değer tahmini ${fmt.num(f.intrinsic, 2)} ₺ (temel analiz yöntemi; kesin değil)` : "")}</div>
+      <p class="tp-more"><a href="#hisse/${esc(sym)}">Temel analiz kartını aç →</a></p>`;
+    return sec;
+  }
+  // Hedef fiyat aralığı: her kurumun son hedefi (120 gün) → en düşük · medyan · en yüksek; güncel fiyat çentikle
+  function targetRange(notes, last, cur) {
+    const by = new Map();
+    notes.filter(n => n.tp).forEach(n => { if (!by.has(n.broker)) by.set(n.broker, n); });
+    const tps = [...by.values()].map(n => n.tp).sort((a, b) => a - b);
+    if (tps.length < 2 && !(tps.length === 1 && last)) return "";
+    const lo = Math.min(tps[0], last || tps[0]), hi = Math.max(tps[tps.length - 1], last || 0), span = (hi - lo) || 1;
+    const X = v => ((v - lo) / span * 100).toFixed(1);
+    const med = tps.length % 2 ? tps[tps.length >> 1] : (tps[tps.length / 2 - 1] + tps[tps.length / 2]) / 2;
+    return `<div class="tr-plot" role="img" aria-label="Hedef aralığı ${fmt.num(tps[0], 2)}–${fmt.num(tps[tps.length - 1], 2)}, medyan ${fmt.num(med, 2)}${last ? `, fiyat ${fmt.num(last, 2)}` : ""}">
+        <span class="tr-rng" style="left:${X(tps[0])}%;width:${(X(tps[tps.length - 1]) - X(tps[0])).toFixed(1)}%"></span>
+        ${tps.map(t => `<i class="tr-dot" style="left:${X(t)}%" data-tip="${fmt.num(t, 2)} ${cur}"></i>`).join("")}
+        <i class="tr-med" style="left:${X(med)}%" data-tip="Medyan ${fmt.num(med, 2)} ${cur}"></i>${last ? `<i class="tr-px" style="left:${X(last)}%" data-tip="Güncel fiyat ${fmt.num(last, 2)} ${cur}"></i>` : ""}</div>
+      <p class="tp-sub tr-leg"><span>en düşük <b class="mono">${fmt.num(tps[0], 2)}</b></span><span>medyan <b class="mono">${fmt.num(med, 2)}</b>${last ? ` <span class="${med > last ? "up" : "down"}">${fmt.pct((med / last - 1) * 100, 0)}</span>` : ""}</span><span>en yüksek <b class="mono">${fmt.num(tps[tps.length - 1], 2)}</b></span><span class="t3">${tps.length} kurum · ▮ fiyat</span></p>`;
+  }
   // Aracı kurum notları (haber başlıklarından çıkarılan: kurum, tavsiye, hedef fiyat) · data/research.json
   const RAT_CLS = { AL: "up", SAT: "down", TUT: "flat" };
   const ACT_TR = { up: "▲ yükseltti", down: "▼ düşürdü", init: "kapsama", keep: "korudu", set: "belirledi", add: "model portföye ekledi", remove: "model portföyden çıkardı" };
@@ -1062,15 +1105,20 @@
     if (!notes.length && !rep) return null;
     const sec = document.createElement("div");
     sec.className = "tp-sec";
-    const cur = p?.currency === "TRY" ? "₺" : p?.currency === "USD" ? "$" : "";
-    const up = c?.median_tp && p?.last ? (c.median_tp / p.last - 1) * 100 : null;
+    const fin = window.radarFundamentals?.row(sym);
+    const cur = p?.currency === "TRY" || (!p && fin) ? "₺" : p?.currency === "USD" ? "$" : "";
+    const last = p?.last || fin?.price || null;
+    const up = c?.median_tp && last ? (c.median_tp / last - 1) * 100 : null;
+    const allNotes = (R?.notes || []).filter(n => n.t === sym && n.src !== "Yahoo");
+    const rangeHTML = targetRange(allNotes, last, cur);
     sec.innerHTML = `<p class="d-sub">Aracı kurum görüşleri <span class="t3">· son 120 gün</span></p>
       ${c ? `<p class="tp-sub">${fmt.int(c.n)} kurum · <span class="up">${c.dist.AL} AL</span> · ${c.dist.TUT} TUT · <span class="down">${c.dist.SAT} SAT</span>${c.median_tp ? ` · medyan hedef <b>${fmt.num(c.median_tp, 2)} ${cur}</b>${up != null ? ` (<span class="${dirCls(up > 0 ? 1 : -1)}">${fmt.pct(up)}</span>)` : ""}` : ""}</p>` : ""}
+      ${rangeHTML}
       ${rep ? `<div class="doc-sum"><p class="d-sub">Son rapor · ${esc(rep.broker)} · ${esc(rep.date || "")}</p>${rep.thesis ? `<p class="d-sum">${esc(rep.thesis)}</p>` : ""}${(rep.est || []).length ? `<table class="doc-figs"><tbody>${rep.est.slice(0, 4).map(e => `<tr><th scope="row">${esc(e.metric)}${e.period ? ` (${esc(e.period)})` : ""}</th><td>${[e.old, e.new].filter(Boolean).map(esc).join(" → ")}</td></tr>`).join("")}</tbody></table>` : ""}</div>` : ""}
       ${notes.length ? `<table class="tx an-tx"><thead><tr><th>Tarih</th><th>Kurum</th><th>Tavsiye</th><th class="num">Hedef</th></tr></thead><tbody>${notes.map(n => `
         <tr><td>${fmt.date(n.ts)}</td><td>${n.url ? `<a href="${esc(n.url)}" target="_blank" rel="noopener" data-tip="${esc(n.title)}">${esc(n.broker)}</a>` : esc(n.broker)}</td>
         <td><span class="${RAT_CLS[n.rating] || ""}" data-tip="${esc(ACT_TR[n.action] || "")}">${esc(n.rating || "—")}</span></td>
-        <td class="num">${n.tp ? fmt.num(n.tp, 2) : "—"}${n.prev && n.tp && n.prev !== n.tp ? ` <span class="${dirCls(n.tp > n.prev ? 1 : -1)}" data-tip="önceki ${fmt.num(n.prev, 2)}">${n.tp > n.prev ? "▲" : "▼"}</span>` : ""}</td></tr>`).join("")}</tbody></table>` : ""}
+        <td class="num">${n.tp ? fmt.num(n.tp, 2) : "—"}${n.prev && n.tp && n.prev !== n.tp ? ` <span class="${dirCls(n.tp > n.prev ? 1 : -1)}" data-tip="önceki ${fmt.num(n.prev, 2)}">${n.tp > n.prev ? "▲" : "▼"} ${fmt.pct((n.tp / n.prev - 1) * 100, 0)}</span>` : ""}</td></tr>`).join("")}</tbody></table>` : ""}
       <p class="tp-more">Kaynak: kamuya duyurulan not başlıkları ve rapor kutusu (yalnız tavsiye, hedef ve kısa tez) · <a href="#arastirma">Araştırma sekmesi</a></p>`;
     return sec;
   }
@@ -1541,7 +1589,12 @@
       { label: "JSON", hint: "tam kayıt + filtreler", run: exportJSON, disabled: !n }]; },
     exportInfo: () => state.feed ? `Filtrelenmiş görünüm: ${fmt.int(filtered().length)} kayıt` : "",
   });
-  window.radar = { get state() { return state; }, ready: null, poll: () => poll(), openTicker: (sym, from) => openTicker(sym, from), openItem: (id, back) => openItem(id, back) };
+  addEventListener("minechange", () => { if (state.feed) { state.limit = PAGE; render(); } });
+  addEventListener("radar:bb", () => { if (state.panel === "ticker" && state.panelTk && !$("#sidePanel").hidden) openTicker(state.panelTk, state.panelFrom); });
+  window.radar = { get state() { return state; }, ready: null, poll: () => poll(), openTicker: (sym, from) => openTicker(sym, from), openItem: (id, back) => openItem(id, back),
+    focusTicker(sym) { if (!state.feed) return; state.ticker = sym; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE;
+      if (state.view === "tickers" || state.view === "karne") state.view = "feed";
+      $$("#viewSeg button").forEach(x => x.setAttribute("aria-checked", String(x.dataset.view === state.view))); render(); } };
 
   async function boot() {
     let done; window.radar.ready = window.radar.ready || new Promise(r => (done = r));

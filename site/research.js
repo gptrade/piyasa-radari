@@ -18,17 +18,27 @@
       const r = await fetch(`data/research.json?t=${Date.now()}`);
       if (!r.ok) throw new Error(`data/research.json okunamadı (HTTP ${r.status})`);
       S.data = await r.json(); S.error = null;
+      if (!window.radar?.state?.macro) S.macro = await fetch(`data/macro.json?t=${Date.now()}`).then(x => x.ok ? x.json() : null).catch(() => null);
     } catch (e) { S.error = e; }
     S.loaded = true;
     if (S.data) sh.setUpdated("arastirma", S.data.generated, { label: "Araştırma güncellendi", staleMin: 120 });
     if (sh.route === "arastirma") render();
   }
-  const watch = () => { const wl = window.radar?.state?.feed?.watchlist; return new Set(wl ? wl.map(w => w.symbol) : Object.keys(S.data?.consensus || {})); };
+  const watch = () => { if (sh.mine) return sh.mineSet(); const wl = window.radar?.state?.feed?.watchlist; return new Set(wl ? wl.map(w => w.symbol) : Object.keys(S.data?.consensus || {})); };
+  const scope = () => sh.mine ? "watch" : S.scope;            // üst çubuktaki "Benimkiler" açıksa her zaman izleme listesi + portföy
   const inMarket = n => sh.market === "ALL" || n.m === sh.market;
   const CUR = { USD: " $", TRY: " ₺", EUR: " €" };
   // "Google News" yerine başlıktaki yayın adı (… - Investing.com Türkiye)
   const srcName = n => { const m = (n.title || "").match(/\s-\s([^-]{2,30})$/); return n.src === "Google News" && m ? m[1].replace(/ Türkiye$/, "") : n.src; };
-  const price = t => window.radarResearch?.prices?.[t]?.last;
+  const price = t => window.radarResearch?.prices?.[t]?.last || window.radarFundamentals?.row?.(t)?.price || null;
+  // Reel potansiyel eşiği (TL hedefleri için): 12 ay sonrası TÜFE beklentisi (TCMB Piyasa Katılımcıları Anketi), yoksa TCMB fonlama faizi
+  const HURDLE = [["TP.PKAUO.S01.E.U", "12 ay sonrası TÜFE beklentisi (TCMB Piyasa Katılımcıları Anketi)", "enflasyon beklentisi"],
+    ["TP.APIFON4", "TCMB ağırlıklı ortalama fonlama maliyeti (yıllık)", "politika faizi"]];
+  function hurdle() {
+    const ser = (window.radar?.state?.macro || S.macro)?.series || [];
+    for (const [code, name, short] of HURDLE) { const x = ser.find(s => s.code === code); if (x?.last != null) return { v: x.last / 100, name, short, date: x.date }; }
+    return null;
+  }
 
   function synthesisCard(s) {
     if (!s) return `<section class="card"><h2 class="card-title">Sentez</h2><p class="tp-empty">Henüz sentez yok. Yeterli not ve görünüm biriktiğinde günde bir üretilir.</p></section>`;
@@ -59,7 +69,7 @@
   function reportsCard(rs) {
     const w = watch();
     let xs = (rs || []).filter(r => sh.market === "ALL" || (r.cur === "USD" ? "US" : "BIST") === sh.market);
-    if (S.scope === "watch") xs = xs.filter(r => [...(r.tickers || []), ...(r.top_picks || []).map(p => p.t)].some(t => w.has(t)));
+    if (scope() === "watch") xs = xs.filter(r => [...(r.tickers || []), ...(r.top_picks || []).map(p => p.t)].some(t => w.has(t)));
     if (S.q) { const q = S.q.toLocaleLowerCase("tr"); xs = xs.filter(r => `${r.broker} ${(r.tickers || []).join(" ")} ${r.sector} ${r.thesis}`.toLocaleLowerCase("tr").includes(q)); }
     if (!(rs || []).length) return "";
     const tk = t => w.has(t) ? `<button type="button" class="tk-link" data-sym="${esc(t)}">${esc(t)}</button>` : esc(t);
@@ -111,17 +121,26 @@
   function notesCard(notes) {
     const w = watch();
     let xs = (notes || []).filter(inMarket);
-    if (S.scope === "watch") xs = xs.filter(n => w.has(n.t));
+    if (scope() === "watch") xs = xs.filter(n => w.has(n.t));
     if (S.q) { const q = S.q.toLocaleLowerCase("tr"); xs = xs.filter(n => `${n.t || ""} ${n.name || ""} ${n.broker} ${n.title}`.toLocaleLowerCase("tr").includes(q)); }
-    const shown = xs.slice(0, S.limit);
+    const shown = xs.slice(0, S.limit), H = hurdle();
     return `<section class="card card-flush" aria-labelledby="resNotT">
       <div class="card-head"><h2 class="card-title" id="resNotT">Aracı kurum notları</h2>
         <span class="card-meta">${fmt.int(xs.length)} not · kamuya duyurulan başlıklardan (AA, Bloomberg HT, Foreks, Yahoo…) çıkarılır, raporların kendisi okunmaz</span></div>
-      ${shown.length ? `<div class="res-tw"><table class="tx res-notes"><thead><tr><th>Tarih</th><th>Hisse</th><th>Kurum</th><th>Tavsiye</th><th>Değişim</th><th class="num">Hedef</th><th>Kaynak</th></tr></thead><tbody>${shown.map(n => `
-        <tr><td>${fmt.date(n.ts)}</td><td>${n.t && w.has(n.t) ? `<button type="button" class="tk-link" data-sym="${esc(n.t)}">${esc(n.t)}</button>` : esc(n.t || n.name || "—")}</td>
-        <td>${esc(n.broker)}</td><td><span class="${RAT[n.rating] || ""}">${esc(n.rating || "—")}</span></td><td>${esc(ACT[n.action] || "")}</td>
+      ${shown.length ? `<div class="res-tw"><table class="tx res-notes"><thead><tr><th>Tarih</th><th>Hisse</th><th class="num">Hedef</th>
+        <th class="num" data-tip="Hedef ÷ güncel fiyat">Potansiyel</th>
+        <th class="num" data-tip="${esc(H ? `TL hedeflerde: (1 + potansiyel) ÷ (1 + ${H.name} %${fmt.num(H.v * 100, 1)}) − 1. Negatifse hedef, ${H.short} kadar bile getiri vaat etmiyor.` : "Eşik verisi yok")}">${H ? (H.short === "enflasyon beklentisi" ? "Reel" : "Faiz üstü") : "Reel"}</th>
+        <th>Tavsiye</th><th>Değişim</th><th>Kurum</th><th>Kaynak</th></tr></thead><tbody>${shown.map(n => { const px = n.t ? price(n.t) : null, pot = n.tp && px ? n.tp / px - 1 : null,
+          rev = n.tp && n.prev && n.prev !== n.tp ? n.tp / n.prev - 1 : null, real = pot != null && H && (n.cur || "TRY") === "TRY" && n.m !== "US" ? (1 + pot) / (1 + H.v) - 1 : null;
+          const pc = v => fmt.pct(v * 100, Math.abs(v) < 0.01 ? 1 : 0); return `
+        <tr><td>${fmt.date(n.ts)}</td><td>${n.t ? `<button type="button" class="tk-link" data-sym="${esc(n.t)}">${esc(n.t)}</button>` : esc(n.name || "—")}</td>
         <td class="num">${n.tp ? fmt.num(n.tp, 2) + (CUR[n.cur] || "") : "—"}${n.prev && n.tp && n.prev !== n.tp ? `<span class="t3" data-tip="önceki hedef"> ← ${fmt.num(n.prev, 2)}</span>` : ""}</td>
-        <td>${n.url ? `<a href="${esc(n.url)}" target="_blank" rel="noopener" data-tip="${esc(n.title)}">${esc(srcName(n))} ↗</a>` : esc(srcName(n))}</td></tr>`).join("")}</tbody></table></div>
+        <td class="num">${pot == null ? "—" : `<span class="${pot > 0 ? "up" : "down"}" data-tip="fiyat ${fmt.num(px, 2)}">${pc(pot)}</span>`}</td>
+        <td class="num">${real == null ? "—" : `<span class="${real > 0 ? "up" : "down"}">${pc(real)}</span>`}</td>
+        <td><span class="${RAT[n.rating] || ""}">${esc(n.rating || "—")}</span></td><td>${esc(ACT[n.action] || "")}${rev != null ? ` <span class="${rev > 0 ? "up" : "down"}" data-tip="Yeni hedef ÷ aynı kurumun önceki hedefi">${pc(rev)}</span>` : ""}</td>
+        <td>${esc(n.broker)}</td>
+        <td>${n.url ? `<a href="${esc(n.url)}" target="_blank" rel="noopener" data-tip="${esc(n.title)}">${esc(srcName(n))} ↗</a>` : esc(srcName(n))}</td></tr>`; }).join("")}</tbody></table></div>
+        ${H ? `<p class="res-more t3">${H.short === "enflasyon beklentisi" ? "Reel potansiyel" : "Faiz üstü potansiyel"}: ${esc(H.name)} %${fmt.num(H.v * 100, 1)}${H.date ? ` (${esc(H.date)})` : ""} düşülerek; hedefler genelde 12 aylıktır. Fiyat: izleme listesinde canlı, diğerlerinde temel analizdeki son kapanış.</p>` : ""}
         ${xs.length > shown.length ? `<p class="res-more"><button type="button" class="link-btn" id="resMore">${Math.min(30, xs.length - shown.length)} not daha göster</button></p>` : ""}`
         : `<p class="tp-empty res-pad">Bu filtrede not yok.</p>`}
     </section>`;
@@ -135,13 +154,15 @@
     const d = S.data;
     box.innerHTML = `<div class="res-grid"><div class="res-main">${synthesisCard(d.synthesis)}${reportsCard(d.reports)}${notesCard(d.notes)}</div>
       <div class="res-side">${consensusCard(d.consensus)}${outlookCard(d.outlooks)}</div></div>`;
-    $$(".tk-link", box).forEach(b => b.onclick = () => { location.hash = "#sinyal"; setTimeout(() => window.radar?.openTicker(b.dataset.sym, b), 80); });
+    $$(".tk-link", box).forEach(b => b.onclick = () => window.radar?.openTicker(b.dataset.sym, b));
     const more = $("#resMore"); if (more) more.onclick = () => { S.limit += 30; render(); };
   }
 
   function bindTools() {
     $$("#resScope button").forEach(b => {
-      b.setAttribute("aria-checked", String(b.dataset.s === S.scope));
+      b.setAttribute("aria-checked", String(b.dataset.s === scope()));
+      b.disabled = sh.mine && b.dataset.s !== "watch";
+      b.dataset.tip = sh.mine && b.dataset.s !== "watch" ? "Üst çubukta “Benimkiler” açık" : "";
       b.onclick = () => { S.scope = b.dataset.s; store.set("radar.resScope", S.scope); S.limit = 30; bindTools(); render(); };
     });
     const q = $("#resQ"); if (q) q.oninput = () => { S.q = q.value.trim(); S.limit = 30; render(); };
@@ -154,6 +175,7 @@
   }
   bindTools();
   addEventListener("marketchange", () => { S.limit = 30; if (sh.route === "arastirma") render(); });
+  addEventListener("minechange", () => { S.limit = 30; bindTools(); if (sh.route === "arastirma") render(); });
   sh.register("arastirma", {
     onShow() { S.loaded ? render() : (render(), load()); },
     async refresh() { S.loaded = false; render(); await load(); },

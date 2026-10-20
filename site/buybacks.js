@@ -140,9 +140,12 @@
     await Promise.race([R()?.ready, new Promise(r => setTimeout(r, 3000))]);
     badge();
     render();
+    dispatchEvent(new Event("radar:bb"));
   }
   // Sinyal Takip'teki hisse paneli için: son işlemler ve program bilgisi
   window.radarBB = {
+    get loaded() { return S.loaded; },
+    ensure() { if (!S.loaded && !S.loading) load(); },
     forTicker(t) {
       if (!S.loaded) return null;
       const tx = S.rows.filter(r => r.t === t && r.kind === "tx").sort((a, b) => b.date - a.date).slice(0, 5);
@@ -164,8 +167,8 @@
     return q ? { last: q.last, at: q.date + "T15:00:00Z", src: "Yahoo kapanış" } : null;
   }
   function inPeriod() {
-    const cut = Date.now() - S.days * DAY, q = S.q.toLocaleLowerCase("tr"), w = watchSet();
-    return S.rows.filter(r => r.date >= cut && (!S.watch || w.has(r.t))
+    const cut = Date.now() - S.days * DAY, q = S.q.toLocaleLowerCase("tr"), w = sh.mine ? sh.mineSet() : watchSet();
+    return S.rows.filter(r => r.date >= cut && (!(S.watch || sh.mine) || w.has(r.t))
       && (!q || r.t.toLocaleLowerCase("tr").includes(q) || r.name.toLocaleLowerCase("tr").includes(q)));
   }
   function aggregate(rows) {
@@ -303,7 +306,7 @@
       const ratioTip = o.ratio == null ? (o.avg ? "Güncel fiyat yok" : "Ortalama fiyat hesaplanamadı") :
         `Güncel ${fmt.num(o.q.last)} ₺ (${o.q.src}) ÷ ort. ${fmt.num(o.avg)} ₺ = ${fmt.num(o.ratio)}<br>Ortalamaya göre ${fmt.pct((o.ratio - 1) * 100)}`;
       return `<tr class="row ${open ? "open" : ""} ${w.has(o.t) ? "mine" : ""}" data-t="${esc(o.t)}" tabindex="0" aria-expanded="${!!open}">
-        <td class="tk">${esc(o.t)}${w.has(o.t) ? ` <span class="mine-dot" data-tip="İzleme listende">●</span>` : ""}</td>
+        <td class="tk">${esc(o.t)}<button type="button" class="tk-open tk-pi" data-sym="${esc(o.t)}" aria-label="${esc(o.t)} hisse paneli" data-tip="Hisse paneli">◧</button>${w.has(o.t) ? ` <span class="mine-dot" data-tip="İzleme listende">●</span>` : ""}</td>
         <td class="nm" data-tip="${esc(o.name)}">${o.newProg ? `<span class="tag up" data-tip="Bu dönemde yeni program / YK kararı açıklandı (${o.pg ? fmt.date(o.pg.pub) : ""})">yeni</span> ` : ""}${esc(o.name)}</td>
         <td class="num">${o.maxQty == null ? "—" : `<span data-tip="${esc(`Azami ${fmt.int(o.maxQty)} pay (nominal ₺)<br>Program bildirimi: ${fmt.date(o.pg.pub, { day: "numeric", month: "short", year: "numeric" })}`)}">${bin(o.maxQty)}</span>`}</td>
         <td class="num">${o.maxFund == null ? "—" : mn(o.maxFund)}</td>
@@ -437,6 +440,7 @@
   let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(render, 200); });
   addEventListener("themechange", render);
   addEventListener("marketchange", render);
+  addEventListener("minechange", () => { const c = $("#bbWatch"); if (c) { c.disabled = sh.mine; c.checked = sh.mine || S.watch; } render(); });
 
   sh.register("geri-alim", {
     onShow() { S.loaded ? render() : load(); },
