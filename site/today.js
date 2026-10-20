@@ -1,20 +1,19 @@
 /* Piyasa Radarı — Bugün: her sekmeden günün en önemli birkaç şeyi tek ekranda.
-   Kaynaklar sitenin kendi veri dosyaları: feed/digest/macro/research (Sinyal), calendar (Takvim), kurulu_guc (Enerji · KAP),
-   regwatch (Regülasyon), portföy (bu tarayıcı). Her kart ilgili sekmeye götürür. */
+   Kaynaklar sitenin kendi veri dosyaları: feed/digest/macro/research (Sinyal), calendar (Takvim), portföy (bu tarayıcı). Her kart ilgili sekmeye götürür. */
 (() => {
   "use strict";
   const sh = window.shell;
   const { $, esc, fmt, glyph, dirCls } = sh;
   const DAY = 864e5;
   const MAT_W = { low: 1, medium: 2, high: 3 };
-  const S = { cal: null, en: null, rg: null, loaded: false };
+  const S = { cal: null, loaded: false };
 
   async function getJSON(p) {
     try { const r = await fetch(`${p}?t=${Date.now()}`, { cache: "no-store" }); return r.ok ? await r.json() : null; } catch { return null; }
   }
   async function load() {
-    const [cal, en, rg] = await Promise.all([getJSON("data/calendar.json"), getJSON("data/enerji/kurulu_guc.json"), getJSON("data/regulasyon/regwatch.json")]);
-    Object.assign(S, { cal, en, rg, loaded: true });
+    const cal = await getJSON("data/calendar.json");
+    Object.assign(S, { cal, loaded: true });
     await Promise.race([window.radar?.ready, new Promise(r => setTimeout(r, 8000))]);
     const st = window.radar?.state;
     sh.setUpdated("bugun", st?.feed?.generated || new Date(), { label: "Son tarama", staleMin: 45 });
@@ -101,23 +100,6 @@
       <span class="td-tk">${esc(n.t || n.name || "")}</span><span class="td-t">${esc(n.broker || "")}${n.action ? ` · ${esc(act[n.action] || n.action)}` : ""}${n.tp ? ` · ${fmt.num(n.tp, 2)} ${esc(n.cur || "")}` : ""}${n.rating ? ` · ${esc(n.rating)}` : ""}</span>
       <span class="td-age">${fmt.ago(n.ts)}</span></a></li>`).join("")}</ul>`);
   }
-  function energyCard() {
-    const KEEP = new Set(["devreye_alma", "kapasite_artisi", "lisans", "onlisans", "ced", "yeka", "yatirim_karari"]);
-    const rows = (S.en?.kap || []).filter(r => KEEP.has(r.type) && r.tr !== false && r.date && (Date.now() - new Date(r.date + "T12:00:00Z")) <= 14 * DAY).slice(0, 5);
-    if (!rows.length) return "";
-    const tn = S.en.kap_types || {};
-    return card("tdEn", "Enerji yatırım bildirimleri (14 gün)", "enerji", `<ul class="td-list">${rows.map(r => `<li><a class="td-row" href="${esc(r.url)}" target="_blank" rel="noopener">
-      <span class="td-tk">${esc((r.tickers || [])[0] || "")}</span><span class="td-t"><span class="tag">${esc(tn[r.type] || r.type)}</span> ${esc(r.plant || "")}${r.mw ? ` · ${fmt.num(r.mw, r.mw >= 100 ? 0 : 1)} MW` : ""}</span>
-      <span class="td-age">${esc(fmt.date(r.date + "T12:00:00Z"))}</span></a></li>`).join("")}</ul>`);
-  }
-  function regCard() {
-    const items = (S.rg?.items || []).filter(i => i.relevant && i.date && (Date.now() - new Date(i.date + "T12:00:00Z")) <= 14 * DAY).slice(0, 5);
-    if (!items.length) return "";
-    const regs = Object.fromEntries((S.rg.regulators || []).map(r => [r.id, r.name]));
-    return card("tdRg", "Yeni regülasyon dokümanları (14 gün)", "regulasyon", `<ul class="td-list">${items.map(i => `<li><a class="td-row" href="${esc(i.url)}" target="_blank" rel="noopener">
-      <span class="td-tk td-reg">${esc((regs[i.reg] || i.reg).replace(/\s*\(.*\)$/, ""))}</span><span class="td-t">${esc(i.title_tr || i.title)}</span>
-      <span class="td-age">${esc(fmt.date(i.date + "T12:00:00Z"))}</span></a></li>`).join("")}</ul>`);
-  }
 
   function render() {
     if (sh.route !== "bugun") return;
@@ -126,7 +108,7 @@
     const d = new Date().toLocaleDateString("tr-TR", { timeZone: sh.TZ, weekday: "long", day: "numeric", month: "long", year: "numeric" });
     $("#tdDate").textContent = d;
     body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis()}${digest()}
-      <div class="td-grid">${signalCard()}${calCard()}${pfCard()}${researchCard()}${energyCard()}${regCard()}</div></div>`;
+      <div class="td-grid">${signalCard()}${calCard()}${pfCard()}${researchCard()}</div></div>`;
   }
 
   $("#tdBody").addEventListener("click", e => {

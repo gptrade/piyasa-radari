@@ -51,7 +51,7 @@
 
   // ─────────────────────────────── durum
   const ROUTES = {
-    bugun: { title: "Bugün", sub: "Her sekmeden günün öne çıkanları · sinyaller, takvim, portföy, aracı kurum notları, enerji ve regülasyon", view: "#view-bugun", market: false },
+    bugun: { title: "Bugün", sub: "Günün öne çıkanları · sinyaller, takvim, portföy ve aracı kurum notları", view: "#view-bugun", market: false },
     makro: { title: "Makro Veri", sub: "Haftalık makroekonomik göstergeler · ALCO paneli", view: "#view-makro", market: false },
     bankalar: { title: "Türk Bankaları", sub: "BDDK solo verileriyle bilanço yapısı, fonlama, likidite ve kredi portföyü · ayrı panel", view: "#view-bankalar", market: false },
     regulasyon: { title: "Uluslararası Regülasyon Takip", sub: "Risk yönetimi ve model validasyonu düzenlemeleri · BCBS, Türkiye, Azerbaycan, Körfez ve Orta Doğu", view: "#view-regulasyon", market: false },
