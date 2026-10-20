@@ -5,7 +5,7 @@
 (() => {
   "use strict";
   const sh = window.shell;
-  const { $, $$, esc, fmt } = sh;
+  const { $, $$, esc, fmt, fold } = sh;
   const SRC = "data/enerji/kurulu_guc.json";
   const PAGE = 25;
   const KINDS = { all: "Tümü", listed: "Borsada", private: "Borsa dışı", kamu: "Kamu" };
@@ -54,12 +54,12 @@
 
   // ─────────────────────────────── süzme
   function filtered() {
-    const d = S.doc, q = S.q.toLocaleLowerCase("tr");
+    const d = S.doc, q = fold(S.q);
     let rows = d.groups.filter(g => S.kind === "all" || kindOf(g) === S.kind);
     rows.forEach(g => { g.srcMw = S.src ? g.src[S.src] || 0 : g.total; g.srcPipe = S.src ? g.pipe[S.src] || 0 : g.pipe_total; });
     if (S.src) rows = rows.filter(g => g.srcMw > 0 || g.srcPipe > 0);
-    if (q) rows = rows.filter(g => g.name.toLocaleLowerCase("tr").includes(q) || g.code.toLocaleLowerCase("tr").includes(q) ||
-      g.entities.some(n => n.toLocaleLowerCase("tr").includes(q)) || g.units.some(([u]) => d.units[u].n.toLocaleLowerCase("tr").includes(q)));
+    if (q) rows = rows.filter(g => fold(g.name).includes(q) || fold(g.code).includes(q) ||
+      g.entities.some(n => fold(n).includes(q)) || g.units.some(([u]) => fold(d.units[u].n).includes(q) || fold(d.units[u].o || "").includes(q)));
     const k = S.sort === "total" ? "srcMw" : S.sort === "pipe_total" ? "srcPipe" : S.sort;
     return rows.sort((a, b) => {
       const va = a[k], vb = b[k];

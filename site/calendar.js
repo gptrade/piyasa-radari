@@ -261,7 +261,7 @@
   }
   function badge() {
     const n = (S.cal?.events || []).filter(e => inMarket(e) && e.importance >= 3 && [0, 1].includes(daysTo(e.date))).length;
-    sh.setBadge("takvim", n, n ? `Bugün ve yarın ${n} önemli olay` : "");
+    sh.setBadge("takvim", n, n ? `Bugün ve yarın ${n} önemli olay` : "", { tone: "info" });
   }
   function shift(dir) {
     if (dir === 0) S.anchor = todayISO();

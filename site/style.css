@@ -1174,3 +1174,21 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .rg-cov-i { display: flex; flex-direction: column; font-size: var(--fs-sm); padding: var(--s-1) 0; border-top: 1px solid var(--border); }
 .rg-cov-i .meta { font-size: var(--fs-xs); color: var(--text-3); }
 .rg-cov-i.bad .meta { color: var(--warn); }
+
+/* ───────────── Kenar çubuğu grupları ───────────── */
+.nav { gap: var(--s-1); }
+.nav-sec { display: flex; flex-direction: column; }
+.nav-sec-items { display: flex; flex-direction: column; gap: 2px; }
+.nav-sec.collapsed .nav-sec-items { display: none; }
+.nav .nav-group { display: flex; align-items: center; gap: var(--s-2); width: 100%; margin: var(--s-2) 0 2px; padding: 4px var(--s-3); border-radius: var(--r-sm);
+  font-size: var(--fs-2xs); font-weight: var(--fw-semibold); letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); text-align: left; }
+.nav .nav-group:hover { color: var(--text-2); background: var(--surface-2); }
+.nav .nav-group .chev { width: 12px; height: 12px; margin-left: auto; transition: transform .15s; }
+.nav-sec.collapsed .nav-group .chev { transform: rotate(-90deg); }
+.nav .nav-group .sec-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.nav-sec:first-child .nav-group { margin-top: 0; }
+.nav-foot { margin-top: var(--s-3); padding-top: var(--s-2); border-top: 1px solid var(--border); }
+.nav-item.nav-item-sm { min-height: 32px; font-size: var(--fs-sm); color: var(--text-3); }
+.nav-item.nav-item-sm svg { width: 16px; height: 16px; }
+.badge.info { background: var(--surface-3); color: var(--text-2); }
+@media (prefers-reduced-motion: reduce) { .nav .nav-group .chev { transition: none; } }

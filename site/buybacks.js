@@ -151,8 +151,8 @@
     },
   };
   function badge() {
-    const n = S.rows.filter(r => r.kind === "tx" && r.pub >= Date.now() - DAY).length;
-    sh.setBadge("geri-alim", n, `Son 24 saatte ${n} geri alım işlemi bildirildi`);
+    const ids = S.rows.filter(r => r.kind === "tx" && r.pub >= Date.now() - DAY).map(r => r.id);
+    sh.setBadge("geri-alim", ids.length, "x", { ids, label: n => `Son ziyaretinden beri ${n} yeni geri alım işlemi` });
   }
 
   // ─────────────────────────────── hesap

@@ -14,6 +14,10 @@
     get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* özel pencere / engelli depolama */ } },
   };
+  // Arama için sadeleştirme: Türkçe harfler ve aksanlar yok sayılır ("İş Enerji" = "is enerji" = "IS ENERJI")
+  const fold = t => String(t ?? "").replace(/İ/g, "i").replace(/I/g, "ı").toLocaleLowerCase("tr")
+    .replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g").replace(/ç/g, "c").replace(/ö/g, "o").replace(/ü/g, "u")
+    .normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
   const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   // Sayılar: Türkçe biçim (1.234,56 · %3,5 · +%1,2 · −%0,8). Eksi işareti gerçek eksi (U+2212).
@@ -63,24 +67,42 @@
     karsilastir: { title: "Karşılaştır", sub: "Seçtiğin şirketlerin kategori puanları, oranları ve eğilimleri", view: "#view-karsilastir", market: false },
   };
   const ALIAS = { "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", bankalar: "bankalar", banka: "bankalar", "türk-bankaları": "bankalar", enerji: "enerji", energy: "enerji", "regülasyon": "regulasyon", regulation: "regulasyon", "kurulu-guc": "enerji", sinyaller: "sinyal", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
+  const badgeIds = {};                            // route → rozetteki kayıt kimlikleri
+  function markBadgeSeen(route) {
+    if (!badgeIds[route]) return;
+    const prev = store.get(`radar.seen.${route}`, []);
+    store.set(`radar.seen.${route}`, [...new Set([...badgeIds[route], ...prev])].slice(0, 800));
+    const b = $(`.nav-item[data-route="${route}"] .badge`);
+    if (b) { b.hidden = true; b.textContent = ""; }
+  }
   const H = {};                                   // route → işleyiciler {refresh, exports, onShow, onHide, onMarket}
   const updatedAt = {};                           // route → {t, label, staleMin}
   const S = { route: null, param: "", market: store.get("radar.market", "ALL") };
   if (!["ALL", "BIST", "US"].includes(S.market)) S.market = "ALL";
 
   const shell = {
-    $, $$, esc, fmt, store, glyph, dirCls, TZ,
+    $, $$, esc, fmt, store, glyph, dirCls, TZ, fold,
     get route() { return S.route; },
     get param() { return S.param; },
     get market() { return S.market; },
     register(route, h) { H[route] = h; if (S.route === route) { h.onShow?.(); syncActions(); } },
     setUpdated(route, t, opt = {}) { updatedAt[route] = t ? { t: new Date(t), ...opt } : null; if (route === S.route) syncActions(); },
     syncActions: () => syncActions(),
-    setBadge(route, n, label) {
+    // opt.ids: rozet yalnız sekme son açıldığından beri görülmemiş kayıtları sayar (sekme açılınca hepsi görüldü sayılır)
+    // opt.tone: "info" = bilgi amaçlı sayaç (nötr renk); varsayılan = dikkat isteyen (vurgu rengi)
+    setBadge(route, n, label, opt = {}) {
       const b = $(`.nav-item[data-route="${route}"] .badge`);
       if (!b) return;
+      if (opt.ids) {
+        badgeIds[route] = opt.ids.map(String);
+        if (S.route === route) markBadgeSeen(route);
+        const seen = new Set(store.get(`radar.seen.${route}`, []));
+        n = badgeIds[route].filter(id => !seen.has(id)).length;
+        if (label && n) label = typeof opt.label === "function" ? opt.label(n) : label;
+      }
       b.hidden = !n; b.textContent = n > 99 ? "99+" : n || "";
-      b.dataset.tip = label || ""; b.setAttribute("aria-label", label || "");
+      b.classList.toggle("info", opt.tone === "info");
+      b.dataset.tip = n ? label || "" : ""; b.setAttribute("aria-label", n ? label || "" : "");
     },
     setMarket(m) { if (m !== S.market) { S.market = m; store.set("radar.market", m); syncMarket(); dispatchEvent(new CustomEvent("marketchange", { detail: m })); } },
     isDark: () => root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches,
@@ -137,6 +159,9 @@
     Object.entries(ROUTES).forEach(([k, r]) => { $(r.view).hidden = k !== route; });
     const navRoute = ROUTES[route].nav || route;
     $$(".nav-item").forEach(a => a.dataset.route === navRoute ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+    markBadgeSeen(route);
+    const sec = $(`.nav-item[data-route="${navRoute}"]`)?.closest(".nav-sec");
+    if (sec?.classList.contains("collapsed")) toggleSec(sec, true);
     $("#pageTitle").textContent = ROUTES[route].title;
     $("#pageSub").textContent = ROUTES[route].sub;
     $("#pageSub").hidden = !ROUTES[route].sub;
@@ -155,6 +180,29 @@
   addEventListener("hashchange", fromURL);
   addEventListener("popstate", fromURL);
   $$(".nav-item").forEach(a => a.addEventListener("click", e => { e.preventDefault(); go(a.dataset.route, { focus: true }); }));
+
+  // Kenar çubuğu grupları: başlığa tıklayınca katlanır; durum bu tarayıcıda hatırlanır. Kapalı gruptaki rozetler başlıkta toplanır.
+  function toggleSec(sec, open) {
+    sec.classList.toggle("collapsed", !open);
+    $(".nav-group", sec).setAttribute("aria-expanded", String(open));
+    const closed = $$(".nav-sec.collapsed").map(x => x.dataset.sec);
+    store.set("radar.navClosed", closed);
+    syncSecBadges();
+  }
+  function syncSecBadges() {
+    $$(".nav-sec").forEach(sec => {
+      let dot = $(".sec-dot", sec);
+      const has = sec.classList.contains("collapsed") && $$(".nav-item .badge", sec).some(b => !b.hidden && !b.classList.contains("info"));
+      if (has && !dot) { dot = document.createElement("span"); dot.className = "sec-dot"; dot.setAttribute("aria-label", "yeni"); $(".nav-group", sec).insertBefore(dot, $(".chev", sec)); }
+      if (dot) dot.hidden = !has;
+    });
+  }
+  const closedSecs = new Set(store.get("radar.navClosed", []));
+  $$(".nav-sec").forEach(sec => {
+    if (closedSecs.has(sec.dataset.sec)) { sec.classList.add("collapsed"); $(".nav-group", sec).setAttribute("aria-expanded", "false"); }
+    $(".nav-group", sec).addEventListener("click", () => toggleSec(sec, sec.classList.contains("collapsed")));
+  });
+  new MutationObserver(syncSecBadges).observe($(".nav"), { subtree: true, attributes: true, attributeFilter: ["hidden"] });
 
   // ─────────────────────────────── eylem çubuğu
   function syncUpdated() {

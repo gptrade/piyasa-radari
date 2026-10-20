@@ -4,7 +4,7 @@
 (() => {
   "use strict";
   const sh = window.shell;
-  const { $, $$, esc, fmt } = sh;
+  const { $, $$, esc, fmt, fold } = sh;
   const SRC = "data/regulasyon/regwatch.json";
   const PERIODS = { 30: "30G", 90: "90G", 180: "6A", 365: "1Y" };
   const S = { doc: null, loaded: false, loading: false, error: null, missing: false, days: 90, reg: "", topic: "", type: "", q: "", limit: 40 };
@@ -29,9 +29,9 @@
 
   const dayOf = it => it.date || (it.baseline ? "" : (it.first_seen || "").slice(0, 10));
   function filtered() {
-    const d = S.doc, since = new Date(Date.now() - S.days * 864e5).toISOString().slice(0, 10), q = S.q.toLocaleLowerCase("tr");
+    const d = S.doc, since = new Date(Date.now() - S.days * 864e5).toISOString().slice(0, 10), q = fold(S.q);
     return d.items.filter(it => it.relevant && dayOf(it) >= since && (!S.reg || it.reg === S.reg) && (!S.topic || (it.topics || []).includes(S.topic)) &&
-      (!S.type || it.type === S.type) && (!q || `${it.title} ${it.title_tr || ""} ${it.summary || ""}`.toLocaleLowerCase("tr").includes(q)));
+      (!S.type || it.type === S.type) && (!q || fold(`${it.title} ${it.title_tr || ""} ${it.summary || ""}`).includes(q)));
   }
 
   function summaryCard() {
