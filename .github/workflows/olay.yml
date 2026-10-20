@@ -1,0 +1,63 @@
+name: olay
+
+# Olay veritabanı (Faz 1): KAP bildirimleri (evrenin tamamı), panel akışı, sinyal arşivi, aracı kurum notları, geri alım
+# ve kâr payı kararları tek tabloda; BIST Tüm günlük fiyat ve olay başına 1/5/20 seans anormal getiri.
+# Veri ayrı, tek commit'lik `olay` dalında (Parquet). Fiyat günde bir kez (İstanbul 18:45 sonrası) güncellenir.
+on:
+  schedule:
+    - cron: "25 * * * *"
+  workflow_dispatch:
+    inputs:
+      px_full:
+        description: "Fiyat geçmişini baştan indir"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: olay
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Girdileri ve önceki veritabanını geri yükle
+        run: |
+          mkdir -p site/data/olay site/data/fin
+          if git ls-remote --exit-code --heads origin olay >/dev/null 2>&1; then
+            git fetch --depth 1 origin olay && git archive FETCH_HEAD | tar -x -C site/data/olay
+          fi
+          git fetch --depth 1 origin data
+          git archive FETCH_HEAD feed.json signals.json research.json calendar.json | tar -x -C site/data || true
+          git fetch --depth 1 origin fin
+          git archive FETCH_HEAD _dividends.json _universe.json | tar -x -C site/data/fin || true
+
+      - name: Olay veritabanı
+        timeout-minutes: 25
+        run: python -m radar.eventdb ${{ inputs.px_full && '--px-full' || '' }}
+
+      - name: Veriyi olay dalına kaydet
+        if: always()
+        run: |
+          cd site/data/olay
+          [ -f summary.json ] || exit 0
+          git init -q -b olay
+          git config user.name "radar-bot"
+          git config user.email "radar-bot@users.noreply.github.com"
+          git add -A
+          git commit -qm "olay $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" olay
+          rm -rf .git

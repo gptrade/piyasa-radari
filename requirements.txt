@@ -10,3 +10,4 @@ openpyxl>=3.1
 Pillow>=10
 lxml>=5.0
 aia>=0.2
+pyarrow>=15
