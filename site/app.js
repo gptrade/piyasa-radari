@@ -1216,7 +1216,7 @@
         <td class="num">${o.mis ? `<span class="mis" data-tip="Haber yönü ile fiyat ters">≠</span> ` : ""}${o.chg == null ? NA("Fiyat verisi yok (izleme listesi dışı)") : `<span class="rx ${dirCls(ck)}">${glyph(ck)} ${fmt.pct(o.chg, 2)}</span>`}</td>
         <td>${o.ta ? `<span class="tag ${dirCls(vk)}" data-tip="${esc(taTip)}">${glyph(vk)} ${VIEW_LBL[o.ta.view] || "NÖTR"}</span>` : NA("Teknik veri yok (izleme listesi dışı)")}</td>
         <td class="num">${rsiTag}</td>
-        <td class="num">${o.pos52 == null ? "—" : `<span class="p52" data-tip="52 hafta: ${fmt.num(o.ta.lo52)} – ${fmt.num(o.ta.hi52)}"><i style="width:${Math.max(4, Math.min(100, o.pos52))}%"></i></span>${fmt.num(o.pos52, 0)}`}</td>
+        <td class="num">${o.pos52 == null ? "—" : `<span class="p52" data-tip="52 hafta: ${fmt.num(o.ta.lo52)} – ${fmt.num(o.ta.hi52)}"><i style="width:${Math.max(4, Math.min(100, o.pos52))}%"></i></span><span class="p52-v">${fmt.pct(o.pos52, 0, false)}</span>`}</td>
         <td class="num">${shortCell(o)}</td>
         <td>${o.nk == null ? (o.n ? NA("Bu hissenin haberlerinde AI değerlendirmesi yok") : `<span class="muted">—</span>`) : `<span class="dir ${dirCls(o.nk)}" style="display:inline">${glyph(o.nk)}</span><span class="netlbl">${o.nk > 0 ? "olumlu" : o.nk < 0 ? "olumsuz" : "nötr"}</span>`}</td>
         <td class="num">${o.n ? `<span data-tip="Son haber: ${esc(fmt.full(o.last))}">${fmt.int(o.n)}</span>` : "0"}</td>

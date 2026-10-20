@@ -684,6 +684,7 @@ main:focus { outline: none; }
 .hm.panel { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text); }
 .p52 { display: inline-block; width: 34px; height: 6px; border-radius: 3px; background: var(--surface-3); margin-right: 6px; vertical-align: 1px; overflow: hidden; }
 .p52 i { display: block; height: 100%; background: var(--imp-2); }
+.p52-v { display: inline-block; min-width: 4ch; text-align: right; }
 .muted { color: var(--text-3); }
 /* panel dar ekranlarda da açılır (hisse paneli): sağdan kayan sayfa, mobilde tam genişlik */
 @media (max-width: 1399px) { .side-panel { width: min(460px, 100vw); } }
