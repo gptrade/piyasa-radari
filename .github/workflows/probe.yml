@@ -15,24 +15,34 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - name: SPK ve BIST duyuru kaynaklarını yokla
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: |
           mkdir -p probe
           pip install -q -r requirements.txt
-          python - > probe/log2.txt 2>&1 <<'PY' || true
-          import re
-          from radar.regwatch import Fetcher, load_config
-          f = Fetcher()
-          cfg = load_config()
-          for reg in cfg["regulators"]:
-              for src in reg.get("sources") or []:
-                  r = f.get(src["url"])
-                  if r is None:
-                      print("==", reg["id"], "YOK"); continue
-                  t = re.sub(r"<script[\s\S]*?</script>|<style[\s\S]*?</style>", " ", r.text)
-                  hits = [m.start() for m in re.finditer(r"(?i)effective|yürürlük|yururluk|issue date|issued on|تاريخ", t)][:4]
-                  print("==", reg["id"], src["url"][:80], len(t), "isabet", len(hits))
-                  for h in hits:
-                      print("   ", re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " | ", t[max(0, h - 300):h + 400]))[:600])
+          python - > probe/log3.txt 2>&1 <<'PY' || true
+          import os, json, requests
+          key = os.environ.get("EVDS_API_KEY")
+          print("key", bool(key))
+          base = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
+          for path in ["datagroups/mode=2&code=bie_pkauo&type=json", "serieList/type=json&code=bie_pkauo",
+                       "datagroups/mode=0&type=json", "categories/type=json"]:
+              try:
+                  r = requests.get(base + path, headers={"key": key}, timeout=40)
+                  t = r.text
+                  print("==", path, r.status_code, len(t))
+                  if "categories" in path or "mode=0" in path:
+                      try:
+                          js = r.json()
+                          for x in js:
+                              s = json.dumps(x, ensure_ascii=False)
+                              if any(w in s.lower() for w in ("beklenti", "katılımcı", "katilimci", "expectation")):
+                                  print("  ", s[:300])
+                      except Exception as e: print("json?", e, t[:300])
+                  else:
+                      print(t[:3000])
+              except Exception as e:
+                  print("hata", path, e)
           PY
       - name: kaydet
         if: always()
