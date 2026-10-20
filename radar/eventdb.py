@@ -49,7 +49,15 @@ PX_YEARS = 2
 COLS = ["id", "sym", "market", "ts", "ts_eff", "type", "subtype", "dir", "conf", "mat", "mag", "src", "title", "url", "ingested", "payload", "cluster"]
 
 # KAP konu başlığı → olay tipi (sadeleştirilmiş küçük harf; sıra önemli, özel ifade önce)
+SCHEMA = 2                                                    # sınıflandırma değişince eski tablo silinip yeniden doldurulur
+# İdari / rutin bildirimler: saklanır ama olay çalışmalarına girmez (type="idari")
+KAP_ADMIN = ("genel bilgi formu", "katılım finansı", "sorumluluk beyanı", "takasbank", "haftalık rapor", "piyasa yapıcılığı",
+             "likidite sağlayıcılık", "tertip ihraç", "pay dışında sermaye piyasası aracı", "izahname", "kurumsal yönetim bilgi formu",
+             "sürdürülebilirlik raporu", "tsrs", "bağımsız denetim kuruluşu", "yönetim kurulu komiteleri", "esas sözleşme",
+             "herhangi bir otoriteye mali tablo", "tipe dönüşüm", "spk işlem yasağı nedeniyle", "temerrüt", "işlem görmeye başlama",
+             "borçlanma araçlarının", "kira sertifika", "ihraç belgesi", "fon ", "genel açıklama")
 KAP_TYPES = [
+    ("endeks", "endeks", "endeks değişikliği"),
     ("geri al", "geri_alim", "geri alım"), ("kar payı", "temettu", "kâr payı"), ("kâr payı", "temettu", "kâr payı"),
     ("finansal rapor", "finansal", "finansal rapor"), ("faaliyet raporu", "finansal", "faaliyet raporu"),
     ("sermaye artırımı", "sermaye", "sermaye artırımı/azaltımı"), ("bedelsiz", "sermaye", "bedelsiz"), ("bölünme", "sermaye", "bölünme"),
@@ -100,6 +108,8 @@ def _row(**k) -> dict:
 
 
 def kap_type(subject: str, summary: str = "") -> tuple[str, str]:
+    if any(k in _fold(subject) for k in KAP_ADMIN):
+        return "idari", (subject or "")[:60]
     t = _fold(f"{subject} {summary}")
     for k, typ, sub in KAP_TYPES:
         if k in t:
@@ -108,7 +118,8 @@ def kap_type(subject: str, summary: str = "") -> tuple[str, str]:
 
 
 # ─────────────────────────────── kaynak eşlemeleri (saf fonksiyonlar; test edilir)
-def from_kap_rows(rows: list[dict]) -> list[dict]:
+def from_kap_rows(rows: list[dict], universe: set[str] | None = None) -> list[dict]:
+    """universe verilirse yalnız evrendeki pay kodları tutulur (fon, tahvil, varant kodları ayıklanır)."""
     out = []
     for row in rows:
         ts, idx = _kap_ts(row.get("publishDate") or ""), row.get("disclosureIndex")
@@ -116,8 +127,18 @@ def from_kap_rows(rows: list[dict]) -> list[dict]:
             continue
         codes = [c.strip().upper() for c in str(row.get("relatedStocks") or row.get("stockCodes") or "").replace(";", ",").split(",") if c.strip()]
         subject, summ = row.get("subject") or "", row.get("summary") or ""
+        if universe:
+            codes = [c for c in codes if c in universe]
+            if not codes:
+                continue
         bist = "BORSA İSTANBUL" in (row.get("kapTitle") or "").upper()
-        typ, sub = ("borsa_tedbir", "Borsa İstanbul duyurusu") if bist else kap_type(subject, summ)
+        if bist:
+            typ, sub = kap_type(subject, summ)
+            if typ not in ("idari", "endeks"):
+                from .sources.kap import bist_measure
+                typ, sub = "borsa_tedbir", bist_measure(f"{summ} {subject}")
+        else:
+            typ, sub = kap_type(subject, summ)
         for sym in codes or [""]:
             out.append(_row(id=f"kap:{idx}", sym=sym, market="BIST", ts=ts, type=typ, subtype=sub, src="kap",
                             title=f"{subject} · {summ}"[:300], url=f"https://www.kap.org.tr/tr/Bildirim/{idx}",
@@ -399,10 +420,38 @@ def update_px(symbols: list[str], old: pd.DataFrame | None, full: bool) -> pd.Da
     except ImportError:
         return old
     yfs = {s: YF.get(s, s if s.startswith("^") or "." in s else f"{s}.IS") for s in symbols}
+    frames = _download(yf, yfs, full)
+    got = {f.sym.iloc[0] for f in frames}
+    for size, wait in ((25, 20), (8, 60)):               # Yahoo hız sınırı: eksikleri küçük parçalarla, bekleyerek yeniden dene
+        miss = {s: y for s, y in yfs.items() if s not in got}
+        if not miss:
+            break
+        log.info("Fiyat: %d sembol eksik, %d'lik parçalarla yeniden deneniyor", len(miss), size)
+        import time as _t
+        _t.sleep(wait)
+        more = _download(yf, miss, full, size=size, pause=2)
+        frames += more
+        got |= {f.sym.iloc[0] for f in more}
+    log.info("Fiyat: %d/%d sembol", len(got), len(yfs))
+    if not frames:
+        return old
+    new = pd.concat(frames, ignore_index=True)
+    allp = new if old is None or old.empty else pd.concat([old.assign(date=pd.to_datetime(old["date"]).dt.date), new], ignore_index=True)
+    allp = allp.drop_duplicates(["sym", "date"], keep="last").sort_values(["sym", "date"])
+    if not full and old is not None:
+        # düzeltilmiş kapanış geçmişi yeni temettü/bölünmeyle değişir: son 1 ayın oranıyla eski satırları ölçekle
+        allp = _rescale_adj(allp, new)
+    return allp.reset_index(drop=True)
+
+
+def _download(yf, yfs: dict[str, str], full: bool, size: int = 60, pause: float = 1.0) -> list[pd.DataFrame]:
+    import time as _t
     frames = []
     items = list(yfs.items())
-    for i in range(0, len(items), 80):
-        part = dict(items[i:i + 80])
+    for i in range(0, len(items), size):
+        if i:
+            _t.sleep(pause)
+        part = dict(items[i:i + size])
         try:
             df = yf.download(" ".join(part.values()), period=f"{PX_YEARS}y" if full else "1mo", interval="1d", group_by="ticker",
                              auto_adjust=False, actions=False, threads=True, progress=False)
@@ -419,15 +468,7 @@ def update_px(symbols: list[str], old: pd.DataFrame | None, full: bool) -> pd.Da
                 continue
             frames.append(pd.DataFrame({"sym": sym, "date": pd.to_datetime(g.index).date, "close": g["Close"].round(4).values,
                                         "adj_close": g["Adj Close"].round(4).values, "volume": g["Volume"].fillna(0).astype("int64").values}))
-    if not frames:
-        return old
-    new = pd.concat(frames, ignore_index=True)
-    allp = new if old is None or old.empty else pd.concat([old.assign(date=pd.to_datetime(old["date"]).dt.date), new], ignore_index=True)
-    allp = allp.drop_duplicates(["sym", "date"], keep="last").sort_values(["sym", "date"])
-    if not full and old is not None:
-        # düzeltilmiş kapanış geçmişi yeni temettü/bölünmeyle değişir: son 1 ayın oranıyla eski satırları ölçekle
-        allp = _rescale_adj(allp, new)
-    return allp.reset_index(drop=True)
+    return frames
 
 
 def _rescale_adj(allp: pd.DataFrame, new: pd.DataFrame) -> pd.DataFrame:
@@ -507,12 +548,20 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
     OUT.mkdir(parents=True, exist_ok=True)
     st = _json(STATE, {})
     old = load_events()
+    if st.get("schema") != SCHEMA:
+        log.info("Olay şeması %s → %s: tablo yeniden dolduruluyor", st.get("schema"), SCHEMA)
+        old, st = None, {"px_day": st.get("px_day")}
+        for f in EV_DIR.glob("*.parquet"):
+            f.unlink()
+    uni_rows = _json(DATA / "fin" / "_universe.json", {}).get("members") or []
+    uni = [m if isinstance(m, str) else m.get("code") for m in uni_rows]
+    useq = set(filter(None, uni))
 
     # 1) KAP: ilk turda 90 gün geriye, sonra son başarılı tarihten bir gün önce başlayarak
     today = now_ts.tz_convert(IST).date()
     last = date.fromisoformat(st["kap_to"]) if st.get("kap_to") else today - timedelta(days=BACKFILL_DAYS)
     kap_rows = fetch_kap(max(last - timedelta(days=1), today - timedelta(days=BACKFILL_DAYS)), today)
-    new = from_kap_rows(kap_rows)
+    new = from_kap_rows(kap_rows, useq or None)
     if kap_rows:
         st["kap_to"] = today.isoformat()
 
@@ -529,11 +578,9 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
 
     # 3) fiyat: günde bir (İstanbul 18:45 sonrası) ya da ilk kurulumda tam geçmiş
     px = pd.read_parquet(PX) if PX.exists() else None
-    uni = _json(DATA / "fin" / "_universe.json", {}).get("members") or []
-    uni = [m if isinstance(m, str) else m.get("code") for m in uni]
     us = sorted({s for s in ev.loc[ev.market == "US", "sym"].dropna() if s and s.isascii() and len(s) <= 6})
     wl = sorted({s for s in ev.loc[ev.market == "BIST", "sym"].dropna() if s})
-    syms = sorted(set(uni) | set(wl) | set(us)) + list(YF)
+    syms = list(YF) + sorted(set(useq) | set(wl) | set(us))           # endeksler önce: takvim ve getiri onlara bağlı
     loc = now_ts.tz_convert(IST)
     due = px is None or px_force or (st.get("px_day") != loc.date().isoformat() and loc.time() >= time(18, 45)) or set(syms) - set(px.sym.unique())
     if due:
@@ -580,6 +627,7 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
         "kap_to": st.get("kap_to"),
     }
     SUMMARY.write_text(json.dumps(summary, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+    st["schema"] = SCHEMA
     STATE.write_text(json.dumps(st), encoding="utf-8")
     log.info("Olay veritabanı: %d olay (%d yeni satır, %d tekrar), %d getiri satırı", len(ev), len(new), dup, len(ret))
     return summary

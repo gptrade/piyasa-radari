@@ -119,3 +119,11 @@ def test_clusters_group_same_story():
     df["cluster"] = E.clusters(df)
     assert list(df.cluster) == ["a", "a", "c", "d"]
     assert E.near_dups(df) == (1, 4)
+
+
+def test_kap_universe_filter_and_admin():
+    rows = [{"publishDate": "20.10.2026 10:00:00", "disclosureIndex": 1, "relatedStocks": "TCZB", "subject": "Özel Durum Açıklaması (Genel)"},
+            {"publishDate": "20.10.2026 10:00:00", "disclosureIndex": 2, "relatedStocks": "THYAO", "subject": "Şirket Genel Bilgi Formu"},
+            {"publishDate": "20.10.2026 10:00:00", "disclosureIndex": 3, "relatedStocks": "THYAO, TCZB", "subject": "Yeni İş İlişkisi"}]
+    out = E.from_kap_rows(rows, {"THYAO"})
+    assert [(r["id"], r["sym"], r["type"]) for r in out] == [("kap:2", "THYAO", "idari"), ("kap:3", "THYAO", "is_iliskisi")]
