@@ -11,13 +11,14 @@
   const SRC = "data/enerji/kurulu_guc.json";
   const PAGE = 25, UPAGE = 50;
   const KINDS = { all: "Tümü", listed: "Borsada", private: "Borsa dışı", kamu: "Kamu" };
-  const TABS = [["", "Genel bakış"], ["harita", "Harita"], ["gruplar", "Gruplar"], ["santraller", "Santraller"], ["yatirimlar", "Yatırımlar"]];
+  const TABS = [["", "Genel bakış"], ["harita", "Harita"], ["gruplar", "Gruplar"], ["santraller", "Santraller"], ["yatirimlar", "Yatırımlar"], ["degerleme", "Değerleme"]];
   const PIPE = new Set(["construction", "pre-construction", "announced", "pre-permit", "permitted"]);
   const RENEW = ["hidro", "ruzgar", "gunes", "jeotermal", "diger"];
 
   const S = { doc: null, loaded: false, loading: false, error: null, missing: false,
     q: "", kind: "all", src: "", kapType: "", kapLimit: 15, sort: "total", dir: -1, open: new Set(), limit: PAGE, recLimit: 12, pipeLimit: 12,
-    scope: "tr", st: "op", usort: "mw", udir: -1, ulimit: UPAGE, group: "", mapView: "units", focus: null };
+    scope: "tr", st: "op", usort: "mw", udir: -1, ulimit: UPAGE, group: "", mapView: "units", focus: null, year: null };
+  const Y0 = 1980;                                                 // zaman çubuğunun başı (öncesi ilk karede birlikte görünür)
 
   // ─────────────────────────────── birimler
   const mw = v => v == null ? "—" : fmt.num(v, v >= 100 ? 0 : 1);
@@ -97,24 +98,24 @@
   const stOk = u => S.st === "all" || (S.st === "op" ? u.st === "operating" : PIPE.has(u.st));
   const scopeOk = u => S.scope === "all" || (S.scope === "ab" ? u.ab : !u.ab);
   const kindOk = u => S.kind === "all" || S.doc.owners[u.i].some(([g]) => kindOf(g) === S.kind);
-  function unitsFiltered({ group = true } = {}) {
+  function unitsFiltered({ group = true, st = true } = {}) {
     const d = S.doc, q = fold(S.q), g = group && S.group ? d.byKey.get(S.group) : null;
     const only = g ? new Set(g.units.map(([i]) => i)) : null;
-    return d.units.filter(u => (!only || only.has(u.i)) && (!S.src || u.s === S.src) && stOk(u) && scopeOk(u) && kindOk(u) && (!q || u.q.includes(q)));
+    return d.units.filter(u => (!only || only.has(u.i)) && (!S.src || u.s === S.src) && (!st || stOk(u)) && scopeOk(u) && kindOk(u) && (!q || u.q.includes(q)));
   }
 
   // ─────────────────────────────── ortak parçalar
-  function mixBar(src, total, { h = 10 } = {}) {
+  function mixBar(src, total, { h = 10, on = "" } = {}) {
     const d = S.doc;
     if (!total) return "";
     const ks = d.sources.filter(s => src[s] > 0);
     return `<span class="en-mix" style="height:${h}px" role="img" aria-label="${esc(ks.map(s => `${d.source_names[s]} ${pct(src[s] / total, 0)}`).join(", "))}">${ks.map(s =>
-      `<span style="width:${(src[s] / total * 100).toFixed(2)}%;background:${color(s)}" data-tip="${esc(`${d.source_names[s]}: ${mw(src[s])} MW (${pct(src[s] / total)})`)}"></span>`).join("")}</span>`;
+      `<span class="${on && on !== s ? "off" : ""}" style="width:${(src[s] / total * 100).toFixed(2)}%;background:${color(s)}" data-tip="${esc(`${d.source_names[s]}: ${mw(src[s])} MW (${pct(src[s] / total)})`)}"></span>`).join("")}</span>`;
   }
-  function legend(src, total) {
+  function legend(src, total, on = "") {
     const d = S.doc;
     return `<div class="en-legend">${d.sources.filter(s => src[s] > 0).map(s =>
-      `<span><i style="background:${color(s)}"></i>${d.source_names[s]} <b>${gw(src[s])}</b> <em>${pct(src[s] / total)}</em></span>`).join("")}</div>`;
+      `<span class="${on && on !== s ? "off" : on === s ? "on" : ""}"><i style="background:${color(s)}"></i>${d.source_names[s]} <b>${gw(src[s])}</b> <em>${pct(src[s] / total)}</em></span>`).join("")}</div>`;
   }
   const srcDot = s => `<i class="en-dot" style="background:${color(s)}"></i>${esc(S.doc.source_names[s] || s)}`;
   const stTag = u => u.st === "operating" ? "" : ` <span class="tag ${u.st === "construction" ? "up" : ""}">${esc(S.doc.status_names[u.st] || u.st)}</span>`;
@@ -142,10 +143,27 @@
 
   // ─────────────────────────────── Genel bakış
   function kpis() {
-    const d = S.doc, n = d.national;
+    const d = S.doc, n = d.national, src = S.src;
+    const k = (label, value, sub = "", tip = "") => `<div class="kpi" ${tip ? `data-tip="${esc(tip)}"` : ""}><span class="kpi-label">${label}</span><span class="kpi-value">${value}</span>${sub ? `<span class="kpi-sub">${sub}</span>` : ""}</div>`;
+    if (src) {                                                     // kaynak seçiliyse tüm göstergeler o kaynağa göre
+      const nm = d.source_names[src], tot = n.src[src] || 0, gs = d.groups.filter(g => g.src[src] > 0).sort((a, b) => b.src[src] - a.src[src]);
+      const listed = gs.filter(g => g.ticker || g.parent).reduce((a, g) => a + g.src[src], 0);
+      const top10 = gs.slice(0, 10).reduce((a, g) => a + g.src[src], 0);
+      const rec = d.units.filter(u => !u.ab && u.s === src && u.st === "operating" && (u.y || 0) >= d.year - 2).reduce((a, u) => a + u.mw, 0);
+      const ab = d.units.filter(u => u.ab && u.s === src && u.st === "operating");
+      const big = gs.find(g => g.kind !== "kamu");
+      return `<div class="kpi-grid">
+        ${k(`${esc(nm)} kurulu güç`, gw(tot), `Türkiye toplamının ${pct(tot / (n.total || 1))}`)}
+        ${k("Son 3 yılda eklenen", "+" + gw(rec), `${d.year - 2}–${d.year} başlangıçlı`)}
+        ${k("Borsa şirketlerinin payı", pct(listed / (tot || 1)), "pay oranıyla")}
+        ${k("İlk 10 grubun payı", pct(top10 / (tot || 1)))}
+        ${k("Yatırım hattı", gw(n.pipe[src] || 0), "yapım ve planlama")}
+        ${k("Yurt dışı yatırımlar", gw(ab.reduce((a, u) => a + u.mw, 0)), ab.length ? `${new Set(ab.map(u => u.cn)).size} ülke` : "yok")}
+        ${k(`En büyük özel ${esc(nm.toLocaleLowerCase("tr"))} grubu`, big ? esc(big.name) : "—", big ? `${gw(big.src[src])} · ${pct(big.src[src] / (tot || 1))}` : "")}
+      </div>`;
+    }
     const ren = RENEW.reduce((s, k) => s + (n.src[k] || 0), 0);
     const big = d.groups.find(g => g.kind !== "kamu");
-    const k = (label, value, sub = "", tip = "") => `<div class="kpi" ${tip ? `data-tip="${esc(tip)}"` : ""}><span class="kpi-label">${label}</span><span class="kpi-value">${value}</span>${sub ? `<span class="kpi-sub">${sub}</span>` : ""}</div>`;
     return `<div class="kpi-grid">
       ${k("İşletmedeki kurulu güç", gw(n.total), "Türkiye, izlenen santraller", "Global Energy Monitor Integrated Power Tracker'daki Türkiye'de işletmedeki üniteler (güneş ≥1 MW). Lisanssız/çatı güneşin çoğu ve eşik altı küçük santraller dahil değil.")}
       ${k("Yenilenebilir payı", pct(ren / (n.total || 1)))}
@@ -184,7 +202,7 @@
     })() : "";
     return `<section class="card" aria-labelledby="enNatT">
       <div class="card-head"><h2 class="card-title" id="enNatT">Türkiye kaynak dağılımı (işletmede)</h2><span class="card-meta">${gw(n.total)} · sahibi bilinmeyen ${gw(n.unowned)}</span></div>
-      ${mixBar(n.src, n.total, { h: 18 })}${legend(n.src, n.total)}${ctx}</section>`;
+      <div class="${S.src ? "en-focus" : ""}" style="--on:${S.src ? color(S.src) : "transparent"}">${mixBar(n.src, n.total, { h: 18, on: S.src })}${legend(n.src, n.total, S.src)}</div>${ctx}</section>`;
   }
   function opVsPipe() {
     const d = S.doc, n = d.national;
@@ -198,19 +216,24 @@
       <div class="en-hb-grid"><span></span><span class="en-hb-h">İşletmede</span><span class="en-hb-h">Yatırım hattı</span>${ks.map(row).join("")}</div></section>`;
   }
   function abroadCard() {
-    const d = S.doc;
-    const gs = d.groups.filter(g => g.abroad_total + g.abroad_pipe > 0).sort((a, b) => (b.abroad_total + b.abroad_pipe) - (a.abroad_total + a.abroad_pipe));
-    if (!gs.length) return "";
-    const byC = {};
-    d.units.filter(u => u.ab && u.st === "operating").forEach(u => { byC[u.cn] = (byC[u.cn] || 0) + u.mw; });
+    const d = S.doc, src = S.src;
+    const ab = g => src ? g.abroad[src] || 0 : g.abroad_total;
+    const abp = g => src ? d.units.filter(u => u.ab && u.s === src && PIPE.has(u.st) && d.owners[u.i].some(([x]) => x === g)).reduce((a, u) => a + u.mw * (d.owners[u.i].find(([x]) => x === g)[1]), 0) : g.abroad_pipe;
+    const gs = d.groups.map(g => [g, ab(g), abp(g)]).filter(([, a, p]) => a + p > 0.5).sort((a, b) => (b[1] + b[2]) - (a[1] + a[2]));
+    const us = d.units.filter(u => u.ab && u.st === "operating" && (!src || u.s === src));
+    const head = `<div class="card-head"><h2 class="card-title" id="enAbT">Türk gruplarının yurt dışı santralleri${src ? ` · ${esc(d.source_names[src])}` : ""}</h2>`;
+    if (!gs.length) return src ? `<section class="card" aria-labelledby="enAbT">${head}</div><p class="meta">${esc(d.source_names[src])} kaynağında Türk gruplarının yurt dışında santrali yok.</p></section>` : "";
+    const byC = {}; us.forEach(u => { byC[u.cn] = (byC[u.cn] || 0) + u.mw; });
     const cs = Object.entries(byC).sort((a, b) => b[1] - a[1]);
-    return `<section class="card card-flush" aria-labelledby="enAbT"><div class="card-head"><h2 class="card-title" id="enAbT">Türk gruplarının yurt dışı santralleri</h2>
-      <span class="card-meta">${gw(d.abroad_total)} işletmede · ${cs.length} ülke · Türkiye toplamına katılmaz · <a class="link-btn" href="#enerji/harita" data-abroad="1">Haritada gör →</a></span></div>
+    const ctry = g => { const c = [...new Set(g.units.map(([i]) => d.units[i]).filter(u => u.ab && (!src || u.s === src)).map(u => u.cn))];
+      return c.length > 3 ? `<span data-tip="${esc(c.join(", "))}">${c.slice(0, 3).map(esc).join(", ")} <span class="meta">+${c.length - 3}</span></span>` : c.map(esc).join(", "); };
+    return `<section class="card card-flush" aria-labelledby="enAbT">${head}
+      <span class="card-meta">${gw(us.reduce((a, u) => a + u.mw, 0))} işletmede · ${cs.length} ülke · Türkiye toplamına katılmaz · <a class="link-btn" href="#enerji/harita" data-abroad="1">Haritada gör →</a></span></div>
       <div class="en-ab"><div class="tbl-scroll"><table class="tbl en-add"><thead><tr><th scope="col">Grup</th><th scope="col" class="num">İşletmede (MW)</th><th scope="col" class="num">Yatırım hattı (MW)</th><th scope="col">Kaynak</th><th scope="col">Ülkeler</th></tr></thead><tbody>
-      ${gs.slice(0, 12).map(g => `<tr><td class="en-nm"><span>${esc(g.name)}</span>${g.code ? ` <a href="#hisse/${esc(g.code)}" class="en-code">${esc(g.code)}</a>` : ""}</td><td class="num"><b>${g.abroad_total ? mw(g.abroad_total) : "—"}</b></td>
-        <td class="num">${g.abroad_pipe ? mw(g.abroad_pipe) : "—"}</td><td class="en-mixc">${mixBar(g.abroad, g.abroad_total)}</td><td class="en-cn">${g.countries.length > 3 ? `<span data-tip="${esc(g.countries.join(", "))}">${g.countries.slice(0, 3).map(esc).join(", ")} <span class="meta">+${g.countries.length - 3}</span></span>` : g.countries.map(esc).join(", ")}</td></tr>`).join("")}
+      ${gs.slice(0, 12).map(([g, a, p]) => `<tr><td class="en-nm"><span>${esc(g.name)}</span>${g.code ? ` <a href="#hisse/${esc(g.code)}" class="en-code">${esc(g.code)}</a>` : ""}</td><td class="num"><b>${a ? mw(a) : "—"}</b></td>
+        <td class="num">${p ? mw(p) : "—"}</td><td class="en-mixc">${a ? mixBar(src ? { [src]: a } : g.abroad, a) : ""}</td><td class="en-cn">${ctry(g)}</td></tr>`).join("")}
       </tbody></table></div>
-      <div class="en-ab-c"><h3 class="en-h3">Ülkelere göre (işletmede)</h3>${cs.slice(0, 10).map(([c, v]) => `<div class="en-ab-r"><span>${esc(c)}</span><span class="en-ab-b"><span style="width:${(v / cs[0][1] * 100).toFixed(1)}%"></span></span><b>${mw(v)}</b></div>`).join("")}</div></div></section>`;
+      <div class="en-ab-c"><h3 class="en-h3">Ülkelere göre (işletmede)</h3>${cs.length ? cs.slice(0, 10).map(([c, v]) => `<div class="en-ab-r"><span>${esc(c)}</span><span class="en-ab-b"><span style="width:${(v / cs[0][1] * 100).toFixed(1)}%"></span></span><b>${mw(v)}</b></div>`).join("") : `<p class="meta">İşletmede santral yok; yalnız yatırım hattında.</p>`}</div></div></section>`;
   }
   function overview() {
     const d = S.doc;
@@ -282,7 +305,12 @@
       this.markers = [];
       const css = Object.fromEntries(d.sources.map(s => [s, sh.cssVar(`--en-${s}`) || "#888"]));
       const ring = sh.cssVar("--surface") || "#fff";
-      const us = unitsFiltered().filter(u => u.la != null && u.lo != null);
+      let us;
+      if (S.year != null) {                                        // zaman makinesi: o yıla kadar devreye girenler (+ sonrası için planlananlar)
+        const now = d.year;
+        us = unitsFiltered({ st: false }).filter(u => u.la != null && u.y && u.y <= S.year &&
+          (u.st === "operating" || (S.year > now && PIPE.has(u.st) && u.y > now)));
+      } else us = unitsFiltered().filter(u => u.la != null && u.lo != null);
       if (S.mapView === "prov" && S.scope === "tr") {
         const P = {};
         us.filter(u => !u.ab).forEach(u => { const p = P[fold(u.p || "")] ||= { p: u.p || "bilinmiyor", mw: 0, n: 0, src: {} };
@@ -298,9 +326,10 @@
         const steps = [0.02, 0.1, 0.35, 1].map(t => Math.round(max * t));
         $("#enProvLeg") && ($("#enProvLeg").innerHTML = `<span class="en-cho">${steps.map(v => `<span><i style="background:${fill(v)}"></i>${v >= 1000 ? fmt.num(v / 1000, 1) + " GW" : fmt.int(v) + " MW"}</span>`).join("")}</span>`);
       } else {
+        const fresh = S.year != null ? sh.cssVar("--text") || "#111" : null;
         us.sort((a, b) => b.mw - a.mw).forEach(u => {
-          const pipe = u.st !== "operating", c = css[u.s];
-          const mk = L.circleMarker([u.la, u.lo], { radius: this.radius(u.mw), color: pipe ? c : ring, weight: pipe ? 2 : 1, fillColor: c, fillOpacity: pipe ? 0.08 : 0.78, opacity: 1 })
+          const pipe = u.st !== "operating", c = css[u.s], isNew = fresh && u.y === S.year;
+          const mk = L.circleMarker([u.la, u.lo], { radius: this.radius(u.mw) * (isNew ? 1.25 : 1), color: isNew ? fresh : pipe ? c : ring, weight: isNew ? 2 : pipe ? 2 : 1, fillColor: c, fillOpacity: pipe ? 0.08 : 0.78, opacity: 1 })
             .bindPopup(() => popup(u), { maxWidth: 360, minWidth: 260 })
             .bindTooltip(`${u.n} · ${mw(u.mw)} MW`, { direction: "top", offset: [0, -4] });
           mk.addTo(this.layer); this.markers[u.i] = mk;
@@ -317,6 +346,7 @@
       }
       if (S.mapView !== "prov" && $("#enProvLeg")) $("#enProvLeg").innerHTML = "";
       $("#enMapN") && ($("#enMapN").textContent = `${fmt.int(us.length)} ünite · ${gw(us.reduce((a, u) => a + u.mw, 0))}`);
+      yearPanel(us);
     },
     open(i) {
       const mk = this.markers[i];
@@ -352,16 +382,59 @@
       ${kap.length ? `<div class="en-pop-kap"><b>KAP</b>${kap.map(r => `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(fmt.date(r.date + "T12:00:00Z", { day: "numeric", month: "short", year: "2-digit" }))} · ${esc(d.kap_types[r.type] || r.type)}${r.mw ? ` · ${mw(r.mw)} MW` : ""} ↗</a>`).join("")}</div>` : ""}
       <div class="en-pop-f">${u.u ? `<a href="${esc(u.u)}" target="_blank" rel="noopener">GEM.wiki ↗</a>` : ""}${os[0] ? `<button type="button" class="link-btn" data-grp="${esc(os[0][0].key)}">${esc(os[0][0].name)} santralleri</button>` : ""}</div></div>`;
   }
+  // ─────────────────────────────── zaman makinesi
+  const Play = { t: null };
+  function timeBar() {
+    const d = S.doc, max = d.year + 5, y = S.year ?? d.year;
+    return `<div class="en-time ${S.year != null ? "on" : ""}">
+      <button type="button" class="btn-sm en-play" id="enPlay" aria-pressed="${!!Play.t}" aria-label="${Play.t ? "Durdur" : "Oynat"}">${Play.t ? "❚❚ Durdur" : "▶ Zamanda oynat"}</button>
+      <input type="range" id="enYear" min="${Y0}" max="${max}" step="1" value="${y}" aria-label="Yıl" aria-valuetext="${S.year == null ? "bugün" : S.year}">
+      <span class="en-time-y" id="enYearL">${S.year == null ? "Bugün" : S.year}${S.year > d.year ? ` <span class="tag">plan</span>` : ""}</span>
+      ${S.year != null ? `<button type="button" class="link-btn" id="enYearOff">Bugüne dön</button>` : `<span class="meta">${Y0}'den ${max}'e santrallerin devreye girişi</span>`}
+    </div>`;
+  }
+  function yearPanel(us) {
+    const box = $("#enYr"); if (!box) return;
+    if (S.year == null) { box.hidden = true; return; }
+    const d = S.doc, op = us.filter(u => u.st === "operating"), by = {}; op.forEach(u => { by[u.s] = (by[u.s] || 0) + u.mw; });
+    const tot = sum(by), plan = us.filter(u => u.st !== "operating").reduce((a, u) => a + u.mw, 0);
+    const add = us.filter(u => u.y === S.year).reduce((a, u) => a + u.mw, 0);
+    const noY = unitsFiltered({ st: false }).filter(u => u.st === "operating" && !u.y).reduce((a, u) => a + u.mw, 0);
+    const ren = RENEW.reduce((a, k) => a + (by[k] || 0), 0);
+    box.hidden = false;
+    box.innerHTML = `<b class="en-yr-y">${S.year}</b><span class="en-yr-v">${gw(tot)}</span><span class="meta">işletmede · yenilenebilir ${pct(ren / (tot || 1), 0)}</span>
+      ${mixBar(by, tot, { h: 8 })}<span class="en-yr-a">${add ? `bu yıl +${mw(add)} MW${S.year > d.year ? " (planlanan)" : ""}` : "bu yıl yeni santral yok"}${plan ? ` · toplam planlanan ${gw(plan)}` : ""}</span>
+      ${noY > 1 ? `<span class="meta" style="font-size:var(--fs-2xs)">başlangıç yılı bilinmeyen ${gw(noY)} dahil değil</span>` : ""}`;
+  }
+  function setYear(y) {
+    const d = S.doc;
+    S.year = y;
+    if (y == null) { stopPlay(); return render(); }
+    if ($(".en-time:not(.on)") || $("#enSt")) return render();       // ilk geçiş: kontrolleri yeniden kur
+    $("#enYear").value = y; $("#enYear").setAttribute("aria-valuetext", y);
+    $("#enYearL").innerHTML = `${y}${y > d.year ? ` <span class="tag">plan</span>` : ""}`;
+    Map_.draw();
+  }
+  function stopPlay() { clearInterval(Play.t); Play.t = null; const b = $("#enPlay"); if (b) { b.textContent = "▶ Zamanda oynat"; b.setAttribute("aria-pressed", "false"); } }
+  function togglePlay() {
+    if (Play.t) return stopPlay();
+    const max = S.doc.year + 5;
+    let y = S.year == null || S.year >= max ? Y0 : S.year;
+    setYear(y);
+    Play.t = setInterval(() => { if (sh.route !== "enerji" || tab() !== "harita") return stopPlay(); y++; if (y > max) return stopPlay(); setYear(y); }, 550);
+    const b = $("#enPlay"); if (b) { b.textContent = "❚❚ Durdur"; b.setAttribute("aria-pressed", "true"); }
+  }
   function mapTab() {
     const d = S.doc;
     return `${groupChip()}<section class="card card-flush en-mapcard" aria-labelledby="enMapT">
       <div class="card-head"><h2 class="card-title" id="enMapT">Santral haritası</h2><span class="card-meta" id="enMapN"></span></div>
       <div class="en-map-ctl">
         ${seg("enScope", "Kapsam", scopeOpts([["tr", "Türkiye"], ["ab", "Yurt dışı yatırımlar"], ["all", "Dünya"]]), S.scope)}
-        ${seg("enSt", "Durum", [["op", "İşletmede"], ["pipe", "Yatırım hattı"], ["all", "Tümü"]], S.st)}
+        ${S.year == null ? seg("enSt", "Durum", [["op", "İşletmede"], ["pipe", "Yatırım hattı"], ["all", "Tümü"]], S.st) : ""}
         ${S.scope === "tr" ? seg("enView", "Görünüm", [["units", "Santraller"], ["prov", "İl toplamı"]], S.mapView) : ""}
       </div>
-      <div class="en-map-wrap"><div id="enMapEmpty">${emptyNote()}</div><div id="enMap" class="en-map" role="region" aria-label="Santral haritası; ayrıntı için Santraller sekmesindeki tabloyu kullan"></div></div>
+      ${timeBar()}
+      <div class="en-map-wrap"><div id="enMapEmpty">${S.year == null ? emptyNote() : ""}</div><div class="en-yr" id="enYr" ${S.year == null ? "hidden" : ""}></div><div id="enMap" class="en-map" role="region" aria-label="Santral haritası; ayrıntı için Santraller sekmesindeki tabloyu kullan"></div></div>
       <div class="en-map-leg">${d.sources.filter(s => d.national.src[s] || d.national.pipe[s]).map(s => `<span>${srcDot(s)}</span>`).join("")}
         <span class="en-leg-sz"><i style="width:7px;height:7px"></i><i style="width:14px;height:14px"></i><i style="width:24px;height:24px"></i>boyut = MW</span><span><i class="en-ring"></i>içi boş = yapım/planlama</span><span id="enProvLeg"></span></div>
     </section>
@@ -446,6 +519,55 @@
       <td>${srcDot(u.s)}</td><td class="num">${mw(u.mw)}</td>
       <td class="num">${share == null ? "" : pct(share, share < 1 ? 1 : 0)}</td><td class="num">${u.y || "—"}</td><td>${place(u)}</td></tr>`;
   }
+  // ─────────────────────────────── sahiplik ağacı (GEM sahiplik zinciri + sahip/ana ortak alanları)
+  const OT_SKIP = /natural person|small shareholder|individual investor|gerçek kişi/i;
+  const otNorm = n => fold(n).replace(/\b(A S|AS|A Ş|ANONIM SIRKETI|SANAYI VE TICARET|SAN VE TIC|SAN TIC|LTD STI|LIMITED SIRKETI|LTD|INC|NV|JSC|LLC)\b/g, "").replace(/\s+/g, " ").trim();
+  const otPart = s => { const m = String(s).trim().match(/^(.*?)\s*\[([\d.]+)%\]\s*$/); return m ? [m[1].trim(), +m[2] / 100] : [String(s).trim(), null]; };
+  const otList = s => String(s || "").split(";").map(x => x.trim()).filter(Boolean).map(otPart);
+  function ownTree(g) {
+    // Grup → santrali doğrudan tutan şirketler (adı farklı yazılmış aynı şirket birleştirilir) → santraller.
+    // Şirketin üstündeki ortaklar (zincirdeki önceki halkalar ya da GEM "ana ortak" alanı) şirket kartında "↑" ile gösterilir.
+    const d = S.doc, C = new Map();
+    const keyOf = n => { const k = otNorm(n) || fold(n);
+      for (const [k2, c] of C) { const [a, b] = k.length < k2.length ? [k, k2] : [k2, k];
+        if (a.split(" ").length >= 2 && (b === a || b.startsWith(a + " "))) { if (k.length > k2.length) { C.delete(k2); C.set(k, c); return k; } return k2; } }
+      return k; };
+    const company = n => { const k = keyOf(n); let c = C.get(k); if (!c) C.set(k, c = { name: n, up: new Map(), leaves: [] }); else if (n.length > c.name.length) c.name = n; return c; };
+    for (const u of g.units.map(([i]) => d.units[i]).filter(u => !S.src || u.s === S.src)) {
+      const all = otList(u.o);
+      let links;                                                    // [[şirket, santraldeki payı, [[üst ortak, pay]...]]]
+      if (u.path) { const parts = u.path.split("->").map(otPart), pl = parts.pop(), chain = parts.filter(([n]) => !OT_SKIP.test(n));
+        if (!chain.length) continue;
+        const [cn] = chain[chain.length - 1];
+        links = [[cn, pl[1], chain.slice(0, -1).map(([n], j) => [n, chain[j + 1][1]])]]; }
+      else { const pars = otList(u.pa);
+        links = (all.length ? all : pars.slice(0, 1)).map(([n, pct]) => [n, pct, pars.filter(([pn]) => otNorm(pn) !== otNorm(n))]); }
+      for (const [cn, pct, ups] of links) {
+        const c = company(cn);
+        ups.forEach(([n, x]) => { if (!c.up.has(fold(n))) c.up.set(fold(n), [n, x]); });
+        c.leaves.push({ u, pct, co: all.filter(([n]) => otNorm(n) !== otNorm(cn)) });
+      }
+    }
+    if (!C.size) return "";
+    const pctTag = p => p != null && p < 0.9995 ? `<span class="en-ot-p">%${fmt.num(p * 100, p < 0.1 ? 1 : 0)}</span>` : "";
+    const plants = ls => { const P = new Map();
+      ls.forEach(l => { const base = l.u.n.replace(/\s+(\d+|[IVX]+|CC|ST|GT|Unit \d+|Faz \d+)$/i, "").trim(), k = fold(base) + "|" + (l.u.cn || "");
+        const p = P.get(k) || P.set(k, { n: base, mw: 0, nu: 0, s: l.u.s, st: l.u.st, ab: l.u.ab, cn: l.u.cn, p: l.u.p, pct: l.pct, co: l.co, i: l.u.i }).get(k);
+        p.mw += l.u.mw; p.nu++; if (l.u.st === "operating") p.st = "operating"; });
+      return [...P.values()].sort((a, b) => b.mw - a.mw); };
+    const cs = [...C.values()].map(c => ({ ...c, ps: plants(c.leaves), mw: c.leaves.reduce((a, l) => a + l.u.mw, 0),
+      src: c.leaves.reduce((o, l) => (o[l.u.s] = (o[l.u.s] || 0) + l.u.mw, o), {}) })).sort((a, b) => b.mw - a.mw);
+    const LIM = 12, tot = cs.reduce((a, c) => a + c.mw, 0);
+    const plantLi = p => `<li class="en-ot-l"><button type="button" class="en-ot-plant" data-u="${p.i}" data-tip="Haritada göster">
+        <i class="en-dot" style="background:${color(p.s)}"></i><span class="en-ot-name">${esc(p.n)}</span>${pctTag(p.pct)}<span class="en-ot-mw">${mw(p.mw)} MW${p.nu > 1 ? ` · ${p.nu} ünite` : ""}</span>
+        <span class="meta">${p.ab ? esc(p.cn) : esc(p.p || "")}${p.st !== "operating" ? " · " + esc(S.doc.status_names[p.st] || p.st) : ""}</span></button>
+        ${p.co.length ? `<span class="en-ot-co">ortak: ${p.co.map(([n, x]) => `${esc(n)}${x != null ? ` %${fmt.num(x * 100, 0)}` : ""}`).join(" · ")}</span>` : ""}</li>`;
+    return `<details class="en-ot" open><summary class="en-h3">Sahiplik ağacı <span class="meta">grup → santrali tutan şirketler → santraller · yüzdeler ortaklık payı · ↑ = şirketin ortakları · “ortak” = santraldeki diğer pay sahipleri</span></summary>
+      <ul class="en-ot-root"><li class="en-ot-n"><div class="en-ot-h en-ot-g"><span class="en-ot-name"><b>${esc(g.name)}</b></span>${g.code ? `<span class="en-code">${esc(g.code)}</span>` : ""}<span class="en-ot-mw">${mw(tot)} MW · ${cs.length} şirket</span></div>
+      <ul>${cs.map(c => `<li class="en-ot-n"><div class="en-ot-h"><span class="en-ot-name">${esc(c.name)}</span><span class="en-ot-mw">${mw(c.mw)} MW</span><span class="en-ot-mix">${mixBar(c.src, c.mw, { h: 5 })}</span></div>
+        ${c.up.size ? `<div class="en-ot-up">↑ ${[...c.up.values()].map(([n, x]) => `${esc(n)}${x != null ? ` <span class="en-ot-p">%${fmt.num(x * 100, x < 0.1 ? 1 : 0)}</span>` : ""}`).join(" · ")}</div>` : ""}
+        <ul>${c.ps.slice(0, LIM).map(plantLi).join("")}${c.ps.length > LIM ? `<li class="en-ot-l meta">+${c.ps.length - LIM} santral daha</li>` : ""}</ul></li>`).join("")}</ul></li></ul></details>`;
+  }
   function drawer(g) {
     const d = S.doc;
     const us = g.units.filter(([i]) => !S.src || d.units[i].s === S.src);
@@ -456,7 +578,7 @@
     const tbl = (title, list) => list.length ? `<h3 class="en-h3" style="margin-top:var(--s-3)">${title}</h3><table class="tx"><thead><tr><th>Santral / ünite</th><th>Kaynak</th><th class="num">MW</th><th class="num">Pay</th><th class="num">Başlangıç</th><th>${title.includes("Yurt") ? "Ülke" : "İl"}</th></tr></thead><tbody>
       ${list.slice(0, 80).map(([i, s]) => unitRow(i, s)).join("")}</tbody></table>${list.length > 80 ? `<p class="meta">+${list.length - 80} ünite daha (CSV'de tamamı)</p>` : ""}` : "";
     return `<div class="en-drawer1"><div class="en-dr-act"><button type="button" class="btn-sm" data-grp="${esc(g.key)}">Haritada göster</button><button type="button" class="btn-sm" data-grpu="${esc(g.key)}">Santral tablosunda aç</button></div>
-      ${ents}${kapT}${tbl("Türkiye'deki santraller (GEM)", home)}${tbl("Yurt dışı santraller (GEM)", ab)}</div>`;
+      ${ents}${ownTree(g)}${kapT}${tbl("Türkiye'deki santraller (GEM)", home)}${tbl("Yurt dışı santraller (GEM)", ab)}</div>`;
   }
   const groupsTab = () => { const rows = filtered(); return `${treemap(rows)}${table(rows)}`; };
 
@@ -569,6 +691,92 @@
       <p class="en-note"><b>KAP bildirimleri</b> borsa şirketlerinin lisans, ÇED, YEKA, yatırım kararı ve devreye alma açıklamalarıdır; bildirimler ücretsiz bir AI modeliyle okunur, kesin değer için bildirime bak. GEM verisinin tarihinden (${esc(Object.entries(d.gem.asof || {}).map(([k, v]) => `${d.source_names[k] || k} ${v.slice(0, 7)}`).join(", "))}) sonraki devreye almalar Gruplar sekmesindeki KAP sütununa yansır.</p>`;
   }
 
+  // ─────────────────────────────── Değerleme (borsa şirketleri: firma değeri ÷ MW)
+  // Piyasa değeri ve firma değeri temel analiz verisinden (data/fin/_screen.json). MW = Türkiye + yurt dışı işletmedeki kapasite,
+  // ortaklık payıyla. Firma değeri santral dışı işleri de içerir (dağıtım, ticaret, inşaat …); bu yüzden varsayılan yalnız elektrik sektörü.
+  const V = { screen: null, loading: false, err: null, y: "ev", all: false, sort: "evmw", dir: 1 };
+  async function loadScreen() {
+    if (V.screen || V.loading) return;
+    V.loading = true;
+    try {
+      const r = await fetch(`data/fin/_screen.json?t=${Date.now()}`, { cache: "no-store" }); if (!r.ok) throw new Error(`HTTP ${r.status}`); V.screen = await r.json();
+      if (!usdTry()) { const m = await fetch("data/macro.json", { cache: "no-store" }).then(x => x.ok ? x.json() : null).catch(() => null);
+        V.usd = (m?.series || []).find(x => x.code === "TP.DK.USD.A.YTL")?.last || null; }
+    }
+    catch (e) { V.err = e.message || "temel analiz verisi okunamadı"; }
+    finally { V.loading = false; }
+    if (tab() === "degerleme") render();
+  }
+  const usdTry = () => (window.radar?.state?.macro?.series || []).find(x => x.code === "TP.DK.USD.A.YTL")?.last || V.usd || null;
+  const relTxt = v => v == null ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}%${fmt.num(Math.abs(v) * 100, 0)}`;
+  function valRows() {
+    const by = new Map((V.screen?.rows || []).map(r => [r.code, r]));
+    const rows = S.doc.groups.filter(g => g.ticker && by.has(g.ticker)).map(g => {
+      const f = by.get(g.ticker), mwT = (g.total || 0) + (g.abroad_total || 0);
+      const ev = f.v?.ev || null, mc = f.mcap || f.v?.mcap || null;
+      return { g, f, code: g.ticker, name: g.name, mw: mwT, tr: g.total, ab: g.abroad_total, pipe: g.pipe_total + (g.abroad_pipe || 0), renew: g.renew,
+        mc, ev, pure: /ELEKTR/i.test(f.sector || ""), evmw: ev && mwT ? ev / mwT : null, mcmw: mc && mwT ? mc / mwT : null, sector: f.sector };
+    }).filter(r => r.mw >= 5 && (V.all || r.pure) && (r[V.y] != null));
+    const k = V.y === "ev" ? "evmw" : "mcmw", vals = rows.map(r => r[k]).filter(Boolean).sort((a, b) => a - b);
+    const med = vals.length ? vals[Math.floor(vals.length / 2)] : null;
+    rows.forEach(r => { r.rel = med && r[k] ? r[k] / med - 1 : null; });
+    return { rows, med, k };
+  }
+  function valChart(rows, med, k) {
+    if (rows.length < 3) return `<p class="meta">Grafik için yeterli şirket yok.</p>`;
+    const W = 960, H = 440, P = { l: 92, r: 60, t: 16, b: 46 };
+    const xs = rows.map(r => r.mw), ys = rows.map(r => r[V.y]);
+    const lx = v => Math.log10(v), x0 = Math.floor(lx(Math.min(...xs))), x1 = Math.ceil(lx(Math.max(...xs)));
+    const y0 = Math.floor(lx(Math.min(...ys))), y1 = Math.ceil(lx(Math.max(...ys)));
+    const X = v => P.l + (lx(v) - x0) / (x1 - x0) * (W - P.l - P.r), Yp = v => H - P.b - (lx(v) - y0) / (y1 - y0) * (H - P.t - P.b);
+    const tick = (a, b) => { const t = []; for (let e = a; e <= b; e++) for (const m of [1, 2, 5]) { const v = m * 10 ** e; if (lx(v) >= a - 1e-9 && lx(v) <= b + 1e-9) t.push(v); } return t; };
+    const fmtTL = v => v >= 1e9 ? fmt.num(v / 1e9, v >= 1e10 ? 0 : 1) + " mr ₺" : fmt.num(v / 1e6, 0) + " mn ₺";
+    const fmtMW = v => v >= 1000 ? fmt.num(v / 1000, 0) + " GW" : fmt.int(v) + " MW";
+    const grid = tick(x0, x1).map(v => `<line x1="${X(v)}" x2="${X(v)}" y1="${P.t}" y2="${H - P.b}" class="g"/><text x="${X(v)}" y="${H - P.b + 16}" text-anchor="middle">${fmtMW(v)}</text>`).join("") +
+      tick(y0, y1).map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${Yp(v)}" y2="${Yp(v)}" class="g"/><text x="${P.l - 6}" y="${Yp(v) + 4}" text-anchor="end">${fmtTL(v)}</text>`).join("");
+    // medyan değer/MW çizgisi: y = med · x (log-log'da 45°)
+    const mx0 = 10 ** x0, mx1 = 10 ** x1;
+    const line = med ? (() => { const pts = [mx0, mx1].map(x => [x, med * x]).map(([x, y]) => [X(x), Yp(Math.min(Math.max(y, 10 ** y0), 10 ** y1))]);
+      return `<line x1="${pts[0][0]}" y1="${pts[0][1]}" x2="${pts[1][0]}" y2="${pts[1][1]}" class="med"/>`; })() : "";
+    const ramp = r => r == null ? "var(--text-3)" : r >= 0.66 ? "var(--en-v3)" : r >= 0.33 ? "var(--en-v2)" : "var(--en-v1)";
+    const pmax = Math.max(...rows.map(r => r.pipe), 1);
+    const dots = rows.slice().sort((a, b) => b.pipe - a.pipe).map(r => {
+      const cx = X(r.mw), cy = Yp(r[V.y]), rad = 6 + Math.sqrt(r.pipe / pmax) * 16;
+      const tip = `<b>${esc(r.name)} (${esc(r.code)})</b><br>${mw(r.mw)} MW (Türkiye ${mw(r.tr)}${r.ab ? `, yurt dışı ${mw(r.ab)}` : ""})<br>${V.y === "ev" ? "Firma değeri" : "Piyasa değeri"} ${fmtTL(r[V.y])}<br>${V.y === "ev" ? "FD" : "PD"}/MW ${fmt.num(r[k] / 1e6, 1)} mn ₺${r.rel != null ? ` · medyana göre ${relTxt(r.rel)}` : ""}${r.mw < 60 ? "<br>⚠ küçük kapasite: GEM lisanssız/küçük santralleri izlemiyor, MW eksik olabilir" : ""}<br>yenilenebilir ${pct(r.renew, 0)} · yatırım hattı ${mw(r.pipe)} MW`;
+      return `<g class="dot" data-tip="${esc(tip)}"><a href="#hisse/${esc(r.code)}"><circle cx="${cx}" cy="${cy}" r="${rad}" fill="${ramp(r.renew)}"/><circle cx="${cx}" cy="${cy}" r="${Math.max(rad, 12)}" class="hit"/></a>
+        <text x="${cx + rad + 4}" y="${cy + 4}" class="lbl">${esc(r.code)}</text></g>`; }).join("");
+    return `<svg viewBox="0 0 ${W} ${H}" class="en-val-svg" role="img" aria-label="Borsa enerji şirketleri: kurulu güç ve ${V.y === "ev" ? "firma" : "piyasa"} değeri, logaritmik eksen">
+      ${grid}${line}${dots}
+      <text x="${(W + P.l) / 2}" y="${H - 6}" text-anchor="middle" class="ax">Kurulu güç (işletmede, pay oranıyla; log)</text>
+      <text x="14" y="${(H - P.b) / 2}" text-anchor="middle" class="ax" transform="rotate(-90 14 ${(H - P.b) / 2})">${V.y === "ev" ? "Firma değeri" : "Piyasa değeri"} (log)</text>
+    </svg>`;
+  }
+  function valTab() {
+    if (!V.screen) { loadScreen(); return V.err ? sh.stateHTML({ kind: "error", title: "Temel analiz verisi yüklenemedi", msg: esc(V.err) }) :
+      `<div class="card"><div class="skeleton sk-line w40"></div><div class="skeleton" style="height:320px;margin-top:12px"></div></div>`; }
+    const { rows, med, k } = valRows(), usd = usdTry();
+    const sk = V.sort, dir = V.dir;
+    const sorted = rows.slice().sort((a, b) => { const va = a[sk], vb = b[sk]; if (va == null) return 1; if (vb == null) return -1; return (typeof va === "string" ? va.localeCompare(vb, "tr") : va - vb) * dir; });
+    const th = (c, l, num, tip) => `<th scope="col" class="${num ? "num" : ""}" aria-sort="${c === sk ? (dir > 0 ? "ascending" : "descending") : "none"}"><button type="button" class="th-sort" data-vc="${c}" ${tip ? `data-tip="${esc(tip)}"` : ""}>${l}<span class="arr" aria-hidden="true">${c === sk ? (dir > 0 ? "▲" : "▼") : "▼"}</span></button></th>`;
+    const L = V.y === "ev" ? "FD" : "PD";
+    return `<section class="card" aria-labelledby="enValT"><div class="card-head"><h2 class="card-title" id="enValT">Borsa enerji şirketleri: megavat başına değer</h2>
+      <span class="card-meta">${rows.length} şirket · ${esc(V.screen.updated ? "fiyatlar " + fmt.dt(V.screen.updated) : "")}${med ? ` · kesikli çizgi: medyan ${V.y === "ev" ? "FD" : "PD"}/MW ${fmt.num(med / 1e6, 1)} mn ₺ — üstü pahalı, altı ucuz` : ""}</span></div>
+      <div class="en-map-ctl" style="padding:0 0 var(--s-3)">${seg("enValY", "Değer", [["ev", "Firma değeri"], ["mc", "Piyasa değeri"]], V.y === "ev" ? "ev" : "mc")}
+        <label class="switch"><input type="checkbox" id="enValAll" ${V.all ? "checked" : ""}> Holding ve sanayi şirketlerini de göster</label></div>
+      <div class="en-val-wrap">${valChart(rows, med, k)}</div>
+      <div class="en-legend"><span><i style="background:var(--en-v1)"></i>yenilenebilir &lt; %33</span><span><i style="background:var(--en-v2)"></i>%33–66</span><span><i style="background:var(--en-v3)"></i>&gt; %66</span><span class="meta">daire büyüklüğü = yatırım hattı · balona tıkla: temel analiz</span></div></section>
+    <section class="card card-flush" aria-labelledby="enValTT"><div class="card-head"><h2 class="card-title" id="enValTT">${L}/MW sıralaması</h2><span class="card-meta">ucuzdan pahalıya · medyan ${med ? fmt.num(med / 1e6, 1) + " mn ₺/MW" : "—"}${usd && med ? ` (≈ ${fmt.num(med / usd / 1e6, 2)} mn $/MW)` : ""}</span></div>
+      <div class="tbl-scroll"><table class="tbl en-add"><thead><tr>${th("code", "Şirket")}${th("mw", "Kurulu güç (MW)", 1, "Türkiye + yurt dışı, işletmede, ortaklık payıyla")}${th("renew", "Yenilenebilir", 1)}${th("pipe", "Yatırım hattı (MW)", 1)}
+        ${th("mc", "Piyasa değeri", 1)}${th("ev", "Firma değeri", 1, "Piyasa değeri + net borç + azınlık payları")}${th(k, `${L}/MW (mn ₺)`, 1)}<th scope="col" class="num">${L}/MW (mn $)</th>${th("rel", "Medyana göre", 1)}</tr></thead><tbody>
+      ${sorted.map(r => `<tr><td class="en-nm"><a href="#hisse/${esc(r.code)}" class="en-code">${esc(r.code)}</a> <span>${esc(r.name)}</span>${r.mw < 60 ? ` <span class="tag warn" data-tip="GEM 1 MW altı güneşi ve lisanssız santrallerin çoğunu izlemiyor; bu şirketin kapasitesi eksik görünebilir, oran şişkin olabilir">kapsam eksik olabilir</span>` : ""}${r.pure ? "" : ` <span class="tag" data-tip="${esc(r.sector || "")}: firma değerinin büyük kısmı enerji dışı işlerden">enerji dışı ağırlıklı</span>`}</td>
+        <td class="num">${mw(r.mw)}${r.ab ? ` <span class="meta" data-tip="yurt dışı ${mw(r.ab)} MW">*</span>` : ""}</td><td class="num">${pct(r.renew, 0)}</td><td class="num">${r.pipe ? mw(r.pipe) : "—"}</td>
+        <td class="num">${r.mc ? fmt.num(r.mc / 1e9, 1) + " mr" : "—"}</td><td class="num">${r.ev ? fmt.num(r.ev / 1e9, 1) + " mr" : "—"}</td>
+        <td class="num"><b>${r[k] ? fmt.num(r[k] / 1e6, 1) : "—"}</b></td><td class="num">${usd && r[k] ? fmt.num(r[k] / usd / 1e6, 2) : "—"}</td>
+        <td class="num ${r.rel == null ? "" : r.rel < 0 ? "up" : "down"}">${relTxt(r.rel)}</td></tr>`).join("")}
+      </tbody></table></div></section>
+    <p class="en-note"><b>Nasıl okunur:</b> megavat başına değer düşükse piyasa şirketin santrallerine daha az değer biçiyor demektir. Bu tek başına ucuzluk değildir: kaynak türü (yenilenebilir/YEKDEM gelirleri, kömür), santral yaşı, borç, lisans süresi ve enerji dışı işler değeri etkiler. Firma değeri = piyasa değeri + net borç + azınlık payları (temel analiz sekmesindeki son bilanço). Kurulu güç GEM verisinden, ortaklık payıyla; GEM'in izlemediği küçük santraller ve lisanssız güneş dahil değil. Kod: şirketin kendi borsa kodu; borsadaki ortağı olan santral şirketleri (↳) burada yok.</p>`;
+  }
+
   // ─────────────────────────────── ana çizim
   function render() {
     if (sh.route !== "enerji") return;
@@ -585,13 +793,14 @@
     if (keepMap) {                                                   // haritayı yeniden kurma: yalnız işaretleri ve kontrolleri yenile
       const ctl = $(".en-map-ctl"), tmp = document.createElement("div"); tmp.innerHTML = mapTab();
       ctl.replaceWith(tmp.querySelector(".en-map-ctl"));
-      $("#enMapEmpty").innerHTML = emptyNote();
+      $("#enMapEmpty").innerHTML = S.year == null ? emptyNote() : "";
+      const tb = $(".en-time"), ntb = tmp.querySelector(".en-time"); if (tb && ntb) tb.replaceWith(ntb);
       const chip = $("#enBody .en-chip-row"), nchip = tmp.querySelector(".en-chip-row");
       if (chip) chip.remove(); if (nchip) $(".en-mapcard").before(nchip);
       Map_.draw();
     } else {
       body.dataset.tab = t;
-      body.innerHTML = `<div class="view" style="gap:var(--s-4)">${t === "harita" ? mapTab() : t === "gruplar" ? groupsTab() : t === "santraller" ? unitsTab() : t === "yatirimlar" ? investTab() : overview()}</div>`;
+      body.innerHTML = `<div class="view" style="gap:var(--s-4)">${t === "harita" ? mapTab() : t === "gruplar" ? groupsTab() : t === "santraller" ? unitsTab() : t === "yatirimlar" ? investTab() : t === "degerleme" ? valTab() : overview()}</div>`;
       if (t === "harita") Map_.mount($("#enMap")).then(() => S.focus != null && (Map_.open(S.focus), S.focus = null))
         .catch(e => { $("#enMap").innerHTML = sh.stateHTML({ kind: "error", title: "Harita yüklenemedi", msg: esc(e.message) }); });
     }
@@ -607,12 +816,18 @@
     $("#enPipeMore")?.addEventListener("click", () => { S.pipeLimit += 30; render(); });
     $("#enKapMore")?.addEventListener("click", () => { S.kapLimit += 30; render(); });
     $("#enSrcClear")?.addEventListener("click", () => setSrc(""));
+    $("#enPlay")?.addEventListener("click", togglePlay);
+    $("#enYear")?.addEventListener("input", e => { stopPlay(); setYear(+e.target.value); });
+    $("#enYearOff")?.addEventListener("click", () => setYear(null));
+    $("#enValAll")?.addEventListener("change", e => { V.all = e.target.checked; render(); });
+    segBindV();
     $("#enGroupClear")?.addEventListener("click", () => { S.group = ""; S.ulimit = UPAGE; render(); });
     $$("#enKapSeg button").forEach(b => b.onclick = () => { S.kapType = b.dataset.t; S.kapLimit = 15; render(); $(`#enKapSeg button[data-t="${b.dataset.t}"]`)?.focus(); });
     const segBind = (id, fn) => { const el = $("#" + id); if (!el) return; sh.radioKeys?.(el); $$(`#${id} button`).forEach(b => b.onclick = () => { fn(b.dataset.v); S.ulimit = UPAGE; render(); $(`#${id} button[data-v="${b.dataset.v}"]`)?.focus(); }); };
     segBind("enScope", v => { S.scope = v; });
     segBind("enSt", v => { S.st = v; });
     segBind("enView", v => { S.mapView = v; });
+    $$("#enBody .th-sort[data-vc]").forEach(b => b.onclick = () => { const c = b.dataset.vc; V.dir = V.sort === c ? -V.dir : (c === "code" ? 1 : c === "mw" || c === "pipe" || c === "mc" || c === "ev" || c === "renew" ? -1 : 1); V.sort = c; render(); $(`#enBody .th-sort[data-vc="${c}"]`)?.focus(); });
     $$("#enBody .th-sort[data-c]").forEach(b => b.onclick = () => {
       const c = b.dataset.c;
       S.dir = S.sort === c ? -S.dir : (["name", "code"].includes(c) ? 1 : -1); S.sort = c; S.limit = PAGE;
@@ -624,6 +839,7 @@
       render(); $(`#enBody .th-sort[data-uc="${c}"]`)?.focus();
     });
   }
+  function segBindV() { $$("#enValY button").forEach(b => b.onclick = () => { V.y = b.dataset.v === "ev" ? "ev" : "mc"; if (V.sort === "evmw" || V.sort === "mcmw") V.sort = V.y + "mw"; render(); }); }
   function setSrc(s) { S.src = s; S.limit = PAGE; S.recLimit = 12; S.pipeLimit = 12; S.ulimit = UPAGE; render(); }
   function showOnMap({ unit = null, group = "" } = {}) {
     if (group) { S.group = group; S.st = "all"; S.mapView = "units"; const g = S.doc.byKey.get(group); S.scope = g && !g.total && g.abroad_total ? "ab" : g && g.abroad_total ? "all" : "tr"; }
@@ -754,7 +970,7 @@
     if (sb) { S.scope = sb.dataset.scope; return render(); }
     const ab = e.target.closest("[data-abroad]");
     if (ab) { e.preventDefault(); S.scope = "ab"; S.group = ""; return sh.go("enerji", { param: "harita" }); }
-    const ul = e.target.closest(".en-ulink");
+    const ul = e.target.closest(".en-ulink, .en-ot-plant");
     if (ul) return showOnMap({ unit: +ul.dataset.u });
     const ur = e.target.closest("tr.row[data-u]");
     if (ur && !e.target.closest("a, button")) { const u = S.doc.units[+ur.dataset.u]; if (u.la != null) showOnMap({ unit: u.i }); return; }
