@@ -49,15 +49,18 @@ PX_YEARS = 2
 COLS = ["id", "sym", "market", "ts", "ts_eff", "type", "subtype", "dir", "conf", "mat", "mag", "src", "title", "url", "ingested", "payload", "cluster"]
 
 # KAP konu başlığı → olay tipi (sadeleştirilmiş küçük harf; sıra önemli, özel ifade önce)
-SCHEMA = 2                                                    # sınıflandırma değişince eski tablo silinip yeniden doldurulur
+SCHEMA = 3                                                    # sınıflandırma değişince eski tablo silinip yeniden doldurulur
 # İdari / rutin bildirimler: saklanır ama olay çalışmalarına girmez (type="idari")
-KAP_ADMIN = ("genel bilgi formu", "katılım finansı", "sorumluluk beyanı", "takasbank", "haftalık rapor", "piyasa yapıcılığı",
+KAP_ADMIN = ("genel bilgi formu", "kurumsal yönetim ilkelerine uyum", "katılım finansı", "sorumluluk beyanı", "takasbank", "haftalık rapor", "piyasa yapıcılığı",
              "likidite sağlayıcılık", "tertip ihraç", "pay dışında sermaye piyasası aracı", "izahname", "kurumsal yönetim bilgi formu",
              "sürdürülebilirlik raporu", "tsrs", "bağımsız denetim kuruluşu", "yönetim kurulu komiteleri", "esas sözleşme",
              "herhangi bir otoriteye mali tablo", "tipe dönüşüm", "spk işlem yasağı nedeniyle", "temerrüt", "işlem görmeye başlama",
              "borçlanma araçlarının", "kira sertifika", "ihraç belgesi", "fon ", "genel açıklama")
 KAP_TYPES = [
     ("endeks", "endeks", "endeks değişikliği"),
+    ("pay alım teklifi", "birlesme", "pay alım teklifi"), ("haber ve söylenti", "kap_ozel", "haber ve söylentilere açıklama"),
+    ("mali hak kullanım", "temettu", "mali hak kullanımı"), ("kayıtlı sermaye", "sermaye", "kayıtlı sermaye tavanı"),
+    ("finansal duran varlık", "yatirim", "finansal duran varlık"), ("geleceğe dönük", "beklenti", "geleceğe dönük değerlendirme"),
     ("geri al", "geri_alim", "geri alım"), ("kar payı", "temettu", "kâr payı"), ("kâr payı", "temettu", "kâr payı"),
     ("finansal rapor", "finansal", "finansal rapor"), ("faaliyet raporu", "finansal", "faaliyet raporu"),
     ("sermaye artırımı", "sermaye", "sermaye artırımı/azaltımı"), ("bedelsiz", "sermaye", "bedelsiz"), ("bölünme", "sermaye", "bölünme"),
@@ -309,19 +312,36 @@ def ts_effective(ts: pd.Timestamp, market: str, sess: list[date]) -> tuple[pd.Ti
 
 
 # ─────────────────────────────── getiriler
-def event_returns(ev: pd.DataFrame, px: pd.DataFrame) -> pd.DataFrame:
+JUMP = 0.25            # BIST günlük fiyat sınırı ±%10: bundan büyük tek gün hareketi çoğunlukla düzeltilmemiş bölünme/bedelsiz
+
+
+def ew_index(wide: pd.DataFrame, syms: list[str]) -> pd.Series:
+    """Eşit ağırlıklı evren endeksi: günlük getirilerin ortalaması (sıçramalar dışarıda), 100'den zincirlenir.
+    Küçük ve orta ölçekli hisselerin olayları için XU100'den daha adil kıyas: evrenin geneline göre fark."""
+    cols = [c for c in syms if c in wide.columns]
+    r = wide[cols].pct_change(fill_method=None)
+    r = r.where(r.abs() <= JUMP)
+    return (1 + r.mean(axis=1).fillna(0)).cumprod() * 100
+
+
+def event_returns(ev: pd.DataFrame, px: pd.DataFrame, universe: list[str] | None = None) -> pd.DataFrame:
     """d0 = olay seansından önceki son kapanış; h seans getirisi = olay seansından itibaren h. kapanış / d0 kapanışı − 1.
-    Anormal getiri = hisse − piyasa endeksi (aynı tarihler). pre5 = olaydan önceki 5 seans (sızıntı kontrolü)."""
+    m/ar: piyasa endeksi (XU100, S&P 500) ve ona göre fark; e/ae (yalnız BIST): eşit ağırlıklı evren ve ona göre fark.
+    pre5 = olaydan önceki 5 seansın evrene göre farkı (sızıntı kontrolü). Penceresinde ±%25'ten büyük tek gün hareketi
+    olan getiri yazılmaz (jump=True): Yahoo'da düzeltilmemiş bedelsiz/bölünme izi."""
     rows = []
     if ev.empty or px.empty:
-        return pd.DataFrame(columns=["id", "sym", "d0", "pre5"] + [f"{k}{h}" for h in HORIZONS for k in ("r", "m", "ar")])
+        return pd.DataFrame(columns=["id", "sym", "d0", "pre5", "jump"] + [f"{k}{h}" for h in HORIZONS for k in ("r", "m", "ar", "e", "ae")])
     px = px.assign(date=pd.to_datetime(px["date"]).dt.date)
     wide = px.pivot_table(index="date", columns="sym", values="adj_close", aggfunc="last").sort_index()
+    dret = wide.pct_change(fill_method=None).abs()
+    ew = ew_index(wide, universe) if universe else None
     for mkt, g in ev[ev.sym.isin(wide.columns) & ev.sym.ne("")].groupby("market"):
         idx = INDEX.get(mkt)
         if idx not in wide.columns:
             continue
         cal = wide[idx].dropna()
+        bench = ew.reindex(cal.index) if mkt == "BIST" and ew is not None else None
         dates = list(cal.index)
         pos = {d: i for i, d in enumerate(dates)}
         for r in g.itertuples(index=False):
@@ -340,15 +360,23 @@ def event_returns(ev: pd.DataFrame, px: pd.DataFrame) -> pd.DataFrame:
             p0, m0 = s.get(dates[i - 1]), cal.iloc[i - 1]
             if p0 is None or pd.isna(p0) or not p0:
                 continue
-            o = {"id": r.id, "sym": r.sym, "d0": dates[i - 1]}
+            o = {"id": r.id, "sym": r.sym, "d0": dates[i - 1], "jump": False}
+            b = bench if bench is not None else cal
             if i >= 6 and not pd.isna(s.get(dates[i - 6])) and s.get(dates[i - 6]):
-                o["pre5"] = round((p0 / s[dates[i - 6]] - 1) * 100 - (m0 / cal.iloc[i - 6] - 1) * 100, 3)
+                o["pre5"] = round((p0 / s[dates[i - 6]] - 1) * 100 - (b.iloc[i - 1] / b.iloc[i - 6] - 1) * 100, 3)
+            dj = dret[r.sym]
             for h in HORIZONS:
                 j = i + h - 1
                 if j >= len(dates) or pd.isna(s.get(dates[j])):
                     continue
+                if (dj.loc[dates[i]:dates[j]] > JUMP).any():
+                    o["jump"] = True
+                    break
                 rr, mm = (s[dates[j]] / p0 - 1) * 100, (cal.iloc[j] / m0 - 1) * 100
                 o[f"r{h}"], o[f"m{h}"], o[f"ar{h}"] = round(rr, 3), round(mm, 3), round(rr - mm, 3)
+                if bench is not None:
+                    ee = (bench.iloc[j] / bench.iloc[i - 1] - 1) * 100
+                    o[f"e{h}"], o[f"ae{h}"] = round(ee, 3), round(rr - ee, 3)
             rows.append(o)
     return pd.DataFrame(rows)
 
@@ -514,9 +542,12 @@ def clusters(ev: pd.DataFrame) -> pd.Series:
     return out
 
 
+MULTI_OK = {"idari", "borsa_tedbir", "iceriden", "geri_alim"}     # aynı gün birden çok gerçek bildirim olağan
+
+
 def near_dups(ev: pd.DataFrame) -> tuple[int, int]:
-    """Ham olası tekrar sayısı (kümeye bağlanan satır) ve hisseli satır sayısı."""
-    e = ev[ev.sym.fillna("").ne("")]
+    """Olası tekrar (kümeye bağlanan satır) ve hisseli satır sayısı; aynı gün çoklu bildirimi olağan tipler hariç."""
+    e = ev[ev.sym.fillna("").ne("") & ~ev.type.isin(MULTI_OK)]
     return int((e["cluster"] != e["id"]).sum()), len(e)
 
 
@@ -600,7 +631,7 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
     ev = ev.reset_index(drop=True)
     ev["cluster"] = clusters(ev)
     save_events(ev)
-    ret = event_returns(ev, px) if px is not None else pd.DataFrame()
+    ret = event_returns(ev, px, sorted(useq)) if px is not None else pd.DataFrame()
     if not ret.empty:
         ret.to_parquet(RET, index=False, compression="zstd")
 
@@ -622,7 +653,8 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
         "near_dup": nd, "near_dup_rate": round(nd / max(1, nt), 4),
         "px": {"symbols": int(px.sym.nunique()) if px is not None else 0, "rows": int(len(px)) if px is not None else 0,
                "last": str(px.date.max()) if px is not None else None, "gap_ratio_1y": round(gap, 4), "worst": worst},
-        "returns": {"rows": int(len(ret)), "with_r20": int(ret["r20"].notna().sum()) if "r20" in ret else 0},
+        "returns": {"rows": int(len(ret)), "with_r20": int(ret["r20"].notna().sum()) if "r20" in ret else 0,
+                    "jump_excluded": int(ret["jump"].sum()) if "jump" in ret else 0},
         "median_lag_min": round(float(lag.median()), 1) if len(lag) else None, "lag_n": int(len(lag)),
         "kap_to": st.get("kap_to"),
     }

@@ -127,3 +127,15 @@ def test_kap_universe_filter_and_admin():
             {"publishDate": "20.10.2026 10:00:00", "disclosureIndex": 3, "relatedStocks": "THYAO, TCZB", "subject": "Yeni İş İlişkisi"}]
     out = E.from_kap_rows(rows, {"THYAO"})
     assert [(r["id"], r["sym"], r["type"]) for r in out] == [("kap:2", "THYAO", "idari"), ("kap:3", "THYAO", "is_iliskisi")]
+
+
+def test_event_returns_ew_benchmark_and_jump():
+    px, days = _px()
+    extra = [{"sym": "BBB", "date": d, "close": 50.0, "adj_close": 50.0 if i != 15 else 10.0, "volume": 1} for i, d in enumerate(days)]
+    px = pd.concat([px, pd.DataFrame(extra)], ignore_index=True)
+    ev = pd.DataFrame([{"id": "e", "sym": "AAA", "market": "BIST", "ts_eff": pd.Timestamp(f"{days[11]} 08:00", tz="UTC")},
+                       {"id": "j", "sym": "BBB", "market": "BIST", "ts_eff": pd.Timestamp(f"{days[11]} 08:00", tz="UTC")}])
+    out = E.event_returns(ev, px, ["AAA", "BBB"]).set_index("id")
+    # EW = (AAA %1 + BBB %0) / 2; BBB'nin sıçrama günleri ortalamaya girmez
+    assert abs(out.loc["e", "e1"] - 0.5) < 1e-3 and abs(out.loc["e", "ae1"] - 0.5) < 1e-3
+    assert bool(out.loc["j", "jump"]) and pd.notna(out.loc["j", "r1"]) and pd.isna(out.loc["j", "r5"])
