@@ -1432,3 +1432,5 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
 .en-ab-n { font-weight: var(--fw-medium); }
 .en-ab-cn { display: block; margin-top: 2px; font-size: var(--fs-xs); color: var(--text-3); white-space: normal; line-height: 1.35; }
 .en-ab .en-mixc { min-width: 110px; }
+
+.rg-eff { display: block; margin-top: 2px; font-size: var(--fs-xs); color: var(--warn); white-space: nowrap; }

@@ -349,6 +349,17 @@ def save_state(st: dict) -> None:
     OUT.write_text(json.dumps(st, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
+def future_date(it: dict, today: dt.date) -> dict:
+    """Gelecek tarih yayın tarihi olamaz: sayfa yürürlük tarihini veriyor (ör. CBUAE Rulebook "effective date").
+    Yürürlük tarihi ayrı alana taşınır; yayın tarihi yerine ilk görüldüğü gün kullanılır ve tahmini olduğu işaretlenir."""
+    d = it.get("date")
+    if d and d > (today + dt.timedelta(days=1)).isoformat():
+        it["effective"] = d
+        it["date"] = (it.get("first_seen") or today.isoformat())[:10]
+        it["date_est"] = True
+    return it
+
+
 def run(today: dt.date | None = None, analyzer=None, fetcher: Fetcher | None = None, max_batches: int = 25) -> dict:
     today = today or dt.date.today()
     now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -364,6 +375,8 @@ def run(today: dt.date | None = None, analyzer=None, fetcher: Fetcher | None = N
         known.add(it["url"])
         it.update({"first_seen": now, "baseline": first_run and not it.get("date")})
         st["items"].append(it)
+    for it in st["items"]:
+        future_date(it, today)
     if analyzer is None:
         from .analyze import Analyzer
         from .config import load_settings

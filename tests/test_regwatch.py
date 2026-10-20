@@ -72,3 +72,14 @@ def test_run_end_to_end(tmp_path, monkeypatch):
     assert st["status"]["cbb"]["ok"] is False and st["status"]["cbuae"]["ok"]
     assert all("relevant" in i for i in st["items"][:40])
     json.dumps(st)
+
+
+def test_future_date_is_effective_not_publication():
+    import datetime as dt
+    from radar import regwatch
+    it = {"date": "2027-07-15", "first_seen": "2026-10-19T19:31:00+00:00"}
+    regwatch.future_date(it, dt.date(2026, 10, 20))
+    assert it["effective"] == "2027-07-15" and it["date"] == "2026-10-19" and it["date_est"]
+    ok = {"date": "2026-10-18", "first_seen": "2026-10-19T19:31:00+00:00"}
+    regwatch.future_date(ok, dt.date(2026, 10, 20))
+    assert ok["date"] == "2026-10-18" and "effective" not in ok
