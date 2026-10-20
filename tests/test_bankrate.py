@@ -82,3 +82,11 @@ def test_compute_sample_start_and_minimum():
     assert br.compute(docs, rq, 38.0, 30.0, start="2026/03").get("error")   # çok az çeyrek kalır
     full = br.compute(docs, rq, 38.0, 30.0)
     assert all(b["n"] == len(PERIODS) - 1 for b in full["banks"])
+
+
+def test_dedupe_banks_drops_asset_managers_and_share_classes():
+    def d(code, title, n):
+        return {"code": code, "title": title, "series": {"periods": PERIODS[:n]}}
+    out = br.dedupe_banks([d("ISCTR", "TÜRKİYE İŞ BANKASI A.Ş.", 10), d("ISATR", "TÜRKİYE İŞ BANKASI A.Ş.", 6),
+                           d("BRKVY", "BİRİKİM VARLIK YÖNETİM A.Ş.", 9), d("ICBCT", "ICBC TURKEY BANK A.Ş.", 8)])
+    assert [x["code"] for x in out] == ["ICBCT", "ISCTR"]

@@ -44,6 +44,7 @@ EXPECT = "TP.PKAUO.S04.D.U"         # 12 ay sonrası TCMB politika faizi beklent
 EXPECT_CPI = "TP.PKAUO.S01.E.U"     # 12 ay sonrası yıllık TÜFE beklentisi (%)
 START = date(2022, 10, 1)
 MIN_OBS = 6
+VERSION = 2                                                  # model/evren değişince eski çıktı yeniden hesaplanır
 # Ana örneklem 2024'ten: 2023'ün sert faiz artışı döneminde KKM, menkul kıymet tesis zorunluluğu gibi makro ihtiyati
 # düzenlemeler geçişkenliği bozdu; bugünkü (sadeleşmiş) rejime 2024 sonrası daha yakın. 2023 dahil sonuç sağlamlık için ayrıca verilir.
 MAIN_START = "2024/03"
@@ -101,7 +102,21 @@ def bank_docs(fin: Path | None = None) -> list[dict]:
             continue
         if d.get("template") == "banka" and d.get("series", {}).get("q", {}).get("int_inc"):
             docs.append(d)
-    return docs
+    return dedupe_banks(docs)
+
+
+def dedupe_banks(docs: list[dict]) -> list[dict]:
+    """Yalnız mevduat/kalkınma bankaları: banka şablonunu kullanan varlık yönetim şirketleri ayrılır; aynı şirketin
+    ek pay kodları (ISATR, ISBTR) en uzun seriye sahip koda (ISCTR) indirgenir."""
+    best: dict[str, dict] = {}
+    for d in docs:
+        t = (d.get("title") or "").upper()
+        if "BANK" not in t or "VARLIK" in t:
+            continue
+        k = " ".join(t.split())
+        if k not in best or len(d["series"]["periods"]) > len(best[k]["series"]["periods"]):
+            best[k] = d
+    return sorted(best.values(), key=lambda d: d["code"])
 
 
 # ─────────────────────────────── model
@@ -238,7 +253,7 @@ def run(today: date | None = None, force: bool = False) -> dict | None:
         old = {}
     docs = bank_docs()
     periods = max((d["series"]["periods"][-1] for d in docs), default="")
-    if not force and old.get("date") == today.isoformat() and old.get("periods") == periods:
+    if not force and old.get("v") == VERSION and old.get("date") == today.isoformat() and old.get("periods") == periods:
         return old
     daily = policy_daily(today)
     if not daily:
@@ -260,7 +275,7 @@ def run(today: date | None = None, force: bool = False) -> dict | None:
         f = fb.get(b["code"])
         b["full"] = {"n": f["n"], "y1": f["y1"], "y1_se": f["y1_se"], "scenario": f["scenario"]} if f else None
     res["sample"] = {"main": MAIN_START, "full_pool": full.get("pool")}
-    out = {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "date": today.isoformat(), "periods": periods,
+    out = {"v": VERSION, "generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "date": today.isoformat(), "periods": periods,
            "policy": {"now": daily[-1][1], "date": daily[-1][0].isoformat(), "expect_12m": expect, "expect_cpi_12m": exp_cpi,
                       "expect_date": ex[-1]["Tarih"] if ex else None, "quarters": rq,
                       "source": "TCMB EVDS: TP.APIFON4 (ağırlıklı ortalama fonlama maliyeti), TP.PKAUO.S04.D.U (Piyasa Katılımcıları Anketi)"},
