@@ -1425,3 +1425,5 @@ tr.pf-target > * { background: color-mix(in srgb, var(--up) 7%, transparent); }
   .en-val-wrap .en-val-svg { min-width: 760px; }
   .en-yr { width: 150px; gap: 2px; } .en-yr .meta, .en-yr .en-mix { display: none; } .en-yr-v { font-size: var(--fs-md); }
 }
+
+.en-val-warn { margin: 0 0 var(--s-3); color: var(--warn); }
