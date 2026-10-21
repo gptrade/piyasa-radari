@@ -14,23 +14,27 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: SPK ve BIST duyuru kaynaklarını yokla
-        env:
-          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+      - name: EMA zaman dilimleri
         run: |
           mkdir -p probe
+          git fetch -q --depth 1 origin onizleme-ema-zaman && git checkout FETCH_HEAD -- radar
           pip install -q -r requirements.txt
-          python - > probe/log5.txt 2>&1 <<'PY' || true
-          import os, requests, json
-          key = os.environ.get("EVDS_API_KEY")
-          base = "https://evds3.tcmb.gov.tr/igmevdsms-dis/"
-          for codes, extra in [("TP.APIFON4", ""), ("TP.PKAUO.S04.D.U-TP.PKAUO.S01.E.U", "&frequency=5")]:
-              r = requests.get(base + f"series={codes}&startDate=01-10-2022&endDate=20-10-2026&type=json{extra}", headers={"key": key}, timeout=60)
-              js = r.json(); items = js.get("items") or []
-              print("==", codes, r.status_code, len(items))
-              json.dump(items, open(f"probe/evds_{codes.split('-')[0]}.json", "w"))
-              print(items[:2], items[-2:])
+          python - > probe/log6.txt 2>&1 <<'PY' || true
+          import json
+          from radar.config import Stock
+          from radar import prices as P
+          from datetime import datetime
+          for sym, m, y in [("THYAO","BIST","THYAO.IS"),("GRTHO","BIST","GRTHO.IS"),("ASELS","BIST","ASELS.IS"),("AAPL","US","AAPL")]:
+              p = P.fetch(Stock(sym, sym, m, []), y)
+              if not p: print(sym, "yok"); continue
+              print("==", sym, "son", p["last"])
+              for tf, st in p["ema_tf"].items():
+                  print(tf, st["bars"], datetime.fromtimestamp(st["t"], P.EX_TZ[m]).strftime("%Y-%m-%d %H:%M"), st["align"], {k: v["v"] for k, v in st["ema"].items()})
+              h1 = json.load(open(P.H1_DIR / f"{sym}.json"))["bars"]
+              print("h1", len(h1), [datetime.fromtimestamp(b[0], P.EX_TZ[m]).strftime("%m-%d %H:%M") + f" {b[1]}" for b in h1[-12:]])
+              print("4h", [datetime.fromtimestamp(b[0], P.EX_TZ[m]).strftime("%m-%d %H:%M") + f" {b[1]}" for b in P.bars_4h(h1, m)[-6:]])
           PY
+
       - name: kaydet
         if: always()
         run: |
