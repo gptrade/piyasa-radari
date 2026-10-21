@@ -43,7 +43,7 @@ jobs:
           git fetch --depth 1 origin data
           git archive FETCH_HEAD feed.json signals.json research.json calendar.json | tar -x -C site/data || true
           git fetch --depth 1 origin fin
-          git archive FETCH_HEAD _dividends.json _universe.json | tar -x -C site/data/fin || true
+          git archive FETCH_HEAD | tar -x -C site/data/fin || true      # mali tablolar: bilanço sürprizi
 
       - name: Olay veritabanı
         timeout-minutes: 25

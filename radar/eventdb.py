@@ -45,6 +45,8 @@ INDEX = {"BIST": "XU100", "US": "^GSPC"}
 YF = {"XU100": "XU100.IS", "XBANK": "XBANK.IS", "XUSIN": "XUSIN.IS", "^GSPC": "^GSPC"}
 HORIZONS = (1, 5, 20)
 BACKFILL_DAYS = 90
+HISTORY_DAYS = 730          # KAP geçmişi her turda HISTORY_STEP gün daha geriye doldurulur (sunucuya nazik, ~1 günde 2 yıl)
+HISTORY_STEP = 56
 PX_YEARS = 2
 COLS = ["id", "sym", "market", "ts", "ts_eff", "type", "subtype", "dir", "conf", "mat", "mag", "src", "title", "url", "ingested", "payload", "cluster"]
 
@@ -282,6 +284,37 @@ def _merge_payload(ps: list) -> str | None:
             except ValueError:
                 pass
     return json.dumps(d, ensure_ascii=False, separators=(",", ":")) if d else None
+
+
+def annotate_earnings(ev: pd.DataFrame, sur: dict[int, dict]) -> pd.DataFrame:
+    """Finansal rapor olaylarına bilanço sürprizi yönü ve büyüklüğü: kap:<idx> satırı ve aynı küme (konsolide/solo,
+    faaliyet raporu aynı anda yayımlanır). Her turda baştan yazılır (fin verisi güncellendikçe düzelir)."""
+    if not sur or ev.empty:
+        return ev
+    ev = ev.copy()
+    ev["dir"] = ev["dir"].astype("object")
+    keyed = {f"kap:{k}": v for k, v in sur.items()}
+    hit = ev["id"].map(keyed)
+    m = hit.notna() & (ev["sym"] == hit.map(lambda v: v["sym"] if isinstance(v, dict) else None))
+    day = pd.to_datetime(ev["ts"], utc=True).dt.tz_convert(IST).dt.date
+    by_day = {(sy, d): v for sy, d, v in zip(ev.loc[m, "sym"], day[m], hit[m])}   # aynı gün faaliyet raporu vb.
+    tgt = pd.Series([by_day.get((sy, d)) for sy, d in zip(ev["sym"], day)], index=ev.index)
+    mm = tgt.notna() & ev["type"].eq("finansal")
+    mm |= m
+    for i in ev.index[mm]:
+        v = hit[i] if isinstance(hit[i], dict) else tgt[i]
+        ev.at[i, "type"] = "finansal"
+        ev.at[i, "dir"] = v["dir"]
+        ev.at[i, "mag"] = v["su"]
+        ev.at[i, "subtype"] = {1: "kâr sürprizi olumlu", -1: "kâr sürprizi olumsuz", 0: "kâr beklentiye yakın"}.get(v["dir"], "finansal rapor")
+        try:
+            pl = json.loads(ev.at[i, "payload"]) if isinstance(ev.at[i, "payload"], str) else {}
+        except ValueError:
+            pl = {}
+        pl.update({"period": v["period"], "su": v["su"], "sue": v["sue"], "yoy": v["yoy"], "rev_su": v["rev_su"]})
+        ev.at[i, "payload"] = json.dumps(pl, ensure_ascii=False, separators=(",", ":"))
+    log.info("Bilanço sürprizi: %d olay satırı", int(mm.sum()))
+    return ev
 
 
 # ─────────────────────────────── seans takvimi
@@ -592,9 +625,19 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
     today = now_ts.tz_convert(IST).date()
     last = date.fromisoformat(st["kap_to"]) if st.get("kap_to") else today - timedelta(days=BACKFILL_DAYS)
     kap_rows = fetch_kap(max(last - timedelta(days=1), today - timedelta(days=BACKFILL_DAYS)), today)
-    new = from_kap_rows(kap_rows, useq or None)
     if kap_rows:
         st["kap_to"] = today.isoformat()
+    # derin geçmiş: bilanço sürprizi çalışması için 2 yıl (fiyat geçmişiyle aynı)
+    frm = date.fromisoformat(st["kap_from"]) if st.get("kap_from") else today - timedelta(days=BACKFILL_DAYS)
+    if frm > today - timedelta(days=HISTORY_DAYS):
+        lo = max(today - timedelta(days=HISTORY_DAYS), frm - timedelta(days=HISTORY_STEP))
+        deep = fetch_kap(lo, frm - timedelta(days=1))
+        if deep:
+            kap_rows += deep
+            st["kap_from"] = lo.isoformat()
+    elif not st.get("kap_from"):
+        st["kap_from"] = frm.isoformat()
+    new = from_kap_rows(kap_rows, useq or None)
 
     # 2) panelin kendi verisi
     feed = _json(DATA / "feed.json", {}).get("items", [])
@@ -630,6 +673,11 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
     ev["ts_eff"] = eff
     ev = ev.reset_index(drop=True)
     ev["cluster"] = clusters(ev)
+    try:
+        from .earnings import surprises
+        ev = annotate_earnings(ev, surprises(DATA / "fin"))
+    except Exception as e:                                  # noqa: BLE001
+        log.warning("Bilanço sürprizi eklenemedi: %s", e)
     save_events(ev)
     ret = event_returns(ev, px, sorted(useq)) if px is not None else pd.DataFrame()
     if not ret.empty:
