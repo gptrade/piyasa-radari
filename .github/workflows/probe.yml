@@ -19,7 +19,7 @@ jobs:
           mkdir -p probe
           git fetch -q --depth 1 origin onizleme-ema-zaman && git checkout FETCH_HEAD -- radar
           pip install -q -r requirements.txt
-          python - > probe/log6.txt 2>&1 <<'PY' || true
+          python - > probe/log7.txt 2>&1 <<'PY' || true
           import json
           from radar.config import Stock
           from radar import prices as P
@@ -30,7 +30,8 @@ jobs:
               print("==", sym, "son", p["last"])
               for tf, st in p["ema_tf"].items():
                   print(tf, st["bars"], datetime.fromtimestamp(st["t"], P.EX_TZ[m]).strftime("%Y-%m-%d %H:%M"), st["align"], {k: v["v"] for k, v in st["ema"].items()})
-              h1 = json.load(open(P.H1_DIR / f"{sym}.json"))["bars"]
+              c = json.load(open(P.H1_DIR / f"{sym}.json")); h1 = [b for b in c["h60"] if b[0] + 3600 <= c["m30"][0][0]] + c["m30"]
+              print("60dk", len(c["h60"]), "30dk", len(c["m30"]))
               print("h1", len(h1), [datetime.fromtimestamp(b[0], P.EX_TZ[m]).strftime("%m-%d %H:%M") + f" {b[1]}" for b in h1[-12:]])
               print("4h", [datetime.fromtimestamp(b[0], P.EX_TZ[m]).strftime("%m-%d %H:%M") + f" {b[1]}" for b in P.bars_4h(h1, m)[-6:]])
           PY
