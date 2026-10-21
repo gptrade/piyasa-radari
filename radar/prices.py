@@ -75,7 +75,7 @@ EMA_PERIODS = (8, 14, 34, 55, 200)
 # Zaman dilimleri (TradingView adlarıyla): 1 saat ve 4 saat 60 dakikalık barlardan, haftalık günlükten.
 SESSION_OPEN = {"BIST": (10, 0), "US": (9, 30)}
 SESSION_MIN = {"BIST": 480, "US": 390}  # sürekli işlem süresi (dk); kapanış seansı/son bar son dilime katılır
-H1_DIR = DATA / "prices_h1"            # 60 dk bar önbelleği (2 yıl; günde bir tam, diğer turlarda son 5 gün eklenir)
+H1_DIR = DATA / "prices_h1"            # gün içi bar önbelleği (60 dk 2 yıl + 30 dk 60 gün; bkz. hourly)
 
 
 def ema_tv(xs: list[float], n: int) -> list[float | None]:
@@ -564,25 +564,43 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False, valuati
     }
 
 
+def _hist(tk, interval: str, periods: tuple[str, ...]) -> list[list[float]]:
+    """Yahoo dakikalık geçmiş: yeni halka arzda uzun dönem isteği hata verir, kısa dönemle yeniden denenir."""
+    for per in periods:
+        try:
+            bars = _series(tk.history(period=per, interval=interval, auto_adjust=False))
+        except Exception:                                   # noqa: BLE001
+            bars = []
+        if bars:
+            return bars
+    return []
+
+
 def hourly(stock: Stock, tk) -> list[list[float]]:
-    """60 dk barlar: önbellek günde bir 2 yıllık tam indirme (4 saatlik EMA200 ~100 işlem günü ister; TradingView
-    uzun geçmişle başlattığı için yakınsama payı bırakılır), diğer turlarda son 5 gün eklenir."""
+    """Gün içi barlar (EMA 1S/4S için). Yahoo'nun 60 dk barları BIST'te :30'a hizalı (09:30–10:30 …), TradingView
+    ise seans açılışına (10:00–11:00 …). Bu yüzden son 60 gün 30 dk barlardan (doğru hizalanır), daha eskisi 60 dk
+    barlardan kurulur; uzun EMA'nın başlangıç yakınsaması için eski kısımdaki 30 dakikalık kayma önemsizdir.
+    Önbellek: günde bir tam indirme (60 dk: 2 yıl, 30 dk: 60 gün), diğer turlarda son 5 günün 30 dk barları eklenir."""
     path = H1_DIR / f"{stock.symbol}.json"
     try:
         old = json.loads(path.read_text()) if path.exists() else {}
     except ValueError:
         old = {}
-    full = not old.get("bars") or old.get("day") != now_utc().strftime("%Y-%m-%d")
-    try:
-        new = _series(tk.history(period="730d" if full else "5d", interval="60m", auto_adjust=False))
-    except Exception as e:                                  # noqa: BLE001
-        log.warning("%s 60 dk bar alınamadı: %s", stock.symbol, e)
-        new = []
-    if not new:
-        return old.get("bars") or []
-    bars = new if full else sorted({b[0]: b for b in (old["bars"] + new)}.values(), key=lambda b: b[0])
-    H1_DIR.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"day": now_utc().strftime("%Y-%m-%d") if full else old.get("day"), "bars": bars}, separators=(",", ":")))
+    today = now_utc().strftime("%Y-%m-%d")
+    full = not old.get("m30") or old.get("day") != today
+    h60 = _hist(tk, "60m", ("730d", "1y", "6mo", "3mo")) if full else old.get("h60") or []
+    m30 = _hist(tk, "30m", ("60d", "1mo") if full else ("5d",))
+    if not full and m30:
+        m30 = sorted({b[0]: b for b in (old.get("m30", []) + m30)}.values(), key=lambda b: b[0])
+    elif not m30:
+        m30 = old.get("m30") or []
+    if not h60 and not m30:
+        return []
+    if full:
+        H1_DIR.mkdir(parents=True, exist_ok=True)
+    cut = m30[0][0] if m30 else float("inf")
+    bars = [b for b in h60 if b[0] + 3600 <= cut] + m30          # 60 dk bar 30 dk verinin başladığı yerde biter
+    path.write_text(json.dumps({"day": today if full else old.get("day"), "h60": h60, "m30": m30}, separators=(",", ":")))
     return bars
 
 
