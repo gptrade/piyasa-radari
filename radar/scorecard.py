@@ -23,6 +23,7 @@ from .models import iso, now_utc, parse_iso
 log = logging.getLogger("radar.scorecard")
 
 ARCHIVE = DATA / "signals.json"
+SIGX = DATA / "olay" / "sigx.json"      # olay veritabanının sinyal ölçüleri (önceki kapanıştan; olay.yml)
 SCORE = DATA / "scorecard.json"
 KEEP_DAYS = 180
 HORIZONS = (1, 5, 20)
@@ -272,6 +273,25 @@ def aggregate(recs: list[dict], now: datetime | None = None) -> dict:
     return out
 
 
+def alt_base(recs: list[dict], marks: dict) -> dict | None:
+    """Aynı sinyaller, olay veritabanı ölçüsüyle: olaydan önceki kapanıştan, BIST'te eşit ağırlıklı BIST Tüm'e,
+    ABD'de S&P 500'e göre. Sinyal anı fiyatıyla ölçülen ana karnenin yanında ikinci baz."""
+    if not marks:
+        return None
+    alt = []
+    for r in recs:
+        m = marks.get(f"{r['id']}|{r['t']}")
+        if not m:
+            continue
+        a = {k: v for k, v in r.items() if not (k[0] in "xr" and k[1:].isdigit()) and k != "xp"}
+        a.update({k: v for k, v in m.items()})
+        alt.append(a)
+    if not alt:
+        return None
+    agg = aggregate(alt)
+    return {"scopes": agg["scopes"], "recent": agg["recent"], "n": len(alt)}
+
+
 def load() -> list[dict]:
     try:
         return json.loads(ARCHIVE.read_text(encoding="utf-8")).get("items", [])
@@ -305,6 +325,12 @@ def update(items: list[dict], px: dict, watch: set[str]) -> dict:
     ARCHIVE.write_text(json.dumps({"version": 1, "items": recs}, ensure_ascii=False, separators=(",", ":")),
                        encoding="utf-8")
     sc = aggregate(recs)
+    try:
+        alt = alt_base(recs, json.loads(SIGX.read_text(encoding="utf-8")))
+        if alt:
+            sc["alt"] = alt
+    except (FileNotFoundError, ValueError):
+        pass
     SCORE.write_text(json.dumps(sc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("Karne: %d yeni sinyal, %d notlandı, arşivde %d", added, graded, len(recs))
     return {"added": added, "graded": graded, "total": len(recs)}
