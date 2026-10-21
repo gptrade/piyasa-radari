@@ -2,7 +2,7 @@ name: cloudflare-kurulum
 
 # Kapalı grup sitesi kurulumu (elle tetiklenir, tekrar çalıştırılabilir): radar.<alan adı>, DNS, Cloudflare Access.
 # Grup listesi değişince yeniden çalıştırmak yeter (CF_ACCESS_EMAILS secret'ı).
-# Durum özeti (gizli bilgi içermez: kişi sayısı, alan adı durumları) arastirma-bist-veri dalına yazılır.
+# Durum özeti (gizli bilgi içermez: kişi sayısı, alan adı durumları) tek commit'lik kurulum dalına yazılır.
 on:
   workflow_dispatch: {}
 
@@ -32,7 +32,7 @@ jobs:
         if: always()
         run: |
           [ -f /tmp/cf.json ] || exit 0
-          git fetch -q origin arastirma-bist-veri && git checkout -q arastirma-bist-veri
-          mkdir -p kurulum && cp /tmp/cf.json kurulum/cloudflare.json
-          git config user.name "Gursah"; git config user.email "gptrade@users.noreply.github.com"
-          git add kurulum && git commit -qm "Cloudflare kurulum durumu" && git push -q || true
+          mkdir -p /tmp/kd/kurulum && cp /tmp/cf.json /tmp/kd/kurulum/cloudflare.json && cd /tmp/kd
+          git init -q -b kurulum && git config user.name "Gursah" && git config user.email "gptrade@users.noreply.github.com"
+          git add -A && git commit -qm "Cloudflare kurulum durumu $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" kurulum
