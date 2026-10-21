@@ -96,13 +96,22 @@ def update_macro(settings: dict) -> dict | None:
         return None
     end = now_utc()
     start = end - timedelta(days=int(cfg.get("lookback_days", 400)))
-    r = http.get(evds_url([s["code"] for s in series], start, end), headers={"key": key})
-    data = None
-    if r is not None:
+    # Aylık seriler (ör. Piyasa Katılımcıları Anketi) günlüklerle aynı istekte gelirse günlük satırlarda boş kalır: ayrı istek
+    data, got = None, []
+    for freq in ("", "monthly"):
+        grp = [x for x in series if (x.get("freq") or "") == freq]
+        if not grp:
+            continue
+        url = evds_url([x["code"] for x in grp], start, end) + ("&frequency=5" if freq == "monthly" else "")
+        r = http.get(url, headers={"key": key})
+        if r is None:
+            continue
         try:
-            data = {"updated": iso(end), "series": parse_evds(r.json(), series)}
+            got += parse_evds(r.json(), grp)
         except ValueError:
-            log.warning("EVDS JSON dönmedi (anahtar ya da seri kodu hatalı olabilir)")
+            log.warning("EVDS JSON dönmedi (anahtar ya da seri kodu hatalı olabilir): %s", [x["code"] for x in grp])
+    if got:
+        data = {"updated": iso(end), "series": got}
     if data is None and MACRO_FILE.exists():
         return json.loads(MACRO_FILE.read_text())
     if data:

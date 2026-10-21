@@ -193,6 +193,10 @@ def from_html(text: str, base: str) -> list[dict]:
     return out
 
 
+# Tablolardaki yürürlük durumu sütunu (SAMA Rulebook: In-Force / Modified / Cancelled)
+STATUS = {r"in\s*-?\s*force": "yururlukte", r"modified|amended": "degisti", r"cancel+ed|repealed|withdrawn": "kaldirildi"}
+
+
 def from_table(text: str, base: str) -> list[dict]:
     """Tablo satırları: satırda bir bağlantı ve bir tarih varsa; başlık en uzun hücre."""
     import lxml.html
@@ -209,7 +213,8 @@ def from_table(text: str, base: str) -> list[dict]:
         if len(title) < 12 or url in seen:
             continue
         seen.add(url)
-        out.append({"title": title[:300], "url": url, "date": date, "desc": ""})
+        status = next((STATUS[k] for c in cells for k in STATUS if re.fullmatch(k, c, re.I)), None)
+        out.append({"title": title[:300], "url": url, "date": date, "desc": "", **({"status": status} if status else {})})
     return out
 
 
@@ -291,7 +296,8 @@ Emin değilsen relevant=false. relevant=true yalnız bankaların risk yönetimin
 denetim beklentilerini doğrudan etkileyen düzenleme, rehber, istişare, sirküler ve Basel standartları için.
 Her başlık için SADECE şu JSON dizisini döndür (aynı sırayla, i numarasıyla):
 {"items": [{"i": 0, "relevant": true, "topics": ["mrm","irb","aiml","backtest","ecl","stress","icaap","alm","basel","credit","market","oprisk","climate","gov"],
-"type": "taslak|nihai|rehber|duyuru", "title_tr": "Türkçe başlık", "summary_tr": "1 cümle: ne düzenleniyor, kimi etkiliyor"}]}
+"type": "taslak|nihai|rehber|duyuru", "title_tr": "Türkçe başlık", "summary_tr": "1 cümle: ne düzenleniyor, kimi etkiliyor",
+"effective": "YYYY-MM-DD yalnız başlıkta yürürlük/uygulama tarihi AÇIKÇA yazıyorsa (ör. 'effective 1 January 2027'), yoksa null"}]}
 İlgisizlerde yalnız {"i": n, "relevant": false} yeterli. Başlık Arapça ise Türkçeye çevir."""
 CLS_TOOL = {"name": "classify", "description": "Doküman sınıflandırması", "input_schema": {"type": "object", "properties": {"items": {"type": "array"}}}}
 TOPIC_KEYS = {"mrm", "irb", "aiml", "backtest", "ecl", "stress", "icaap", "alm", "basel", "credit", "market", "oprisk", "climate", "gov"}
@@ -349,6 +355,17 @@ def save_state(st: dict) -> None:
     OUT.write_text(json.dumps(st, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
 
+def future_date(it: dict, today: dt.date) -> dict:
+    """Gelecek tarih yayın tarihi olamaz: sayfa yürürlük tarihini veriyor (ör. CBUAE Rulebook "effective date").
+    Yürürlük tarihi ayrı alana taşınır; yayın tarihi yerine ilk görüldüğü gün kullanılır ve tahmini olduğu işaretlenir."""
+    d = it.get("date")
+    if d and d > (today + dt.timedelta(days=1)).isoformat():
+        it["effective"] = d
+        it["date"] = (it.get("first_seen") or today.isoformat())[:10]
+        it["date_est"] = True
+    return it
+
+
 def run(today: dt.date | None = None, analyzer=None, fetcher: Fetcher | None = None, max_batches: int = 25) -> dict:
     today = today or dt.date.today()
     now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -358,12 +375,18 @@ def run(today: dt.date | None = None, analyzer=None, fetcher: Fetcher | None = N
     first_run = not st["items"]
     known = {i["url"] for i in st["items"]}
     found, status = collect(cfg, fetcher)
+    by_url = {i["url"]: i for i in st["items"]}
     for it in found:
+        old = by_url.get(it["url"])
+        if old is not None and it.get("status") and old.get("status") != it["status"]:
+            old["status"] = it["status"]                         # yürürlük durumu sonradan değişebilir (ör. In-Force → Modified)
         if it["url"] in known or (it.get("date") and it["date"] < SINCE):
             continue
         known.add(it["url"])
         it.update({"first_seen": now, "baseline": first_run and not it.get("date")})
         st["items"].append(it)
+    for it in st["items"]:
+        future_date(it, today)
     if analyzer is None:
         from .analyze import Analyzer
         from .config import load_settings
@@ -389,6 +412,9 @@ def run(today: dt.date | None = None, analyzer=None, fetcher: Fetcher | None = N
                 it["type"] = typ if typ in TYPES else "duyuru"
                 it["title_tr"] = str(r.get("title_tr") or "").strip()[:300] or None
                 it["summary"] = str(r.get("summary_tr") or "").strip()[:400] or None
+                eff = parse_date(str(r.get("effective") or "")) if r.get("effective") else None
+                if eff and not it.get("effective"):
+                    it["effective"] = eff
         for it in batch:                                           # yanıtta olmayan başlık: ilgisiz say
             it.setdefault("relevant", False)
     if not st.get("summary") or st["summary"].get("date", "") <= (today - dt.timedelta(days=7)).isoformat():

@@ -9,7 +9,7 @@ from __future__ import annotations
 import io
 import logging
 import re
-from datetime import datetime
+from datetime import timedelta, datetime
 from urllib.parse import urljoin
 from zoneinfo import ZoneInfo
 
@@ -88,7 +88,9 @@ def collect(ctx: Context) -> list[Item]:
         iid = make_id("spk", b["url"])
         if iid in ctx.seen:
             continue
-        if b["date"] and b["date"] < ctx.since:
+        # Bültenler akşam geç saatlerde yayımlanıyor ama listede yalnız gün var (18:00 varsayılıyor). Son çalıştırmaya göre
+        # süzmek (ctx.since ≈ şimdi − 2 sa) geç yayımlanan bülteni kalıcı olarak kaçırıyordu; görülenler ctx.seen ile ayıklanır.
+        if b["date"] and b["date"] < now_utc() - timedelta(days=int(cfg.get("lookback_days", 14))):
             continue
         if b["date"] is None and not ctx.seen and bulletins.index(b) > 0:
             continue                          # ilk çalıştırma, tarih yok: sadece en yeni bülten
