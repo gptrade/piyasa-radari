@@ -1561,3 +1561,9 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
   .ok-tbl[data-h="20"] .hz1, .ok-tbl[data-h="20"] .hz5 { display: none; }
   .ok-tbl td:first-child { white-space: normal; }
 }
+
+/* ─────────────── Kâğıt portföy */
+#ptBody { display: grid; gap: var(--s-4); }
+.pt-svg .pt-inv { fill: var(--up); opacity: .06; }
+.pt-inv-i { background: color-mix(in srgb, var(--up) 18%, transparent) !important; height: 10px !important; }
+.pt-tbl td { white-space: nowrap; }
