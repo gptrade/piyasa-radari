@@ -55,26 +55,25 @@ def clustered_mean(x: np.ndarray, g: np.ndarray) -> tuple[float, float]:
     return m, float(math.sqrt(var))
 
 
-def paths(ev: pd.DataFrame, px: pd.DataFrame, universe: list[str]) -> dict:
-    """Pazar × tip × yön için 0..N seans ortalama yol. ev: küme başı olaylar (id, sym, market, type, dir, ts_eff)."""
+def event_paths(ev: pd.DataFrame, px: pd.DataFrame, universe: list[str]) -> list[tuple]:
+    """Her olay için 0..N seans kıyasa göre fark yolu: (satır, d0, yol). BIST: eşit ağırlıklı evren, ABD: S&P 500.
+    Fiyat sıçraması (düzeltilmemiş bölünme izi) görülen günden sonrası boş."""
     from .eventdb import JUMP, SESS, INDEX, ew_index
     px = px.assign(date=pd.to_datetime(px["date"]).dt.date)
     wide = px.pivot_table(index="date", columns="sym", values="adj_close", aggfunc="last").sort_index()
     jumps = wide.pct_change(fill_method=None).abs() > JUMP
-    out = {}
+    out = []
     for mkt in ("BIST", "US"):
         idx = INDEX[mkt]
         if idx not in wide.columns:
             continue
         cal = wide[idx].dropna()
-        bench = ew_index(wide, universe).reindex(cal.index) if mkt == "BIST" else cal
+        bench = (ew_index(wide, universe).reindex(cal.index) if mkt == "BIST" else cal).to_numpy()
         W = wide.reindex(cal.index)
         J = jumps.reindex(cal.index).fillna(False)
         dates = list(cal.index)
         pos = {d: i for i, d in enumerate(dates)}
-        g = ev[(ev.market == mkt) & ev.sym.isin(W.columns)]
-        recs = []
-        for r in g.itertuples(index=False):
+        for r in ev[(ev.market == mkt) & ev.sym.isin(W.columns)].itertuples(index=False):
             de = pd.Timestamp(r.ts_eff).tz_convert(SESS[mkt][0]).date()
             i = pos.get(de)
             if i is None:
@@ -85,21 +84,29 @@ def paths(ev: pd.DataFrame, px: pd.DataFrame, universe: list[str]) -> dict:
             if i == 0:
                 continue
             s = W[r.sym].to_numpy()
-            b = bench.to_numpy()
-            p0, b0 = s[i - 1], b[i - 1]
+            p0, b0 = s[i - 1], bench[i - 1]
             if not p0 or np.isnan(p0):
                 continue
             j_end = min(len(dates), i + N)
-            seg = s[i:j_end] / p0 - 1
-            bseg = b[i:j_end] / b0 - 1
+            seg, bseg = s[i:j_end] / p0 - 1, bench[i:j_end] / b0 - 1
             jm = J[r.sym].to_numpy()[i:j_end]
             if jm.any():
                 cut = int(np.argmax(jm))
                 seg, bseg = seg[:cut], bseg[:cut]
-            path = np.full(N + 1, np.nan)
-            path[0] = 0.0
+            path, raw = np.full(N + 1, np.nan), np.full(N + 1, np.nan)
+            path[0] = raw[0] = 0.0
             path[1:1 + len(seg)] = (seg - bseg) * 100
-            recs.append((r.type, int(r.dir) if pd.notna(r.dir) else 0, dates[i - 1], path))
+            raw[1:1 + len(seg)] = seg * 100
+            out.append((r, dates[i - 1], path, raw))
+    return out
+
+
+def paths(ev: pd.DataFrame, px: pd.DataFrame, universe: list[str]) -> dict:
+    """Pazar × tip × yön için 0..N seans ortalama yol. ev: küme başı olaylar (id, sym, market, type, dir, ts_eff)."""
+    out = {}
+    allp = event_paths(ev, px, universe)
+    for mkt in ("BIST", "US"):
+        recs = [(r.type, int(r.dir) if pd.notna(r.dir) else 0, d0, path) for r, d0, path, _ in allp if r.market == mkt]
         if not recs:
             continue
         types = sorted({t for t, *_ in recs})
@@ -119,6 +126,26 @@ def paths(ev: pd.DataFrame, px: pd.DataFrame, universe: list[str]) -> dict:
                     lo.append(round(mm - 1.96 * se, 3) if not math.isnan(se) else round(mm, 3))
                     hi.append(round(mm + 1.96 * se, 3) if not math.isnan(se) else round(mm, 3))
                 out[f"{mkt}|{t}|{dk}"] = {"m": m, "lo": lo, "hi": hi, "n": n}
+    return out
+
+
+def signal_marks(ev: pd.DataFrame, px: pd.DataFrame | None, universe: list[str]) -> dict:
+    """Sinyal arşivindeki (feed:<id>) her sinyal için olay veritabanı ölçüsü: önceki kapanıştan 1/5/20 seans fark ve yol.
+    Sinyal Takip karnesinde "önceki kapanıştan" bazı olarak kullanılır (scorecard.py)."""
+    if px is None or px.empty:
+        return {}
+    pl = ev["payload"].fillna("")
+    sig = ev[ev["id"].str.startswith("feed:") & pl.str.contains('"signal":true')]
+    out = {}
+    for r, _d0, path, raw in event_paths(sig, px, universe):
+        xp = [None if np.isnan(v) else round(float(v), 2) for v in path[1:]]
+        while xp and xp[-1] is None:
+            xp.pop()
+        o = {"xp": xp}
+        for h in (1, 5, 20):
+            if len(xp) >= h and xp[h - 1] is not None:
+                o[f"x{h}"], o[f"r{h}"] = xp[h - 1], round(float(raw[h]), 2)
+        out[f"{r.id[5:]}|{r.sym}"] = o
     return out
 
 

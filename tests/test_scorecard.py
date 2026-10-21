@@ -99,3 +99,16 @@ def test_event_study_mean_and_band():
     assert ev["bull"]["m"] == [0.0, 2.0, 3.0] and ev["bull"]["n"] == [3, 3, 3]
     assert ev["bull"]["lo"][1] < 2.0 < ev["bull"]["hi"][1]
     assert ev["bear"]["m"] == [0.0]                     # 3'ten az örnek: yol çizilmez
+
+
+def test_alt_base_uses_event_db_marks():
+    from radar import scorecard as SC
+    recs = [{"id": "s1", "t": "AAA", "m": "BIST", "ts": "2026-10-01T08:00:00Z", "d": 1, "c": 80, "mat": "high", "ev": "news", "kind": "Haber",
+             "src": "X", "pv": "AI", "x1": -1.0, "r1": -1.0, "xp": [-1.0]},
+            {"id": "s2", "t": "BBB", "m": "BIST", "ts": "2026-10-01T08:00:00Z", "d": 1, "c": 80, "mat": "high", "ev": "news", "kind": "Haber",
+             "src": "X", "pv": "AI", "x1": -1.0, "r1": -1.0}]
+    alt = SC.alt_base(recs, {"s1|AAA": {"x1": 2.0, "r1": 2.5, "xp": [2.0]}})
+    assert alt["n"] == 1
+    t = alt["scopes"]["BIST"]["all"]["total"]["h1"]
+    assert t["n"] == 1 and t["hit"] == 100.0 and t["ex"] == 2.0 and t["raw"] == 2.5
+    assert SC.alt_base(recs, {}) is None

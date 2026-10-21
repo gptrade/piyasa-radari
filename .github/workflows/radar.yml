@@ -100,7 +100,7 @@ jobs:
           rm -rf site/data/olay && mkdir -p site/data/olay
           if git ls-remote --exit-code --heads origin olay >/dev/null 2>&1; then
             git fetch --depth 1 origin olay
-            git archive FETCH_HEAD karne.json | tar -x -C site/data/olay || true
+            git archive FETCH_HEAD karne.json sigx.json | tar -x -C site/data/olay || git archive FETCH_HEAD karne.json | tar -x -C site/data/olay || true
           fi
 
       # Gizli rapor kutusu: kullanıcının gizli reposu, site/ DIŞINA çekilir (Pages'e ve data dalına girmez)

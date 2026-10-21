@@ -29,7 +29,7 @@
     open: new Set(), saved: new Set(store.get("saved", [])), limit: PAGE, sel: null, tkSort: { k: "n", d: -1 }, stripAll: false,
     panel: null, panelTk: null, panelFrom: null,
     seenBefore: null, reasons: new Map(),
-    card: null, karne: Object.assign({ h: 1, w: "90", dim: "kind", ev: "strong" }, store.get("radar.karne", {})),
+    card: null, karne: Object.assign({ h: 1, w: "90", dim: "kind", ev: "strong", base: "sinyal" }, store.get("radar.karne", {})),
   };
   const market = () => sh.market;
 
@@ -1349,7 +1349,9 @@
       <p class="k-note">Çizgi: o seansa kadar endekse göre ortalama fazla getiri (yön ayarı yok: olumlu sinyalde çizginin yukarı, olumsuzda aşağı gitmesi beklenir). Gölge: %95 güven aralığı; sıfırı kesiyorsa fark istatistiksel olarak belirsiz. Örnek: olumlu ${fmt.int(e.bull.n[0])}, olumsuz ${fmt.int(e.bear.n[0])} sinyal; uzak seanslarda örnek azalır.</p></section>`;
   }
   function renderKarne() {
-    const box = $("#karneWrap"), c = state.card, K = state.karne;
+    const box = $("#karneWrap"), c0 = state.card, K = state.karne;
+    const alt = K.base === "olay" && c0?.alt;
+    const c = alt ? { ...c0, scopes: c0.alt.scopes, recent: c0.alt.recent } : c0;
     if (!c) {
       box.innerHTML = stateHTML({ kind: "info", title: "Karne henüz oluşmadı", msg: "Sinyal arşivi bir sonraki taramada başlar. Her yönlü sinyal, yayından sonraki 1. ve 5. seans kapanışında endekse göre notlanır." });
       return;
@@ -1360,6 +1362,7 @@
     let html = `<div class="k-tools">
         <div class="k-ctl"><span aria-hidden="true">Ufuk</span>${seg("h", { 1: "1 seans", 5: "5 seans", 20: "20 seans" }, K.h, "Ufuk")}</div>
         <div class="k-ctl"><span aria-hidden="true">Dönem</span>${seg("w", K_WIN, K.w, "Dönem")}</div>
+        ${c0.alt ? `<div class="k-ctl"><span aria-hidden="true">Ölçüm</span>${seg("base", { sinyal: "Sinyal anından", olay: "Önceki kapanıştan" }, alt ? "olay" : "sinyal", "Ölçüm bazı")}</div>` : ""}
         <label class="k-ctl">Kırılım <select id="kDim">${Object.entries(K_DIM).map(([k, l]) => `<option value="${k}"${k === K.dim ? " selected" : ""}>${l}</option>`).join("")}</select></label>
       </div>
       <div class="kpi-grid k-kpis">
@@ -1395,6 +1398,7 @@
         <td class="num">${r.x1 == null ? "—" : kPct(r.x1, 1)}</td><td class="num">${r.x5 == null ? "—" : kPct(r.x5, 1)}</td><td class="num">${r.x20 == null ? "—" : kPct(r.x20, 1)}</td>
         <td class="num">${ok == null ? `<span class="t3">bekliyor</span>` : ok ? `<span class="up" aria-label="isabetli">✓</span>` : `<span class="down" aria-label="isabetsiz">✕</span>`}</td></tr>`; }).join("")}
       </tbody></table></div>`;
+    if (alt) html += `<p class="k-note"><b>Önceki kapanıştan:</b> aynı sinyaller olay veritabanından ölçülür. Getiri, olaydan (haber/bildirim) önceki son kapanıştan başlar; böylece sinyal yayımlanmadan önce fiyata yansıyan tepki de sayılır. Kıyas BIST'te eşit ağırlıklı BIST Tüm, ABD'de S&P 500. "Sinyal anından" ile fark büyükse, fiyat sinyal panele düşmeden önce hareket etmiş demektir.</p>`;
     html += `<p class="k-note">Yöntem: yönlü sinyaller (olumlu/olumsuz) yayın anındaki fiyatla arşivlenir; aynı hisse, olay ve yön 12 saat içinde bir kez sayılır. Getiri, yayından sonraki 1., 5. ve 20. tam seans kapanışına kadar; fazla getiri aynı aralıkta ${market() === "US" ? "S&P 500" : market() === "BIST" ? "BIST 100" : "BIST 100 / S&P 500"} getirisi düşülerek hesaplanır. Son 180 gün tutulur. Geçmiş isabet gelecek getirinin garantisi değildir.</p>`;
     box.innerHTML = html;
     $$(".seg", box).forEach(sg => sh.radioKeys(sg));

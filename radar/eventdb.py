@@ -685,6 +685,7 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
         try:
             from . import eventstudy
             eventstudy.write(OUT / "karne.json", eventstudy.build(ev, ret, px, sorted(useq), now_ts))
+            (OUT / "sigx.json").write_text(json.dumps(eventstudy.signal_marks(ev, px, sorted(useq)), separators=(",", ":")), encoding="utf-8")
         except Exception as e:                              # noqa: BLE001 — karne düşse de veritabanı kaydedilir
             log.warning("Olay karnesi üretilemedi: %s", e)
 
