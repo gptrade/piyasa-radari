@@ -29,7 +29,7 @@
     open: new Set(), saved: new Set(store.get("saved", [])), limit: PAGE, sel: null, tkSort: { k: "n", d: -1 }, stripAll: false,
     panel: null, panelTk: null, panelFrom: null,
     seenBefore: null, reasons: new Map(),
-    card: null, karne: Object.assign({ h: 1, w: "90", dim: "kind", ev: "strong", base: "sinyal" }, store.get("radar.karne", {})),
+    emaTf: store.get("radar.emaTf", "1G"), card: null, karne: Object.assign({ h: 1, w: "90", dim: "kind", ev: "strong", base: "sinyal" }, store.get("radar.karne", {})),
   };
   const market = () => sh.market;
 
@@ -397,7 +397,9 @@
   }
 
   // ─────────────────────────────── fiyat paneli (grafik parçacığı + teknik görünüm)
-  const EMA_KEYS = ["14", "34", "55", "200"];
+  const EMA_KEYS = ["8", "14", "34", "55", "200"];
+  const ECLS = { 8: "e5", 14: "e1", 34: "e2", 55: "e3", 200: "e4" };       // renkler: eski 4 EMA'nın rengi korunur
+  const EMA_TF = { "1S": "1 saat", "4S": "4 saat", "1G": "Günlük", "1H": "Haftalık" };
   function seriesFor(p, range) {
     if (!p) return { bars: [], ema: null };
     const now = (p.intraday?.at(-1) || p.daily?.at(-1) || [0])[0];
@@ -437,7 +439,7 @@
     if (ema) EMA_KEYS.forEach((k, n) => {
       const pts = (ema[k] || []).map((v, i) => v == null ? null : [x(bars[i][0]), y(v)]).filter(Boolean);
       if (pts.length < 2) return;
-      svg.append(mk("path", { d: path(pts), class: `ln ema e${n + 1}` }));
+      svg.append(mk("path", { d: path(pts), class: `ln ema ${ECLS[k]}` }));
       const l = mk("text", { x: W - padR + 3, y: pts.at(-1)[1] + 3, class: "ema-lbl" }); l.textContent = k; svg.append(l);
     });
     svg.append(mk("path", { d, class: "ln", stroke: color }));
@@ -484,10 +486,15 @@
   const VIEW_K = { "güçlü al": 1, "al": 1, "nötr": 0, "sat": -1, "güçlü sat": -1 };
   function taHTML(ta, p) {
     if (!ta) return "";
-    const em = ta.ema || {};
-    const emaRows = EMA_KEYS.filter(k => em[k]).map((k, n) => {
+    const tf = p?.ema_tf?.[state.emaTf] ? state.emaTf : "1G";
+    const set = p?.ema_tf?.[tf] || { ema: ta.ema || {}, align: ta.ema_align };
+    const em = set.ema || {};
+    const tfSeg = p?.ema_tf ? `<div class="seg seg-sm ema-tf" role="radiogroup" aria-label="EMA zaman dilimi">${Object.entries(EMA_TF).filter(([k]) => p.ema_tf[k]).map(([k, l]) =>
+      `<button type="button" role="radio" data-tf="${k}" aria-checked="${k === tf}" data-tip="${esc(l)} kapanışlar · ${fmt.int(p.ema_tf[k].bars)} bar">${k}</button>`).join("")}</div>` : "";
+    const emaRows = EMA_KEYS.filter(k => em[k]).map(k => {
       const e = em[k];
-      return `<tr><td><i class="ln-sw e${n + 1}"></i>EMA${k}</td><td class="num">${fmt.num(e.v)}</td>
+      if (e.v == null) return `<tr><td><i class="ln-sw ${ECLS[k]}"></i>EMA${k}</td><td class="num t3" colspan="3">yeterli ${esc(EMA_TF[tf].toLocaleLowerCase("tr"))} bar yok</td></tr>`;
+      return `<tr><td><i class="ln-sw ${ECLS[k]}"></i>EMA${k}</td><td class="num">${fmt.num(e.v)}</td>
         <td class="num ${dirCls(e.dist, 0.05)}">${e.dist == null ? "—" : glyph(Math.abs(e.dist) < 0.05 ? 0 : e.dist) + " " + fmt.pct(e.dist)}</td><td>${e.above == null ? "" : e.above ? "▲ üstünde" : "▼ altında"}</td></tr>`;
     }).join("");
     const tile = (l, v, t = "") => `<div data-tip="${esc(t)}"><small>${l}</small><b>${v}</b></div>`;
@@ -495,7 +502,8 @@
     return `
       <div class="ta-head"><span>Teknik görünüm</span>
         <span class="tag ${dirCls(vk)}" data-tip="Günlük/haftalık trend, EMA dizilimi, MACD ve RSI'dan kaba skor (${ta.score > 0 ? "+" : ""}${ta.score})">${glyph(vk)} ${esc((ta.view || "nötr").toLocaleUpperCase("tr"))}</span>
-        <span class="tag" data-tip="Fiyat ve EMA14/34/55/200 sıralaması">dizilim: ${esc(ta.ema_align || "—")}</span></div>
+        <span class="tag" data-tip="${esc(EMA_TF[tf])}: fiyat ve EMA8/14/34/55/200 sıralaması">dizilim${tf !== "1G" ? ` (${tf})` : ""}: ${esc(set.align || "—")}</span></div>
+      ${tfSeg}
       ${emaRows ? `<table class="ema-tbl"><thead><tr><th>Ortalama</th><th class="num">Değer</th><th class="num">Fiyata uzaklık</th><th></th></tr></thead><tbody>${emaRows}</tbody></table>` : ""}
       <div class="ta-grid">
         ${tile("Günlük trend", esc(ta.trend), "Fiyat, EMA55 ve EMA200 sıralaması")}
@@ -509,7 +517,7 @@
       </div>
       ${ta.signals?.length ? `<ul class="ta-sig">${ta.signals.map(s => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}
       ${ne ? `<p class="ne">Sonraki bilanço: <b>${fmt.date(ne.date + "T12:00:00Z", { day: "numeric", month: "long", year: "numeric" })}</b>${ne.eps_est != null ? ` · EPS beklentisi ${fmt.num(ne.eps_est)}` : ""}</p>` : ""}
-      <p class="ta-note">20 gün aralığı: ${fmt.num(ta.lo20)} – ${fmt.num(ta.hi20)} · EMA'lar 5 yıllık günlük kapanıştan TradingView yöntemiyle hesaplanır.</p>`;
+      <p class="ta-note">20 gün aralığı: ${fmt.num(ta.lo20)} – ${fmt.num(ta.hi20)} · EMA'lar ${tf === "1G" ? "5 yıllık günlük" : tf === "1H" ? "5 yıllık haftalık" : tf === "4S" ? "2 yıllık 4 saatlik (seans açılışına hizalı)" : "2 yıllık 1 saatlik"} kapanıştan, TradingView'in ta.ema yöntemiyle hesaplanır; fiyat kaynağı Yahoo olduğu için TradingView'le küçük kuruş farkları olabilir. Diğer göstergeler günlük.</p>`;
   }
   function pricePanel(it) {
     const box = document.createElement("div");
@@ -528,10 +536,10 @@
     const p = state.prices[sym], m = p.market || market;
     box.innerHTML = `
       <div class="px-head"><span class="px-sym">${esc(sym)} · ${esc(p.currency || "")}</span>
-        <div class="px-rng" role="group" aria-label="Grafik aralığı">${["1G", "1H", "1A", "3A", "6A"].map(r => `<button type="button" data-r="${r}" aria-pressed="false" ${["1A", "3A", "6A"].includes(r) ? `data-tip="Günlük · EMA 14/34/55/200 ile"` : ""}>${r}</button>`).join("")}</div></div>
+        <div class="px-rng" role="group" aria-label="Grafik aralığı">${["1G", "1H", "1A", "3A", "6A"].map(r => `<button type="button" data-r="${r}" aria-pressed="false" ${["1A", "3A", "6A"].includes(r) ? `data-tip="Günlük · EMA 8/14/34/55/200 ile"` : ""}>${r}</button>`).join("")}</div></div>
       <div class="px-row"><span class="px-last"></span><span class="rx chg"></span></div>
       <svg class="spark" viewBox="0 0 300 80" preserveAspectRatio="none" role="img" aria-label="${esc(sym)} fiyat grafiği, haber anı işaretli"></svg>
-      <p class="ema-legend" hidden>${EMA_KEYS.map((k, n) => `<span><i class="ln-sw e${n + 1}"></i>EMA${k}</span>`).join("")}<span><i class="ln-sw"></i>Fiyat</span></p>
+      <p class="ema-legend" hidden>${EMA_KEYS.map(k => `<span><i class="ln-sw ${ECLS[k]}"></i>EMA${k}</span>`).join("")}<span><i class="ln-sw"></i>Fiyat</span></p>
       <div class="react-slot"></div><div class="ta-slot"></div>
       <div class="tv-slot"><button type="button" class="btn">TradingView teknik özetini göster</button></div>
       ${extLinks(sym, m, p)}`;
@@ -558,7 +566,12 @@
       if (r.excess != null) parts.push(`fark ${b(r.excess)}`);
       $(".react-slot", box).innerHTML = `<p class="react" data-tip="Haber anındaki fiyattan bu yana; hacim = haber günü / 20 gün ortalaması; fark = hisse − endeks">${parts.join(" · ")}</p>`;
     }
-    $(".ta-slot", box).innerHTML = taHTML(p.ta, p);
+    const paintTa = () => {
+      $(".ta-slot", box).innerHTML = taHTML(p.ta, p);
+      $$(".ema-tf button", box).forEach(b => b.onclick = () => { state.emaTf = b.dataset.tf; store.set("radar.emaTf", state.emaTf); paintTa(); $(`.ema-tf button[data-tf="${state.emaTf}"]`, box)?.focus(); });
+      const sg = $(".ema-tf", box); if (sg) sh.radioKeys(sg);
+    };
+    paintTa();
     $(".tv-slot .btn", box).onclick = () => tvWidget($(".tv-slot", box), sym, m);
     return box;
   }

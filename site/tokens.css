@@ -46,7 +46,7 @@
   --imp-1: #86b6ef; --imp-2: #3987e5; --imp-3: #184f95;          /* önem: tek ton, açık → koyu */
   --on-imp-1: #0b1a2e; --on-imp-2: #ffffff; --on-imp-3: #ffffff;
   --hm-up: #15803d; --hm-down: #c81e1e; --hm-mid: #eeefec;        /* ısı haritası uçları + nötr orta */
-  --e1: #2a78d6; --e2: #eb6834; --e3: #1baf7a; --e4: #eda100;     /* EMA 14/34/55/200 */
+  --e1: #2a78d6; --e2: #eb6834; --e3: #1baf7a; --e4: #eda100; --e5: #a35bd6;     /* EMA 14/34/55/200, EMA8 */
   --grid: #e4e7e5; --axis: #b9c1be;
 
   /* ── boşluk: 4px ölçeği ── */
@@ -87,7 +87,7 @@
     --imp-1: #256abf; --imp-2: #5598e7; --imp-3: #9ec5f4;
     --on-imp-1: #ffffff; --on-imp-2: #0b1a2e; --on-imp-3: #0b1a2e;
     --hm-up: #15803d; --hm-down: #dc2626; --hm-mid: #2c3331;
-    --e1: #3987e5; --e2: #d95926; --e3: #199e70; --e4: #c98500;
+    --e1: #3987e5; --e2: #d95926; --e3: #199e70; --e4: #c98500; --e5: #b37ae0;
     --grid: #26302e; --axis: #46524f;
     --shadow-1: 0 1px 2px rgb(0 0 0 / .4); --shadow-2: 0 8px 24px rgb(0 0 0 / .5); --shadow-3: 0 16px 48px rgb(0 0 0 / .6);
   }
@@ -104,7 +104,7 @@
   --imp-1: #256abf; --imp-2: #5598e7; --imp-3: #9ec5f4;
   --on-imp-1: #ffffff; --on-imp-2: #0b1a2e; --on-imp-3: #0b1a2e;
   --hm-up: #15803d; --hm-down: #dc2626; --hm-mid: #2c3331;
-  --e1: #3987e5; --e2: #d95926; --e3: #199e70; --e4: #c98500;
+  --e1: #3987e5; --e2: #d95926; --e3: #199e70; --e4: #c98500; --e5: #b37ae0;
   --grid: #26302e; --axis: #46524f;
   --shadow-1: 0 1px 2px rgb(0 0 0 / .4); --shadow-2: 0 8px 24px rgb(0 0 0 / .5); --shadow-3: 0 16px 48px rgb(0 0 0 / .6);
 }
