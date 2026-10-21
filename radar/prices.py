@@ -71,7 +71,11 @@ def _rsi(xs: list[float], n: int = 14) -> float | None:
     return 100 - 100 / (1 + ag / al)
 
 
-EMA_PERIODS = (14, 34, 55, 200)
+EMA_PERIODS = (8, 14, 34, 55, 200)
+# Zaman dilimleri (TradingView adlarıyla): 1 saat ve 4 saat 60 dakikalık barlardan, haftalık günlükten.
+SESSION_OPEN = {"BIST": (10, 0), "US": (9, 30)}
+SESSION_MIN = {"BIST": 480, "US": 390}  # sürekli işlem süresi (dk); kapanış seansı/son bar son dilime katılır
+H1_DIR = DATA / "prices_h1"            # gün içi bar önbelleği (60 dk 2 yıl + 30 dk 60 gün; bkz. hourly)
 
 
 def ema_tv(xs: list[float], n: int) -> list[float | None]:
@@ -100,14 +104,71 @@ def _atr(daily: list[list[float]], n: int = 14) -> float | None:
     return a
 
 
-def _weekly(daily: list[list[float]]) -> list[float]:
-    """Günlük kapanışları haftalık kapanışa çevir (ISO hafta)."""
+def _weekly(daily: list[list[float]], tz=None) -> list[float]:
+    """Günlük kapanışları haftalık kapanışa çevir (ISO hafta, borsanın yerel tarihi). Yahoo BIST günlük barını yerel
+    gece yarısında (UTC 21:00, önceki gün) damgalar: UTC ile bakılırsa pazartesi barı önceki haftaya düşer."""
+    return [b[1] for b in _weekly_bars(daily, tz)]
+
+
+def _weekly_bars(daily: list[list[float]], tz=None) -> list[list[float]]:
     from datetime import datetime, timezone
-    weeks: dict[tuple, float] = {}
+    weeks: dict[tuple, list] = {}
     for b in daily:
-        d = datetime.fromtimestamp(b[0], tz=timezone.utc).isocalendar()
-        weeks[(d[0], d[1])] = b[1]
+        d = datetime.fromtimestamp(b[0], tz=tz or timezone.utc).isocalendar()
+        weeks[(d[0], d[1])] = b
     return [weeks[k] for k in sorted(weeks)]
+
+
+def bars_tf(h1: list[list[float]], market: str, minutes: int) -> list[list[float]]:
+    """60 dk barlardan `minutes` dakikalık kapanışlar, TradingView gibi seans açılışına hizalı (4 saat: BIST 10:00–14:00,
+    14:00–18:00; ABD 9:30–13:30, 13:30–16:00). Açılış öncesi bar ilk dilime, kapanış sonrası (kapanış seansı) son dilime
+    katılır. Her dilimin kapanışı içindeki son 60 dk barın kapanışıdır."""
+    from datetime import datetime
+    tz = EX_TZ.get(market)
+    oh, om = SESSION_OPEN.get(market, (10, 0))
+    last_k = (SESSION_MIN.get(market, 480) - 1) // minutes
+    out: dict[tuple, list] = {}
+    for b in h1:
+        t = datetime.fromtimestamp(b[0], tz)
+        k = (t.date(), min(last_k, max(0, (t.hour * 60 + t.minute - oh * 60 - om)) // minutes))
+        out[k] = b
+    return [out[k] for k in sorted(out)]
+
+
+def bars_4h(h1: list[list[float]], market: str) -> list[list[float]]:
+    return bars_tf(h1, market, 240)
+
+
+def ema_set(closes: list[float], last: float | None = None, periods=EMA_PERIODS) -> dict | None:
+    """Bir zaman diliminin EMA'ları (TradingView ta.ema), fiyata uzaklık ve dizilim."""
+    if len(closes) < 20:
+        return None
+    last = last if last is not None else closes[-1]
+    r = lambda x, d=2: round(x, d) if x is not None else None
+    vals = {n: ema_tv(closes, n)[-1] for n in periods}
+    info = {str(n): {"v": r(v), "dist": r((last / v - 1) * 100, 1) if v else None, "above": (last > v) if v else None}
+            for n, v in vals.items()}
+    ps = sorted(periods)
+    vs = [vals[n] for n in ps]
+    if all(v is not None for v in vs) and last > vs[0] and all(a > b for a, b in zip(vs, vs[1:])):
+        align = "boğa"
+    elif all(v is not None for v in vs) and last < vs[0] and all(a < b for a, b in zip(vs, vs[1:])):
+        align = "ayı"
+    else:
+        align = "karışık"
+    return {"ema": info, "align": align, "bars": len(closes)}
+
+
+def ema_timeframes(daily: list, h1: list, market: str, last: float | None) -> dict:
+    """1S / 4S / 1G / 1H EMA setleri. Uzun EMA'lar (200) yeterli bar yoksa boş kalır."""
+    tz = EX_TZ.get(market)
+    tf = {}
+    for key, bars in (("1S", bars_tf(h1, market, 60) if h1 else []), ("4S", bars_4h(h1, market) if h1 else []), ("1G", daily), ("1H", _weekly_bars(daily, tz))):
+        st = ema_set([b[1] for b in bars], last) if bars else None
+        if st:
+            st["t"] = bars[-1][0]
+            tf[key] = st
+    return tf
 
 
 def _cross(a: list, b: list, lookback: int = 5) -> str | None:
@@ -123,7 +184,7 @@ def _cross(a: list, b: list, lookback: int = 5) -> str | None:
     return None
 
 
-def technicals(daily: list[list[float]], live: bool = False, periods=EMA_PERIODS) -> dict | None:
+def technicals(daily: list[list[float]], live: bool = False, periods=EMA_PERIODS, tz=None) -> dict | None:
     """live=True: son günlük bar süren seansa ait (hacmi eksik); hacim oranı son tamamlanmış günden."""
     closes = [b[1] for b in daily]
     if len(closes) < 30:
@@ -184,7 +245,7 @@ def technicals(daily: list[list[float]], live: bool = False, periods=EMA_PERIODS
     mid = sma20
     sd = (sum((c - mid) ** 2 for c in closes[-20:]) / 20) ** 0.5 if mid else None
     pct_b = ((last - (mid - 2 * sd)) / (4 * sd) * 100) if sd else None
-    wk = _weekly(daily)
+    wk = _weekly(daily, tz)
     w10, w30 = ema_tv(wk, 10), ema_tv(wk, 30)
     if w10[-1] and w30[-1]:
         wtrend = "yukarı" if wk[-1] > w10[-1] > w30[-1] else "aşağı" if wk[-1] < w10[-1] < w30[-1] else "yatay"
@@ -201,7 +262,7 @@ def technicals(daily: list[list[float]], live: bool = False, periods=EMA_PERIODS
 
     signals = list(crosses)
     if align != "karışık":
-        signals.append(f"EMA dizilimi: {align} (fiyat ve 14/34/55/200 sıralı)")
+        signals.append(f"EMA dizilimi: {align} (fiyat ve {'/'.join(str(n) for n in sorted(periods))} sıralı)")
     if rsi is not None and rsi >= 70:
         signals.append(f"RSI {rsi:.0f}: aşırı alım")
     elif rsi is not None and rsi <= 30:
@@ -462,6 +523,7 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False, valuati
         tk = yf.Ticker(yahoo or stock.yahoo)
         intraday = _series(tk.history(period="5d", interval="5m", auto_adjust=False))
         daily = _series(tk.history(period="5y", interval="1d", auto_adjust=False))   # EMA200 yakınsaması için uzun geçmiş
+        h1 = hourly(stock, tk)
         try:
             currency = tk.fast_info.get("currency")
         except Exception:
@@ -490,7 +552,8 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False, valuati
         "currency": currency or ("TRY" if stock.market == "BIST" else "USD"),
         "last": last, "prev_close": prev,
         "change_pct": round((last / prev - 1) * 100, 2) if prev else None,
-        "ta": technicals(daily, live=(live := bool(intraday) and now_utc().timestamp() - intraday[-1][0] < 20 * 60)),
+        "ta": technicals(daily, live=(live := bool(intraday) and now_utc().timestamp() - intraday[-1][0] < 20 * 60), tz=EX_TZ.get(stock.market)),
+        "ema_tf": ema_timeframes(daily, h1, stock.market, last),
         "events": tech_events(daily, live=live),
         # Panel için: gün içi 5 gün, günlük son ~6 ay yeter (dosya boyutu)
         "intraday": intraday, "daily": daily[-keep:], "ema": ema_overlay, "updated": iso(now_utc()),
@@ -499,6 +562,46 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False, valuati
         **({"analyst": an} if an else {}),
         **({"valuation": val} if val else {}),
     }
+
+
+def _hist(tk, interval: str, periods: tuple[str, ...]) -> list[list[float]]:
+    """Yahoo dakikalık geçmiş: yeni halka arzda uzun dönem isteği hata verir, kısa dönemle yeniden denenir."""
+    for per in periods:
+        try:
+            bars = _series(tk.history(period=per, interval=interval, auto_adjust=False))
+        except Exception:                                   # noqa: BLE001
+            bars = []
+        if bars:
+            return bars
+    return []
+
+
+def hourly(stock: Stock, tk) -> list[list[float]]:
+    """Gün içi barlar (EMA 1S/4S için). Yahoo'nun 60 dk barları BIST'te :30'a hizalı (09:30–10:30 …), TradingView
+    ise seans açılışına (10:00–11:00 …). Bu yüzden son 60 gün 30 dk barlardan (doğru hizalanır), daha eskisi 60 dk
+    barlardan kurulur; uzun EMA'nın başlangıç yakınsaması için eski kısımdaki 30 dakikalık kayma önemsizdir.
+    Önbellek: günde bir tam indirme (60 dk: 2 yıl, 30 dk: 60 gün), diğer turlarda son 5 günün 30 dk barları eklenir."""
+    path = H1_DIR / f"{stock.symbol}.json"
+    try:
+        old = json.loads(path.read_text()) if path.exists() else {}
+    except ValueError:
+        old = {}
+    today = now_utc().strftime("%Y-%m-%d")
+    full = not old.get("m30") or old.get("day") != today
+    h60 = _hist(tk, "60m", ("730d", "1y", "6mo", "3mo")) if full else old.get("h60") or []
+    m30 = _hist(tk, "30m", ("60d", "1mo") if full else ("5d",))
+    if not full and m30:
+        m30 = sorted({b[0]: b for b in (old.get("m30", []) + m30)}.values(), key=lambda b: b[0])
+    elif not m30:
+        m30 = old.get("m30") or []
+    if not h60 and not m30:
+        return []
+    if full:
+        H1_DIR.mkdir(parents=True, exist_ok=True)
+    cut = m30[0][0] if m30 else float("inf")
+    bars = [b for b in h60 if b[0] + 3600 <= cut] + m30          # 60 dk bar 30 dk verinin başladığı yerde biter
+    path.write_text(json.dumps({"day": today if full else old.get("day"), "h60": h60, "m30": m30}, separators=(",", ":")))
+    return bars
 
 
 def prev_close(daily: list, intraday: list, tz=None) -> float | None:
