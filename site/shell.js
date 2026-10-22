@@ -1,4 +1,4 @@
-/* Piyasa Radarı — uygulama kabuğu.
+/* Lyra Radar — uygulama kabuğu.
    Yönlendirme (#makro · #sinyal · #geri-alim), tema, kenar çubuğu (masaüstünde daraltma, dar ekranda çekmece),
    üst eylem çubuğu (son güncelleme · yenile · dışa aktar · tema), piyasa filtresi, sekme rozetleri,
    kaynak sağlığı hapı, ortak ipucu ve Türkçe sayı biçimleri. Sekmeler kendilerini shell.register ile bağlar. */
@@ -177,7 +177,7 @@
     $("#pageTitle").textContent = ROUTES[route].title;
     $("#pageSub").textContent = ROUTES[route].sub;
     $("#pageSub").hidden = !ROUTES[route].sub;
-    document.title = `${ROUTES[route].title} · Piyasa Radarı`;
+    document.title = `${ROUTES[route].title} · Lyra Radar`;
     $("#marketSec").hidden = !ROUTES[route].market;
     const h = "#" + route + (S.param ? "/" + S.param : "");
     if (location.hash !== h) (push ? history.pushState : history.replaceState).call(history, { r: 1 }, "", h);

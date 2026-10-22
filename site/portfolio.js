@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Portföy sekmesi.
+/* Lyra Radar — Portföy sekmesi.
    Pozisyonlar YALNIZ bu tarayıcıda saklanır (localStorage "radar.portfolio.v1"); sunucuya gönderilmez.
    Biçim ileride repoya (config/portfolio.yml) taşınabilecek şekilde sade tutulur; JSON olarak dışa/içe aktarılabilir.
    Fiyat: izleme listesi fiyat dosyaları (data/prices) → BIST geri alım fiyatları (data/bb_quotes.json) → elle girilen fiyat.

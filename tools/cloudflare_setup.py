@@ -19,7 +19,8 @@ DOMAIN = os.environ.get("CF_DOMAIN", "lyracube.com")
 HOST = f"{os.environ.get('CF_SUB', 'radar')}.{DOMAIN}"
 PROJECT = os.environ.get("CF_PROJECT", "piyasa-radari")
 EMAILS = [e.strip().lower() for e in os.environ.get("CF_ACCESS_EMAILS", "").split(",") if "@" in e]
-APP_NAME = "Piyasa Radarı"
+APP_NAME = "Lyra Radar"
+OLD_NAMES = ("Piyasa Radarı",)              # yeniden adlandırma: eski adlı uygulama bulunup bu ada çevrilir (kopya açılmaz)
 st: dict = {"host": HOST}
 
 
@@ -97,7 +98,7 @@ def dns():
     res, err = cf("GET", f"/zones/{zid}/dns_records", params={"name": HOST})
     if err:
         return {"hata": err}
-    body = {"type": "CNAME", "name": HOST, "content": sub, "proxied": True, "ttl": 1, "comment": "Piyasa Radarı (Cloudflare Pages)"}
+    body = {"type": "CNAME", "name": HOST, "content": sub, "proxied": True, "ttl": 1, "comment": "Lyra Radar (Cloudflare Pages)"}
     if res:
         rec = res[0]
         if rec["type"] == "CNAME" and rec["content"] == sub and rec.get("proxied"):
@@ -126,7 +127,7 @@ def access():
     res, err = cf("GET", f"/accounts/{ACC}/access/apps")
     if err:
         return {"hata": err}
-    app = next((a for a in res or [] if a.get("name") == APP_NAME), None)
+    app = next((a for a in res or [] if a.get("name") in (APP_NAME, *OLD_NAMES)), None)
     body = {"name": APP_NAME, "type": "self_hosted", "domain": HOST, "self_hosted_domains": domains,
             "session_duration": "720h", "app_launcher_visible": True, "auto_redirect_to_identity": False}
     if app:

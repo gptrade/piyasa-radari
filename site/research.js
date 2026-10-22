@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Araştırma sekmesi.
+/* Lyra Radar — Araştırma sekmesi.
    Veri: data/research.json (pipeline: radar/research.py)
    - synthesis: günlük AI sentezi (aracı kurum notları + kurum görünümleri + makro gelişmeler)
    - outlooks: J.P. Morgan Guide to the Markets, BlackRock haftalık yorum özetleri

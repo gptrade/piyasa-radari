@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Enerji: Türkiye elektrik üretim şirketlerinin kurulu güç envanteri.
+/* Lyra Radar — Enerji: Türkiye elektrik üretim şirketlerinin kurulu güç envanteri.
    Veri: data/enerji/kurulu_guc.json (enerji.yml). Santral, konum ve sahiplik: Global Energy Monitor (Integrated Power + Ownership
    Tracker, CC BY 4.0); Türkiye bağlamı: EPİAŞ Şeffaflık (YEKDEM); yatırım bildirimleri: KAP.
    Grup MW'ı pay oranına göredir (ortaklık payı × ünite gücü); konsolide = %50+ payla kontrol edilen ünitelerin tam gücü.

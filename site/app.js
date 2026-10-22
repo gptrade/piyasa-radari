@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Sinyal Takip sekmesi.
+/* Lyra Radar — Sinyal Takip sekmesi.
    Veri: data/feed.json, data/digest.json, data/macro.json, data/prices/<SYMBOL>.json */
 (() => {
   "use strict";

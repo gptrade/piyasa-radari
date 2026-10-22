@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Şirket Geri Alım sekmesi.
+/* Lyra Radar — Şirket Geri Alım sekmesi.
    Veri, ayrı repodaki takipçiden gelir (gptrade/kap-geri-alim-takibi → kap-buybacks.json).
    Güncel fiyatlar: data/bb_quotes.json (pipeline saatte bir Yahoo'dan toplu çeker) + izleme listesi fiyatları. */
 (() => {

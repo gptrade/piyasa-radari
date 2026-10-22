@@ -1,4 +1,4 @@
-/* Piyasa Radarı — hisse ve sayfa paleti (Ctrl/⌘ K ya da /).
+/* Lyra Radar — hisse ve sayfa paleti (Ctrl/⌘ K ya da /).
    Hangi sekmede olursan ol: hisse ara → hisse paneli, temel analiz kartı, sinyal akışında süz, sektör emsalleriyle karşılaştır,
    portföye ekle; ya da sayfa adına göre sekmeye git. Hisse evreni: temel analiz evreni (BIST Tüm) + izleme listesi (ABD dahil).
    Sayfa içindeki .tk-open[data-sym] öğeleri de evrensel hisse panelini açar. */

@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Takvim sekmesi (katalizörler).
+/* Lyra Radar — Takvim sekmesi (katalizörler).
    Veri: data/calendar.json (pipeline: TÜİK Ulusal Veri Yayımlama Takvimi + config/calendar.yml makro takvim
    + hesaplanan vade sonları + KAP/Yahoo bilanço/temettü).
    Görünümler: Hafta (iş günü sütunları), Ay (ızgara), Liste (gün gün). Olaya tıklayınca ayrıntı penceresi. */
