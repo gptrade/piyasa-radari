@@ -306,20 +306,40 @@
     syncMenuBtn();
     if (open) setTimeout(() => $(".nav-item[aria-current]", sidebar)?.focus(), 60);   // görünürlük geçişi bitsin
   }
+  // Masaüstünde "side-off": yalnız simgelerin kaldığı dar şerit (64 px); adlar ipucunda gösterilir.
+  const sideToggle = $("#sideToggle");
   function syncMenuBtn() {
-    const open = isNarrow() ? root.classList.contains("drawer-open") : !root.classList.contains("side-off");
+    const narrow = isNarrow(), rail = !narrow && root.classList.contains("side-off");
+    const open = narrow ? root.classList.contains("drawer-open") : !rail;
+    const lbl = narrow ? (open ? "Kenar çubuğunu kapat" : "Kenar çubuğunu aç") : (open ? "Kenar çubuğunu daralt" : "Kenar çubuğunu genişlet");
     menuBtn.setAttribute("aria-expanded", String(open));
-    menuBtn.setAttribute("aria-label", open ? "Kenar çubuğunu kapat" : "Kenar çubuğunu aç");
-    menuBtn.dataset.tip = open ? "Kenar çubuğunu kapat" : "Kenar çubuğunu aç";
-    sidebar.inert = !open;
+    menuBtn.setAttribute("aria-label", lbl);
+    menuBtn.dataset.tip = lbl;
+    sideToggle.setAttribute("aria-expanded", String(open));
+    sideToggle.setAttribute("aria-label", lbl);
+    $("span", sideToggle).textContent = narrow ? "Kapat" : "Daralt";
+    if (rail) sideToggle.dataset.tip = "Genişlet"; else delete sideToggle.dataset.tip;
+    sidebar.inert = narrow && !open;
+    // daraltılmışken her simgenin adı ipucunda
+    $$(".nav-item", sidebar).forEach(a => {
+      if (rail) a.dataset.tip = a.querySelector("span:not(.badge)")?.textContent.trim() || ""; else delete a.dataset.tip;
+    });
+    const hb = $("#healthBtn");
+    if (rail) hb.dataset.tip = $("#healthTxt").textContent; else delete hb.dataset.tip;
   }
-  menuBtn.addEventListener("click", () => {
-    if (isNarrow()) { setDrawer(!root.classList.contains("drawer-open")); return; }
+  function toggleRail() {
     root.classList.toggle("side-off");
     store.set("radar.side", !root.classList.contains("side-off"));
     syncMenuBtn();
     dispatchEvent(new Event("resize"));
+  }
+  menuBtn.addEventListener("click", () => {
+    if (isNarrow()) { setDrawer(!root.classList.contains("drawer-open")); return; }
+    toggleRail();
   });
+  // daraltılmışken kaynak durumuna tıklamak çubuğu açar (liste dar şeritte gösterilemez)
+  $("#healthBtn").addEventListener("click", () => { if (!isNarrow() && root.classList.contains("side-off")) toggleRail(); }, true);
+  sideToggle.addEventListener("click", () => { if (isNarrow()) { setDrawer(false); menuBtn.focus(); return; } toggleRail(); });
   scrim.addEventListener("click", () => { setDrawer(false); menuBtn.focus(); });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && root.classList.contains("drawer-open")) { setDrawer(false); menuBtn.focus(); }
@@ -372,6 +392,7 @@
     btn.className = "health " + level;
     $(".sym", btn).textContent = { ok: "✓", warn: "!", bad: "✕" }[level] || "";
     $("#healthTxt").textContent = data.length ? `${active}/${data.length} kaynak aktif` : "Kaynak durumu yok";
+    if (document.documentElement.classList.contains("side-off")) $("#healthBtn").dataset.tip = $("#healthTxt").textContent;
     btn.dataset.tip = data.length ? `${active} kaynak çalışıyor${fails ? ` · ${fails} hatalı` : ""}${st.some(([, k]) => k === "off") ? ` · ${st.filter(([, k]) => k === "off").length} kapalı` : ""} — ayrıntı için tıkla` : "";
     const when = t => t ? fmt.ago(t, true) : null;
     const rows = st.map(([s, k]) => {

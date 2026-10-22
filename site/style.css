@@ -187,8 +187,26 @@ th[aria-sort="ascending"] .arr, th[aria-sort="descending"] .arr { opacity: 1; co
 
 /* ───────────── 3. uygulama kabuğu ───────────── */
 .app { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: 100vh; }
-.side-off .app { grid-template-columns: 0 minmax(0, 1fr); }
-.side-off .sidebar { visibility: hidden; }
+/* Daraltılmış kenar çubuğu (masaüstü): yalnız simgeler; adlar ipucunda */
+.side-toggle { display: flex; align-items: center; gap: var(--s-3); width: 100%; min-height: 34px; padding: 0 var(--s-3); border-radius: var(--r-md);
+  color: var(--text-3); font-size: var(--fs-xs); }
+.side-toggle:hover { background: var(--surface-2); color: var(--text); }
+.side-toggle svg { width: 16px; height: 16px; transition: transform var(--dur) var(--ease); }
+@media (min-width: 1024px) {
+  .side-off .app { grid-template-columns: 64px minmax(0, 1fr); }
+  .side-off .sidebar { padding: var(--s-4) var(--s-2); gap: var(--s-4); overflow-x: hidden; }
+  .side-off .brand { justify-content: center; padding: 0; }
+  .side-off .brand b, .side-off .nav-item > span:not(.badge), .side-off #marketSec, .side-off #healthTxt, .side-off .health .sym,
+  .side-off .health .chev, .side-off .health-list, .side-off .nav-group > *, .side-off .side-toggle span { display: none !important; }
+  .side-off .nav-item { justify-content: center; padding: 0; position: relative; }
+  .side-off .nav-item .badge { position: absolute; top: 1px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; }
+  .side-off .nav .nav-group { height: 1px; min-height: 0; margin: var(--s-2) var(--s-3); padding: 0; border: 0; border-radius: 0; background: var(--border); pointer-events: none; overflow: hidden; }
+  .side-off .nav-sec:first-child .nav-group { display: none; }
+  .side-off .nav-sec.collapsed .nav-sec-items { display: flex; }
+  .side-off .health { justify-content: center; padding: 0; }
+  .side-off .side-toggle { justify-content: center; padding: 0; }
+  .side-off .side-toggle svg { transform: rotate(180deg); }
+}
 
 .sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: var(--s-5);
   padding: var(--s-4) var(--s-3); background: var(--surface); border-right: 1px solid var(--border); z-index: 30; }
