@@ -82,7 +82,7 @@ def send_hello(summary: dict, ai: dict | None) -> bool:
     if not token or not chat:
         return False
     site = os.environ.get("SITE_URL")
-    text = ("✅ <b>Piyasa Radarı bağlandı</b>\n\n"
+    text = ("✅ <b>Lyra Radar bağlandı</b>\n\n"
             f"Bu turda {summary.get('collected', 0)} kayıt tarandı, {summary.get('new', 0)} yeni kayıt, "
             f"{summary.get('analyzed', 0)} AI değerlendirmesi.\n"
             f"AI: {html.escape(' → '.join(ai['providers'])) + ' (' + html.escape(ai['model']) + ')' if ai and ai.get('providers') else 'kapalı (AI anahtarı yok)'}\n\n"

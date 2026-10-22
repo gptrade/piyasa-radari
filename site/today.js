@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Bugün: her sekmeden günün en önemli birkaç şeyi tek ekranda.
+/* Lyra Radar — Bugün: her sekmeden günün en önemli birkaç şeyi tek ekranda.
    Kaynaklar sitenin kendi veri dosyaları: feed/digest/macro/research (Sinyal), calendar (Takvim), portföy (bu tarayıcı). Her kart ilgili sekmeye götürür. */
 (() => {
   "use strict";

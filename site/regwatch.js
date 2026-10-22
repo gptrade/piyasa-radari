@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Uluslararası Regülasyon Takip.
+/* Lyra Radar — Uluslararası Regülasyon Takip.
    Veri: data/regulasyon/regwatch.json (regulasyon.yml, günlük). BCBS/BIS, Azerbaycan, Türkiye, Körfez ve Orta Doğu bankacılık
    düzenleyicilerinin risk yönetimi ve model validasyonu yayınları; kurumların kendi yayın sayfalarından okunur. */
 (() => {

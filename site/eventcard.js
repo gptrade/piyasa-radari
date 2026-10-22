@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Olay Karnesi.
+/* Lyra Radar — Olay Karnesi.
    Veri: data/olay/karne.json (olay.yml → olay dalı; radar/eventstudy.py). Bütün BIST (ve izlenen ABD hisseleri) için
    olay tipine ve yöne göre olaydan sonraki 1/5/20 seans anormal getiri. BIST: eşit ağırlıklı BIST Tüm'e göre, ABD: S&P 500'e göre.
    Tablo tarayıcıda süzülüp toplanır (pazar, dönem, yön, güçlü, Benimkiler); 20 seanslık yol grafiği sunucuda hesaplanır. */

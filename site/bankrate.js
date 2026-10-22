@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Banka Faiz Duyarlılığı (net faiz marjının politika faizine duyarlılığı).
+/* Lyra Radar — Banka Faiz Duyarlılığı (net faiz marjının politika faizine duyarlılığı).
    Veri: data/fin/_bankrate.json (temel.yml; radar/fundamentals/bankrate.py). KAP banka tablolarından çeyreklik
    aktif getirisi (faiz gelirleri / ort. aktif) ve fonlama maliyeti (faiz giderleri / ort. aktif) çıkarılır; ikisi ayrı ayrı
    politika faizinin bu ve önceki çeyrek ortalamasına regrese edilir (bankalar arası havuz + Bayes büzme).

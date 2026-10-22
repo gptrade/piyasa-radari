@@ -1,4 +1,4 @@
-/* Piyasa Radarı — Temel Analiz (BIST-100, KAP mali tabloları).
+/* Lyra Radar — Temel Analiz (BIST-100, KAP mali tabloları).
    Rotalar: #temel (genel bakış) · #hisse/KOD (şirket) · #tarama · #karsilastir/KOD,KOD
    Veri: data/fin/_screen.json (evren özeti), data/fin/KOD.json (seriler + metrikler), data/fin/_universe.json
    Tutarlar TL; "Reel" görünümde her dönem TÜFE(son dönem)/TÜFE(dönem sonu) ile bugünün TL'sine taşınır. */
@@ -328,7 +328,7 @@
     if (notReady(el)) return;
     const row = rowOf(code);
     $("#pageTitle").textContent = code; $("#pageSub").textContent = row ? trTitle(row.title) : "";
-    document.title = `${code} · Temel Analiz · Piyasa Radarı`;
+    document.title = `${code} · Temel Analiz · Lyra Radar`;
     if (!el.dataset.code || el.dataset.code !== code) { loading(el); el.dataset.code = code; }
     let d;
     try { d = await doc(code); } catch (e) {
