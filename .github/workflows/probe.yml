@@ -14,32 +14,37 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: CBO arama 3
+      - name: Regülasyon alternatif kanallar
         run: |
           mkdir -p probe
           pip install -q -r requirements.txt
-          python - > probe/log13.txt 2>&1 <<'PY' || true
-          import json
+          python - > probe/log14.txt 2>&1 <<'PY' || true
+          import re
+          from urllib.parse import quote_plus
           from radar.regwatch import Fetcher
-          f = Fetcher()
-          base = "https://cbo.gov.om/_api/search/query"
-          tries = [
-            {"querytext": "'(IsDocument:\"True\" OR contentclass:\"STS_ListItem\") (CBOItemVisibility:b2c OR CBOItemVisibility:All)'", "sourceid": "'a52a80b8-1b71-4ecd-b3a5-681645e00edf'", "selectproperties": "'Title,Path,CBOItemDate,CircularFilename,CBOAttachment'", "sortlist": "'CBOItemDate:descending'", "rowlimit": "10", "QueryPropertiesTemplateUrl": "'querygroup://webroot/Pages/Circulars.aspx?groupname=Default'"},
-            {"querytext": "'*'", "sourceid": "'a52a80b8-1b71-4ecd-b3a5-681645e00edf'", "rowlimit": "10"},
-            {"querytext": "'path:\"https://cbo.gov.om/sites/assets/Documents/English/Circulars\"'", "rowlimit": "10", "selectproperties": "'Title,Path,LastModifiedTime'"},
-            {"querytext": "'Circular'", "rowlimit": "10", "selectproperties": "'Title,Path,LastModifiedTime,CBOItemDate'"},
-          ]
-          for p in tries:
-              try:
-                  r = f.s.get(base, params=p, headers={"Accept": "application/json;odata=verbose"}, timeout=45, verify=f._verify(base))
-              except Exception as e:
-                  print("hata", repr(e)[:200]); continue
-              print(p["querytext"], r.status_code, len(r.text), r.text[:200] if r.status_code != 200 else "")
-              if r.status_code == 200:
-                  rows = r.json()["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"]
-                  for row in rows[:8]:
-                      c = {x["Key"]: x["Value"] for x in row["Cells"]["results"]}
-                      print("  ", {k: (c.get(k) or "")[:80] for k in ("Title", "CBOItemDate", "LastModifiedTime", "Path")})
+          f = Fetcher(); f.gap = 0
+          C = {
+            "CBB rulebook": ["https://cbben.thomsonreuters.com/", "https://cbben.thomsonreuters.com/rulebook-updates", "https://cbben.thomsonreuters.com/robots.txt"],
+            "CBB ana": ["https://www.cbb.gov.bh/feed/", "https://www.cbb.gov.bh/wp-json/wp/v2/posts?per_page=3", "https://www.cbb.gov.bh/robots.txt"],
+            "BOI": ["https://www.boi.org.il/en/communication-and-publications/press-releases/", "https://www.boi.org.il/robots.txt", "https://www.gov.il/en/departments/bank_of_israel"],
+            "BDL": ["https://www.bdl.gov.lb/circulars.php", "https://www.abl.org.lb/english/circulars", "https://www.abl.org.lb/"],
+            "CBAR": ["https://www.cbar.az/", "https://cbar.az/page-41/rss", "https://e-qanun.az/", "https://www.cbar.az/rss"],
+            "CBO": ["https://qanoon.om/", "https://mjla.gov.om/"],
+          }
+          for k, urls in C.items():
+              for u in urls:
+                  try:
+                      r = f.s.get(u, timeout=30, verify=f._verify(u))
+                      t = r.text
+                      bot = "Just a moment" in t[:4000] or "captcha" in t[:4000].lower()
+                      print(k, "|", u, "|", r.status_code, len(t), "BOT" if bot else "", "|", re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", t))[:160])
+                  except Exception as e:
+                      print(k, "|", u, "| HATA", type(e).__name__, str(e)[:120])
+          for q in ['"Central Bank of Bahrain" circular', '"Bank of Israel" directive banks', '"Banque du Liban" circular', 'site:cbar.az', '"Central Bank of Oman" circular', '"Mərkəzi Bank" qərar']:
+              u = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:60d&hl=en-US&gl=US&ceid=US:en"
+              r = f.s.get(u, timeout=30)
+              items = re.findall(r"<item>.*?<title>(.*?)</title>.*?<pubDate>(.*?)</pubDate>", r.text, re.S)
+              print("GNEWS", q, r.status_code, len(items), [ (t[:70], d[5:16]) for t, d in items[:4]])
           PY
 
       - name: kaydet
