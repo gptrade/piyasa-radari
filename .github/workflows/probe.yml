@@ -14,29 +14,34 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Sağlık yoklaması
-        env:
-          ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+      - name: CBO AIA
         run: |
           mkdir -p probe
           pip install -q -r requirements.txt
-          python - > probe/log8.txt 2>&1 <<'PY' || true
-          import os, requests, json
-          from radar import http
-          for u in ["https://cbo.gov.om/Pages/Circulars.aspx", "https://cbo.gov.om/"]:
-              try:
-                  r = requests.get(u, timeout=40, headers={"User-Agent": "Mozilla/5.0"})
-                  print("CBO", u, r.status_code, len(r.text), r.text[:200].replace("\n", " "))
-              except Exception as e:
-                  print("CBO", u, "HATA", repr(e)[:300])
-              r2 = http.get(u, timeout=40)
-              print("CBO radar.http", u, None if r2 is None else (r2.status_code, len(r2.text)))
-          k = os.environ.get("ALPHAVANTAGE_API_KEY")
-          print("AV anahtar var:", bool(k))
-          r = requests.get("https://www.alphavantage.co/query", params={"function": "NEWS_SENTIMENT", "tickers": "AAPL", "sort": "LATEST", "limit": 5, "apikey": k}, timeout=40)
-          js = r.json()
-          print("AV", r.status_code, list(js)[:6], {kk: str(v)[:200] for kk, v in js.items() if kk in ("Information", "Note", "Error Message", "items")})
-          print("AV ilk", [(f.get("time_published"), f.get("title", "")[:60]) for f in (js.get("feed") or [])[:3]])
+          python - > probe/log9.txt 2>&1 <<'PY' || true
+          import logging, ssl, socket
+          logging.basicConfig(level=logging.INFO)
+          from radar.regwatch import Fetcher
+          f = Fetcher()
+          for u in ["https://cbo.gov.om/Pages/Circulars.aspx"]:
+              r = f.get(u); print("fetcher", None if r is None else (r.status_code, len(r.text)))
+          from aia import AIASession
+          try:
+              s = AIASession(); chain = s.aia_chase("cbo.gov.om") if hasattr(s, "aia_chase") else None
+              print("chase", [c.get_subject() for c in chain] if chain else chain)
+          except Exception as e: print("chase hata", repr(e)[:400])
+          try:
+              print("cadata", len(s.cadata_from_url("https://cbo.gov.om/")))
+          except Exception as e: print("cadata hata", repr(e)[:400])
+          ctx = ssl.create_default_context(); ctx.check_hostname = False; ctx.verify_mode = ssl.CERT_NONE
+          with socket.create_connection(("cbo.gov.om", 443), timeout=20) as so:
+              with ctx.wrap_socket(so, server_hostname="cbo.gov.om") as ss:
+                  from cryptography import x509
+                  c = x509.load_der_x509_certificate(ss.getpeercert(True))
+                  print("leaf", c.subject.rfc4514_string(), "| issuer", c.issuer.rfc4514_string(), c.not_valid_after_utc)
+                  try:
+                      print("aia ext", c.extensions.get_extension_for_class(x509.AuthorityInformationAccess).value)
+                  except Exception as e: print("aia ext yok", e)
           PY
 
       - name: kaydet
