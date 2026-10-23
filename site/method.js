@@ -70,7 +70,7 @@
         ["Kaynak", "kurumların kendi duyuru, sirküler ve yayın sayfaları her gün okunur (BCBS/BIS, Türkiye, Azerbaycan, Körfez ve Orta Doğu bankacılık düzenleyicileri)."],
         ["Süzme", "başlıklar ücretsiz bir AI modeliyle risk yönetimi ve model validasyonu açısından süzülür; faiz kararları, enflasyon raporları ve rutin makro duyurular hariç. Konu etiketleri ve Türkçe özetler de AI ile üretilir."],
         ["Tarih", "yayın tarihi gelecekteyse yürürlük tarihi olarak gösterilir, yayın tarihi ilk görüldüğü gün sayılır; ayrı yürürlük bilgisi varsa Yürürlük sütununda."],
-        ["Erişilemeyenler", "bot korumalı ya da yurt dışı sunuculara kapalı kurumlar (Bahreyn, İsrail, Lübnan, Azerbaycan, Umman; BAE'de ana site) panelde “erişilemiyor” görünür; bu korumalar aşılmaz. Sertifika zincirini eksik gönderen sitelerde eksik ara sertifika kurumun kendi AIA adresinden tamamlanır, doğrulama kapatılmaz."],
+        ["Erişilemeyen siteler", "bot korumalı ya da yurt dışı sunuculara kapalı kurumların korumaları aşılmaz. Bunun yerine: İsrail, Lübnan, Azerbaycan, Umman, Bahreyn ve BAE ana sitesi için Google News'in herkese açık RSS'inde kurumun alan adı aranır (site:); bu kayıtlar \u201cGoogle News\u201d etiketiyle gösterilir, tarih Google'ın dizine aldığı gündür ve genelge PDF'leri çoğu zaman bu listede yer almaz. Bahreyn'in bağlayıcı kural kitabı (CBB Rulebook) Thomson Reuters'ın barındırdığı ayrı sitesinden, BAE'ninki kendi Rulebook sitesinden okunur. Sertifika zincirini eksik gönderen sitelerde eksik ara sertifika kurumun kendi AIA adresinden tamamlanır, doğrulama kapatılmaz."],
         ["Sınır", "bağlayıcılık ve yürürlük için orijinal dokümana bak."],
       ]))],
     ["portfoy", "Portföy", () => card("Veri ve hesaplar", ul([

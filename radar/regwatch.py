@@ -292,6 +292,8 @@ def collect(cfg: dict, f: Fetcher | None = None) -> tuple[list[dict], dict]:
             got = (from_gnews(text, src) if src["type"] == "gnews" else from_rss(text, src["url"]) if src["type"] == "rss" else from_table(text, src["url"]) if src["type"] == "table"
                    else from_sp(text, src) if src["type"] == "sp" else from_html(text, src["url"]))
             got = [g for g in got if g["date"]]                   # tarihsiz bağlantılar çoğunlukla menü/gezinme ya da arşiv
+            seen_td = set()                                       # kural kitabında aynı değişiklik her bölüm için ayrı satır
+            got = [g for g in got if not ((g["title"].casefold(), g["date"]) in seen_td or seen_td.add((g["title"].casefold(), g["date"])))]
             for it in got:
                 it["reg"] = reg["id"]
                 items.append(tidy(reg["id"], it))

@@ -54,9 +54,9 @@ regulators:
   - id: cbb
     name: "Bahreyn Merkez Bankası"
     country: Bahreyn
-    note: "Ana site sunucu isteklerine 403 veriyor; kural kitabı güncellemeleri (CBB Rulebook, Thomson Reuters) ve Google News"
+    note: "Ana site sunucu isteklerine 403 veriyor; kural kitabı güncellemeleri (CBB Rulebook, son 30 gün, her gün) ve Google News"
     sources:
-      - { type: html, url: "https://cbben.thomsonreuters.com/view-revision-updates?f_days=on&changed=-365%20day" }
+      - { type: html, url: "https://cbben.thomsonreuters.com/view-revision-updates?f_days=on&changed=-30%20day" }
       - { type: gnews, site: cbb.gov.bh }
   - id: cbo
     name: "Umman Merkez Bankası"
