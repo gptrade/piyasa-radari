@@ -14,41 +14,31 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Regülasyon alternatif siteler
+      - name: Regülasyon yeni kanallar
         run: |
-          mkdir -p probe/alt
+          mkdir -p probe
+          git fetch -q --depth 1 origin onizleme-regulasyon-kanal && git checkout FETCH_HEAD -- radar config
           pip install -q -r requirements.txt
-          python - > probe/log16.txt 2>&1 <<'PY' || true
-          import re, json
-          from radar.regwatch import Fetcher
-          f = Fetcher()
-          def get(u, save=None, **kw):
+          python - > probe/log17.txt 2>&1 <<'PY' || true
+          import re, json, collections
+          from radar import regwatch as R
+          cfg = R.load_config()
+          cfg["regulators"] = [r for r in cfg["regulators"] if r["id"] in ("cbb", "cbo", "boi", "bdl", "cbar", "cbuae")]
+          items, status = R.collect(cfg)
+          print(json.dumps(status, ensure_ascii=False))
+          by = collections.defaultdict(list)
+          for it in items: by[it["reg"]].append(it)
+          for k, v in by.items():
+              v.sort(key=lambda x: x["date"] or "", reverse=True)
+              print("==", k, len(v)); [print("   ", it["date"], it.get("via", ""), it["title"][:110]) for it in v[:12]]
+          f = R.Fetcher()
+          for u in ["https://qanoon.om/?s=%D8%A7%D9%84%D8%A8%D9%86%D9%83+%D8%A7%D9%84%D9%85%D8%B1%D9%83%D8%B2%D9%8A&feed=rss2"]:
+              r = f.s.get(u, timeout=40); its = re.findall(r"<item>.*?<title>(.*?)</title>.*?<pubDate>(.*?)</pubDate>", r.text, re.S)
+              print("QANOON", r.status_code, len(its), [(t[:80], d[5:16]) for t, d in its[:8]])
+          for u in ["https://api.e-qanun.az/", "https://napi.e-qanun.az/", "https://api.e-qanun.az/getDetailSearch?start=0&length=10&orderColumn=8&orderDirection=desc&title=true&searchWord=M%C9%99rk%C9%99zi+Bank", "https://api.e-qanun.az/getDetailSearch?start=0&length=10&orderColumn=8&orderDirection=desc&codeType=1&dateType=1"]:
               try:
-                  r = f.s.get(u, timeout=40, verify=f._verify(u), **kw)
-              except Exception as e:
-                  print("HATA", u, type(e).__name__); return None
-              print("GET", u, r.status_code, len(r.text), r.headers.get("content-type", "")[:40])
-              if save: open("probe/alt/" + save, "w", encoding="utf-8").write(r.text)
-              return r
-          r = get("https://cbben.thomsonreuters.com/cbb-rulebook", "cbb_rulebook.html")
-          if r is not None:
-              links = sorted(set(re.findall(r'href="(/[^"#]{3,120})"', r.text)))
-              print("CBB linkler", len(links)); print([l for l in links if re.search(r"updat|new|change|amend|consult|circular|notice|log", l, re.I)][:40]); print(links[:80])
-          for u in ["https://cbben.thomsonreuters.com/rss.xml", "https://cbben.thomsonreuters.com/rss", "https://cbben.thomsonreuters.com/rulebook-updates-log", "https://cbben.thomsonreuters.com/content/rulebook-updates", "https://cbben.thomsonreuters.com/search?f%5B0%5D=type%3Arulebook_update"]:
-              get(u)
-          r = get("https://e-qanun.az/", "eqanun.html")
-          if r is not None:
-              js = re.findall(r'src="(/_next/static/[^"]+\.js)"', r.text); print("eqanun js", js[:12])
-              for j in js[:12]:
-                  rr = get("https://e-qanun.az" + j)
-                  if rr is not None:
-                      apis = set(re.findall(r'https?://[a-z0-9.-]*e-qanun\.az[^"\'` ]{0,80}', rr.text)) | set(re.findall(r'"(/api/[^"]{0,80})"', rr.text))
-                      if apis: print("  api", j[-40:], list(apis)[:15])
-          for u in ["https://qanoon.om/feed/", "https://qanoon.om/?s=Central+Bank&feed=rss2", "https://qanoon.om/wp-json/wp/v2/categories?per_page=100"]:
-              r = get(u, u.split("/")[-1][:20].replace("?", "_") + ".txt")
-              if r is not None and "rss" in u or (r is not None and "feed" in u):
-                  items = re.findall(r"<item>.*?<title>(.*?)</title>.*?<pubDate>(.*?)</pubDate>", r.text, re.S)
-                  print("  qanoon items", len(items), [(t[:70], d[5:16]) for t, d in items[:8]])
+                  r = f.s.get(u, timeout=30); print("EQANUN", u[:110], r.status_code, r.text[:300].replace("\n", " "))
+              except Exception as e: print("EQANUN", u, "HATA", type(e).__name__)
           PY
 
       - name: kaydet
