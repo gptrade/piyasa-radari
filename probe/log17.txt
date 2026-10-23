@@ -1,0 +1,57 @@
+{"cbuae": {"ok": true, "n": 23, "why": null, "via": "Google News"}, "cbb": {"ok": true, "n": 12, "why": null, "via": "Google News"}, "cbo": {"ok": false, "n": 0, "why": null, "via": "Google News"}, "boi": {"ok": true, "n": 45, "why": null, "via": "Google News"}, "bdl": {"ok": true, "n": 6, "why": null, "via": "Google News"}, "cbar": {"ok": true, "n": 4, "why": null, "via": "Google News"}}
+== cbuae 23
+    2027-07-15  Standard of Shari’ah and Procedural Requirements for Agency (Wakala) in Takaful Insurance
+    2027-07-15  Standard Re Controls and Procedures Establishing Takaful Insurance Fund
+    2027-07-15  Standard Re the Operational Model of Takaful Insurance
+    2026-10-05 Google News CBUAE Governor Convenes CEOs of Banks Operating in the UAE and Discusses Banking Sector Performance
+    2026-10-03 Google News CBUAE and Bank Al-Maghrib sign two MoUs to strengthen supervisory cooperation and Islamic finance and interlin
+    2026-10-02 Google News Governor of the CBUAE Participates in the Joint Meeting of GCC Finance Ministers and Central Bank Governors wi
+    2026-10-02 Google News CBUAE and Central Bank of Syria Sign Memorandum of Understanding on Financial and Technical Cooperation
+    2026-09-30 Google News Quarterly Economic Review
+    2026-09-14  Regulation Regarding Takaful Insurance
+    2026-09-14  Operational Risk Management Regulation
+    2026-09-14 Google News CBUAE and Mastercard conclude programme to strengthen national capabilities in fraud risk management
+    2026-09-13  Small to Medium Sized Enterprises (SME) - Customer Protection Regulation
+== cbb 12
+    2026-10-22 Google News CBB Ijara Murabaha Sukuk Fully subscribed
+    2026-10-19 Google News CBB Governor receives employee Noora Alhadi on the occasion of her acceptance into the 12th cohort of The Prim
+    2026-10-19 Google News CBB Treasury Bills Oversubscribed
+    2026-10-14 Google News The Kingdom of Bahrain Chairs the Joint Meeting of GCC Central Bank Governors and the Governor of the People’s
+    2026-10-13 Google News CBB 12 Month Treasury Bills Issue No. 145 Oversubscribed
+    2026-10-12 Google News CBB Treasury Bills Oversubscribed
+    2026-10-09 Google News Events for October 2026Holiday | CBB
+    2026-10-08 Google News CBB Governor Participates in the Second Edition of the Climate Forum in Abu Dhabi
+    2026-10-08 Google News Moderated by H.E. the Minister of Sustainable Development, Chief Executive of Bahrain EDB CBB Governor Partici
+    2026-10-07 Google News Events from October 7 - December 16Holiday | CBB
+    2026-09-16 Google News قائمـة الجـداول Tables List الجدول Table Banking Statistics اإلحصاءات المصرفية
+    2026-09-07 Google News Protected: Privacy Notice
+== boi 45
+    2026-10-21 Google News Research Department Staff Forecast, October 2026
+    2026-10-21 Google News The Monetary Committee decides on October 21, 2026 to keep the interest rate unchanged at 3.25 percent.
+    2026-10-21 Google News Remarks by the Governor of the Bank of Israel at the press briefing on monetary policy held today at the Bank 
+    2026-10-20 Google News The Expected Rate of Inflation Derived from Various Sources
+    2026-10-08 Google News Foreign Exchange Reserves at the Bank of Israel, September 2026
+    2026-10-08 Google News Foreign Exchange Reserves at the Bank of Israel, September 2026
+    2026-10-05 Google News Debt Developments in the Nonfinancial Private Sector, Second Quarter of 2026
+    2026-10-05 Google News The public's financial assets portfolio in the second quarter of 2026
+    2026-09-23 Google News Interest Rate Decision – February 20, 2006
+    2026-09-22 Google News Israel’s International Investment Position (IIP), Second quarter of 2026
+    2026-09-17 Google News The monthly Index of Economic Activity increased by 0.4 percent in August
+    2026-09-17 Google News Ammunition Hill - 20 NIS
+== bdl 6
+    2026-10-17 Google News Basic Circular 1
+    2026-10-17 Google News Banque Du Liban
+    2026-10-16 Google News Banque Du Liban
+    2026-08-31 Google News Intermediate Circular 772
+    2026-08-14 Google News Money Supply History
+    2026-08-02 Google News Money Supply History
+== cbar 4
+    2026-10-14 Google News Central Bank introduces new fees for payment system services
+    2026-07-31 Google News Central Bank of the Republic of Azerbaijan - Central Bank keeps interest rate corridor parameters unchanged
+    2026-07-16 Google News Central Bank of Azerbaijan and National Bank of Slovakia discussed cooperation
+    2026-05-16 Google News Electronic System for Information Disclosure
+QANOON 200 0 []
+EQANUN https://api.e-qanun.az/ 404 {"timestamp":"2026-10-23T15:06:06.590+00:00","status":404,"error":"Not Found","path":"/"}
+EQANUN https://napi.e-qanun.az/ 404 {"timestamp":"2026-10-23T15:06:07.402+00:00","status":404,"error":"Not Found","path":"/"}
+EQANUN https://api.e-qanun.az/getDetailSearch?start=0&length=10&orderColumn=8&orderDirection=desc&title=true&searchWo 500 {"timestamp":"2026-10-23T15:06:07.596+00:00","status":500,"error":"Internal Server Error","path":"/getDetailSearch"}
+EQANUN https://api.e-qanun.az/getDetailSearch?start=0&length=10&orderColumn=8&orderDirection=desc&codeType=1&dateType 500 {"timestamp":"2026-10-23T15:06:07.786+00:00","status":500,"error":"Internal Server Error","path":"/getDetailSearch"}

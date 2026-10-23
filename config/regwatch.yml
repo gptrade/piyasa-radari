@@ -32,7 +32,8 @@ regulators:
     country: BAE
     sources:
       - { type: html, url: "https://rulebook.centralbank.ae/en/view-revision-updates?f_days=on&changed=-365%20day" }
-    note: "Ana site (haberler, yayınlar) bot korumalı; yalnız Rulebook güncellemeleri okunuyor"
+      - { type: gnews, site: centralbank.ae }
+    note: "Ana site (haberler, yayınlar) bot korumalı; Rulebook güncellemeleri ve ana site için Google News"
   - id: dfsa
     name: "Dubai Finansal Hizmetler Otoritesi (DFSA)"
     country: BAE
@@ -53,14 +54,17 @@ regulators:
   - id: cbb
     name: "Bahreyn Merkez Bankası"
     country: Bahreyn
-    blocked: "Site sunucu isteklerine 403 veriyor"
-    sources: []
+    note: "Ana site sunucu isteklerine 403 veriyor; kural kitabı güncellemeleri (CBB Rulebook, Thomson Reuters) ve Google News"
+    sources:
+      - { type: html, url: "https://cbben.thomsonreuters.com/view-revision-updates?f_days=on&changed=-365%20day" }
+      - { type: gnews, site: cbb.gov.bh }
   - id: cbo
     name: "Umman Merkez Bankası"
     country: Umman
+    note: "Genelge listesi tarayıcıda betikle yükleniyor, sitenin arama servisi anonim sorguya kapalı; ana sayfa ve Google News"
     sources:
-      - { type: html, url: "https://cbo.gov.om/Pages/Circulars.aspx" }
       - { type: html, url: "https://cbo.gov.om/" }
+      - { type: gnews, site: cbo.gov.om }
   - id: cbe
     name: "Mısır Merkez Bankası"
     country: Mısır
@@ -75,13 +79,15 @@ regulators:
   - id: boi
     name: "İsrail Merkez Bankası"
     country: İsrail
-    blocked: "Site bot korumalı (doğrulama sayfası)"
-    sources: []
+    note: "Site bot korumalı (doğrulama sayfası); Google News üzerinden"
+    sources:
+      - { type: gnews, site: boi.org.il }
   - id: bdl
     name: "Lübnan Merkez Bankası"
     country: Lübnan
-    blocked: "Site bot korumalı (Cloudflare doğrulaması)"
-    sources: []
+    note: "Site bot korumalı (Cloudflare doğrulaması); Google News üzerinden, kurum adından ibaret başlıklar elenir"
+    sources:
+      - { type: gnews, site: bdl.gov.lb }
   - id: cbiq
     name: "Irak Merkez Bankası"
     country: Irak
@@ -96,8 +102,9 @@ regulators:
   - id: cbar
     name: "Azerbaycan Merkez Bankası"
     country: Azerbaycan
-    blocked: "Site yurt dışı sunuculardan bağlantı kabul etmiyor"
-    sources: []
+    note: "Site yurt dışı sunuculardan bağlantı kabul etmiyor; Google News üzerinden"
+    sources:
+      - { type: gnews, site: cbar.az }
 
 # Konular (AI sınıflandırmasının kullandığı anahtarlar)
 topics:
