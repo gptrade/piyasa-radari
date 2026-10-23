@@ -1590,3 +1590,4 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .m-grid { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); align-items: start; }
 .m-link { font-weight: var(--fw-medium); color: var(--accent-ink); white-space: nowrap; }
 .m-foot { margin: 0; font-size: var(--fs-sm); }
+.mkt-top { margin-right: var(--s-1); } @media (max-width: 720px) { .mkt-top button { padding: 0 6px; } }

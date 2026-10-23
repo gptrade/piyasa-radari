@@ -235,6 +235,7 @@
     $("#refreshBtn").disabled = !h.refresh;
     syncUpdated();
     syncMine();
+    syncMarket();
   }
   function syncMine() {
     const b = $("#mineBtn"); if (!b) return;
@@ -348,11 +349,16 @@
   syncMenuBtn();
 
   // ─────────────────────────────── piyasa filtresi (Sinyal Takip + Şirket Geri Alım)
+  // Piyasa süzgeci hem kenar çubuğunda hem üst çubukta (yalnız piyasa süzgeci uygulanan sekmelerde): kenar çubuğu
+  // daraltılmışken de hangi piyasanın seçili olduğu görünsün (aksi halde ör. Takvim'de ABD "kaybolmuş" sanılır).
   function syncMarket() {
-    $$("#marketSeg button").forEach(b => b.setAttribute("aria-checked", String(b.dataset.market === S.market)));
+    $$("#marketSeg button, #marketTop button").forEach(b => b.setAttribute("aria-checked", String(b.dataset.market === S.market)));
+    const top = $("#marketTop");
+    if (top) top.hidden = !ROUTES[S.route]?.market;
   }
-  $$("#marketSeg button").forEach(b => b.addEventListener("click", () => shell.setMarket(b.dataset.market)));
+  $$("#marketSeg button, #marketTop button").forEach(b => b.addEventListener("click", () => shell.setMarket(b.dataset.market)));
   radioKeys($("#marketSeg"));
+  if ($("#marketTop")) radioKeys($("#marketTop"));
   syncMarket();
 
   // Segment gruplarında ok tuşlarıyla gezinme (role=radiogroup)
