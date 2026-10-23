@@ -14,27 +14,32 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: CBO arama
+      - name: CBO arama 2
         run: |
           mkdir -p probe
           pip install -q -r requirements.txt
-          python - > probe/log11.txt 2>&1 <<'PY' || true
+          python - > probe/log12.txt 2>&1 <<'PY' || true
           import json
           from radar.regwatch import Fetcher
           f = Fetcher()
-          r = f.get("https://cbo.gov.om/robots.txt"); print("robots", None if r is None else r.text[:600])
-          q = "(IsDocument:\"True\" OR contentclass:\"STS_ListItem\") (CBOItemVisibility:b2c OR CBOItemVisibility:All)"
-          url = ("https://cbo.gov.om/_api/search/query?querytext='" + q + "'&sourceid='a52a80b8-1b71-4ecd-b3a5-681645e00edf'"
-                 "&selectproperties='Title,Path,CBOItemDate,CircularFilename,CBOAttachment,CBOItemSummary'&sortlist='CBOItemDate:descending'&rowlimit=15")
-          r = f.get(url, headers={"Accept": "application/json;odata=verbose"})
-          print("arama", None if r is None else (r.status_code, len(r.text)))
-          if r is not None:
-              js = r.json()
-              rows = js["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"]
-              print("satır", len(rows))
-              for row in rows[:10]:
-                  c = {x["Key"]: x["Value"] for x in row["Cells"]["results"]}
-                  print({k: (c.get(k) or "")[:90] for k in ("Title", "CBOItemDate", "Path", "CircularFilename", "CBOAttachment")})
+          base = "https://cbo.gov.om/_api/search/query"
+          tries = [
+            {"querytext": "'*'", "sourceid": "'a52a80b8-1b71-4ecd-b3a5-681645e00edf'", "selectproperties": "'Title,Path,CBOItemDate,CircularFilename'", "sortlist": "'CBOItemDate:descending'", "rowlimit": "10"},
+            {"querytext": "'*'", "sourceid": "'a52a80b8-1b71-4ecd-b3a5-681645e00edf'", "rowlimit": "10"},
+            {"querytext": "'path:\"https://cbo.gov.om/sites/assets/Documents/English/Circulars\"'", "rowlimit": "10", "selectproperties": "'Title,Path,LastModifiedTime'"},
+            {"querytext": "'Circular'", "rowlimit": "10", "selectproperties": "'Title,Path,LastModifiedTime,CBOItemDate'"},
+          ]
+          for p in tries:
+              try:
+                  r = f.s.get(base, params=p, headers={"Accept": "application/json;odata=verbose"}, timeout=45, verify=f._verify(base))
+              except Exception as e:
+                  print("hata", repr(e)[:200]); continue
+              print(p["querytext"], r.status_code, len(r.text), r.text[:200] if r.status_code != 200 else "")
+              if r.status_code == 200:
+                  rows = r.json()["d"]["query"]["PrimaryQueryResult"]["RelevantResults"]["Table"]["Rows"]["results"]
+                  for row in rows[:8]:
+                      c = {x["Key"]: x["Value"] for x in row["Cells"]["results"]}
+                      print("  ", {k: (c.get(k) or "")[:80] for k in ("Title", "CBOItemDate", "LastModifiedTime", "Path")})
           PY
 
       - name: kaydet
