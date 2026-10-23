@@ -657,7 +657,12 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
     syms = list(YF) + sorted(set(useq) | set(wl) | set(us))           # endeksler önce: takvim ve getiri onlara bağlı
     loc = now_ts.tz_convert(IST)
     after_close = loc.time() >= time(18, 45)
-    close_due = st.get("px_day") != loc.date().isoformat() and after_close
+    today_s = loc.date().isoformat()
+    px_last = str(pd.to_datetime(px["date"]).max().date()) if px is not None and not px.empty else ""
+    # kapanış sonrası: bugün henüz alınmadıysa ya da son fiyat bugünden eskiyse (günde bir ek deneme; tatilde boşa döner)
+    close_due = after_close and (st.get("px_day") != today_s or (px_last < today_s and st.get("px_close_try") != today_s))
+    if close_due:
+        st["px_close_try"] = today_s
     due = px is None or px_force or close_due or set(syms) - set(px.sym.unique())
     if due:
         full = px is None or px_force
