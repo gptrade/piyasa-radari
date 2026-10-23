@@ -1,0 +1,7 @@
+https://cbo.gov.om/_api/search/query?querytext='(IsDocument:"True" OR contentclass:"STS_Li: HTTP 500
+robots User-agent: *
+
+Disallow: /randomdata
+
+Disallow: /special-offers.html
+arama None
