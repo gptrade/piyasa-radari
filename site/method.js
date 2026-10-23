@@ -33,6 +33,7 @@
       <li><b>Kaynak.</b> Fiyat: Yahoo Finance (kişisel kullanım). Veri saatlik güncellenir; KAP geçmişi 90 gün geriye dolduruldu ve birikerek uzar.</li></ul>`)],
     ["takvim", "Takvim", () => card("Kaynaklar", ul([
         ["Saat", "tüm saatler İstanbul saatiyle."],
+        ["Süzgeçler", "üst çubuktaki piyasa seçimi (BIST/ABD) yalnız şirket olaylarına uygulanır: bilanço, temettü, genel kurul, vade sonu. Makro veriler ve merkez bankası kararları bu seçimden bağımsızdır; onları takvimin Bölge süzgeci daraltır (Türkiye, ABD, Avrupa, İngiltere, Japonya)."],
         ["Türkiye verileri", "TÜİK Ulusal Veri Yayımlama Takvimi'nden (TÜİK, TCMB, BDDK, Hazine ve Maliye Bakanlığı, SPK ve diğer kurumlar; otomatik, yaklaşık 2 ay ileri). Son açıklanan değerler TCMB EVDS'ten."],
         ["Merkez bankaları", "TCMB PPK, Fed ve ABD TÜFE resmi takvimlerden; ECB toplantıları ecb.europa.eu'dan, BoE toplantıları bankofengland.co.uk'ten, BoJ toplantıları boj.or.jp'den. Euro Bölgesi verileri Eurostat'tan."],
         ["Bilançolar", "ABD (S&P 500) Alpha Vantage kazanç takviminden; Avrupa ve izleme listesi bilançoları Yahoo Finance'ten (şirketler tarihi değiştirebilir)."],

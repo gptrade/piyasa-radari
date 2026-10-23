@@ -45,7 +45,11 @@
   const daysTo = iso => Math.round((D(iso) - D(todayISO())) / DAY);
   const dLabel = (iso, o) => D(iso).toLocaleDateString("tr-TR", { timeZone: "UTC", ...o });
 
-  const inMarket = e => sh.market === "ALL" || e.market === "ALL" || e.market === sh.market;
+  // Üstteki piyasa seçimi (BIST/ABD) yalnız piyasaya ait olaylara uygulanır: bilanço, temettü, genel kurul/rapor, vade sonu.
+  // Makro veri ve merkez bankası kararları piyasa seçiminden bağımsızdır (Fed kararı BIST için de önemli); onları
+  // takvimin kendi "Bölge" süzgeci daraltır. Eskiden BoE/BoJ "ALL" işaretli olduğu için kalıyor, Fed ve ECB kayboluyordu.
+  const MARKET_KINDS = new Set(["earnings", "dividend", "report", "expiry"]);
+  const inMarket = e => sh.market === "ALL" || !MARKET_KINDS.has(e.kind) || e.market === "ALL" || e.market === sh.market;
   const regionOf = e => e.region || ({ BIST: "TR", US: "US", EU: "EU" })[e.market] || "TR";
   // "Benimkiler" açıkken şirket olayları (bilanço, temettü, genel kurul) yalnız izleme listesi + portföy hisseleri; makro olaylar kalır
   const mineOk = e => !sh.mine || !e.ticker || sh.mineSet().has(e.ticker);

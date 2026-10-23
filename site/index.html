@@ -8,8 +8,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='white'/><path d='M16 16 L24 9' stroke='white' stroke-width='2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="tokens.css?v=20261023d">
-<link rel="stylesheet" href="style.css?v=20261023d">
+<link rel="stylesheet" href="tokens.css?v=20261023e">
+<link rel="stylesheet" href="style.css?v=20261023e">
 <script>
   // Kayıtlı tema ve kenar çubuğu durumu ilk boyamadan önce uygulanır (yanıp sönme olmasın).
   (function () {
@@ -136,7 +136,7 @@
         <button type="button" role="radio" data-market="BIST" aria-checked="false">BIST</button>
         <button type="button" role="radio" data-market="US" aria-checked="false">ABD</button>
       </div>
-      <p class="side-note">Sinyal Takip, Takvim ve Şirket Geri Alım panellerine uygulanır.</p>
+      <p class="side-note">Sinyal Takip, Araştırma ve Şirket Geri Alım'a; Takvim'de yalnız şirket olaylarına (bilanço, temettü, vade sonu) uygulanır. Makro veriler için Takvim'deki Bölge süzgecini kullan.</p>
     </section>
 
     <div class="side-foot">
@@ -165,7 +165,7 @@
           <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m13.2 13.2 3.3 3.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
           <span class="btn-lbl">Ara</span><kbd class="cmd-kbd">⌘K</kbd>
         </button>
-        <div class="seg seg-sm mkt-top" role="radiogroup" aria-label="Piyasa" id="marketTop" hidden>
+        <div class="seg seg-sm mkt-top" role="radiogroup" aria-label="Piyasa" id="marketTop" data-tip="Piyasa: hisse ve şirket olaylarını süzer. Takvim'de makro veriler ve faiz kararları bundan etkilenmez; onlar için Bölge süzgeci." hidden>
           <button type="button" role="radio" data-market="ALL" aria-checked="true">Tümü</button>
           <button type="button" role="radio" data-market="BIST" aria-checked="false">BIST</button>
           <button type="button" role="radio" data-market="US" aria-checked="false">ABD</button>
@@ -447,20 +447,20 @@
   <div class="sp-body" id="spBody"></div>
 </aside>
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="shell.js?v=20261023d"></script>
-<script src="app.js?v=20261023d"></script>
-<script src="calendar.js?v=20261023d"></script>
-<script src="portfolio.js?v=20261023d"></script>
-<script src="research.js?v=20261023d"></script>
-<script src="fundamentals.js?v=20261023d"></script>
-<script src="method.js?v=20261023d"></script>
-<script src="energy.js?v=20261023d"></script>
-<script src="regwatch.js?v=20261023d"></script>
-<script src="bankrate.js?v=20261023d"></script>
-<script src="eventcard.js?v=20261023d"></script>
-<script src="palette.js?v=20261023d"></script>
-<script src="today.js?v=20261023d"></script>
-<script src="buybacks.js?v=20261023d"
+<script src="shell.js?v=20261023e"></script>
+<script src="app.js?v=20261023e"></script>
+<script src="calendar.js?v=20261023e"></script>
+<script src="portfolio.js?v=20261023e"></script>
+<script src="research.js?v=20261023e"></script>
+<script src="fundamentals.js?v=20261023e"></script>
+<script src="method.js?v=20261023e"></script>
+<script src="energy.js?v=20261023e"></script>
+<script src="regwatch.js?v=20261023e"></script>
+<script src="bankrate.js?v=20261023e"></script>
+<script src="eventcard.js?v=20261023e"></script>
+<script src="palette.js?v=20261023e"></script>
+<script src="today.js?v=20261023e"></script>
+<script src="buybacks.js?v=20261023e"
   data-src="/kap-geri-alim-takibi/kap-buybacks.json"
   data-fallback="https://raw.githubusercontent.com/gptrade/kap-geri-alim-takibi/main/site/kap-buybacks.json"></script>
 </body>
