@@ -1,0 +1,25 @@
+mjla.gov.om: sertifika zinciri tamamlanamadı ('issuer')
+CBB rulebook | https://cbben.thomsonreuters.com/ | 200 35122  |  window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments)};gtag("js", new Date());gtag("set", "developer_id.dMDhkMT", true);gtag("con
+CBB rulebook | https://cbben.thomsonreuters.com/rulebook-updates | 404 43546  |  window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments)};gtag("js", new Date());gtag("set", "developer_id.dMDhkMT", true);gtag("con
+CBB rulebook | https://cbben.thomsonreuters.com/robots.txt | 403 239  |  403 Forbidden Forbidden You don't have permission to access this resource. 
+CBB ana | https://www.cbb.gov.bh/feed/ | 403 520  |  403 Forbidden 403 Forbidden 
+CBB ana | https://www.cbb.gov.bh/wp-json/wp/v2/posts?per_page=3 | 403 520  |  403 Forbidden 403 Forbidden 
+CBB ana | https://www.cbb.gov.bh/robots.txt | 403 520  |  403 Forbidden 403 Forbidden 
+BOI | https://www.boi.org.il/en/communication-and-publications/press-releases/ | 200 118357  |  Radware Page html, body { font-family: "Roboto"; color: #264769; height: 100%; overflow: hidden; } .container { width: 100%; height: 100%; display: flex; justi
+BOI | https://www.boi.org.il/robots.txt | 200 65273  |  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0], j=d.createElement(s),dl=l!
+BOI | https://www.gov.il/en/departments/bank_of_israel | 403 5882 BOT |  Just a moment... *{box-sizing:border-box;margin:0;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%;color:#313131;font-family:system-ui,-apple-syst
+BDL | https://www.bdl.gov.lb/circulars.php | 403 5817 BOT |  Just a moment... *{box-sizing:border-box;margin:0;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%;color:#313131;font-family:system-ui,-apple-syst
+BDL | https://www.abl.org.lb/english/circulars | 404 21469  |  Page Not Found - ABL - Association of banks in lebanon window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Da
+BDL | https://www.abl.org.lb/ | 200 51957  |  الصفحة الرئيسية - جمعية مصارف لبنان window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config
+CBAR | https://www.cbar.az/ | HATA ConnectionError ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+CBAR | https://cbar.az/page-41/rss | HATA ConnectionError ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+CBAR | https://e-qanun.az/ | 200 2669  |  {"props":{"pageProps":{}},"page":"/","query":{},"buildId":"DLZNoAr8-sRAexgJEdemO","nextExport":true,"autoExport":true,"isFallback":false,"scriptLoader":[]} 
+CBAR | https://www.cbar.az/rss | HATA ConnectionError ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+CBO | https://qanoon.om/ | 200 153049  |  Qanoon.om img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px} /*# sourceURL=wp-img-auto-sizes-contain-inline-css */ img.wp-smiley, 
+CBO | https://mjla.gov.om/ | HATA SSLError HTTPSConnectionPool(host='mjla.gov.om', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificat
+GNEWS "Central Bank of Bahrain" circular 200 8 [('Tanami closes funding round to power Qatar push - Dealroom', '01 Oct 2026'), ("Solowin Has Bahrain's First Stablecoin License. The Coin Comes Next. -", '28 Aug 2026'), ("Bahrain's Tanami closes funding round with Tali Ventures, Qatar Develo", '15 Sep 2026'), ('Tanami Closes Funding Round Backed by tali ventures, QDB, and 1818 Ven', '15 Sep 2026')]
+GNEWS "Bank of Israel" directive banks 200 8 [("'In a year, we will be in a whole new world': Bank of Israel official'", '27 Sep 2026'), ('The banks made billions from Israelis’ checking accounts. Now they cou', '24 Sep 2026'), ('SAMA Quantum Circular: Crypto Inventory by December 31 - PostQuantum.c', '17 Oct 2026'), ('Israeli lender hopes to open nonprofit bank, ‘do good and do well at s', '20 Oct 2026')]
+GNEWS "Banque du Liban" circular 200 10 [('Lebanon Revokes Bank Saderat’s License, but Hezbollah’s Financial Netw', '16 Oct 2026'), ('BDL tightens oversight of $300m invested in start-ups under Circular 3', '08 Sep 2026'), ("Lebanon's Deposit Withdrawals: Rise or Halt After June 30? - المدن", '05 Sep 2026'), ('The UK Sanctions Hezbollah’s Shadow Bank. Lebanon Should Shut It Down.', '10 Sep 2026')]
+GNEWS site:cbar.az 200 3 [('Central Bank introduces new fees for payment system services - CBAR', '14 Oct 2026'), ('Electronic System for Information Disclosure - CBAR', '16 May 2026'), ('Central Bank Governor Taleh Kazimov speaks at Istanbul Economic Forum ', '09 Oct 2026')]
+GNEWS "Central Bank of Oman" circular 200 0 []
+GNEWS "Mərkəzi Bank" qərar 200 0 []
