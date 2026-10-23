@@ -1,0 +1,9 @@
+GET https://cbo.gov.om/Pages/Circulars.aspx -> HTTPSConnectionPool(host='cbo.gov.om', port=443): Max retries exceeded with url: /Pages/Circulars.aspx (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+GET https://cbo.gov.om/ -> HTTPSConnectionPool(host='cbo.gov.om', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))
+CBO https://cbo.gov.om/Pages/Circulars.aspx HATA SSLError(MaxRetryError("HTTPSConnectionPool(host='cbo.gov.om', port=443): Max retries exceeded with url: /Pages/Circulars.aspx (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))"))
+CBO radar.http https://cbo.gov.om/Pages/Circulars.aspx None
+CBO https://cbo.gov.om/ HATA SSLError(MaxRetryError("HTTPSConnectionPool(host='cbo.gov.om', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)')))"))
+CBO radar.http https://cbo.gov.om/ None
+AV anahtar var: True
+AV 200 ['Information'] {'Information': 'Thank you for using Alpha Vantage! This is a premium endpoint. You may subscribe to any of the premium plans at https://www.alphavantage.co/premium/ to instantly unlock all premium endpoints'}
+AV ilk []
