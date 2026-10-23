@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>Qanoon.om</title>
+	<atom:link href="https://qanoon.om/feed/" rel="self" type="application/rss+xml" />
+	<link>https://qanoon.om</link>
+	<description></description>
+	<lastBuildDate>Sun, 18 Oct 2026 10:06:09 +0000</lastBuildDate>
+	<language>ar</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=7.1.3</generator>
+
+<image>
+	<url>https://qanoon.om/wp-content/uploads/2020/09/cropped-qanoonfavicon-32x32.png</url>
+	<title>Qanoon.om</title>
+	<link>https://qanoon.om</link>
+	<width>32</width>
+	<height>32</height>
+</image> 
+<site xmlns="com-wordpress:feed-additions:1">95163989</site>	<item>
+		<title>مرسوم سلطاني رقم ٩٦ / ٢٠٢٦ بإجازة الاتفاقية النفطية بين حكومة سلطنة عمان وشركة أوكيو للاستكشاف والإنتاج الواحة ش.م.م للمنطقة رقم (٣٦)</title>
+		<link>https://qanoon.om/p/2026/rd2026096/</link>
+		
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<pubDate>Sun, 18 Oct 2026 08:23:53 +0000</pubDate>
+				<category><![CDATA[مرسوم سلطاني]]></category>
+		<guid isPermaLink="false">https://qanoon.om/p/2026/rd2026096/</guid>
+
+					<description><![CDATA[2026/96 96/2026  ٢٠٢٦/٩٦ ٩٦/٢٠٢٦]]></description>
+										<content:encoded><![CDATA[<p><a class="pdf-link" href="https://data.qanoon.om/ar/rd/2026/2026-096.pdf">تحميل</a> <a class="decree-link" title="Royal Decree 96/2026 Approving the Petroleum Agreement Between the Government of the Sultanate of Oman and OQ Exploration and Production Al-Wahah LLC for Block 36" href="https://decree.om/2026/rd20260096/">English</a></p>
+<p>نحن هيثم بن طارق سلطان عمان</p>
+<p>بعد الاطلاع على <a href="https://qanoon.om/p/2021/rd2021006/">النظام الأساسي للدولة</a>،</p>
+<p>وعلى <a href="https://qanoon.om/p/2011/rd2011008/">قانون النفط والغاز الصادر بالمرسوم السلطاني رقم ٨ / ٢٠١١</a>،</p>
+<p>وعلى الاتفاقية النفطية بين حكومة سلطنة عمان وشركة أوكيو للاستكشاف والإنتاج الواحة ش.م.م للمنطقة رقم (٣٦)، الموقعة بتاريخ ٢٤ من سبتمبر ٢٠٢٦م،</p>
+<p>وبناء على ما تقتضيه المصلحة العامة،</p>
+<h3>رسمنا بما هو آت</h3>
+<h3>المادة الأولى</h3>
+<p>إجازة الاتفاقية النفطية المشار إليها.</p>
+<h3>المادة الثانية</h3>
+<p>ينشر هذا المرسوم في الجريدة الرسمية، ويعمل به من تاريخ صدوره.</p>
+<p><strong>صدر في: ٤ من جمادى الأولى سنة ١٤٤٨هـ<br />
+الموافق: ١٥ من أكتوبر سنة ٢٠٢٦م</strong></p>
+<p style="text-align: left;"><strong>هيثم بن طارق<br />
+سلطان عمان</strong></p>
+<p>نشر في <a href="https://qanoon.om/p/2026/og1670/">عدد الجريدة الرسمية رقم (١٦٧٠) الصادر في ١٨ من أكتوبر ٢٠٢٦م</a>.</p>
+]]></content:encoded>
+					
+		
+		
+		<post-id xmlns="com-wordpress:feed-additions:1">43697</post-id>	</item>
+		<item>
+		<title>مرسوم سلطاني رقم ٩٥ / ٢٠٢٦ بإجازة الاتفاقية النفطية بين حكومة سلطنة عمان وشركة أوكيو للاستكشاف والإنتاج غاية ش.م.م للمنطقة رقم (٦٦)</title>
+		<link>https://qanoon.om/p/2026/rd2026095/</link>
+		
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<pubDate>Sun, 18 Oct 2026 08:23:52 +0000</pubDate>
+				<category><![CDATA[مرسوم سلطاني]]></category>
+		<guid isPermaLink="false">https://qanoon.om/p/2026/rd2026095/</guid>
+
+					<description><![CDATA[2026/95 95/2026  ٢٠٢٦/٩٥ ٩٥/٢٠٢٦]]></description>
+										<content:encoded><![CDATA[<p><a class="pdf-link" href="https://data.qanoon.om/ar/rd/2026/2026-095.pdf">تحميل</a> <a class="decree-link" title="Royal Decree 95/2026 Approving the Petroleum Agreement Between the Government of the Sultanate of Oman and OQ Exploration and Production Ghayah LLC for Block 66" href="https://decree.om/2026/rd20260095/">English</a></p>
+<p>نحن هيثم بن طارق سلطان عمان</p>
+<p>بعد الاطلاع على <a href="https://qanoon.om/p/2021/rd2021006/">النظام الأساسي للدولة</a>،</p>
+<p>وعلى <a href="https://qanoon.om/p/2011/rd2011008/">قانون النفط والغاز الصادر بالمرسوم السلطاني رقم ٨ / ٢٠١١</a>،</p>
+<p>وعلى الاتفاقية النفطية بين حكومة سلطنة عمان وشركة أوكيو للاستكشاف والإنتاج غاية ش.م.م للمنطقة رقم (٦٦)، الموقعة بتاريخ ٢٤ من سبتمبر ٢٠٢٦م،</p>
+<p>وبناء على ما تقتضيه المصلحة العامة،</p>
+<h3>رسمنا بما هو آت</h3>
+<h3>المادة الأولى</h3>
+<p>إجازة الاتفاقية النفطية المشار إليها.</p>
+<h3>المادة الثانية</h3>
+<p>ينشر هذا المرسوم في الجريدة الرسمية، ويعمل به من تاريخ صدوره.</p>
+<p><strong>صدر في: ٤ من جمادى الأولى سنة ١٤٤٨هـ<br />
+الموافق: ١٥ من أكتوبر سنة ٢٠٢٦م</strong></p>
+<p style="text-align: left;"><strong>هيثم بن طارق<br />
+سلطان عمان </strong></p>
+<p>نشر في <a href="https://qanoon.om/p/2026/og1670/">عدد الجريدة الرسمية رقم (١٦٧٠) الصادر في ١٨ من أكتوبر ٢٠٢٦م</a>.</p>
+]]></content:encoded>
+					
+		
+		
+		<post-id xmlns="com-wordpress:feed-additions:1">43696</post-id>	</item>
+		<item>
+		<title>مرسوم سلطاني رقم ٩٤ / ٢٠٢٦ بإجازة الاتفاقية النفطية بين حكومة سلطنة عمان وشركة أوكيو للاستكشاف والإنتاج الظاهرة ش.م.م للمنطقة رقم (43A)</title>
+		<link>https://qanoon.om/p/2026/rd2026094/</link>
+		
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<pubDate>Sun, 18 Oct 2026 08:23:51 +0000</pubDate>
+				<category><![CDATA[مرسوم سلطاني]]></category>
+		<guid isPermaLink="false">https://qanoon.om/p/2026/rd2026094/</guid>
+
+					<description><![CDATA[2026/94 94/2026  ٢٠٢٦/٩٤ ٩٤/٢٠٢٦]]></description>
+										<content:encoded><![CDATA[<p><a class="pdf-link" href="https://data.qanoon.om/ar/rd/2026/2026-094.pdf">تحميل</a> <a class="decree-link" title="Royal Decree 94/2026 Approving the Petroleum Agreement Between the Government of the Sultanate of Oman and OQ Exploration and Production Al-Dhahirah LLC for Block 43A" href="https://decree.om/2026/rd20260094/">English</a></p>
+<p>نحن هيثم بن طارق سلطان عمان</p>
+<p>بعد الاطلاع على <a href="https://qanoon.om/p/2021/rd2021006/">النظام الأساسي للدولة</a>،</p>
+<p>وعلى <a href="https://qanoon.om/p/2011/rd2011008/">قانون النفط والغاز الصادر بالمرسوم السلطاني رقم ٨ / ٢٠١١</a>،</p>
+<p>وعلى الاتفاقية النفطية بين حكومة سلطنة عمان وشركة أوكيو للاستكشاف والإنتاج الظاهرة ش.م.م للمنطقة رقم (43A)، الموقعة بتاريخ ٢٤ من سبتمبر ٢٠٢٦م،</p>
+<p>وبناء على ما تقتضيه المصلحة العامة،</p>
+<h3>رسمنا بما هو آت</h3>
+<h3>المادة الأولى</h3>
+<p>إجازة الاتفاقية النفطية المشار إليها.</p>
+<h3>المادة الثانية</h3>
+<p>ينشر هذا المرسوم في الجريدة الرسمية، ويعمل به من تاريخ صدوره.</p>
+<p><strong>صدر في: ٤ من جمادى الأولى سنة ١٤٤٨هـ<br />
+الموافق: ١٥ من أكتوبر سنة ٢٠٢٦م</strong></p>
+<p style="text-align: left;"><strong>هيثم بن طارق<br />
+سلطان عمان</strong></p>
+<p>نشر في <a href="https://qanoon.om/p/2026/og1670/">عدد الجريدة الرسمية رقم (١٦٧٠) الصادر في ١٨ من أكتوبر ٢٠٢٦م</a>.</p>
+]]></content:encoded>
+					
+		
+		
+		<post-id xmlns="com-wordpress:feed-additions:1">43695</post-id>	</item>
+		<item>
+		<title>مرسوم سلطاني رقم ٩٣ / ٢٠٢٦ بإجازة اتفاقية امتياز الاستكشاف والتعدين بين حكومة سلطنة عمان وشركة الخليج الملكية للمعادن والطاقة ش.م.م للمنطقة رقم (25-E)</title>
+		<link>https://qanoon.om/p/2026/rd2026093/</link>
+		
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<pubDate>Sun, 18 Oct 2026 08:23:51 +0000</pubDate>
+				<category><![CDATA[مرسوم سلطاني]]></category>
+		<guid isPermaLink="false">https://qanoon.om/p/2026/rd2026093/</guid>
+
+					<description><![CDATA[2026/93 93/2026  ٢٠٢٦/٩٣ ٩٣/٢٠٢٦]]></description>
+										<content:encoded><![CDATA[<p><a class="pdf-link" href="https://data.qanoon.om/ar/rd/2026/2026-093.pdf">تحميل</a> <a class="decree-link" title="Royal Decree 93/2026 Approving the Exploration and Mining Concession Agreement Between the Government of the Sultanate of Oman and Royal Gulf Minerals and Energy LLC for Block E25" href="https://decree.om/2026/rd20260093/">English</a></p>
+<p>نحن هيثم بن طارق سلطان عمان</p>
+<p>بعد الاطلاع على <a href="https://qanoon.om/p/2021/rd2021006/">النظام الأساسي للدولة</a>،</p>
+<p>وعلى <a href="https://qanoon.om/p/2019/rd2019019/">قانون الثروة المعدنية الصادر بالمرسوم السلطاني رقم ١٩ / ٢٠١٩</a>،</p>
+<p>وعلى اتفاقية امتياز الاستكشاف والتعدين بين حكومة سلطنة عمان وشركة الخليج الملكية للمعادن والطاقة ش.م.م للمنطقة رقم (25-E)، الموقعة بتاريخ ١٠ من سبتمبر ٢٠٢٦م،</p>
+<p>وبناء على ما تقتضيه المصلحة العامة،</p>
+<h3>رسمنا بما هو آت</h3>
+<h3>المادة الأولى</h3>
+<p>إجازة اتفاقية امتياز الاستكشاف والتعدين المشار إليها.</p>
+<h3>المادة الثانية</h3>
+<p>ينشر هذا المرسوم في الجريدة الرسمية، ويعمل به من تاريخ صدوره.</p>
+<p><strong>صدر في: ٤ من جمادى الأولى سنة ١٤٤٨هـ<br />
+الموافق: ١٥ من أكتوبر سنة ٢٠٢٦م</strong></p>
+<p style="text-align: left;"><strong>هيثم بن طارق<br />
+سلطان عمان</strong></p>
+<p>نشر في <a href="https://qanoon.om/p/2026/og1670/">عدد الجريدة الرسمية رقم (١٦٧٠) الصادر في ١٨ من أكتوبر ٢٠٢٦م</a>.</p>
+]]></content:encoded>
+					
+		
+		
+		<post-id xmlns="com-wordpress:feed-additions:1">43694</post-id>	</item>
+		<item>
+		<title>مرسوم سلطاني رقم ٩٢ / ٢٠٢٦ بإجازة اتفاقية امتياز الاستكشاف والتعدين بين حكومة سلطنة عمان وشركة إعمار للتعدين ش.م.م للمنطقة رقم (51-B)</title>
+		<link>https://qanoon.om/p/2026/rd2026092/</link>
+		
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<pubDate>Sun, 18 Oct 2026 08:23:50 +0000</pubDate>
+				<category><![CDATA[مرسوم سلطاني]]></category>
+		<guid isPermaLink="false">https://qanoon.om/p/2026/rd2026092/</guid>
+
+					<description><![CDATA[2026/92 92/2026  ٢٠٢٦/٩٢ ٩٢/٢٠٢٦]]></description>
+										<content:encoded><![CDATA[<p><a class="pdf-link" href="https://data.qanoon.om/ar/rd/2026/2026-092.pdf">تحميل</a> <a class="decree-link" title="Royal Decree 92/2026 Approving the Exploration and Mining Concession Agreement Between the Government of the Sultanate of Oman and Emaar Mining LLC for Block B51" href="https://decree.om/2026/rd20260092/">English</a></p>
+<p>نحن هيثم بن طارق سلطان عمان</p>
+<p>بعد الاطلاع على <a href="https://qanoon.om/p/2021/rd2021006/">النظام الأساسي للدولة</a>،</p>
+<p>وعلى <a href="https://qanoon.om/p/2019/rd2019019/">قانون الثروة المعدنية الصادر بالمرسوم السلطاني رقم ١٩ / ٢٠١٩</a>،</p>
+<p>وعلى اتفاقية امتياز الاستكشاف والتعدين بين حكومة سلطنة عمان وشركة إعمار للتعدين ش.م.م للمنطقة رقم (51-B)، الموقعة بتاريخ ١٠ من سبتمبر ٢٠٢٦م،</p>
+<p>وبناء على ما تقتضيه المصلحة العامة،</p>
+<h3>رسمنا بما هو آت</h3>
+<h3>المادة الأولى</h3>
+<p>إجازة اتفاقية امتياز الاستكشاف والتعدين المشار إليها.</p>
+<h3>المادة الثانية</h3>
+<p>ينشر هذا المرسوم في الجريدة الرسمية، ويعمل به من تاريخ صدوره.</p>
+<p><strong>صدر في: ٤ من جمادى الأولى سنة ١٤٤٨هـ<br />
+الموافق: ١٥ من أكتوبر سنة ٢٠٢٦م</strong></p>
+<p style="text-align: left;"><strong>هيثم بن طارق<br />
+سلطان عمان</strong></p>
+<p>نشر في <a href="https://qanoon.om/p/2026/og1670/">عدد الجريدة الرسمية رقم (١٦٧٠) الصادر في ١٨ من أكتوبر ٢٠٢٦م</a>.</p>
+]]></content:encoded>
+					
+		
+		
+		<post-id xmlns="com-wordpress:feed-additions:1">43693</post-id>	</item>
+		<item>
+		<title>مرسوم سلطاني رقم ٨٩ / ٢٠٢٦ برد الجنسية العمانية</title>
+		<link>https://qanoon.om/p/2026/rd2026089/</link>
+		
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<pubDate>Sun, 18 Oct 2026 08:23:49 +0000</pubDate>
+				<category><![CDATA[مرسوم سلطاني]]></category>
+		<guid isPermaLink="false">https://qanoon.om/p/2026/rd2026089/</guid>
+
+					<description><![CDATA[2026/89 89/2026  ٢٠٢٦/٨٩ ٨٩/٢٠٢٦]]></description>
+										<content:encoded><![CDATA[<p><a class="pdf-link" href="https://data.qanoon.om/ar/rd/2026/2026-089.pdf">تحميل</a> <a class="decree-link" title="Royal Decree 89/2026 Reinstating Omani Nationality" href="https://decree.om/2026/rd20260089/">English</a></p>
+<p>نحن هيثم بن طارق سلطان عمان</p>
+<p>بعد الاطلاع على <a href="https://qanoon.om/p/2021/rd2021006/">النظام الأساسي للدولة</a>،</p>
+<p>وعلى <a href="https://qanoon.om/p/2025/rd2025017/">قانون الجنسية العمانية الصادر بالمرسوم السلطاني رقم ١٧ / ٢٠٢٥</a>،</p>
+<p>وبناء على ما تقتضيه المصلحة العامة،</p>
+<h3>رسمنا بما هو آت</h3>
+<h3>المادة الأولى</h3>
+<p>ترد الجنسية العمانية لكل من الواردة أسماؤهم في القائمة المرفقة.</p>
+<h3>المادة الثانية</h3>
+<p>ينشر هذا المرسوم في الجريدة الرسمية، ويعمل به من تاريخ صدوره.</p>
+<p><strong>صدر في: ١ من جمادى الأولى سنة ١٤٤٨هـ<br />
+الموافق: ١٢ من أكتوبر سنة ٢٠٢٦م</strong></p>
+<p style="text-align: left;"><strong>هيثم بن طارق<br />
+سلطان عمان</strong></p>
+<p>نشر في <a href="https://qanoon.om/p/2026/og1670/">عدد الجريدة الرسمية رقم (١٦٧٠) الصادر في ١٨ من أكتوبر ٢٠٢٦م</a>.</p>
+<p><span id="more-43692"></span></p>
+<h3>قائمة بأسماء من ردت لهم الجنسية العمانية</h3>
+<table>
+<tbody>
+<tr>
+<td width="84"><strong>م</strong></td>
+<td width="539"><strong>الاسم</strong></td>
+</tr>
+<tr>
+<td width="84">١</td>
+<td width="539">حليمه بنت سليمان بن محمد العلوي</td>
+</tr>
+<tr>
+<td width="84">٢</td>
+<td width="539">سالم بن محمد بن حبريش الراشدي</td>
+</tr>
+<tr>
+<td width="84">٣</td>
+<td width="539">شايعه بنت محمد بن حبريش الراشدي</td>
+</tr>
+<tr>
+<td width="84">٤</td>
+<td width="539">شما بنت محمد بن حبريش الراشدي</td>
+</tr>
+<tr>
+<td width="84">٥</td>
+<td width="539">شيخه بنت سالم بن محمد الصقري</td>
+</tr>
+<tr>
+<td width="84">٦</td>
+<td width="539">صفية بنت صالح بن راشد العريمي</td>
+</tr>
+<tr>
+<td width="84">٧</td>
+<td width="539">علي بن سليم بن علي العبري</td>
+</tr>
+<tr>
+<td width="84">٨</td>
+<td width="539">فاطمة بنت سهيل بن علي العمري</td>
+</tr>
+<tr>
+<td width="84">٩</td>
+<td width="539">محمد بن علي بن محمد المرهون</td>
+</tr>
+<tr>
+<td width="84">١٠</td>
+<td width="539">منى بنت سهيل بن علي العمري</td>
+</tr>
+<tr>
+<td width="84">١١</td>
+<td width="539">ناموس بنت محمد بن حبريش الراشدي</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+]]></content:encoded>
+					
+		
+		
+		<post-id xmlns="com-wordpress:feed-additions:1">43692</post-id>	</item>
+		<item>
+		<title>الجريدة الرسمية العدد ١٦٧٠</title>
+		<link>https://qanoon.om/p/2026/og1670/</link>
+		
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<pubDate>Sun, 18 Oct 2026 07:00:00 +0000</pubDate>
+				<category><![CDATA[الجريدة الرسمية]]></category>
+		<guid isPermaLink="false">https://qanoon.om/p/2026/og1670/</guid>
+
+					<description><![CDATA[تحميل مراسيم سلطانية مرسوم سلطاني رقم ٨٩ / ٢٠٢٦ برد الجنسية العمانية. مرسوم سلطاني رقم ٩٠ / ٢٠٢٦ بالتصديق على اتفاقية التعاون الفني بين حكومة سلطنة عمان وحكومة جمهورية أنجولا. مرسوم سلطاني رقم ٩١ / ٢٠٢٦ بالتصديق على اتفاقية بين حكومة سلطنة عمان وحكومة جمهورية أنجولا حول الإعفاء المتبادل من التأشيرة لحاملي جوازات السفر الدبلوماسية [&#8230;]]]></description>
+										<content:encoded><![CDATA[<p><a class="pdf-link" href="https://data.qanoon.om/og/1670.pdf">تحميل</a></p>
+<h3>مراسيم سلطانية</h3>
+<p><a href="https://qanoon.om/p/2026/rd2026089/">مرسوم سلطاني رقم ٨٩ / ٢٠٢٦ برد الجنسية العمانية</a>.</p>
+<p><a href="https://qanoon.om/p/2026/rd2026090/">مرسوم سلطاني رقم ٩٠ / ٢٠٢٦ بالتصديق على اتفاقية التعاون الفني بين حكومة سلطنة عمان وحكومة جمهورية أنجولا</a>.</p>
+<p><a href="https://qanoon.om/p/2026/rd2026091/">مرسوم سلطاني رقم ٩١ / ٢٠٢٦ بالتصديق على اتفاقية بين حكومة سلطنة عمان وحكومة جمهورية أنجولا حول الإعفاء المتبادل من التأشيرة لحاملي جوازات السفر الدبلوماسية والخاصة والخدمة</a>.</p>
+<p><a href="https://qanoon.om/p/2026/rd2026092/">مرسوم سلطاني رقم ٩٢ / ٢٠٢٦ بإجازة اتفاقية امتياز الاستكشاف والتعدين بين حكومة سلطنة عمان وشركة إعمار للتعدين ش.م.م للمنطقة رقم (51-B)</a>.</p>
+<p><a href="https://qanoon.om/p/2026/rd2026093/">مرسوم سلطاني رقم ٩٣ / ٢٠٢٦ بإجازة اتفاقية امتياز الاستكشاف والتعدين بين حكومة سلطنة عمان وشركة الخليج الملكية للمعادن والطاقة ش.م.م للمنطقة رقم (25-E)</a>.</p>
+<p><a href="https://qanoon.om/p/2026/rd2026094/">مرسوم سلطاني رقم ٩٤ / ٢٠٢٦ بإجازة الاتفاقية النفطية بين حكومة سلطنة عمان وشركة أوكيو للاستكشاف والإنتاج الظاهرة ش.م.م للمنطقة رقم (43A)</a>.</p>
+<p><a href="https://qanoon.om/p/2026/rd2026095/">مرسوم سلطاني رقم ٩٥ / ٢٠٢٦ بإجازة الاتفاقية النفطية بين حكومة سلطنة عمان وشركة أوكيو للاستكشاف والإنتاج غاية ش.م.م للمنطقة رقم (٦٦)</a>.</p>
+<p><a href="https://qanoon.om/p/2026/rd2026096/">مرسوم سلطاني رقم ٩٦ / ٢٠٢٦ بإجازة الاتفاقية النفطية بين حكومة سلطنة عمان وشركة أوكيو للاستكشاف والإنتاج الواحة ش.م.م للمنطقة رقم (٣٦)</a>.</p>
+<h3>أوامر سامية بمنح أوسمة</h3>
+<p><strong>ديوان البلاط السلطاني</strong><strong><br />
+المراسم السلطانية</strong></p>
+<p><a href="https://qanoon.om/p/2026/ro20260011/">أمر بمنح وسام</a>.</p>
+<h3>قرارات وزارية</h3>
+<p><strong>وزارة الثروة الزراعية والسمكية وموارد المياه</strong></p>
+<p><a href="https://qanoon.om/p/2026/mafw20260258/">قرار وزاري رقم ٢٥٨ / ٢٠٢٦ بحظر استيراد الطيور الحية من مقاطعة مين ولوار (Loire-et-Maine) في جمهورية فرنسا</a>.</p>
+<p><a href="https://qanoon.om/p/2026/mafw20260259/">قرار وزاري رقم ٢٥٩ / ٢٠٢٦ بحظر استيراد بعض أنواع الأسماك من المنطقة الشمالية في جمهورية سنغافورة</a>.</p>
+<p><a href="https://qanoon.om/p/2026/mafw20260260/">قرار وزاري رقم ٢٦٠ / ٢٠٢٦ بحظر استيراد بعض أنواع القشريات من مقاطعة ييلان في تايوان</a>.</p>
+<p><a href="https://qanoon.om/p/2026/mafw20260261/">قرار وزاري رقم ٢٦١ / ٢٠٢٦ بحظر استيراد الأبقار الحية من اسكتلندا في المملكة المتحدة</a>.</p>
+<p><a href="https://qanoon.om/p/2026/mafw20260262/">قرار وزاري رقم ٢٦٢ / ٢٠٢٦ بحظر استيراد الحيوانات الحية ذات الظلف المشقوق من محافظة سيلنج في جمهورية منغوليا</a>.</p>
+<p><strong>شرطة عمان السلطانية</strong></p>
+<p><a href="https://qanoon.om/p/2026/rop20260145/">قرار رقم ١٤٥ / ٢٠٢٦ بإنشاء أسواق حرة في بعض المنافذ البرية</a>.</p>
+<h3>الإعلانات</h3>
+<p><strong>وزارة العدل والشؤون القانونية</strong></p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ٢٨٣ / ٣ / ٢٠٢٦ بالموافقة على تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ٣٢٠ / ٣ / ٢٠٢٦ بالموافقة على تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ٣٢٩ / ٣ / ٢٠٢٦ بالموافقة على تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ٢١٢ / ٥ / ٢٠٢٦ بالموافقة على تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ١٠٦ / ١٠ / ٢٠٢٦ بالموافقة على تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ١٠٨ / ١٠ / ٢٠٢٦ بالموافقة على تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ١١٤ / ١٠ / ٢٠٢٦ بالموافقة على تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ١١٦ / ١٠ / ٢٠٢٦ بالموافقة على تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ١٠١ / ١١ / ٢٠٢٦ بالموافقة على تعديل عقد تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ١٠٢ / ١١ / ٢٠٢٦ بالموافقة على تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ١٠٣ / ١١ / ٢٠٢٦ بالموافقة على تعديل عقد تأسيس شركة مدنية للمحاماة.</p>
+<p>قرار لجنة شؤون المحامين والمستشارين القانونيين رقم ١٠٥ / ١١ / ٢٠٢٦ بالموافقة على تأسيس شركة مدنية للمحاماة.</p>
+<p><strong>وزارة التجارة والصناعة وترويج الاستثمار</strong></p>
+<p>الإعلانات الخاصة بالنشر عن طلبات تسجيل العلامات التجارية.</p>
+<p>الإعلانات الخاصة بالعلامات التي تم التأشير في السجلات بالترخيص بالانتفاع.</p>
+<p>الإعلانات الخاصة بتجديد مدة حماية علامات تجارية مسجلة.</p>
+<p>الإعلانات الخاصة ببدء أعمال التصفية.</p>
+<p>الإعلانات الخاصة بانتهاء أعمال التصفية.</p>
+<p>إعلان بإنهاء الأعمال المصرفية لدى بنك بيروت (فرع سلطنة عمان).</p>
+<p><strong>البنك المركزي العماني</strong></p>
+<p><a href="https://qanoon.om/p/2026/cbo20269918/">إعلان بشأن القيمة الإجمالية للنقد المتداول في سلطنة عمان حتى نهاية شهر سبتمبر ٢٠٢٦م</a>.</p>
+]]></content:encoded>
+					
+		
+		
+		<post-id xmlns="com-wordpress:feed-additions:1">43686</post-id>	</item>
+		<item>
+		<title>البنك المركزي العماني: إعلان بشأن القيمة الإجمالية للنقد المتداول في سلطنة عمان حتى نهاية شهر سبتمبر ٢٠٢٦م</title>
+		<link>https://qanoon.om/p/2026/cbo20269918/</link>
+		
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<pubDate>Sat, 17 Oct 2026 20:00:00 +0000</pubDate>
+				<category><![CDATA[قرار وزاري]]></category>
+		<category><![CDATA[البنك المركزي العماني]]></category>
+		<guid isPermaLink="false">https://qanoon.om/p/2026/cbo20269918/</guid>
+
+					<description><![CDATA[تحميل English استنادا إلى المادة رقم (٤٨) من القانون المصرفي الصادر بالمرسوم السلطاني رقم ٢ / ٢٠٢٥، يعلن البنك المركزي العماني أن القيمة الإجمالية للنقد المتداول في سلطنة عمان حتى نهاية شهر سبتمبر ٢٠٢٦م قد بلغت: ١,٥٥٦,٥٤٢,٧١٢ (مليارا وخمسمائة وستة وخمسين مليونا وخمسمائة واثنين وأربعين ألفا وسبعمائة واثني عشر ريالا عمانيا فقط). البنك المركزي العماني [&#8230;]]]></description>
+										<content:encoded><![CDATA[<p><a class="pdf-link" href="https://data.qanoon.om/ar/md/cbo/2026-9918.pdf">تحميل</a> <a class="decree-link" title="Central Bank of Oman: Announcement Regarding the Total Value of Currency in Circulation in the Sultanate of Oman up to the End of September 2026" href="https://decree.om/2026/cbo20269918/">English</a></p>
+<p>استنادا إلى المادة رقم (٤٨) من <a href="https://qanoon.om/p/2025/rd2025002/">القانون المصرفي الصادر بالمرسوم السلطاني رقم ٢ / ٢٠٢٥</a>، يعلن البنك المركزي العماني أن القيمة الإجمالية للنقد المتداول في سلطنة عمان حتى نهاية شهر سبتمبر ٢٠٢٦م قد بلغت: ١,٥٥٦,٥٤٢,٧١٢ (مليارا وخمسمائة وستة وخمسين مليونا وخمسمائة واثنين وأربعين ألفا وسبعمائة واثني عشر ريالا عمانيا فقط).</p>
+<p style="text-align: left;"><strong>البنك المركزي العماني</strong></p>
+<p>نشر في <a href="https://qanoon.om/p/2026/og1670/">عدد الجريدة الرسمية رقم (١٦٧٠) الصادر في ١٨ من أكتوبر ٢٠٢٦م</a>.</p>
+]]></content:encoded>
+					
+		
+		
+		<post-id xmlns="com-wordpress:feed-additions:1">43719</post-id>	</item>
+		<item>
+		<title>وزارة الثروة الزراعية والسمكية وموارد المياه: قرار وزاري رقم ٢٦٢ / ٢٠٢٦ بحظر استيراد الحيوانات الحية ذات الظلف المشقوق من محافظة سيلنج في جمهورية منغوليا</title>
+		<link>https://qanoon.om/p/2026/mafw20260262/</link>
+		
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<pubDate>Wed, 14 Oct 2026 20:00:00 +0000</pubDate>
+				<category><![CDATA[قرار وزاري]]></category>
+		<category><![CDATA[وزارة الثروة الزراعية والسمكية وموارد المياه]]></category>
+		<guid isPermaLink="false">https://qanoon.om/p/2026/mafw20260262/</guid>
+
+					<description><![CDATA[2026/262 262/2026  ٢٠٢٦/٢٦٢ ٢٦٢/٢٠٢٦]]></description>
+										<content:encoded><![CDATA[<p><a class="pdf-link" href="https://data.qanoon.om/ar/md/mafw/2026-0262.pdf">تحميل</a> <a class="decree-link" title="Ministry of Agriculture, Fisheries, and Water Resources: Ministerial Decision 262/2026 Banning the Import of Live Cloven Hoof Animals From the Governorate of Selenge in the Republic of Mongolia" href="https://decree.om/2026/mafw20260262/">English</a></p>
+<p>استنادا إلى <a href="https://qanoon.om/p/2004/rd2004045/">قانون الحجر البيطري الصادر بالمرسوم السلطاني رقم ٤٥ / ٢٠٠٤</a>،</p>
+<p>وإلى <a href="https://qanoon.om/p/2008/moa20080107/">اللائحة التنفيذية لقانون الحجر البيطري الصادرة بالقرار الوزاري رقم ١٠٧ / ٢٠٠٨</a>،</p>
+<p>وإلى توصية الجهة البيطرية المختصة بحظر استيراد الحيوانات الحية ذات الظلف المشقوق ومنتجاتها ومشتقاتها ومخلفاتها من محافظة سيلنج في جمهورية منغوليا،</p>
+<p>وبناء على ما تقتضيه المصلحة العامة،</p>
+<h3>تقرر</h3>
+<h3>المادة الأولى</h3>
+<p>يحظر استيراد الحيوانات الحية ذات الظلف المشقوق ومنتجاتها ومشتقاتها ومخلفاتها من محافظة سيلنج في جمهورية منغوليا، وذلك لحين زوال سبب الحظر وصدور قرار بهذا الشأن.</p>
+<p>وتستثنى من ذلك المنتجات والمشتقات والمخلفات المعاملة أو المجهزة حراريا وفقا للقانون الصحي لحيوانات اليابسة الصادر عن &#8211; المكتب الدولي للأوبئة (OIE) &#8211; المنظمة العالمية لصحة الحيوان (WOAH).</p>
+<h3>المادة الثانية</h3>
+<p>على الجهات المختصة تنفيذ هذا القرار، كل في مجال اختصاصه.</p>
+<h3>المادة الثالثة</h3>
+<p>ينشر هذا القرار في الجريدة الرسمية، ويعمل به من اليوم التالي لتاريخ نشره.</p>
+<p><strong>صدر في: ٤ / ٥ / ١٤٤٨هـ<br />
+الموافق: ١٥ / ١٠ / ٢٠٢٦م</strong></p>
+<p style="text-align: left;"><strong>د. سعود بن حمود بن أحمد الحبسي<br />
+وزير الثروة الزراعية والسمكية وموارد المياه   </strong></p>
+<p>نشر في <a href="https://qanoon.om/p/2026/og1670/">عدد الجريدة الرسمية رقم (١٦٧٠) الصادر في ١٨ من أكتوبر ٢٠٢٦م</a>.</p>
+]]></content:encoded>
+					
+		
+		
+		<post-id xmlns="com-wordpress:feed-additions:1">43717</post-id>	</item>
+		<item>
+		<title>وزارة الثروة الزراعية والسمكية وموارد المياه: قرار وزاري رقم ٢٦١ / ٢٠٢٦ بحظر استيراد الأبقار الحية من اسكتلندا في المملكة المتحدة</title>
+		<link>https://qanoon.om/p/2026/mafw20260261/</link>
+		
+		<dc:creator><![CDATA[admin]]></dc:creator>
+		<pubDate>Wed, 14 Oct 2026 20:00:00 +0000</pubDate>
+				<category><![CDATA[قرار وزاري]]></category>
+		<category><![CDATA[وزارة الثروة الزراعية والسمكية وموارد المياه]]></category>
+		<guid isPermaLink="false">https://qanoon.om/p/2026/mafw20260261/</guid>
+
+					<description><![CDATA[2026/261 261/2026  ٢٠٢٦/٢٦١ ٢٦١/٢٠٢٦]]></description>
+										<content:encoded><![CDATA[<p><a class="pdf-link" href="https://data.qanoon.om/ar/md/mafw/2026-0261.pdf">تحميل</a> <a class="decree-link" title="Ministry of Agriculture, Fisheries, and Water Resources: Ministerial Decision 261/2026 Banning the Import of Live Cattle From Scotland in the United Kingdom" href="https://decree.om/2026/mafw20260261/">English</a></p>
+<p>استنادا إلى <a href="https://qanoon.om/p/2004/rd2004045/">قانون الحجر البيطري الصادر بالمرسوم السلطاني رقم ٤٥ / ٢٠٠٤</a>،</p>
+<p>وإلى <a href="https://qanoon.om/p/2008/moa20080107/">اللائحة التنفيذية لقانون الحجر البيطري الصادرة بالقرار الوزاري رقم ١٠٧ / ٢٠٠٨</a>،</p>
+<p>وإلى توصية الجهة البيطرية المختصة بحظر استيراد الأبقار الحية ومنتجاتها ومشتقاتها ومخلفاتها من اسكتلندا في المملكة المتحدة،</p>
+<p>وبناء على ما تقتضيه المصلحة العامة،</p>
+<h3>تقرر</h3>
+<h3>المادة الأولى</h3>
+<p>يحظر استيراد الأبقار الحية ومنتجاتها ومشتقاتها ومخلفاتها من اسكتلندا في المملكة المتحدة، وذلك لحين زوال سبب الحظر وصدور قرار بهذا الشأن.</p>
+<p>وتستثنى من ذلك المنتجات والمشتقات والمخلفات المعاملة أو المجهزة حراريا وفقا للقانون الصحي لحيوانات اليابسة الصادر عن &#8211; المكتب الدولي للأوبئة (OIE) &#8211; المنظمة العالمية لصحة الحيوان (WOAH).</p>
+<h3>المادة الثانية</h3>
+<p>على الجهات المختصة تنفيذ هذا القرار، كل في مجال اختصاصه.</p>
+<h3>المادة الثالثة</h3>
+<p>ينشر هذا القرار في الجريدة الرسمية، ويعمل به من اليوم التالي لتاريخ نشره.</p>
+<p><strong>صدر في: ٤ / ٥ / ١٤٤٨هـ<br />
+الموافق: ١٥ / ١٠ / ٢٠٢٦م</strong></p>
+<p style="text-align: left;"><strong>د. سعود بن حمود بن أحمد الحبسي<br />
+وزير الثروة الزراعية والسمكية وموارد المياه   </strong></p>
+<p>نشر في <a href="https://qanoon.om/p/2026/og1670/">عدد الجريدة الرسمية رقم (١٦٧٠) الصادر في ١٨ من أكتوبر ٢٠٢٦م</a>.</p>
+]]></content:encoded>
+					
+		
+		
+		<post-id xmlns="com-wordpress:feed-additions:1">43716</post-id>	</item>
+	</channel>
+</rss>

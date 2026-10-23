@@ -1,0 +1,32 @@
+GET https://cbben.thomsonreuters.com/cbb-rulebook 200 39313 text/html; charset=UTF-8
+CBB linkler 42
+['/view-revision-updates?f_days=on&amp;changed=-30%20day']
+['/bhb-material', '/cbb-capital-market-regulations', '/cbb-rulebook', '/help', '/laws', '/node/103932', '/node/104101', '/node/104102', '/node/104220', '/node/202239', '/node/202407', '/node/202408', '/node/202509', '/node/2304721', '/node/2304755', '/node/2304756', '/node/2304759', '/node/300002', '/node/302388', '/node/302568', '/node/302569', '/node/400002', '/node/401585', '/node/401692', '/node/401693', '/node/500001', '/node/500002', '/node/500003', '/node/500004', '/node/500005', '/node/500021', '/node/600002', '/node/600003', '/node/600004', '/node/600005', '/node/700002', '/node/700003', '/node/700004', '/node/700005', '/search', '/sites/default/files/favicon.ico', '/view-revision-updates?f_days=on&amp;changed=-30%20day']
+GET https://cbben.thomsonreuters.com/rss.xml 200 317 application/rss+xml; charset=utf-8
+GET https://cbben.thomsonreuters.com/rss 404 43520 text/html; charset=UTF-8
+GET https://cbben.thomsonreuters.com/rulebook-updates-log 404 43554 text/html; charset=UTF-8
+GET https://cbben.thomsonreuters.com/content/rulebook-updates 404 43545 text/html; charset=UTF-8
+GET https://cbben.thomsonreuters.com/search?f%5B0%5D=type%3Arulebook_update 200 41936 text/html; charset=UTF-8
+GET https://e-qanun.az/ 200 2669 text/html; charset=utf-8
+eqanun js ['/_next/static/chunks/polyfills-0d1b80a048d4787e.js', '/_next/static/chunks/webpack-dfeac0d616d438b9.js', '/_next/static/chunks/framework-4556c45dd113b893.js', '/_next/static/chunks/main-25e5079ab4bd6ecd.js', '/_next/static/chunks/pages/_app-0149c819ba842c63.js', '/_next/static/chunks/644-cc407beab4c07881.js', '/_next/static/chunks/325-e8f568a2f89b78c2.js', '/_next/static/chunks/562-26e0872cff68f641.js', '/_next/static/chunks/34-a209859bbcba4b7a.js', '/_next/static/chunks/pages/index-3110c520678852fd.js', '/_next/static/DLZNoAr8-sRAexgJEdemO/_buildManifest.js', '/_next/static/DLZNoAr8-sRAexgJEdemO/_ssgManifest.js']
+GET https://e-qanun.az/_next/static/chunks/polyfills-0d1b80a048d4787e.js 200 91414 application/javascript; charset=UTF-8
+GET https://e-qanun.az/_next/static/chunks/webpack-dfeac0d616d438b9.js 200 2206 application/javascript; charset=UTF-8
+GET https://e-qanun.az/_next/static/chunks/framework-4556c45dd113b893.js 200 140930 application/javascript; charset=UTF-8
+GET https://e-qanun.az/_next/static/chunks/main-25e5079ab4bd6ecd.js 200 108061 application/javascript; charset=UTF-8
+  api t/static/chunks/main-25e5079ab4bd6ecd.js ['/api/']
+GET https://e-qanun.az/_next/static/chunks/pages/_app-0149c819ba842c63.js 200 419118 application/javascript; charset=UTF-8
+  api ic/chunks/pages/_app-0149c819ba842c63.js ['https://images.e-qanun.az/telimat/warning.jpg', 'https://napi.e-qanun.az/', 'http://images.e-qanun.az/telimat/telimat.pdf', 'https://api.e-qanun.az/']
+GET https://e-qanun.az/_next/static/chunks/644-cc407beab4c07881.js 200 8053 application/javascript; charset=UTF-8
+GET https://e-qanun.az/_next/static/chunks/325-e8f568a2f89b78c2.js 200 67676 application/javascript; charset=UTF-8
+GET https://e-qanun.az/_next/static/chunks/562-26e0872cff68f641.js 200 300267 application/javascript; charset=UTF-8
+GET https://e-qanun.az/_next/static/chunks/34-a209859bbcba4b7a.js 200 43761 application/javascript; charset=UTF-8
+  api ext/static/chunks/34-a209859bbcba4b7a.js ['https://napi.e-qanun.az/', 'https://api.e-qanun.az/']
+GET https://e-qanun.az/_next/static/chunks/pages/index-3110c520678852fd.js 200 7828 application/javascript; charset=UTF-8
+  api c/chunks/pages/index-3110c520678852fd.js ['https://e-qanun.az/', 'https://napi.e-qanun.az/', 'https://api.e-qanun.az/']
+GET https://e-qanun.az/_next/static/DLZNoAr8-sRAexgJEdemO/_buildManifest.js 200 1447 application/javascript; charset=UTF-8
+GET https://e-qanun.az/_next/static/DLZNoAr8-sRAexgJEdemO/_ssgManifest.js 200 77 application/javascript; charset=UTF-8
+GET https://qanoon.om/feed/ 200 26170 application/rss+xml; charset=UTF-8
+  qanoon items 10 [('مرسوم سلطاني رقم ٩٦ / ٢٠٢٦ بإجازة الاتفاقية النفطية بين حكومة سلطنة عم', '18 Oct 2026'), ('مرسوم سلطاني رقم ٩٥ / ٢٠٢٦ بإجازة الاتفاقية النفطية بين حكومة سلطنة عم', '18 Oct 2026'), ('مرسوم سلطاني رقم ٩٤ / ٢٠٢٦ بإجازة الاتفاقية النفطية بين حكومة سلطنة عم', '18 Oct 2026'), ('مرسوم سلطاني رقم ٩٣ / ٢٠٢٦ بإجازة اتفاقية امتياز الاستكشاف والتعدين بي', '18 Oct 2026'), ('مرسوم سلطاني رقم ٩٢ / ٢٠٢٦ بإجازة اتفاقية امتياز الاستكشاف والتعدين بي', '18 Oct 2026'), ('مرسوم سلطاني رقم ٨٩ / ٢٠٢٦ برد الجنسية العمانية', '18 Oct 2026'), ('الجريدة الرسمية العدد ١٦٧٠', '18 Oct 2026'), ('البنك المركزي العماني: إعلان بشأن القيمة الإجمالية للنقد المتداول في س', '17 Oct 2026')]
+GET https://qanoon.om/?s=Central+Bank&feed=rss2 200 1194 application/rss+xml; charset=UTF-8
+  qanoon items 0 []
+GET https://qanoon.om/wp-json/wp/v2/categories?per_page=100 200 10295 application/json; charset=UTF-8
