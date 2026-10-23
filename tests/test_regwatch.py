@@ -91,3 +91,16 @@ def test_table_status_column_parsed():
     <tr><td>4821</td><td><a href="/en/y">Old Liquidity Rules for licensed banks</a></td><td>01/02/2013</td><td>Modified</td></tr></table>"""
     rows = regwatch.from_table(html, "https://rulebook.sama.gov.sa/en/banking-sector-circulars")
     assert [r.get("status") for r in rows] == ["yururlukte", "degisti"]
+
+
+def test_from_gnews_strips_publisher_and_generic_titles():
+    from radar import regwatch as R
+    rss = """<rss><channel>
+    <item><title>CBB Ijara Murabaha Sukuk Fully subscribed - Central Bank of Bahrain</title><link>https://news.google.com/rss/articles/A1</link><pubDate>Thu, 22 Oct 2026 08:00:00 GMT</pubDate></item>
+    <item><title>BANQUE DU LIBAN - Central Bank of Lebanon</title><link>https://news.google.com/rss/articles/A2</link><pubDate>Mon, 19 Oct 2026 08:00:00 GMT</pubDate></item>
+    <item><title>Protected: Privacy Notice - Central Bank of Bahrain</title><link>https://news.google.com/rss/articles/A3</link><pubDate>Mon, 07 Sep 2026 08:00:00 GMT</pubDate></item>
+    </channel></rss>"""
+    out = R.from_gnews(rss, {"skip": ["^Protected:"]})
+    assert [o["title"] for o in out] == ["CBB Ijara Murabaha Sukuk Fully subscribed"]
+    assert out[0]["date"] == "2026-10-22" and out[0]["via"] == "Google News"
+    assert "site%3Acbb.gov.bh" in R.gnews_url("cbb.gov.bh")

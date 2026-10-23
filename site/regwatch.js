@@ -56,7 +56,7 @@
 </td>
         <td class="rg-date">${it.effective ? `<span class="${it.effective > today() ? "rg-eff" : ""}" data-tip="${it.effective > today() ? "Henüz yürürlükte değil" : "Yürürlüğe girdi"}">${esc(fmt.date(it.effective + "T12:00:00Z", { day: "numeric", month: "short", year: "numeric" }))}</span>` : ""}
           ${it.status ? `<span class="tag ${it.status === "yururlukte" ? "up" : it.status === "kaldirildi" ? "down" : "warn"}">${esc(STATUS[it.status] || it.status)}</span>` : it.effective ? "" : `<span class="meta">—</span>`}</td>
-        <td class="rg-title"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)} ↗</a>${it.title_tr && it.title_tr !== it.title ? `<span class="rg-tr-title">${esc(it.title_tr)}</span>` : ""}${it.summary ? `<p class="rg-s">${esc(it.summary)}</p>` : ""}</td>
+        <td class="rg-title"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)} ↗</a>${it.via ? ` <span class="tag" data-tip="Kurumun sitesi sunucumuza kapalı; bu sayfa Google News dizininden geliyor">${esc(it.via)}</span>` : ""}${it.title_tr && it.title_tr !== it.title ? `<span class="rg-tr-title">${esc(it.title_tr)}</span>` : ""}${it.summary ? `<p class="rg-s">${esc(it.summary)}</p>` : ""}</td>
         <td><span class="tag ${it.type === "taslak" ? "warn" : it.type === "nihai" ? "up" : ""}">${esc(d.types[it.type] || it.type)}</span></td>
         <td class="rg-topics">${(it.topics || []).map(k => `<span class="rg-chip">${esc(d.topicById[k] || k)}</span>`).join("")}</td></tr>`; }).join("")}
       </tbody></table>
@@ -68,8 +68,9 @@
     const cnt = {}; d.items.forEach(it => { if (it.relevant) cnt[it.reg] = (cnt[it.reg] || 0) + 1; });
     return `<section class="card" aria-labelledby="rgCovT"><div class="card-head"><h2 class="card-title" id="rgCovT">Kaynak durumu</h2><span class="card-meta">kurum sayfaları her gün okunur</span></div>
       <div class="rg-cov">${(d.regulators || []).map(r => { const x = st[r.id] || {};
-        const msg = r.blocked ? esc(r.blocked) : x.ok ? `okundu · ${x.n} bağlantı · ${cnt[r.id] || 0} ilgili doküman${x.why ? " · " + esc(x.why) : ""}` : esc(x.why || "okunamadı");
-        return `<div class="rg-cov-i ${r.blocked || !x.ok ? "bad" : ""}"><b>${esc(r.name)}</b><span class="meta">${msg}${r.note ? ` · ${esc(r.note)}` : ""}</span></div>`; }).join("")}</div></section>`;
+        const viaG = x.via ? " · Google News üzerinden" : "";
+        const msg = r.blocked && !r.sources?.length ? esc(r.blocked) : x.ok ? `okundu${viaG} · ${x.n} bağlantı · ${cnt[r.id] || 0} ilgili doküman${x.why ? " · " + esc(x.why) : ""}` : esc(x.why || "okunamadı") + (r.blocked ? " · " + esc(r.blocked) : "");
+        return `<div class="rg-cov-i ${(r.blocked && !r.sources?.length) || !x.ok ? "bad" : x.via ? "part" : ""}"><b>${esc(r.name)}</b><span class="meta">${msg}${r.note ? ` · ${esc(r.note)}` : ""}</span></div>`; }).join("")}</div></section>`;
   }
   function render() {
     if (sh.route !== "regulasyon") return;
