@@ -238,7 +238,7 @@
   function overview() {
     const d = S.doc;
     return `${kpis()}${sourceCards()}<div class="en-2col">${national()}${opVsPipe()}</div>${abroadCard()}
-      <p class="en-note">Santraller, konumlar ve sahiplik <b>Global Energy Monitor</b> Integrated Power ve Ownership izleyicilerinden gelir (yılda yaklaşık iki kez güncellenir; aktarım ${esc(d.gem.imported || "")}). Grup kapasitesi <b>pay oranına göredir</b>: ortak girişimlerde her ortağa payı kadar MW yazılır. Yurt dışı santraller yalnız sahibi ya da ana ortağı Türkiye'de kayıtlı bir şirketse alınır ve Türkiye toplamlarına katılmaz. Kapsam dışı: 1 MW altı güneş ve izleyici eşiğinin altındaki küçük santraller.</p>`;
+      <p class="en-note">Global Energy Monitor (aktarım ${esc(d.gem.imported || "")}) ve EPİAŞ · grup kapasitesi pay oranına göre · ${window.radarMethod?.link("enerji") || ""}</p>`;
   }
 
   // ─────────────────────────────── Harita (Leaflet + kendi taban haritamız)

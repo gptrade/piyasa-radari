@@ -233,7 +233,7 @@
     // portföy haberleri
     html += newsHTML();
     html += formHTML();
-    html += `<p class="k-note">Pozisyonlar yalnız bu tarayıcıda (localStorage) saklanır, sunucuya gönderilmez; tarayıcı verisi silinirse kaybolur — Dışa aktar → Portföy yedeği (JSON) ile yedekle. Fiyatlar son taramadan (15 dk); izleme listesi dışındaki BIST hisseleri için geri alım fiyat listesi, o da yoksa elle girilen fiyat kullanılır. ABD pozisyonları ${fxSrc()} USD/TRY kuruyla TL'ye çevrilir. Betalar son 60 günde kendi endeksine (BIST 100 / S&P 500) göre. Bu bir takip aracıdır, yatırım tavsiyesi değildir.</p>`;
+    html += `<p class="k-note">Pozisyonlar yalnız bu tarayıcıda saklanır, sunucuya gönderilmez — Dışa aktar → Portföy yedeği (JSON) ile yedekle. Bu bir takip aracıdır, yatırım tavsiyesi değildir · ${window.radarMethod?.link("portfoy") || ""}</p>`;
     box.innerHTML = html;
     bindForm(); bindTable(); badge();
   }

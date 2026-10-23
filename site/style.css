@@ -1580,3 +1580,13 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
   .ok-tbl td:first-child { white-space: normal; }
 }
 .ema-tf { margin: 0 0 var(--s-2); }
+
+/* ─────────────── Metodoloji */
+.m-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: var(--s-4); }
+.m-tab { padding: 6px 12px; border-radius: var(--r-pill); border: 1px solid var(--border); color: var(--text-2); font-size: var(--fs-sm); text-decoration: none; }
+.m-tab:hover { border-color: var(--text-3); color: var(--text); }
+.m-tab[aria-current="page"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); font-weight: var(--fw-semibold); }
+.m-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-3); }
+.m-grid { display: grid; gap: var(--s-4); grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); align-items: start; }
+.m-link { font-weight: var(--fw-medium); color: var(--accent-ink); white-space: nowrap; }
+.m-foot { margin: 0; font-size: var(--fs-sm); }

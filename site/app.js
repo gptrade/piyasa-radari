@@ -1411,8 +1411,7 @@
         <td class="num">${r.x1 == null ? "—" : kPct(r.x1, 1)}</td><td class="num">${r.x5 == null ? "—" : kPct(r.x5, 1)}</td><td class="num">${r.x20 == null ? "—" : kPct(r.x20, 1)}</td>
         <td class="num">${ok == null ? `<span class="t3">bekliyor</span>` : ok ? `<span class="up" aria-label="isabetli">✓</span>` : `<span class="down" aria-label="isabetsiz">✕</span>`}</td></tr>`; }).join("")}
       </tbody></table></div>`;
-    if (alt) html += `<p class="k-note"><b>Önceki kapanıştan:</b> aynı sinyaller olay veritabanından ölçülür. Getiri, olaydan (haber/bildirim) önceki son kapanıştan başlar; böylece sinyal yayımlanmadan önce fiyata yansıyan tepki de sayılır. Kıyas BIST'te eşit ağırlıklı BIST Tüm, ABD'de S&P 500. "Sinyal anından" ile fark büyükse, fiyat sinyal panele düşmeden önce hareket etmiş demektir.</p>`;
-    html += `<p class="k-note">Yöntem: yönlü sinyaller (olumlu/olumsuz) yayın anındaki fiyatla arşivlenir; aynı hisse, olay ve yön 12 saat içinde bir kez sayılır. Getiri, yayından sonraki 1., 5. ve 20. tam seans kapanışına kadar; fazla getiri aynı aralıkta ${market() === "US" ? "S&P 500" : market() === "BIST" ? "BIST 100" : "BIST 100 / S&P 500"} getirisi düşülerek hesaplanır. Son 180 gün tutulur. Geçmiş isabet gelecek getirinin garantisi değildir.</p>`;
+    html += `<p class="k-note">Ölçüm: ${alt ? "olaydan önceki kapanıştan, BIST'te eşit ağırlıklı BIST Tüm'e göre" : "sinyalin yayın anındaki fiyattan, endekse göre"} · geçmiş isabet gelecek getirinin garantisi değildir · ${window.radarMethod?.link("sinyal") || ""}</p>`;
     box.innerHTML = html;
     $$(".seg", box).forEach(sg => sh.radioKeys(sg));
   }

@@ -367,7 +367,7 @@
     const showRatio = aggregate(period).some(o => o.ratio != null);
     const W = Math.max(280, Math.round((body.getBoundingClientRect().width || 720) - 34));
     const qAt = S.quotesAt ? ` · güncel fiyatlar ${fmt.dt(S.quotesAt)}` : "";
-    $("#bbSrc").innerHTML = `Kaynak: <a href="https://github.com/gptrade/kap-geri-alim-takibi" target="_blank" rel="noopener">kap-geri-alim-takibi</a> · son bildirim ${fmt.dt(S.updated)} · ${fmt.int(S.rows.length)} kayıt${qAt}`;
+    $("#bbSrc").innerHTML = `Kaynak: <a href="https://github.com/gptrade/kap-geri-alim-takibi" target="_blank" rel="noopener">kap-geri-alim-takibi</a> · son bildirim ${fmt.dt(S.updated)} · ${fmt.int(S.rows.length)} kayıt${qAt} · ${window.radarMethod?.link("geri-alim") || ""}`;
     const scroll = $(".bb-scroll")?.scrollTop || 0;
     body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis(period, aggregate(period))}${dailyChart(period, aggregate(period), W)}${table(agg, showRatio)}</div>`;
     if ($(".bb-scroll")) $(".bb-scroll").scrollTop = scroll;

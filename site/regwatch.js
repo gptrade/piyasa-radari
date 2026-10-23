@@ -81,7 +81,7 @@
     $("#rgSrc").innerHTML = `Kaynak: kurumların resmi yayın sayfaları · faiz kararları, enflasyon raporları ve rutin makro duyurular hariç · ${fmt.int(d.items.filter(i => i.relevant).length)} ilgili doküman · güncelleme ${fmt.dt(d.generated)}`;
     const rows = filtered();
     $("#rgBody").innerHTML = `<div class="view" style="gap:var(--s-4)">${summaryCard()}${table(rows)}${coverage()}
-      <p class="en-note">Dokümanlar kurumların kendi duyuru, sirküler ve yayın sayfalarından her gün okunur; başlıklar ücretsiz bir AI modeliyle risk yönetimi ve model validasyonu açısından süzülür, konu etiketleri ve Türkçe özetler de AI ile üretilir — bağlayıcılık ve yürürlük tarihi için orijinal dokümana bak. Bot korumalı ya da yurt dışı erişime kapalı kurumlar “Kaynak durumu” bölümünde belirtilir; bu kurumların korumaları aşılmaz. İlk taramada tarihi olmayan eski bağlantılar dönem süzgecine girmez.</p></div>`;
+      <p class="en-note">Kurumların kendi yayın sayfaları · AI ile süzülür ve özetlenir; bağlayıcılık için orijinal dokümana bak · ${window.radarMethod?.link("regulasyon") || ""}</p></div>`;
     $("#rgMore")?.addEventListener("click", () => { S.limit += 40; render(); });
   }
   function renderLoading() {
