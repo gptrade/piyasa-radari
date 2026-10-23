@@ -14,28 +14,41 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Regülasyon alternatif kanallar 2
+      - name: Regülasyon alternatif siteler
         run: |
-          mkdir -p probe
+          mkdir -p probe/alt
           pip install -q -r requirements.txt
-          python - > probe/log15.txt 2>&1 <<'PY' || true
-          import re
-          from urllib.parse import quote_plus
+          python - > probe/log16.txt 2>&1 <<'PY' || true
+          import re, json
           from radar.regwatch import Fetcher
           f = Fetcher()
-          for q in ["site:cbb.gov.bh", "site:boi.org.il", "site:bdl.gov.lb", "site:cbo.gov.om", "site:cbar.az", "site:centralbank.ae"]:
-              for hl in ("hl=en-US&gl=US&ceid=US:en",):
-                  u = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:120d&{hl}"
-                  r = f.s.get(u, timeout=30)
+          def get(u, save=None, **kw):
+              try:
+                  r = f.s.get(u, timeout=40, verify=f._verify(u), **kw)
+              except Exception as e:
+                  print("HATA", u, type(e).__name__); return None
+              print("GET", u, r.status_code, len(r.text), r.headers.get("content-type", "")[:40])
+              if save: open("probe/alt/" + save, "w", encoding="utf-8").write(r.text)
+              return r
+          r = get("https://cbben.thomsonreuters.com/cbb-rulebook", "cbb_rulebook.html")
+          if r is not None:
+              links = sorted(set(re.findall(r'href="(/[^"#]{3,120})"', r.text)))
+              print("CBB linkler", len(links)); print([l for l in links if re.search(r"updat|new|change|amend|consult|circular|notice|log", l, re.I)][:40]); print(links[:80])
+          for u in ["https://cbben.thomsonreuters.com/rss.xml", "https://cbben.thomsonreuters.com/rss", "https://cbben.thomsonreuters.com/rulebook-updates-log", "https://cbben.thomsonreuters.com/content/rulebook-updates", "https://cbben.thomsonreuters.com/search?f%5B0%5D=type%3Arulebook_update"]:
+              get(u)
+          r = get("https://e-qanun.az/", "eqanun.html")
+          if r is not None:
+              js = re.findall(r'src="(/_next/static/[^"]+\.js)"', r.text); print("eqanun js", js[:12])
+              for j in js[:12]:
+                  rr = get("https://e-qanun.az" + j)
+                  if rr is not None:
+                      apis = set(re.findall(r'https?://[a-z0-9.-]*e-qanun\.az[^"\'` ]{0,80}', rr.text)) | set(re.findall(r'"(/api/[^"]{0,80})"', rr.text))
+                      if apis: print("  api", j[-40:], list(apis)[:15])
+          for u in ["https://qanoon.om/feed/", "https://qanoon.om/?s=Central+Bank&feed=rss2", "https://qanoon.om/wp-json/wp/v2/categories?per_page=100"]:
+              r = get(u, u.split("/")[-1][:20].replace("?", "_") + ".txt")
+              if r is not None and "rss" in u or (r is not None and "feed" in u):
                   items = re.findall(r"<item>.*?<title>(.*?)</title>.*?<pubDate>(.*?)</pubDate>", r.text, re.S)
-                  print("GNEWS", q, len(items), [(t[:80], d[5:16]) for t, d in items[:6]])
-          for u in ["https://cbben.thomsonreuters.com/sitemap.xml", "https://cbben.thomsonreuters.com/rulebook/whats-new", "https://cbben.thomsonreuters.com/latest-updates"]:
-              r = f.s.get(u, timeout=30); print("CBBRB", u, r.status_code, len(r.text), re.sub(r"\s+"," ",r.text[:200]))
-          r = f.s.get("https://cbben.thomsonreuters.com/", timeout=30)
-          links = sorted(set(re.findall(r'href="(/[^"#?]{3,80})"', r.text)))
-          print("CBBRB linkler", len(links), links[:60])
-          r = f.s.get("https://www.abl.org.lb/", timeout=30)
-          print("ABL linkler", sorted(set(l for l in re.findall(r'href="([^"]+)"', r.text) if "circ" in l.lower() or "تعاميم" in l or "bdl" in l.lower()))[:20])
+                  print("  qanoon items", len(items), [(t[:70], d[5:16]) for t, d in items[:8]])
           PY
 
       - name: kaydet
