@@ -1083,14 +1083,14 @@
   function faSection(sym, f) {
     if (!f) return null;
     const v = f.v || {}, r = f.r || {}, gt = window.radarFundamentals.gradeTag;
-    const cell = (l, val, tip) => `<div class="fa-mini-c" ${tip ? `data-tip="${esc(tip)}"` : ""}><span class="t3">${l}</span><b class="mono">${val}</b></div>`;
+    const cell = (l, val, tip) => `<div class="tp-mini-c" ${tip ? `data-tip="${esc(tip)}"` : ""}><span class="t3">${l}</span><b class="mono">${val}</b></div>`;
     const x = (n, d = 1) => n == null || !isFinite(n) ? "—" : fmt.num(n, d) + "x";
     const sec = document.createElement("div");
     sec.className = "tp-sec";
     sec.innerHTML = `<p class="d-sub">Temel analiz <span class="t3">· ${esc(f.period || "")} bilanço</span></p>
-      <div class="fa-mini">${cell("Not", gt(f.grade, f.grade_label || ""), "Genel puan " + (f.overall ?? "—") + "/100")}${cell("Kalite", f.quality ?? "—", "Kârlılık, büyüme, borçluluk ve nakit kalitesi puanı (0–100)")}
+      <div class="tp-mini">${cell("Not", gt(f.grade, f.grade_label || ""), "Genel puan " + (f.overall ?? "—") + "/100")}${cell("Kalite", f.quality ?? "—", "Kârlılık, büyüme, borçluluk ve nakit kalitesi puanı (0–100)")}
         ${cell("Değerleme", f.valuation_score ?? "—", "Çarpanların sektörüne ve geçmişine göre ucuzluk puanı (0–100)")}${cell("F/K", x(v.pe))}${cell("PD/DD", x(v.pb, 2))}${cell("FD/FAVÖK", x(v.ev_ebitda))}
-        ${cell("Özsermaye kârlılığı", r.roe == null ? "—" : fmt.pct(r.roe * 100, 0, false))}${cell("İçsel değere göre", f.potential == null ? "—" : `<span class="${f.potential > 0 ? "up" : "down"}">${fmt.pct(f.potential * 100, 0)}</span>`, f.intrinsic ? `İçsel değer tahmini ${fmt.num(f.intrinsic, 2)} ₺ (temel analiz yöntemi; kesin değil)` : "")}</div>
+        ${cell("Özsermaye kârlılığı", r.roe == null ? "—" : fmt.pct(r.roe * 100, 0, false))}${cell("İçsel değere göre", f.potential == null ? "—" : `<span class="${f.potential > 0.005 ? "up" : f.potential < -0.005 ? "down" : ""}">${fmt.pct(f.potential * 100, 0)}</span>`, f.intrinsic ? `İçsel değer tahmini ${fmt.num(f.intrinsic, 2)} ₺ (temel analiz yöntemi; kesin değil)` : "")}</div>
       <p class="tp-more"><a href="#hisse/${esc(sym)}">Temel analiz kartını aç →</a></p>`;
     return sec;
   }

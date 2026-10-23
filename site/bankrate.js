@@ -213,10 +213,10 @@
     const sec = document.createElement("div");
     sec.className = "tp-sec";
     sec.innerHTML = `<p class="d-sub">Faiz duyarlılığı <span class="t3">· ${esc(b.period)} · ${b.n} çeyrek</span></p>
-      <div class="fa-mini">
-        <div class="fa-mini-c" data-tip="100 bp politika faizi indiriminin 12 ayda net faiz marjına etkisi"><span class="t3">100 bp indirim</span><b class="mono ${cls(p100?.dnim_bp)}">${bp(p100?.dnim_bp)}</b></div>
-        <div class="fa-mini-c" data-tip="Anket beklentisi (${d > 0 ? "+" : "−"}${fmt.num(Math.abs(d ?? 0), 2)} puan) ile 12 ayda NIM değişimi"><span class="t3">Beklenti senaryosu</span><b class="mono ${cls(s?.dnim_bp)}">${bp(s?.dnim_bp)}</b></div>
-        <div class="fa-mini-c" data-tip="Senaryoda son 12 ay net kâra göre değişim"><span class="t3">Net kâr</span><b class="mono ${cls(s?.net_pct)}">${s?.net_pct == null ? "—" : fmt.pct(s.net_pct, 0)}</b></div>
+      <div class="tp-mini">
+        <div class="tp-mini-c" data-tip="100 bp politika faizi indiriminin 12 ayda net faiz marjına etkisi"><span class="t3">100 bp indirim</span><b class="mono ${cls(p100?.dnim_bp)}">${bp(p100?.dnim_bp)}</b></div>
+        <div class="tp-mini-c" data-tip="Anket beklentisi (${d > 0 ? "+" : "−"}${fmt.num(Math.abs(d ?? 0), 2)} puan) ile 12 ayda NIM değişimi"><span class="t3">Beklenti senaryosu</span><b class="mono ${cls(s?.dnim_bp)}">${bp(s?.dnim_bp)}</b></div>
+        <div class="tp-mini-c" data-tip="Senaryoda son 12 ay net kâra göre değişim"><span class="t3">Net kâr</span><b class="mono ${cls(s?.net_pct)}">${s?.net_pct == null ? "—" : fmt.pct(s.net_pct, 0)}</b></div>
       </div>
       <p class="tp-more"><a href="#banka-faiz/${esc(code)}">Banka faiz duyarlılığını aç →</a></p>`;
     return sec;

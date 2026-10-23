@@ -1512,9 +1512,9 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .tk-pi:hover { color: var(--accent-ink); background: var(--accent-soft); }
 .tp-acts { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 .tp-acts .btn { text-decoration: none; }
-.fa-mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
-.fa-mini-c { display: grid; gap: 2px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-2); font-size: var(--fs-xs); min-width: 0; }
-.fa-mini-c b { font-size: var(--fs-sm); color: var(--text); }
+.tp-mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+.tp-mini-c { display: grid; gap: 2px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-2); font-size: var(--fs-xs); min-width: 0; }
+.tp-mini-c b { font-size: var(--fs-sm); color: var(--text); }
 .tr-plot { position: relative; height: 22px; margin: var(--s-2) 6px 2px; }
 .tr-plot::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--surface-3); border-radius: 1px; }
 .tr-rng { position: absolute; top: 9px; height: 4px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 2px; }
@@ -1522,7 +1522,7 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .tr-med { position: absolute; top: 4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); }
 .tr-px { position: absolute; top: 0; width: 3px; height: 22px; margin-left: -1.5px; background: var(--text); border-radius: 1px; }
 .tr-leg { display: flex; flex-wrap: wrap; gap: 2px var(--s-3); font-size: var(--fs-xs); }
-@media (max-width: 767px) { .fa-mini { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767px) { .tp-mini { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* ─────────────── Banka faiz duyarlılığı */
 #brBody { display: grid; gap: var(--s-4); }
