@@ -155,6 +155,29 @@ def from_rss(text: str, base: str) -> list[dict]:
     return out
 
 
+GNEWS_SKIP = (r"^(Protected:|Privacy|Cookie|Contact|Careers?|Sitemap|Home|Search|Login)\b", r"^Historical Exchange Rates", r"Exchange Rates?$")
+
+
+def gnews_url(site: str, days: int = 120) -> str:
+    """Google News RSS: kurum alan adındaki sayfalar (site:). Kurum sitesi bizim sunucuya kapalıyken (bot koruması,
+    yurt dışı engeli) Google'ın dizinindeki resmi sayfalar; koruma aşılmaz, Google'ın herkese açık RSS'i okunur."""
+    from urllib.parse import quote_plus
+    return f"https://news.google.com/rss/search?q={quote_plus('site:' + site)}+when:{days}d&hl=en-US&gl=US&ceid=US:en"
+
+
+def from_gnews(text: str, src: dict) -> list[dict]:
+    """Google News RSS → doküman. Başlıktaki " - Yayıncı" eki atılır; kurum adından ibaret genel başlıklar
+    (ör. "BANQUE DU LIBAN") ve "skip" listesindeki kalıplar elenir. Bağlantı Google News yönlendirmesidir."""
+    skip = [re.compile(p, re.I) for p in [*GNEWS_SKIP, *(src.get("skip") or [])]]
+    out = []
+    for it in from_rss(text, "https://news.google.com/"):
+        title = re.sub(r"\s+-\s+[^-]{2,80}$", "", it["title"]).strip()
+        if len(title) < 15 or title.isupper() and len(title.split()) <= 4 or any(p.search(title) for p in skip):
+            continue
+        out.append({**it, "title": title, "desc": "", "via": "Google News"})
+    return out
+
+
 def from_html(text: str, base: str) -> list[dict]:
     """Tarihli bağlantılar: metni ≥18 karakter olan, kurumun alan adındaki (ya da PDF) bağlantılar; tarih bağlantının
     yakın atasındaki metinden."""
@@ -253,18 +276,20 @@ def collect(cfg: dict, f: Fetcher | None = None) -> tuple[list[dict], dict]:
     f = f or Fetcher()
     items, status = [], {}
     for reg in cfg["regulators"]:
-        if reg.get("blocked"):
+        if reg.get("blocked") and not reg.get("sources"):
             status[reg["id"]] = {"ok": False, "why": reg["blocked"], "n": 0}
             continue
         n, errs = 0, []
         for src in reg.get("sources") or []:
+            if src["type"] == "gnews":
+                src = {**src, "url": gnews_url(src["site"], src.get("days", 120))}
             r = f.get(src["url"], headers={"Accept": "application/json;odata=verbose"} if src["type"] == "sp" else None)
             if r is None:
                 errs.append(urlparse(src["url"]).path[:40] or "/")
                 continue
             r.encoding = r.encoding or "utf-8"
             text = r.text
-            got = (from_rss(text, src["url"]) if src["type"] == "rss" else from_table(text, src["url"]) if src["type"] == "table"
+            got = (from_gnews(text, src) if src["type"] == "gnews" else from_rss(text, src["url"]) if src["type"] == "rss" else from_table(text, src["url"]) if src["type"] == "table"
                    else from_sp(text, src) if src["type"] == "sp" else from_html(text, src["url"]))
             got = [g for g in got if g["date"]]                   # tarihsiz bağlantılar çoğunlukla menü/gezinme ya da arşiv
             for it in got:
@@ -272,7 +297,8 @@ def collect(cfg: dict, f: Fetcher | None = None) -> tuple[list[dict], dict]:
                 items.append(tidy(reg["id"], it))
             n += len(got)
             time.sleep(getattr(f, "gap", 1.0))
-        status[reg["id"]] = {"ok": n > 0, "n": n, "why": ("okunamayan: " + ", ".join(errs)) if errs else None}
+        status[reg["id"]] = {"ok": n > 0, "n": n, "why": ("okunamayan: " + ", ".join(errs)) if errs else None,
+                             **({"via": "Google News"} if any(s["type"] == "gnews" for s in reg.get("sources") or []) else {})}
         log.info("%s: %d bağlantı%s", reg["name"], n, f" (hata: {errs})" if errs else "")
     return items, status
 
@@ -423,7 +449,7 @@ def run(today: dt.date | None = None, analyzer=None, fetcher: Fetcher | None = N
             st["summary"] = s
     st["status"] = status
     st["regulators"] = [{"id": r["id"], "name": r["name"], "country": r["country"], "blocked": r.get("blocked"), "note": r.get("note"),
-                         "sources": [s["url"] for s in r.get("sources") or []]} for r in cfg["regulators"]]
+                         "sources": [s.get("url") or gnews_url(s["site"]) for s in r.get("sources") or []]} for r in cfg["regulators"]]
     st["topics"] = cfg["topics"]
     st["types"] = TYPES
     st["generated"] = now
