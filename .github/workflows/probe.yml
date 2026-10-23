@@ -14,37 +14,28 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Regülasyon alternatif kanallar
+      - name: Regülasyon alternatif kanallar 2
         run: |
           mkdir -p probe
           pip install -q -r requirements.txt
-          python - > probe/log14.txt 2>&1 <<'PY' || true
+          python - > probe/log15.txt 2>&1 <<'PY' || true
           import re
           from urllib.parse import quote_plus
           from radar.regwatch import Fetcher
-          f = Fetcher(); f.gap = 0
-          C = {
-            "CBB rulebook": ["https://cbben.thomsonreuters.com/", "https://cbben.thomsonreuters.com/rulebook-updates", "https://cbben.thomsonreuters.com/robots.txt"],
-            "CBB ana": ["https://www.cbb.gov.bh/feed/", "https://www.cbb.gov.bh/wp-json/wp/v2/posts?per_page=3", "https://www.cbb.gov.bh/robots.txt"],
-            "BOI": ["https://www.boi.org.il/en/communication-and-publications/press-releases/", "https://www.boi.org.il/robots.txt", "https://www.gov.il/en/departments/bank_of_israel"],
-            "BDL": ["https://www.bdl.gov.lb/circulars.php", "https://www.abl.org.lb/english/circulars", "https://www.abl.org.lb/"],
-            "CBAR": ["https://www.cbar.az/", "https://cbar.az/page-41/rss", "https://e-qanun.az/", "https://www.cbar.az/rss"],
-            "CBO": ["https://qanoon.om/", "https://mjla.gov.om/"],
-          }
-          for k, urls in C.items():
-              for u in urls:
-                  try:
-                      r = f.s.get(u, timeout=30, verify=f._verify(u))
-                      t = r.text
-                      bot = "Just a moment" in t[:4000] or "captcha" in t[:4000].lower()
-                      print(k, "|", u, "|", r.status_code, len(t), "BOT" if bot else "", "|", re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", t))[:160])
-                  except Exception as e:
-                      print(k, "|", u, "| HATA", type(e).__name__, str(e)[:120])
-          for q in ['"Central Bank of Bahrain" circular', '"Bank of Israel" directive banks', '"Banque du Liban" circular', 'site:cbar.az', '"Central Bank of Oman" circular', '"Mərkəzi Bank" qərar']:
-              u = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:60d&hl=en-US&gl=US&ceid=US:en"
-              r = f.s.get(u, timeout=30)
-              items = re.findall(r"<item>.*?<title>(.*?)</title>.*?<pubDate>(.*?)</pubDate>", r.text, re.S)
-              print("GNEWS", q, r.status_code, len(items), [ (t[:70], d[5:16]) for t, d in items[:4]])
+          f = Fetcher()
+          for q in ["site:cbb.gov.bh", "site:boi.org.il", "site:bdl.gov.lb", "site:cbo.gov.om", "site:cbar.az", "site:centralbank.ae"]:
+              for hl in ("hl=en-US&gl=US&ceid=US:en",):
+                  u = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:120d&{hl}"
+                  r = f.s.get(u, timeout=30)
+                  items = re.findall(r"<item>.*?<title>(.*?)</title>.*?<pubDate>(.*?)</pubDate>", r.text, re.S)
+                  print("GNEWS", q, len(items), [(t[:80], d[5:16]) for t, d in items[:6]])
+          for u in ["https://cbben.thomsonreuters.com/sitemap.xml", "https://cbben.thomsonreuters.com/rulebook/whats-new", "https://cbben.thomsonreuters.com/latest-updates"]:
+              r = f.s.get(u, timeout=30); print("CBBRB", u, r.status_code, len(r.text), re.sub(r"\s+"," ",r.text[:200]))
+          r = f.s.get("https://cbben.thomsonreuters.com/", timeout=30)
+          links = sorted(set(re.findall(r'href="(/[^"#?]{3,80})"', r.text)))
+          print("CBBRB linkler", len(links), links[:60])
+          r = f.s.get("https://www.abl.org.lb/", timeout=30)
+          print("ABL linkler", sorted(set(l for l in re.findall(r'href="([^"]+)"', r.text) if "circ" in l.lower() or "تعاميم" in l or "bdl" in l.lower()))[:20])
           PY
 
       - name: kaydet
