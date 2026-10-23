@@ -58,6 +58,7 @@ regulators:
   - id: cbo
     name: "Umman Merkez Bankası"
     country: Umman
+    blocked: "Genelge listesi tarayıcıda betikle yükleniyor; sitenin arama servisi anonim sorguya kapalı"
     sources:
       - { type: html, url: "https://cbo.gov.om/Pages/Circulars.aspx" }
       - { type: html, url: "https://cbo.gov.om/" }

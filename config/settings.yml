@@ -66,7 +66,8 @@ sources:
     per_symbol: 8              # istek başına en fazla haber (en yeniler)
     lookback_hours: 24
   alphavantage:
-    enabled: true              # ALPHAVANTAGE_API_KEY secret'ı gerekir; ücretsiz plan günde 25 istek → turda en fazla 1 istek
+    enabled: false             # Ekim 2026: NEWS_SENTIMENT ücretli plana taşındı ("premium endpoint"); ücretsiz anahtarla veri gelmiyor
+                               # ALPHAVANTAGE_API_KEY secret'ı gerekir; ücretsiz plan günde 25 istek → turda en fazla 1 istek
     interval_min: 60           # ABD hisseleri sırayla: her istek bir sembol
     max_per_day: 20            # günlük sınırın altında kal (elle deneme payı)
     per_request: 8

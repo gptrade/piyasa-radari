@@ -656,7 +656,9 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
     wl = sorted({s for s in ev.loc[ev.market == "BIST", "sym"].dropna() if s})
     syms = list(YF) + sorted(set(useq) | set(wl) | set(us))           # endeksler önce: takvim ve getiri onlara bağlı
     loc = now_ts.tz_convert(IST)
-    due = px is None or px_force or (st.get("px_day") != loc.date().isoformat() and loc.time() >= time(18, 45)) or set(syms) - set(px.sym.unique())
+    after_close = loc.time() >= time(18, 45)
+    close_due = st.get("px_day") != loc.date().isoformat() and after_close
+    due = px is None or px_force or close_due or set(syms) - set(px.sym.unique())
     if due:
         full = px is None or px_force
         missing = [] if px is None else sorted(set(syms) - set(px.sym.unique()))
@@ -665,7 +667,8 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
             px = _merge_new_syms(px, missing, set(us))
         if px is not None:
             px.to_parquet(PX, index=False, compression="zstd")
-            st["px_day"] = loc.date().isoformat()
+            if after_close or px is None or px_force:       # gün içi (eksik sembol) güncellemesi günün kapanışını atlatmasın
+                st["px_day"] = loc.date().isoformat()
 
     # 4) ts_eff (seans takvimi fiyattan) ve getiriler
     sess = {m: sessions_from_px(px, m) for m in SESS}
