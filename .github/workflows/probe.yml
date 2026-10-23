@@ -14,17 +14,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: CBO arama 2
+      - name: CBO arama 3
         run: |
           mkdir -p probe
           pip install -q -r requirements.txt
-          python - > probe/log12.txt 2>&1 <<'PY' || true
+          python - > probe/log13.txt 2>&1 <<'PY' || true
           import json
           from radar.regwatch import Fetcher
           f = Fetcher()
           base = "https://cbo.gov.om/_api/search/query"
           tries = [
-            {"querytext": "'*'", "sourceid": "'a52a80b8-1b71-4ecd-b3a5-681645e00edf'", "selectproperties": "'Title,Path,CBOItemDate,CircularFilename'", "sortlist": "'CBOItemDate:descending'", "rowlimit": "10"},
+            {"querytext": "'(IsDocument:\"True\" OR contentclass:\"STS_ListItem\") (CBOItemVisibility:b2c OR CBOItemVisibility:All)'", "sourceid": "'a52a80b8-1b71-4ecd-b3a5-681645e00edf'", "selectproperties": "'Title,Path,CBOItemDate,CircularFilename,CBOAttachment'", "sortlist": "'CBOItemDate:descending'", "rowlimit": "10", "QueryPropertiesTemplateUrl": "'querygroup://webroot/Pages/Circulars.aspx?groupname=Default'"},
             {"querytext": "'*'", "sourceid": "'a52a80b8-1b71-4ecd-b3a5-681645e00edf'", "rowlimit": "10"},
             {"querytext": "'path:\"https://cbo.gov.om/sites/assets/Documents/English/Circulars\"'", "rowlimit": "10", "selectproperties": "'Title,Path,LastModifiedTime'"},
             {"querytext": "'Circular'", "rowlimit": "10", "selectproperties": "'Title,Path,LastModifiedTime,CBOItemDate'"},
