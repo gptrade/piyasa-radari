@@ -1,0 +1,11 @@
+INFO:aia:Checking the cbo.gov.om certificate chain...
+INFO:aia:The cbo.gov.om certificate chain is valid!
+INFO:radar.regwatch:cbo.gov.om: eksik ara sertifika AIA ile tamamlandı
+INFO:aia:Checking the cbo.gov.om certificate chain...
+INFO:aia:The cbo.gov.om certificate chain is valid!
+fetcher (200, 204945)
+chase hata AttributeError("'bytes' object has no attribute 'get_subject'")
+cadata 3014
+Traceback (most recent call last):
+  File "<stdin>", line 18, in <module>
+ModuleNotFoundError: No module named 'cryptography'
