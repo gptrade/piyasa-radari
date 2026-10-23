@@ -158,24 +158,13 @@
     </section>`;
   }
 
-  function method() {
-    return `<details class="card br-meth"><summary class="card-title">Yöntem ve sınırlar</summary>
-      <ul>
-        <li><b>Veri.</b> KAP'taki banka mali tabloları (solo/konsolide, bankanın yayımladığı): faiz gelirleri ve giderleri çeyreklere ayrılır, ortalama toplam aktife bölünüp yıllıklandırılır. Politika faizi: TCMB ağırlıklı ortalama fonlama maliyeti (EVDS, günlük → çeyrek ortalaması). Beklenti: TCMB Piyasa Katılımcıları Anketi, 12 ay sonrası politika faizi.</li>
-        <li><b>Model.</b> Aktif getirisi ve fonlama maliyeti ayrı ayrı faizin bu ve önceki çeyrek ortalamasına regrese edilir. Banka katsayıları bankalar arası havuz tahminine doğru gözlem gürültüsüyle orantılı büzülür (az çeyreği olan banka sektöre daha çok benzer). 1 yıllık etki = bu çeyrek katsayısı + önceki çeyreğin ¾'ü (12 ayda geçişin dört çeyreğe yayıldığı varsayımı).</li>
-        <li><b>Örneklem.</b> Ana model 2024 T1'den başlar: 2023'teki KKM, menkul kıymet tesis ve kredi büyüme sınırları faiz geçişkenliğini bozdu. "2023 dahil" düğmesi sağlamlık için aynı hesabı uzun örneklemle verir; ikisi çok ayrışıyorsa sonuç düzenleme rejimine duyarlıdır.</li>
-        <li><b>Sınırlar.</b> TL/döviz karışımı ayrıştırılmaz (döviz fonlama faiz giderini TL faizinden bağımsız etkiler). Swap fonlaması faiz giderinde değil ticari kâr/zararda görünür: swap kullanımı yüksek bankada gerçek fonlama maliyeti ve duyarlılık eksik ölçülür. TÜFE'ye endeksli menkul kıymet geliri enflasyona bağlıdır, faize değil; enflasyon düşüşü bu geliri ayrıca azaltır. Bilanço büyümesi, kredi/mevduat karması değişimi, karşılık giderleri ve vergi oranı sabit kabul edilir. Katılım bankaları kapsam dışıdır.</li>
-        <li><b>Okuma.</b> Bu bir duyarlılık tahminidir, hedef fiyat değildir. "Piyasa değerine" sütunu, etkinin fiyatta olup olmadığını söylemez; piyasa faiz indirimi beklentisini zaten fiyatlıyor olabilir.</li>
-      </ul></details>`;
-  }
-
   function render() {
     if (!S.doc?.banks?.length) {
       $("#brBody").innerHTML = sh.stateHTML({ kind: "info", title: "Yeterli banka verisi yok", msg: esc(S.doc?.error || "") });
       return;
     }
     const sel = document.activeElement?.id;
-    $("#brBody").innerHTML = `${kpis()}${slider()}<div class="br-grid2">${table()}${chart()}</div>${method()}
+    $("#brBody").innerHTML = `${kpis()}${slider()}<div class="br-grid2">${table()}${chart()}</div><p class="m-foot">${window.radarMethod?.link("banka-faiz") || ""}</p>
       <p class="src-line">Kaynak: ${esc(S.doc.policy.source)} · KAP mali tabloları · son dönem ${esc(S.doc.periods)}</p>`;
     bind();
     if (sel === "brDr") $("#brDr")?.focus();

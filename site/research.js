@@ -59,7 +59,7 @@
         <div>${list("Riskler", s.risks)}</div>
         <div>${list("İzlenecekler", s.watch_next)}</div>
       </div>
-      <p class="card-foot">AI sentezi; kurumların görüşlerini özetler, yatırım tavsiyesi değildir. Dayandığı notlar ve görünümler aşağıda.</p>
+      <p class="card-foot">AI sentezi; kurumların görüşlerini özetler, yatırım tavsiyesi değildir. Dayandığı notlar ve görünümler aşağıda · ${window.radarMethod?.link("arastirma") || ""}</p>
     </section>`;
   }
 

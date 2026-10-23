@@ -175,20 +175,10 @@
     </section>`;
   }
 
-  function method() {
-    return `<details class="card br-meth"><summary class="card-title">Yöntem ve sınırlar</summary><ul>
-      <li><b>Olaylar.</b> KAP bildirimlerinin tamamı (idari ve rutin bildirimler hariç), panelin haber ve sinyal akışı, aracı kurum notlarının kamuya açık özetleri, gerçekleşen geri alımlar ve kâr payı kararları tek tabloda. Aynı gün aynı hisse için başlığı neredeyse aynı olaylar (aynı haberin birkaç kaynağı, konsolide + solo rapor) tek olay sayılır.</li>
-      <li><b>Getiri.</b> Olaydan önceki son kapanıştan 1, 5 ve 20 seans sonraki kapanışa; seans dışı olaylar sonraki seanstan başlar. BIST'te kıyas eşit ağırlıklı BIST Tüm: dönemde küçük ve orta hisseler XU100'den belirgin zayıf kaldığı için XU100'e göre fark her olayı olumsuz gösterirdi. Yahoo'da düzeltilmemiş bölünme/bedelsiz izi taşıyan pencereler dışarıda.</li>
-      <li><b>Bilanço sürprizi.</b> Analist konsensüsü ücretsiz ve lisanslı olmadığından beklenti = geçen yılın aynı çeyreğinin reel (TÜFE ile düzeltilmiş) net kârı. Sürpriz, farkın son dört çeyreğin ortalama kâr büyüklüğüne oranı; +0,2 üstü olumlu, −0,2 altı olumsuz. Aynı gün yayımlanan faaliyet raporu ve konsolide/solo rapor aynı yönü alır.</li>
-      <li><b>Belirsizlik.</b> %95 aralık olay gününe göre kümelenmiş standart hatayla. Geri alım gibi ardışık günlerde tekrarlanan bildirimlerde pencereler çakışır; aralık yine de biraz dar kalabilir.</li>
-      <li><b>Okuma.</b> Bu geçmişin ortalaması, bir alım-satım kuralı değil. İşlem maliyeti, likidite ve açılış boşluğu yok sayılır. ABD tarafında yalnız izlenen hisseler var (seçim yanlılığı: izlenen hisseler son dönemin güçlü hisseleri olabilir). "Öncesi (5)" sütunu büyükse olay, fiyat hareketinin sonucu olabilir (ör. devre kesici).</li>
-      <li><b>Kaynak.</b> Fiyat: Yahoo Finance (kişisel kullanım). Veri saatlik güncellenir; KAP geçmişi 90 gün geriye dolduruldu ve birikerek uzar.</li></ul></details>`;
-  }
-
   function render() {
     const rows = filtered(), a = agg(rows);
     if (S.sel !== "*" && !a.list.some(o => o.type === S.sel)) S.sel = "*";
-    $("#okBody").innerHTML = `${controls()}${kpis(rows, a)}${rows.length ? table(a) + pathChart() + recent(rows) : sh.stateHTML({ kind: "empty", title: "Bu süzgeçle olay yok", msg: sh.mine ? "Benimkiler açık: izleme listesi ve portföy hisselerinde bu dönemde olay yok." : "" })}${method()}
+    $("#okBody").innerHTML = `${controls()}${kpis(rows, a)}${rows.length ? table(a) + pathChart() + recent(rows) : sh.stateHTML({ kind: "empty", title: "Bu süzgeçle olay yok", msg: sh.mine ? "Benimkiler açık: izleme listesi ve portföy hisselerinde bu dönemde olay yok." : "" })}<p class="m-foot">${window.radarMethod?.link("olay-karnesi") || ""}</p>
       <p class="src-line">Kaynak: KAP, panel akışı, aracı kurum duyuruları, kap-geri-alim-takibi · fiyat Yahoo · ${fmt.date(S.doc.generated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>`;
     bind();
   }

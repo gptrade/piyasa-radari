@@ -839,8 +839,7 @@
 
 
   // ───────────── metodoloji
-  function renderMethod() {
-    const el = $("#view-metodoloji");
+  function methodHTML() {
     const cat = [
       ["Karlılık", "ROE %0→%30, ROA %0→%12, net marj %0→%20, FAVÖK marjı %0→%30, brüt marj %5→%45"],
       ["Reel Büyüme", "12A satış −%10→+%20, FAVÖK −%20→+%25, net kar −%30→+%30 (bir yıl önceye göre, TÜFE ile)"],
@@ -849,7 +848,7 @@
       ["Nakit Akışı & Kar Kalitesi", "İşletme nakdi/net kar 0→1,2, serbest nakit akışı marjı −%5→+%12, tahakkuk oranı %10→−%5, serbest nakit/FAVÖK −%20→%60, parasal kazancın vergi öncesi kardaki payı %60→%0"],
       ["Verimlilik", "Aktif devir hızı 0,2→1,5, nakit dönüşüm süresi 180→30 gün, ROIC %0→%25"],
     ];
-    el.innerHTML = `<div class="fa-two">
+    return `<div class="fa-two">
       <section class="card fa-method"><h2 class="card-title">Veri</h2>
         <ul>
           <li><b>Mali tablolar:</b> KAP'taki "Finansal Rapor" bildirimleri (bilanço, kar/zarar, nakit akış). Aynı dönemde konsolide ve solo rapor varsa konsolide kullanılır; düzeltme bildirimi gelirse dönem yeniden okunur.</li>
@@ -923,9 +922,8 @@
   reg("hisse", renderCompany);
   reg("tarama", renderScreen);
   reg("karsilastir", renderCompare);
-  sh.register("metodoloji", { onShow: renderMethod, exports: () => [], exportNote: "Metodoloji metni" });
   addEventListener("themechange", () => { if (["hisse", "karsilastir"].includes(sh.route)) rerender(); });
-  window.radarFundamentals = { open: code => sh.go("hisse", { param: code }), has: code => !!rowOf(code), get rows() { return rows(); },
+  window.radarFundamentals = { methodHTML, open: code => sh.go("hisse", { param: code }), has: code => !!rowOf(code), get rows() { return rows(); },
     // hisse paleti ve evrensel hisse paneli için: süzgeçsiz evren satırı ve aynı sektörden piyasa değerine göre en yakın emsaller
     row: code => (S.screen?.rows || []).find(r => r.code === code) || null,
     get all() { return S.screen?.rows || []; },

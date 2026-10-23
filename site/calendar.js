@@ -259,7 +259,7 @@
     S.idx = [];
     const body = S.view === "week" ? renderWeek() : S.view === "month" ? renderMonth() : renderList();
     const until = S.cal.tr_until, mu = S.cal.macro_until;
-    box.innerHTML = body + `<p class="k-note">Saatler İstanbul saatiyle. Türkiye verileri TÜİK Ulusal Veri Yayımlama Takvimi'nden (TÜİK, TCMB, BDDK, Hazine ve Maliye Bakanlığı, SPK ve diğer kurumlar; otomatik${until ? `, ${fmt.date(until, { day: "numeric", month: "long" })} tarihine kadar` : ""}); son açıklanan değerler TCMB EVDS'ten · TCMB PPK, Fed ve ABD TÜFE resmi takvimlerden${mu ? ` (tanımlı son tarih ${fmt.date(mu, { day: "numeric", month: "long", year: "numeric" })})` : ""} · ECB toplantıları ecb.europa.eu'dan, BoE toplantıları bankofengland.co.uk'ten, BoJ toplantıları boj.or.jp'den, Euro Bölgesi verileri Eurostat'tan · ABD bilançoları (S&P 500) Alpha Vantage'dan, Avrupa ve izleme listesi bilançoları Yahoo Finance'ten (şirketler değiştirebilir) · temettüler KAP'tan, genel kurullar Borsa İstanbul listesinden · VİOP vade sonu çift ayların son iş günü, ABD opsiyon vadesi ayın 3. cuması olarak hesaplanır.</p>`;
+    box.innerHTML = body + `<p class="k-note">Saatler İstanbul saatiyle · ${window.radarMethod?.link("takvim") || ""}</p>`;
   }
   function badge() {
     const n = (S.cal?.events || []).filter(e => inMarket(e) && e.importance >= 3 && [0, 1].includes(daysTo(e.date))).length;
