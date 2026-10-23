@@ -658,11 +658,9 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
     loc = now_ts.tz_convert(IST)
     after_close = loc.time() >= time(18, 45)
     today_s = loc.date().isoformat()
-    px_last = str(pd.to_datetime(px["date"]).max().date()) if px is not None and not px.empty else ""
-    # kapanış sonrası: bugün henüz alınmadıysa ya da son fiyat bugünden eskiyse (günde bir ek deneme; tatilde boşa döner)
-    close_due = after_close and (st.get("px_day") != today_s or (px_last < today_s and st.get("px_close_try") != today_s))
-    if close_due:
-        st["px_close_try"] = today_s
+    # Günün kapanışı: 18:45 sonrası günde bir. Gün içi güncelleme (eksik sembol) Yahoo'nun süren günlük barını da getirir;
+    # o bar kapanış değildir, bu yüzden ayrı anahtar (px_close) yalnız kapanış sonrası güncellemede işaretlenir.
+    close_due = after_close and st.get("px_close") != today_s
     due = px is None or px_force or close_due or set(syms) - set(px.sym.unique())
     if due:
         full = px is None or px_force
@@ -672,8 +670,9 @@ def run(now: datetime | None = None, px_force: bool = False) -> dict:
             px = _merge_new_syms(px, missing, set(us))
         if px is not None:
             px.to_parquet(PX, index=False, compression="zstd")
-            if after_close or px is None or px_force:       # gün içi (eksik sembol) güncellemesi günün kapanışını atlatmasın
-                st["px_day"] = loc.date().isoformat()
+            st["px_day"] = today_s
+            if after_close:
+                st["px_close"] = today_s
 
     # 4) ts_eff (seans takvimi fiyattan) ve getiriler
     sess = {m: sessions_from_px(px, m) for m in SESS}
