@@ -40,8 +40,10 @@
       const mine = universe().filter(t => t.watch || t.held).slice(0, 8);
       return [...mine.map(t => ({ type: "tk", t })), ...PAGES.slice(0, 6).map(([r, l]) => ({ type: "pg", r, l }))];
     }
-    const score = t => { const s = t.sym.toUpperCase(), n = fold(t.name || "");
-      return s === F ? 100 : s.startsWith(F) ? 80 - s.length : n.startsWith(f) ? 60 : n.split(" ").some(w => w.startsWith(f)) ? 45 : n.includes(f) || s.includes(F) ? 30 : 0; };
+    const cf = sh.compact(q);
+    const score = t => { const s = t.sym.toUpperCase(), n = fold(t.name || ""), c = sh.compact(t.name || "");
+      return s === F ? 100 : s.startsWith(F) ? 80 - s.length : n.startsWith(f) ? 60 : n.split(" ").some(w => w.startsWith(f)) ? 45
+        : c.startsWith(cf) && cf.length > 2 ? 44 : n.includes(f) || s.includes(F) ? 30 : cf.length > 2 && c.includes(cf) ? 25 : 0; };
     const tks = universe().map(t => [t, score(t) + (t.held ? 6 : t.watch ? 4 : 0)]).filter(([, s]) => s > 4).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t);
     const out = [];
     tks.forEach((t, j) => { out.push({ type: "tk", t }); if (j === 0) actions(t).forEach(a => out.push({ type: "act", t, a })); });

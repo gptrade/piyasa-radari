@@ -170,7 +170,7 @@
       if (state.hideNoise && state.reasons.has(it.id) && !state.saved.has(it.id)) return false;
       if (q) {
         const a = it.analysis || {};
-        if (!`${it.title} ${it.summary} ${it.source} ${relTickers(it).join(" ")} ${a.event_label || ""} ${a.what || ""} ${a.summary || ""}`.toLocaleLowerCase("tr").includes(q)) return false;
+        if (!sh.match(`${it.title} ${it.summary} ${it.source} ${relTickers(it).join(" ")} ${a.event_label || ""} ${a.what || ""} ${a.summary || ""}`, q)) return false;
       }
       return true;
     });
@@ -1211,8 +1211,8 @@
         m.set(t, o);
       }
     }
-    const q = state.q.toLocaleLowerCase("tr");
-    return [...m.values()].filter(o => !q || o.n || `${o.t} ${o.name}`.toLocaleLowerCase("tr").includes(q)).map(o => {
+    const q = state.q;
+    return [...m.values()].filter(o => !q || o.n || sh.match(`${o.t} ${o.name}`, q)).map(o => {
       const p = state.prices[o.t], ta = p?.ta;
       o.net = o.w ? o.s / o.w : null;
       o.nk = o.net == null ? null : o.net > 0.15 ? 1 : o.net < -0.15 ? -1 : 0;

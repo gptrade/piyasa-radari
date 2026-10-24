@@ -169,7 +169,7 @@
   function inPeriod() {
     const cut = Date.now() - S.days * DAY, q = S.q.toLocaleLowerCase("tr"), w = sh.mine ? sh.mineSet() : watchSet();
     return S.rows.filter(r => r.date >= cut && (!(S.watch || sh.mine) || w.has(r.t))
-      && (!q || r.t.toLocaleLowerCase("tr").includes(q) || r.name.toLocaleLowerCase("tr").includes(q)));
+      && (!q || sh.match(`${r.t} ${r.name}`, q)));
   }
   function aggregate(rows) {
     const m = new Map();

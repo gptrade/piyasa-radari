@@ -18,6 +18,9 @@
   const fold = t => String(t ?? "").replace(/İ/g, "i").replace(/I/g, "ı").toLocaleLowerCase("tr")
     .replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g").replace(/ç/g, "c").replace(/ö/g, "o").replace(/ü/g, "u")
     .normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+  // Arama eşleşmesi: Türkçe harf/aksan farkı ve noktalama yok sayılır ("gürsel" = "GÜR-SEL", "is yatirim" = "İŞ YATIRIM")
+  const compact = t => fold(t).replace(/[^a-z0-9]+/g, "");
+  const match = (text, q) => { const a = fold(text), b = fold(q); return !b || a.includes(b) || (compact(b).length > 1 && compact(a).includes(compact(b))); };
   const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   // Sayılar: Türkçe biçim (1.234,56 · %3,5 · +%1,2 · −%0,8). Eksi işareti gerçek eksi (U+2212).
@@ -86,7 +89,7 @@
   if (!["ALL", "BIST", "US"].includes(S.market)) S.market = "ALL";
 
   const shell = {
-    $, $$, esc, fmt, store, glyph, dirCls, TZ, fold,
+    $, $$, esc, fmt, store, glyph, dirCls, TZ, fold, match, compact,
     get route() { return S.route; },
     get param() { return S.param; },
     get market() { return S.market; },

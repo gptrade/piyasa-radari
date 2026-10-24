@@ -158,7 +158,7 @@
     const all = rows();
     const sectors = [...new Set(all.map(r => r.sector || "Diğer"))].sort((a, b) => a.localeCompare(b, "tr"));
     let xs = all.filter(r => (!S.sector || (r.sector || "Diğer") === S.sector) && inIx(r));
-    if (S.q) { const q = S.q.toLocaleLowerCase("tr"); xs = xs.filter(r => `${r.code} ${r.title}`.toLocaleLowerCase("tr").includes(q)); }
+    if (S.q) xs = xs.filter(r => sh.match(`${r.code} ${r.title}`, S.q));
     const dist = { A: 0, B: 0, C: 0, D: 0, E: 0 }; all.forEach(r => r.grade && dist[r.grade]++);
     const oos = S.screen.out_of_scope || [], pend = S.screen.pending || [];
     const scoreCell = (v, g) => `<td class="num"><span class="sc">${v ?? "—"}</span>${g !== undefined ? " " + gradeTag(g) : ""}</td>`;
@@ -807,12 +807,12 @@
       setTimeout(() => $("#faCmpQ")?.focus(), 0);
     };
     // Türkçe büyük/küçük harf: "is" hem ISCTR'yi hem İŞ'i bulsun (I/ı/İ/i tek harf sayılır)
-    const low = t => (t || "").toLocaleLowerCase("tr").replace(/ı/g, "i").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const low = t => sh.fold(t || "");
     let hits = [], cur = 0;
     const show = () => {
       const q = low(inp.value.split(",").pop().trim());
       hits = !q ? [] : rows().filter(r => !S.cmp.includes(r.code))
-        .map(r => ({ r, k: low(r.code).startsWith(q) ? 0 : low(r.code).includes(q) ? 1 : low(r.title).includes(q) ? 2 : low(r.title).replace(/\s+/g, "").includes(q.replace(/\s+/g, "")) ? 3 : 9 }))
+        .map(r => ({ r, k: low(r.code).startsWith(q) ? 0 : low(r.code).includes(q) ? 1 : low(r.title).includes(q) ? 2 : sh.compact(r.title).includes(sh.compact(q)) ? 3 : 9 }))
         .filter(o => o.k < 9).sort((a, b) => a.k - b.k || a.r.code.localeCompare(b.r.code)).slice(0, 8).map(o => o.r);
       cur = 0;
       list.innerHTML = hits.map((r, i) => `<li role="option" id="faSug${i}" aria-selected="${i === cur}" data-code="${r.code}"><b class="mono">${r.code}</b> <span class="muted">${esc(trTitle(r.title))}</span> <small class="muted">${esc(r.sector || "")}</small></li>`).join("")

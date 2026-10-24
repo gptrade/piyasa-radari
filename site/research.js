@@ -70,7 +70,7 @@
     const w = watch();
     let xs = (rs || []).filter(r => sh.market === "ALL" || (r.cur === "USD" ? "US" : "BIST") === sh.market);
     if (scope() === "watch") xs = xs.filter(r => [...(r.tickers || []), ...(r.top_picks || []).map(p => p.t)].some(t => w.has(t)));
-    if (S.q) { const q = S.q.toLocaleLowerCase("tr"); xs = xs.filter(r => `${r.broker} ${(r.tickers || []).join(" ")} ${r.sector} ${r.thesis}`.toLocaleLowerCase("tr").includes(q)); }
+    if (S.q) xs = xs.filter(r => sh.match(`${r.broker} ${(r.tickers || []).join(" ")} ${r.sector} ${r.thesis}`, S.q));
     if (!(rs || []).length) return "";
     const tk = t => w.has(t) ? `<button type="button" class="tk-link" data-sym="${esc(t)}">${esc(t)}</button>` : esc(t);
     return `<section class="card" aria-labelledby="resRepT">
@@ -122,7 +122,7 @@
     const w = watch();
     let xs = (notes || []).filter(inMarket);
     if (scope() === "watch") xs = xs.filter(n => w.has(n.t));
-    if (S.q) { const q = S.q.toLocaleLowerCase("tr"); xs = xs.filter(n => `${n.t || ""} ${n.name || ""} ${n.broker} ${n.title}`.toLocaleLowerCase("tr").includes(q)); }
+    if (S.q) xs = xs.filter(n => sh.match(`${n.t || ""} ${n.name || ""} ${n.broker} ${n.title}`, S.q));
     const shown = xs.slice(0, S.limit), H = hurdle();
     return `<section class="card card-flush" aria-labelledby="resNotT">
       <div class="card-head"><h2 class="card-title" id="resNotT">Aracı kurum notları</h2>
