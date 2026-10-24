@@ -335,7 +335,9 @@ def test_deep_history_listed_in_yearly_steps(fin_dir, monkeypatch):
     c = store._load(store.STATE, {})["companies"]["TRGYO"]
     assert c["deep"] == store.HISTORY_DEEP.isoformat() and "deep_upto" not in c
     assert calls[0][1] == store.HISTORY_START - store.timedelta(days=1)
-    assert calls[-1][0] == store.HISTORY_DEEP and len(calls) == 7
+    assert calls[6][0] == store.HISTORY_DEEP
+    # ardından yayın anı taraması: bugünden geriye, eski kısa pencerenin başına kadar
+    assert c["pubscan"] and calls[-1][0] == store.HISTORY_START and calls[7][1] == store.date.today()
 
 
 def test_publish_date_kept_until_report_saved():

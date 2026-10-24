@@ -126,6 +126,9 @@ def enqueue(state: dict, code: str, row: dict) -> bool:
     if not 1 <= period <= 4 or year < DEEP_MIN_YEAR:
         return False
     idx = int(row["disclosureIndex"])
+    pub = _pub_iso(row.get("publishDate"))
+    if pub:                                      # yayın anı: geriye dönük testlerde rapor ancak bu andan sonra bilinir
+        state.setdefault("pub", {})[str(idx)] = pub
     comp = state.setdefault("companies", {}).setdefault(code, {})
     if idx in comp.get("seen", []):
         return False
@@ -135,9 +138,6 @@ def enqueue(state: dict, code: str, row: dict) -> bool:
     q.setdefault(pk, [])
     if idx not in q[pk]:
         q[pk].append(idx)
-    pub = _pub_iso(row.get("publishDate"))
-    if pub:                                      # yayın anı: geriye dönük testlerde rapor ancak bu andan sonra bilinir
-        state.setdefault("pub", {})[str(idx)] = pub
     return True
 
 
@@ -259,6 +259,7 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
         comps.setdefault(code, {})["listed"] = date.today().isoformat()
         comps[code]["lv"] = LIST_VERSION
         comps[code]["deep"] = HISTORY_DEEP.isoformat()
+        comps[code]["pubscan"] = True          # tam pencere bu listede: yayın anları kayıtlı
         stats["listed"] += 1
 
     # Derin geçmiş: daha önce kısa pencereyle listelenmiş şirketlerin eski bildirimleri (yıl yıl, kalan istek kotasıyla)
@@ -283,6 +284,28 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
             c.pop("deep_upto", None)
         stats["deep_listed"] = stats.get("deep_listed", 0) + 1
 
+    # Yayın anı taraması: kısa pencereyle listelenmiş (yayın anı saklanmadan inmiş) son yılların bildirimleri bir kez
+    # yeniden listelenir; kuyruğa bir şey eklenmez (görülmüş), yalnız yayın anı kaydedilir. Derin geçmişten sonra.
+    for code, m in order:
+        if left() < budget * 0.6 or spent() >= MAX_REQ:
+            break
+        c = comps.get(code, {})
+        if not c.get("listed") or c.get("deep") != HISTORY_DEEP.isoformat() or c.get("pubscan"):
+            continue
+        floor = HISTORY_DEEP if c.get("deep_full") else \
+            (HISTORY_START if "XU100" in m.get("idx", ["XU100"]) else HISTORY_START_EXT)
+        upto = date.fromisoformat(c.get("pub_upto") or (date.today() + timedelta(days=1)).isoformat())
+        frm = max(floor, upto - timedelta(days=365))
+        rows = kapfin.list_reports(m["oid"], frm, upto - timedelta(days=1))
+        if rows is None:
+            continue
+        for row in rows:
+            enqueue(state, code, row)
+        c["pub_upto"] = frm.isoformat()
+        if frm <= floor:
+            c["pubscan"] = True
+            c.pop("pub_upto", None)
+
     prio = {c for c, m in members.items() if "XU100" in m.get("idx", ["XU100"])}
     have = {}
     for p in FIN.glob("[A-Z0-9]*.json"):
@@ -306,8 +329,6 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
             save_report(code, members.get(code, {}).get("title", ""), pk, rep)
             stats["processed"] += 1
         tries.pop(pk, None)
-        for i in idxs:
-            state.get("pub", {}).pop(str(i), None)
         del state["queue"][code][pk]
         if not state["queue"][code]:
             del state["queue"][code]
