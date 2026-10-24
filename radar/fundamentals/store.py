@@ -310,14 +310,14 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
     stats = {"listed": 0, "queued": 0, "processed": 0, "failed": 0}
     comps = state.setdefault("companies", {})
 
-    if not uni.get("members") or uni.get("v", 1) < 3 or _due(state, "universe", 24 * 7):
+    if not uni.get("members") or uni.get("v", 1) < 4 or _due(state, "universe", 24 * 7):
         idx = kapfin.fetch_indices()
         base = idx.get(UNIVERSE_INDEX) or idx.get("XU100")
         if base:
             sectors = kapfin.fetch_sectors()
             members = [{**m, **sectors.get(m["code"], {}),
                         "idx": [t for t in INDEX_TAGS if any(x["code"] == m["code"] for x in idx.get(t, []))]} for m in base]
-            uni = {"v": 3, "index": UNIVERSE_INDEX if idx.get(UNIVERSE_INDEX) else "XU100",
+            uni = {"v": 4, "index": UNIVERSE_INDEX if idx.get(UNIVERSE_INDEX) else "XU100",
                    "updated": _now().isoformat(timespec="seconds"), "members": members}
             _save(UNIVERSE, uni)
     members = {m["code"]: m for m in uni.get("members", [])}

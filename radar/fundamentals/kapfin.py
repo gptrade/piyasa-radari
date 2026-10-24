@@ -296,7 +296,7 @@ def parse_indices(text: str) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {}
     for m in re.finditer(r'\{"code":"(X[A-Z0-9]+)","content":\[(.*?)\]', t):
         members = [{"code": a, "title": b, "oid": c} for a, b, c in
-                   re.findall(r'"stockCode":"([A-Z0-9]+)","title":"([^"]*)","mkkMemberOid":"([0-9a-f]+)"', m.group(2))]
+                   re.findall(r'"stockCode":"([A-Z0-9]+)","title":"([^"]*)","mkkMemberOid":"([0-9a-fA-F]+)"', m.group(2))]
         if members and m.group(1) not in out:
             out[m.group(1)] = members
     return out

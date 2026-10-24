@@ -297,3 +297,10 @@ def test_tiers_open_scores_fastest():
     store.enqueue(st2, "BBBB", row(1, 2026, 1))
     store.enqueue(st2, "BBBB", row(2, 2025, 4))
     assert store.next_jobs(st2, have={"BBBB": ["2026/06"]})[0] == ("BBBB", "2025/12")
+
+
+def test_parse_indices_accepts_uppercase_member_oid():
+    from radar.fundamentals import kapfin
+    t = ('{"code":"XU100","content":[{"stockCode":"GARAN","title":"TÜRKİYE GARANTİ BANKASI A.Ş.","mkkMemberOid":"4028e4a140f2ed720140f376bebb01a7"},'
+         '{"stockCode":"HALKB","title":"TÜRKİYE HALK BANKASI A.Ş.","mkkMemberOid":"1DE05DAA82C3073AE0530A4A622A2EBD"}]}')
+    assert [m["code"] for m in kapfin.parse_indices(t)["XU100"]] == ["GARAN", "HALKB"]
