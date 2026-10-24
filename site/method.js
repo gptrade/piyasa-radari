@@ -42,7 +42,7 @@
         ["Rank IC", "Sinyal sırası ile ertesi ay getiri sırası arasındaki Spearman korelasyonunun aylık ortalaması."],
         ["En iyi dilim", "Yalnız en iyi dilimi alan uzun portföyün piyasaya göre fazla getirisi; ayda değişen hisse payı kadar %0,2/işlem maliyeti düşülür. Reel TL (TÜFE) ve ABD doları cinsinden yıllık getiri de verilir."],
         ["Alt dönemler", "2017–2019, 2020–2022 ve 2023 sonrası (enflasyon muhasebesi) ayrı ayrı."],
-        ["Karar", "Çok sayıda yöntem test edildiği için güçlü kanıt eşiği t ≥ 3 (Harvey, Liu ve Zhu 2016) ve alt dönemlerin çoğunda aynı yön; 2 ≤ t < 3 zayıf işaret; |t| < 2 kanıt yok; eksi yönde aynı eşikler \"ters çalışıyor\". 24 aydan az test edilebilir dönem: veri yetersiz."],
+        ["Karar", "Çok sayıda yöntem test edildiği için güçlü kanıt eşiği t ≥ 3 (Harvey, Liu ve Zhu 2016) ve alt dönemlerin çoğunda aynı yön; en az iki alt dönem ve 60 ay yoksa \"güçlü · kısa dönem\" (farklı piyasa koşullarında sınanmadı); 2 ≤ t < 3 zayıf işaret; |t| < 2 kanıt yok; eksi yönde aynı eşikler \"ters çalışıyor\". 24 aydan az test edilebilir dönem: veri yetersiz."],
       ])) + card("Sınırlar", ul([
         ["Hayatta kalma", "Borsadan çıkmış şirketlerin fiyatları Yahoo'da yok; evren bugünkü şirketlerden oluşur. Bu, özellikle ucuz ve sıkıntılı hisselerin sonuçlarını iyimser gösterir."],
         ["Örneklem", "KAP tabloları 2016 yıl sonundan önce okunamıyor; en fazla ~115 ay. Geçmiş tablolar KAP indirme sınırı nedeniyle kademeli iniyor, temel yöntemlerin test dönemi doldukça uzar."],

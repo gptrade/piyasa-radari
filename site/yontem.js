@@ -11,13 +11,14 @@
   const GROUPS = { all: "Tümü", "Değer": "Değer", "Kalite": "Kalite", "Fiyat": "Fiyat", "Olay": "Olay", "Birleşik": "Birleşik" };
   const V = {
     guclu: ["Güçlü kanıt", "up", "t ≥ 3 ve alt dönemlerin çoğunda aynı yön"],
+    kisa_guclu: ["Güçlü · kısa dönem", "up", "t ≥ 3, ama test tek bir dönemi (ör. yalnız 2023 sonrası) ya da 60 aydan azını kapsıyor; farklı piyasa koşullarında sınanmadı"],
     umut: ["Zayıf işaret", "warn-t", "2 ≤ t < 3: umut verici ama çoklu test eşiğinin altında"],
     yok: ["Kanıt yok", "t3", "|t| < 2: getiri farkı şanstan ayırt edilemiyor"],
     zayif_ters: ["Zayıf ters", "warn-t", "−3 < t ≤ −2: beklenenin tersi yönde, zayıf"],
     ters: ["Ters çalışıyor", "down", "t ≤ −3: beklenenin tersi yönde güçlü"],
     yetersiz: ["Veri yetersiz", "t3", "24 aydan az test edilebilir dönem"],
   };
-  const ORDER = { guclu: 0, umut: 1, zayif_ters: 3, ters: 4, yok: 2, yetersiz: 5 };
+  const ORDER = { guclu: 0, kisa_guclu: 0.5, umut: 1, zayif_ters: 3, ters: 4, yok: 2, yetersiz: 5 };
 
   async function load(force = false) {
     if (S.loading || (S.loaded && !force)) return;
@@ -59,7 +60,7 @@
 
   function kpis(d) {
     const k = (label, value, sub = "", tip = "") => `<div class="kpi" ${tip ? `data-tip="${esc(tip)}"` : ""}><span class="kpi-label">${label}</span><span class="kpi-value">${value}</span>${sub ? `<span class="kpi-sub">${sub}</span>` : ""}</div>`;
-    const fs = d.factors, strong = fs.filter(f => f.verdict === "guclu").length, weak = fs.filter(f => f.verdict === "umut").length;
+    const fs = d.factors, strong = fs.filter(f => f.verdict === "guclu" || f.verdict === "kisa_guclu").length, weak = fs.filter(f => f.verdict === "umut").length;
     const fund = fs.filter(f => f.scope !== "Tüm hisseler" && f.n), fn = fund.length ? Math.max(...fund.map(f => f.n)) : 0;
     return `<div class="kpi-grid">
       ${k("Test dönemi", d.months ? `${mlab(d.months[0])} – ${mlab(d.months[1])}` : "—", `${fmt.int(d.n_months)} ay · fiyat yöntemleri`)}

@@ -49,6 +49,8 @@ def test_evaluate_finds_planted_signal_and_rejects_noise():
     assert noise["verdict"] in ("yok", "umut", "zayif_ters")
     bad = Y.evaluate(_panel(-0.01), "x", "all", {}, {})
     assert bad["verdict"] == "ters"
+    mid = Y.evaluate(_panel(0.01, months=40), "x", "all", {}, {})
+    assert mid["verdict"] == "kisa_guclu"
     short = Y.evaluate(_panel(0.01, months=12), "x", "all", {}, {})
     assert short["verdict"] == "yetersiz"
 

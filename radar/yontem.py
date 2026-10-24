@@ -508,7 +508,8 @@ def verdict(res: dict) -> str:
     same = sum(1 for s in subs if (s["ls"] > 0) == (ls > 0))
     steady = not subs or same >= max(1, len(subs) - 1)
     if t >= 3 and steady:
-        return "guclu"
+        # tek bir alt dönemden (ör. yalnız 2023 sonrası) gelen kanıt: rejim değişimine karşı sınanmamış
+        return "guclu" if len(subs) >= 2 and n >= 60 else "kisa_guclu"
     if t >= 2:
         return "umut"
     if t <= -3 and steady:
