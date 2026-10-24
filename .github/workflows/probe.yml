@@ -14,20 +14,41 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: KAP endeks sayfası
+      - name: KAP derin geçmiş
         run: |
           mkdir -p probe
           pip install -q -r requirements.txt
-          python - > probe/log19.txt 2>&1 <<'PY' || true
-          import re
+          python - > probe/log20.txt 2>&1 <<'PY' || true
+          import re, time, collections
+          from datetime import date
           from radar import http
           from radar.fundamentals import kapfin
-          r = http.get(kapfin.INDEX_URL, timeout=60); t = r.text.replace('\\"', '"')
-          for c in ["HALKB", "QNBTR", "KLNMA", "GARAN"]:
-              for m in list(re.finditer(c, t))[:2]:
-                  print(c, "|", t[max(0, m.start() - 60): m.end() + 120].replace("\n", " "))
-          idx = kapfin.parse_indices(r.text); print("XUTUM", len(idx.get("XUTUM", [])), "XU100", len(idx.get("XU100", [])))
-          multi = re.findall(r'"stockCode":"([A-Z0-9]+, [A-Z0-9, ]+)"', t); print("çok kodlu", len(set(multi)), sorted(set(multi))[:40])
+          for u in ["https://www.kap.org.tr/tr/bist-sirketler", "https://www.kap.org.tr/tr/Sektorler"]:
+              try:
+                  t = http.get(u, timeout=60).text.replace('\\"', '"')
+                  for c in ["QNBTR", "KLNMA"]:
+                      ms = list(re.finditer(c, t))[:2]
+                      print(u, c, len(ms), [t[max(0, m.start()-150): m.end()+150].replace("\n", " ") for m in ms])
+              except Exception as e:
+                  print(u, "HATA", e)
+          oid = "4028e4a140f2ed720140f37cb2a601b7"   # GARAN
+          rows = kapfin.list_reports(oid, date(2009, 1, 1), date(2022, 12, 31)) or []
+          fr = [r for r in rows if kapfin.is_fr(r)]
+          by = collections.Counter(str(r.get("year")) for r in fr)
+          print("GARAN FR", len(fr), sorted(by.items()))
+          print("örnek", {k: fr[-1].get(k) for k in list(fr[-1])[:20]} if fr else None)
+          pick = {}
+          for r in fr:
+              y = r.get("year")
+              if y in (2010, 2013, 2016, 2019, 2021) and y not in pick:
+                  pick[y] = r
+          for y, r in sorted(pick.items()):
+              idx = r.get("disclosureIndex") or r.get("index")
+              rep = kapfin.fetch_export(idx); time.sleep(4)
+              if not rep:
+                  print(y, idx, "İNDİRİLEMEDİ"); continue
+              print(y, idx, rep.get("year"), rep.get("period"), rep.get("template"), rep.get("currency"), rep.get("scale"),
+                    {k: len(rep[k]["rows"]) for k in ("bs", "is", "cf") if k in rep}, list(rep.get("is", {}).get("rows", {}))[:6])
           PY
 
       - name: kaydet
