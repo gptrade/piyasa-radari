@@ -1,0 +1,6 @@
+HALKB | emberOid":"4028e4a140f2ed720140f37cb2a601b7"},{"stockCode":"HALKB","title":"TÜRKİYE HALK BANKASI A.Ş.","mkkMemberOid":"1DE05DAA82C3073AE0530A4A622A2EBD"},{"stockCode":"ISCTR","title":"T
+HALKB | emberOid":"4028e4a140f2ed720140f37cb2a601b7"},{"stockCode":"HALKB","title":"TÜRKİYE HALK BANKASI A.Ş.","mkkMemberOid":"1DE05DAA82C3073AE0530A4A622A2EBD"},{"stockCode":"ISCTR","title":"T
+GARAN | emberOid":"4028e4a140f2ed720140f376bebb01a7"},{"stockCode":"GARAN","title":"TÜRKİYE GARANTİ BANKASI A.Ş.","mkkMemberOid":"4028e4a140f2ed720140f37cb2a601b7"},{"stockCode":"HALKB","title"
+GARAN | d720140f376bebb01a7"},{"stockCode":"GARAN","title":"TÜRKİYE GARANTİ BANKASI A.Ş.","mkkMemberOid":"4028e4a140f2ed720140f37cb2a601b7"},{"stockCode":"HALKB","title":"TÜRKİYE HALK BANKASI A
+XUTUM 573 XU100 98
+çok kodlu 0 []
