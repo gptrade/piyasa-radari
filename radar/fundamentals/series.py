@@ -80,7 +80,7 @@ BANK_BS = {
     "cash": ["Nakit ve Nakit Benzerleri"],
     "loans": ["Krediler"],
     "total_assets": ["VARLIKLAR TOPLAMI"],
-    "deposits": ["MEVDUAT"],
+    "deposits": ["MEVDUAT", "TOPLANAN FONLAR", "KATILIM FONU"],          # katılım bankası: katılım fonları
     "borrowings": ["ALINAN KREDİLER"],
     "money_market": ["PARA PİYASALARINA BORÇLAR"],
     "securities_issued": ["İHRAÇ EDİLEN MENKUL KIYMETLER (Net)"],
@@ -91,11 +91,12 @@ BANK_BS = {
     "total_liab_eq": ["YÜKÜMLÜLÜKLER TOPLAMI"],
 }
 BANK_IS = {
-    "int_inc": ["FAİZ GELİRLERİ"],
-    "loan_int": ["Kredilerden Alınan Faizler"],
-    "int_exp": ["FAİZ GİDERLERİ (-)", "FAİZ GİDERLERİ"],
-    "deposit_int": ["Mevduata Verilen Faizler"],
-    "nii": ["NET FAİZ GELİRİ VEYA GİDERİ", "NET FAİZ GELİRİ/GİDERİ"],
+    # katılım bankalarında aynı kalemler "kâr payı" adıyla
+    "int_inc": ["FAİZ GELİRLERİ", "KAR PAYI GELİRLERİ", "KÂR PAYI GELİRLERİ"],
+    "loan_int": ["Kredilerden Alınan Faizler", "Kredilerden Alınan Kar Payları", "Kredilerden Alınan Kâr Payları"],
+    "int_exp": ["FAİZ GİDERLERİ (-)", "FAİZ GİDERLERİ", "KÂR PAYI GİDERLERİ (-)", "KAR PAYI GİDERLERİ (-)", "KÂR PAYI GİDERLERİ", "KAR PAYI GİDERLERİ"],
+    "deposit_int": ["Mevduata Verilen Faizler", "Katılma Hesaplarına Verilen Kar Payları", "Katılma Hesaplarına Verilen Kâr Payları"],
+    "nii": ["NET FAİZ GELİRİ VEYA GİDERİ", "NET FAİZ GELİRİ/GİDERİ", "NET KAR PAYI GELİRİ (GİDERİ)", "NET KÂR PAYI GELİRİ (GİDERİ)", "NET KAR PAYI GELİRİ/GİDERİ"],
     "fees": ["NET ÜCRET VE KOMİSYON GELİRLERİ VEYA GİDERLERİ", "NET ÜCRET VE KOMİSYON GELİRLERİ/GİDERLERİ"],
     "div_inc": ["TEMETTÜ GELİRLERİ"],
     "trading": ["TİCARİ KAR VEYA ZARAR (Net)", "TİCARİ KÂR/ZARAR (Net)"],

@@ -44,7 +44,7 @@ EXPECT = "TP.PKAUO.S04.D.U"         # 12 ay sonrası TCMB politika faizi beklent
 EXPECT_CPI = "TP.PKAUO.S01.E.U"     # 12 ay sonrası yıllık TÜFE beklentisi (%)
 START = date(2022, 10, 1)
 MIN_OBS = 6
-VERSION = 2                                                  # model/evren değişince eski çıktı yeniden hesaplanır
+VERSION = 3                                                  # model/evren değişince eski çıktı yeniden hesaplanır
 # Ana örneklem 2024'ten: 2023'ün sert faiz artışı döneminde KKM, menkul kıymet tesis zorunluluğu gibi makro ihtiyati
 # düzenlemeler geçişkenliği bozdu; bugünkü (sadeleşmiş) rejime 2024 sonrası daha yakın. 2023 dahil sonuç sağlamlık için ayrıca verilir.
 MAIN_START = "2024/03"

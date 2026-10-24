@@ -66,3 +66,10 @@ def test_bank_and_insurer_ratios():
             assert abs(x["combined"] - (31_729_141_926 + 11_991_204_014 + 1_416_186_182) / 40_074_400_283) < 1e-4
             assert x["inflation"] and x["real_roe"] is not None
         assert m["valuation"]["pb"] > 0
+
+
+def test_participation_bank_uses_bank_template():
+    from radar.fundamentals import kapfin, series
+    rep = {"is": {"title": "Kar veya Zarar Tablosu", "rows": {"KAR PAYI GELİRLERİ": [10.0], "KÂR PAYI GİDERLERİ (-)": [-6.0], "NET KAR PAYI GELİRİ (GİDERİ)": [4.0]}}}
+    assert kapfin.template_of(rep) == "banka"
+    assert "KAR PAYI GELİRLERİ" in series.BANK_IS["int_inc"] and "KATILIM FONU" in series.BANK_BS["deposits"]

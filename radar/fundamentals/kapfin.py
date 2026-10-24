@@ -199,6 +199,9 @@ def template_of(rep: dict) -> str:
     labels = {k.split("#")[0].strip().upper() for k in is_rows}
     if "NET FAİZ GELİRİ VEYA GİDERİ" in labels or "NET FAİZ GELİRİ/GİDERİ" in labels:
         return "banka"
+    # Katılım bankası: aynı BDDK tek düzen tablosu, "faiz" yerine "kâr payı" satırlarıyla
+    if any(l.startswith(("NET KAR PAYI GELİRİ", "NET KÂR PAYI GELİRİ")) for l in labels):
+        return "banka"
     if any("TEKNİK BÖLÜM DENGESİ" in l for l in labels):
         return "sigorta"
     if "Hasılat" in is_rows and "TFRS 9" not in title:

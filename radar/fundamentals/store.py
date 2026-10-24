@@ -340,6 +340,20 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
                 state.get("queue", {}).pop(code, None)
         state["mig_fin"] = True
 
+    if not state.get("mig_katilim"):
+        # Katılım bankası tabloları (kâr payı satırları) banka şablonuna eklendi: "finansal" sayılmış belgeleri
+        # kayıtlı raporlardan yeniden sınıfla; eşleşenler baştan indirilir (seriler banka eşlemesiyle kurulsun)
+        from .kapfin import template_of
+        for p in FIN.glob("[A-Z0-9]*.json"):
+            doc = _load(p, None)
+            if doc and doc.get("template") == "finansal" and any(template_of(r) == "banka" for r in (doc.get("reports") or {}).values()):
+                code = doc.get("code") or p.stem
+                log.info("Temel analiz: %s katılım bankası olarak yeniden indirilecek", code)
+                p.unlink()
+                comps.pop(code, None)
+                state.get("queue", {}).pop(code, None)
+        state["mig_katilim"] = True
+
     cpi_new = _due(state, "cpi", 24) and update_cpi()
 
     comps = state.setdefault("companies", {})
