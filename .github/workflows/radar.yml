@@ -103,6 +103,15 @@ jobs:
             git archive FETCH_HEAD karne.json sigx.json | tar -x -C site/data/olay || git archive FETCH_HEAD karne.json | tar -x -C site/data/olay || true
           fi
 
+      # Yöntem karnesi (yontem.yml, haftalık) yontem dalında; yalnız özet istatistikler
+      - name: Yöntem karnesini geri yükle
+        run: |
+          rm -rf site/data/yontem && mkdir -p site/data/yontem
+          if git ls-remote --exit-code --heads origin yontem >/dev/null 2>&1; then
+            git fetch --depth 1 origin yontem
+            git archive FETCH_HEAD yontem.json | tar -x -C site/data/yontem || true
+          fi
+
       # Gizli rapor kutusu: kullanıcının gizli reposu, site/ DIŞINA çekilir (Pages'e ve data dalına girmez)
       - name: Gizli rapor kutusunu çek
         if: ${{ env.HAS_RAPOR == 'true' }}
@@ -138,7 +147,7 @@ jobs:
           git config user.name "radar-bot"
           git config user.email "radar-bot@users.noreply.github.com"
           # temel analiz (fin) ve enerji verisi kendi dallarında; o dal oluşana dek (geçiş) data dalında kalır
-          if [ "${HAS_FIN:-}" = "1" ]; then git add -A -- . ':!fin' ':!enerji' ':!regulasyon' ':!olay'; else git add -A -- . ':!enerji' ':!regulasyon' ':!olay'; fi
+          if [ "${HAS_FIN:-}" = "1" ]; then git add -A -- . ':!fin' ':!enerji' ':!regulasyon' ':!olay' ':!yontem'; else git add -A -- . ':!enerji' ':!regulasyon' ':!olay' ':!yontem'; fi
           git commit -qm "data $(date -u +%FT%TZ)"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
           rm -rf .git

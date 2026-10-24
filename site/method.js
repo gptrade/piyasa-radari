@@ -31,6 +31,25 @@
       <li><b>Belirsizlik.</b> %95 aralık olay gününe göre kümelenmiş standart hatayla. Geri alım gibi ardışık günlerde tekrarlanan bildirimlerde pencereler çakışır; aralık yine de biraz dar kalabilir.</li>
       <li><b>Okuma.</b> Bu geçmişin ortalaması, bir alım-satım kuralı değil. İşlem maliyeti, likidite ve açılış boşluğu yok sayılır. ABD tarafında yalnız izlenen hisseler var (seçim yanlılığı: izlenen hisseler son dönemin güçlü hisseleri olabilir). "Öncesi (5)" sütunu büyükse olay, fiyat hareketinin sonucu olabilir (ör. devre kesici).</li>
       <li><b>Kaynak.</b> Fiyat: Yahoo Finance (kişisel kullanım). Veri saatlik güncellenir; KAP geçmişi 90 gün geriye dolduruldu ve birikerek uzar.</li></ul>`)],
+    ["yontem-karnesi", "Yöntem Karnesi", () => card("Test kurgusu", ul([
+        ["Soru", "Bir tarama ölçütü (ör. düşük F/K, yüksek F-skoru) geçmişte BIST'te sonraki ayın getirisini öngörüyor muydu?"],
+        ["Nokta-zamanlı", "Her ay sonunda yalnız o güne kadar KAP'ta yayımlanmış son mali tablo kullanılır. Yayın anı bilinmeyen eski raporlarda SPK'nın yasal son günü alınır (1. ve 3. çeyrek +41, 2. çeyrek +61, yıl sonu +71 gün). Dönem sonundan 9 aydan eski tablo kullanılmaz."],
+        ["Fiyat ve pay", "Ay sonu gerçek kapanış × dönemin ödenmiş sermayesi; dönem sonu ile ay sonu arasındaki bölünme ve bedelsizler pay sayısına işlenir (bedelsiz sonrası hisse yanlışlıkla ucuz görünmez). Mali tablo tutarları TÜFE ile ay sonunun TL'sine taşınır."],
+        ["Getiri", "Ertesi ayın temettü ve bölünme düzeltilmiş getirisi. Kıyas aynı ay uygun hisselerin eşit ağırlıklı ortalaması; yani her sonuç piyasaya göre fazla getiridir. Aylık %300 üstü ya da −%90 altı hareketler veri hatası sayılıp dışarıda."],
+        ["Evren", "BIST Tüm ve endeks dışı bankalar. Son 3 ayın medyan işlem hacmine göre o ayın alt %20'si ve aylarca aynı fiyatta kalan hisseler dışarıda. Temel yöntemlerde mali kuruluşlar (banka, sigorta ve finansal şablonla raporlayan şirketler) hariç; fiyat yöntemleri tüm hisselerde."],
+      ])) + card("Ölçütler", ul([
+        ["Dilimler", "Her ay hisseler sinyale göre beş eşit dilime ayrılır (eşit ağırlık). En iyi − en kötü dilim farkının aylık ortalaması ve Newey-West (3 gecikme) t istatistiği."],
+        ["Rank IC", "Sinyal sırası ile ertesi ay getiri sırası arasındaki Spearman korelasyonunun aylık ortalaması."],
+        ["En iyi dilim", "Yalnız en iyi dilimi alan uzun portföyün piyasaya göre fazla getirisi; ayda değişen hisse payı kadar %0,2/işlem maliyeti düşülür. Reel TL (TÜFE) ve ABD doları cinsinden yıllık getiri de verilir."],
+        ["Alt dönemler", "2017–2019, 2020–2022 ve 2023 sonrası (enflasyon muhasebesi) ayrı ayrı."],
+        ["Karar", "Çok sayıda yöntem test edildiği için güçlü kanıt eşiği t ≥ 3 (Harvey, Liu ve Zhu 2016) ve alt dönemlerin çoğunda aynı yön; 2 ≤ t < 3 zayıf işaret; |t| < 2 kanıt yok; eksi yönde aynı eşikler \"ters çalışıyor\". 24 aydan az test edilebilir dönem: veri yetersiz."],
+      ])) + card("Sınırlar", ul([
+        ["Hayatta kalma", "Borsadan çıkmış şirketlerin fiyatları Yahoo'da yok; evren bugünkü şirketlerden oluşur. Bu, özellikle ucuz ve sıkıntılı hisselerin sonuçlarını iyimser gösterir."],
+        ["Örneklem", "KAP tabloları 2016 yıl sonundan önce okunamıyor; en fazla ~115 ay. Geçmiş tablolar KAP indirme sınırı nedeniyle kademeli iniyor, temel yöntemlerin test dönemi doldukça uzar."],
+        ["Enflasyon muhasebesi", "2023 sonu öncesi raporlar nominal, sonrası TMS 29'lu; kârlılık ve büyüme ölçütleri iki dönemde farklı davranabilir (alt dönem tablosuna bak)."],
+        ["Uygulama", "Aylık yeniden dengeleme, açılış boşluğu ve piyasa etkisi yok sayılır; sığ hisselerde gerçek maliyet daha yüksektir."],
+        ["Kaynak", "KAP mali tabloları, TCMB EVDS TÜFE, Yahoo Finance fiyat ve USD/TRY (kişisel kullanım; ham fiyat yayımlanmaz). Haftada bir (pazar) yeniden hesaplanır."],
+      ]))],
     ["takvim", "Takvim", () => card("Kaynaklar", ul([
         ["Saat", "tüm saatler İstanbul saatiyle."],
         ["Süzgeçler", "üst çubuktaki piyasa seçimi (BIST/ABD) yalnız şirket olaylarına uygulanır: bilanço, temettü, genel kurul, vade sonu. Makro veriler ve merkez bankası kararları bu seçimden bağımsızdır; onları takvimin Bölge süzgeci daraltır (Türkiye, ABD, Avrupa, İngiltere, Japonya)."],

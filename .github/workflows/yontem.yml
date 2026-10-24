@@ -1,0 +1,52 @@
+name: yontem
+
+# Yöntem Karnesi: temel ve fiyat yöntemlerinin BIST'te aylık, nokta-zamanlı geriye dönük testi (radar/yontem.py).
+# Girdi: fin dalındaki KAP tabloları + Yahoo günlük fiyatları (her çalıştırmada yeniden indirilir, saklanmaz/yayımlanmaz).
+# Çıktı yalnız özet istatistikler: tek commit'lik `yontem` dalında yontem.json; radar iş akışı panele kopyalar.
+on:
+  schedule:
+    - cron: "17 3 * * 0"      # pazar 06:17 İstanbul (aylık sinyal; haftada bir yeter)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: yontem
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Mali tabloları geri yükle
+        run: |
+          mkdir -p site/data/fin
+          git fetch --depth 1 origin fin
+          git archive FETCH_HEAD | tar -x -C site/data/fin
+
+      - name: Yöntem karnesi
+        timeout-minutes: 30
+        run: python -m radar.yontem
+
+      - name: Sonucu yontem dalına kaydet
+        run: |
+          cd site/data/yontem
+          [ -f yontem.json ] || exit 0
+          git init -q -b yontem
+          git config user.name "radar-bot"
+          git config user.email "radar-bot@users.noreply.github.com"
+          git add yontem.json
+          git commit -qm "yontem $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" yontem
+          rm -rf .git

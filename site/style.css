@@ -1591,3 +1591,9 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .m-link { font-weight: var(--fw-medium); color: var(--accent-ink); white-space: nowrap; }
 .m-foot { margin: 0; font-size: var(--fs-sm); }
 .mkt-top { margin-right: var(--s-1); } @media (max-width: 720px) { .mkt-top button { padding: 0 6px; } }
+
+/* Yöntem karnesi */
+.yk-tbl td { white-space: nowrap; }
+.yk-q { display: inline-flex; align-items: flex-end; gap: 3px; height: 26px; width: 64px; vertical-align: middle; }
+.yk-q i { flex: 1; min-height: 2px; border-radius: 2px 2px 0 0; background: var(--up); opacity: .85; }
+.yk-q i.neg { background: var(--down); }

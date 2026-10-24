@@ -69,10 +69,11 @@
     temel: { title: "Temel Analiz", sub: "BIST Tüm · KAP mali tabloları, reel (TÜFE) düzeltme, oranlar ve skorlar", view: "#view-temel", market: false },
     hisse: { title: "Şirket", sub: "", view: "#view-hisse", market: false, nav: "temel" },
     tarama: { title: "Tarama", sub: "Metrik ve kriter taraması · BIST Tüm, endeks ve sektöre göre", view: "#view-tarama", market: false },
+    "yontem-karnesi": { title: "Yöntem Karnesi", sub: "Hangi tarama yöntemi BIST'te gerçekten işe yarıyor? Aylık, yayın anına göre geriye dönük test · değer, kalite, fiyat ve birleşik yöntemler", view: "#view-yontem-karnesi", market: false },
     metodoloji: { title: "Metodoloji", sub: "Her sekmenin veri kaynakları, hesapları ve sınırları", view: "#view-metodoloji", market: false },
     karsilastir: { title: "Karşılaştır", sub: "Seçtiğin şirketlerin kategori puanları, oranları ve eğilimleri", view: "#view-karsilastir", market: false },
   };
-  const ALIAS = { "bugün": "bugun", today: "bugun", ozet: "bugun", "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", bankalar: "bankalar", banka: "bankalar", "türk-bankaları": "bankalar", "faiz-duyarliligi": "banka-faiz", nim: "banka-faiz", enerji: "enerji", energy: "enerji", "regülasyon": "regulasyon", regulation: "regulasyon", "kurulu-guc": "enerji", sinyaller: "sinyal", "olay": "olay-karnesi", karne: "olay-karnesi", "event-study": "olay-karnesi", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
+  const ALIAS = { "bugün": "bugun", today: "bugun", ozet: "bugun", "temel-analiz": "temel", sirket: "hisse", "şirket": "hisse", "karşılaştır": "karsilastir", alco: "makro", bankalar: "bankalar", banka: "bankalar", "türk-bankaları": "bankalar", "faiz-duyarliligi": "banka-faiz", nim: "banka-faiz", enerji: "enerji", energy: "enerji", "regülasyon": "regulasyon", regulation: "regulasyon", "kurulu-guc": "enerji", sinyaller: "sinyal", "olay": "olay-karnesi", karne: "olay-karnesi", "event-study": "olay-karnesi", "yontem": "yontem-karnesi", "faktor": "yontem-karnesi", backtest: "yontem-karnesi", "geri-alimlar": "geri-alim", katalizor: "takvim", ajanda: "takvim", portfolio: "portfoy", "portföy": "portfoy", "araştırma": "arastirma", research: "arastirma", raporlar: "arastirma" };
   const badgeIds = {};                            // route → rozetteki kayıt kimlikleri
   function markBadgeSeen(route) {
     if (!badgeIds[route]) return;
