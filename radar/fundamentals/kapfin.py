@@ -325,6 +325,29 @@ def parse_sectors(text: str) -> dict[str, dict]:
     return out
 
 
+def sector_members(text: str, sector: str) -> list[dict]:
+    """Bir alt sektördeki şirketler [{'code','title','oid'}]. Endekse girmeyen (ör. halka açıklığı çok düşük)
+    bankaları evrene eklemek için. Çok kodlu şirkette ("FIN, QNBTR") en uzun kod işlem kodudur."""
+    t = text.replace('\\"', '"')
+    out: dict[str, dict] = {}
+    for oid, codes, title in re.findall(r'"sectorName":"' + re.escape(sector) + r'","sectorOid":"[^"]*","sectorNo":"[^"]*",'
+                                        r'"mkkMemberOid":"([0-9a-fA-F]+)","stockCode":"([A-Z0-9, ]+)","title":"([^"]*)"', t):
+        xs = [c.strip() for c in codes.split(",") if c.strip()]
+        if xs:
+            code = max(xs, key=len)
+            out.setdefault(code, {"code": code, "title": title, "oid": oid})
+    return list(out.values())
+
+
+_SECTOR_TEXT = ""   # son fetch_sectors sayfası (ek bankalar aynı sayfadan, ikinci istek atılmadan okunur)
+
+
 def fetch_sectors() -> dict[str, dict]:
+    global _SECTOR_TEXT
     r = http.get(SECTOR_URL, timeout=60)
-    return parse_sectors(r.text) if r is not None else {}
+    _SECTOR_TEXT = r.text if r is not None else ""
+    return parse_sectors(_SECTOR_TEXT) if r is not None else {}
+
+
+def sector_extras(sectors: tuple[str, ...]) -> list[dict]:
+    return [x for sec in sectors for x in sector_members(_SECTOR_TEXT, sec)] if _SECTOR_TEXT else []

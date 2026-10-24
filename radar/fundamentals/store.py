@@ -30,6 +30,10 @@ CPI = FIN / "_cpi.json"
 DIVS = FIN / "_dividends.json"
 HISTORY_START = date(2023, 1, 1)        # BIST-100: 2022 yıl sonundan bu yana
 HISTORY_START_EXT = date(2024, 7, 1)    # diğer şirketler: 12A ve yıllık büyüme için yeterli en kısa geçmiş (2024/06'dan)
+HISTORY_DEEP = date(2017, 1, 1)         # derin geçmiş (KAP tabloları 2016 yıl sonundan itibaren ayrıştırılabiliyor;
+                                        # daha eskiler PDF/eski biçim). Yeni dönemlerden sonra, kalan kotayla iner.
+DEEP_MIN_YEAR = 2016
+EXTRA_SECTORS = ("BANKALAR",)           # endekse girmeyen bankalar da evrende (QNBTR, KLNMA: halka açıklık çok düşük)
 INDEX_TAGS = ("XU030", "XU050", "XU100", "XKTUM")   # arayüzde süzgeç olarak kullanılan endeksler
 UNIVERSE_INDEX = os.environ.get("FIN_UNIVERSE", "XUTUM")  # BIST Tüm
 CPI_SERIES = "TP.GENENDEKS.T1"
@@ -118,7 +122,7 @@ def enqueue(state: dict, code: str, row: dict) -> bool:
         year, period = int(row["year"]), int(row["period"])
     except (KeyError, TypeError, ValueError):
         return False
-    if not 1 <= period <= 4:
+    if not 1 <= period <= 4 or year < DEEP_MIN_YEAR:
         return False
     idx = int(row["disclosureIndex"])
     comp = state.setdefault("companies", {}).setdefault(code, {})
@@ -237,8 +241,7 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
             break
         if comps.get(code, {}).get("listed") and comps[code].get("lv", 1) >= LIST_VERSION:
             continue
-        start = HISTORY_START if "XU100" in m.get("idx", ["XU100"]) else HISTORY_START_EXT
-        rows = kapfin.list_reports(m["oid"], start, date.today())
+        rows = kapfin.list_reports(m["oid"], HISTORY_DEEP, date.today())
         if rows is None:
             continue
         for row in rows:
@@ -246,7 +249,30 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
                 stats["queued"] += 1
         comps.setdefault(code, {})["listed"] = date.today().isoformat()
         comps[code]["lv"] = LIST_VERSION
+        comps[code]["deep"] = HISTORY_DEEP.isoformat()
         stats["listed"] += 1
+
+    # Derin geçmiş: daha önce kısa pencereyle listelenmiş şirketlerin eski bildirimleri (yıl yıl, kalan istek kotasıyla)
+    for code, m in order:
+        if left() < budget * 0.6 or spent() >= MAX_REQ:
+            break
+        c = comps.get(code, {})
+        if not c.get("listed") or c.get("deep") == HISTORY_DEEP.isoformat():
+            continue
+        upto = date.fromisoformat(c.get("deep_upto") or
+                                  (HISTORY_START if "XU100" in m.get("idx", ["XU100"]) else HISTORY_START_EXT).isoformat())
+        frm = max(HISTORY_DEEP, upto - timedelta(days=365))
+        rows = kapfin.list_reports(m["oid"], frm, upto - timedelta(days=1))
+        if rows is None:
+            continue
+        for row in rows:
+            if enqueue(state, code, row):
+                stats["queued"] += 1
+        c["deep_upto"] = frm.isoformat()
+        if frm <= HISTORY_DEEP:
+            c["deep"] = HISTORY_DEEP.isoformat()
+            c.pop("deep_upto", None)
+        stats["deep_listed"] = stats.get("deep_listed", 0) + 1
 
     prio = {c for c, m in members.items() if "XU100" in m.get("idx", ["XU100"])}
     have = {}
@@ -310,14 +336,17 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
     stats = {"listed": 0, "queued": 0, "processed": 0, "failed": 0}
     comps = state.setdefault("companies", {})
 
-    if not uni.get("members") or uni.get("v", 1) < 4 or _due(state, "universe", 24 * 7):
+    if not uni.get("members") or uni.get("v", 1) < 5 or _due(state, "universe", 24 * 7):
         idx = kapfin.fetch_indices()
         base = idx.get(UNIVERSE_INDEX) or idx.get("XU100")
         if base:
             sectors = kapfin.fetch_sectors()
+            have = {m["oid"].lower() for m in base} | {m["code"] for m in base}
+            extra = [x for x in kapfin.sector_extras(EXTRA_SECTORS) if x["oid"].lower() not in have and x["code"] not in have]
             members = [{**m, **sectors.get(m["code"], {}),
                         "idx": [t for t in INDEX_TAGS if any(x["code"] == m["code"] for x in idx.get(t, []))]} for m in base]
-            uni = {"v": 4, "index": UNIVERSE_INDEX if idx.get(UNIVERSE_INDEX) else "XU100",
+            members += [{**x, **sectors.get(x["code"], {}), "idx": [], "extra": True} for x in extra]
+            uni = {"v": 5, "index": UNIVERSE_INDEX if idx.get(UNIVERSE_INDEX) else "XU100",
                    "updated": _now().isoformat(timespec="seconds"), "members": members}
             _save(UNIVERSE, uni)
     members = {m["code"]: m for m in uni.get("members", [])}

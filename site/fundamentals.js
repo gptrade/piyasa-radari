@@ -253,7 +253,7 @@
     const max = niceMax(Math.max(0, ...ok)), min = Math.min(0, ...ok) < 0 ? -niceMax(-Math.min(...ok)) : 0;
     const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
     const y = v => PAD.t + ih * (max - v) / (max - min);
-    const bw = Math.min(36, iw / labels.length * 0.55);
+    const bw = Math.min(36, iw / labels.length * 0.55), lstep = Math.ceil(labels.length / Math.max(4, Math.floor(iw / 46)));
     const ticks = [min, (min + max) / 2, max].filter((v, i, a) => a.indexOf(v) === i);
     return `<svg class="fa-chart" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Çubuk grafik">
       ${ticks.map(t => `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y(t)}" y2="${y(t)}" class="${t === 0 ? "ax0" : "gl"}"/><text x="${PAD.l - 6}" y="${y(t) + 4}" class="tk-y">${axisFmt(t, kind)}</text>`).join("")}
@@ -261,7 +261,7 @@
         const cx = PAD.l + iw * (i + 0.5) / labels.length, v = vals[i];
         const bar = v == null ? "" : (() => { const y0 = y(0), y1 = y(v), h = Math.max(1, Math.abs(y1 - y0)); const top = Math.min(y0, y1);
           return `<rect x="${cx - bw / 2}" y="${top}" width="${bw}" height="${h}" rx="3" fill="${v < 0 ? "var(--down)" : color}" data-tip="<b>${esc(l)}</b><br>${esc(tipFmt(v))}"/>`; })();
-        return `${bar}<rect x="${cx - iw / labels.length / 2}" y="${PAD.t}" width="${iw / labels.length}" height="${ih}" fill="transparent" ${v != null ? `data-tip="<b>${esc(l)}</b><br>${esc(tipFmt(v))}"` : ""}/><text x="${cx}" y="${H - 8}" class="tk-x">${esc(l)}</text>`;
+        return `${bar}<rect x="${cx - iw / labels.length / 2}" y="${PAD.t}" width="${iw / labels.length}" height="${ih}" fill="transparent" ${v != null ? `data-tip="<b>${esc(l)}</b><br>${esc(tipFmt(v))}"` : ""}/>${i % lstep === 0 || i === labels.length - 1 ? `<text x="${cx}" y="${H - 8}" class="tk-x">${esc(l)}</text>` : ""}`;
       }).join("")}</svg>`;
   }
   function lineChart(labels, series, { kind = "pct", tipFmt = pct, w: W = 560 } = {}) {
@@ -569,7 +569,7 @@
       ? [["F/K", v.pe, sm.pe], ["FD/FAVÖK", v.ev_ebitda, sm.ev_ebitda], ["PD/DD", v.pb, sm.pb], ["FD/Satış", v.ev_sales, sm.ev_sales], ["PEG", v.peg, null], ["Net borç/FAVÖK", m.ratios.net_debt_ebitda, null]]
       : [["F/K", v.pe, sm.pe], ["PD/DD", v.pb, sm.pb], ["PEG", v.peg, null], ["Kazanç getirisi", v.earnings_yield, null, pct], ["Temettü verimi (12A)", v.div_yield, null, pct]];
     return `
-      <div class="toolbar fa-sec"><div class="seg" role="radiogroup" aria-label="Çeyrek sayısı">${[4, 5, 8, 12].map(k => `<button type="button" role="radio" data-nq="${k}" aria-checked="${S.nq === k}">${k} çeyrek</button>`).join("")}</div>
+      <div class="toolbar fa-sec"><div class="seg" role="radiogroup" aria-label="Çeyrek sayısı">${[4, 5, 8, 12, 20, 40].filter((k, j, a) => j < 4 || a[j - 1] < se.periods.length).map(k => `<button type="button" role="radio" data-nq="${k}" aria-checked="${S.nq === k}">${k === 40 ? "Tümü" : `${k} çeyrek`}</button>`).join("")}</div>
         <span class="grow"></span><span class="card-meta">bin ₺ · ${amountsLabel(se)}</span></div>
       <div class="fa-two">
         <section class="card"><div class="card-head"><h2 class="card-title">Özet gelir tablosu</h2><span class="card-meta">dönemsel (yılbaşından)</span></div>

@@ -282,7 +282,7 @@ def test_universe_from_xutum_with_index_tags(fin_dir, monkeypatch):
     store.run(budget=60)
     uni = store._load(fin_dir / "_universe.json", {})
     assert uni["index"] == "XUTUM" and {m["code"]: m["idx"] for m in uni["members"]} == {"TRGYO": ["XU100"], "KUCUK": []}
-    assert seen[0] == ("o1", store.HISTORY_START) and seen[1] == ("o2", store.HISTORY_START_EXT)
+    assert seen[0] == ("o1", store.HISTORY_DEEP) and seen[1] == ("o2", store.HISTORY_DEEP)
 
 
 def test_tiers_open_scores_fastest():
@@ -304,3 +304,35 @@ def test_parse_indices_accepts_uppercase_member_oid():
     t = ('{"code":"XU100","content":[{"stockCode":"GARAN","title":"TÜRKİYE GARANTİ BANKASI A.Ş.","mkkMemberOid":"4028e4a140f2ed720140f376bebb01a7"},'
          '{"stockCode":"HALKB","title":"TÜRKİYE HALK BANKASI A.Ş.","mkkMemberOid":"1DE05DAA82C3073AE0530A4A622A2EBD"}]}')
     assert [m["code"] for m in kapfin.parse_indices(t)["XU100"]] == ["GARAN", "HALKB"]
+
+
+def test_sector_members_picks_trading_code_and_extras(monkeypatch):
+    page = ('{"sectorName":"BANKALAR","sectorOid":"1","sectorNo":"008000.001000.",'
+            '"mkkMemberOid":"4028e4a240e95dc90140ee076f400178","stockCode":"FIN, QNBTR","title":"QNB BANK A.Ş.","kapTypes":["IGS"]},'
+            '{"sectorName":"BANKALAR","sectorOid":"1","sectorNo":"008000.001000.",'
+            '"mkkMemberOid":"1DE05DAA82C3073AE0530A4A622A2EBD","stockCode":"HALKB","title":"HALK","kapTypes":["IGS"]}')
+    xs = kapfin.sector_members(page, "BANKALAR")
+    assert [x["code"] for x in xs] == ["QNBTR", "HALKB"] and xs[1]["oid"] == "1DE05DAA82C3073AE0530A4A622A2EBD"
+    assert kapfin.sector_members(page, "SİGORTA") == []
+
+
+def test_enqueue_skips_pre_xbrl_years():
+    st = {}
+    assert not store.enqueue(st, "TRGYO", row(5, year=2014, period=4))
+    assert store.enqueue(st, "TRGYO", row(6, year=2016, period=4))
+
+
+def test_deep_history_listed_in_yearly_steps(fin_dir, monkeypatch):
+    calls = []
+    _fake_env(monkeypatch, lambda idx: None)
+    monkeypatch.setattr(store.kapfin, "list_reports", lambda oid, a, b: calls.append((a, b)) or [])
+    store._save(store.STATE, {"companies": {"TRGYO": {"listed": "2026-01-01", "lv": store.LIST_VERSION}}})
+    store._save(store.UNIVERSE, {"v": 5, "members": [{"code": "TRGYO", "title": "T", "oid": "o1", "idx": ["XU100"]}],
+                                 "updated": store._now().isoformat()})
+    monkeypatch.setattr(store, "_due", lambda st, k, h: k not in ("universe",))
+    for _ in range(10):
+        store.run(budget=60)
+    c = store._load(store.STATE, {})["companies"]["TRGYO"]
+    assert c["deep"] == store.HISTORY_DEEP.isoformat() and "deep_upto" not in c
+    assert calls[0][1] == store.HISTORY_START - store.timedelta(days=1)
+    assert calls[-1][0] == store.HISTORY_DEEP and len(calls) == 7
