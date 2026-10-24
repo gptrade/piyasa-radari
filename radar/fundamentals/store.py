@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -134,7 +135,15 @@ def enqueue(state: dict, code: str, row: dict) -> bool:
     q.setdefault(pk, [])
     if idx not in q[pk]:
         q[pk].append(idx)
+    pub = _pub_iso(row.get("publishDate"))
+    if pub:                                      # yayın anı: geriye dönük testlerde rapor ancak bu andan sonra bilinir
+        state.setdefault("pub", {})[str(idx)] = pub
     return True
+
+
+def _pub_iso(s) -> str | None:
+    m = re.match(r"(\d{2})\.(\d{2})\.(\d{4}) (\d{2}:\d{2})", str(s or ""))
+    return f"{m.group(3)}-{m.group(2)}-{m.group(1)}T{m.group(4)}" if m else None
 
 
 def _tier(pk: str, latest: str) -> int:
@@ -293,9 +302,12 @@ def _kap_work(state, members, comps, stats, left, budget) -> None:
             comps[code].setdefault("failed", []).append(pk)
             stats["failed"] += 1
         else:
+            rep["published"] = state.get("pub", {}).get(str(rep.get("idx")))
             save_report(code, members.get(code, {}).get("title", ""), pk, rep)
             stats["processed"] += 1
         tries.pop(pk, None)
+        for i in idxs:
+            state.get("pub", {}).pop(str(i), None)
         del state["queue"][code][pk]
         if not state["queue"][code]:
             del state["queue"][code]

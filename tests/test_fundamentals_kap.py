@@ -336,3 +336,9 @@ def test_deep_history_listed_in_yearly_steps(fin_dir, monkeypatch):
     assert c["deep"] == store.HISTORY_DEEP.isoformat() and "deep_upto" not in c
     assert calls[0][1] == store.HISTORY_START - store.timedelta(days=1)
     assert calls[-1][0] == store.HISTORY_DEEP and len(calls) == 7
+
+
+def test_publish_date_kept_until_report_saved():
+    st = {}
+    assert store.enqueue(st, "TRGYO", {**row(7), "publishDate": "02.02.2022 18:10:15"})
+    assert st["pub"]["7"] == "2022-02-02T18:10"
