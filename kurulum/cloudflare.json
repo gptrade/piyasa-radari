@@ -1,0 +1,47 @@
+{
+ "host": "radar.lyracube.com",
+ "anahtar": {
+  "uzunluk": 53,
+  "bosluk": false,
+  "hesap_id_uzunluk": 32,
+  "hesap_id_hex": true,
+  "durum": "active"
+ },
+ "alan_adi": {
+  "durum": "active",
+  "ns": [
+   "dawn.ns.cloudflare.com",
+   "troy.ns.cloudflare.com"
+  ]
+ },
+ "pages_projesi": {
+  "durum": "var",
+  "pages_dev": "piyasa-radari.pages.dev",
+  "domains": [
+   "piyasa-radari.pages.dev",
+   "radar.lyracube.com"
+  ]
+ },
+ "pages_ozel_alan": {
+  "durum": "active",
+  "dogrulama": "active"
+ },
+ "dns": "var",
+ "eposta_kodu": {
+  "hata": "1010 "
+ },
+ "access": {
+  "uygulama": "hazır",
+  "korunan": [
+   "radar.lyracube.com",
+   "piyasa-radari.pages.dev",
+   "*.piyasa-radari.pages.dev"
+  ],
+  "izinli_kisi": 8,
+  "politika": "hazır"
+ },
+ "dogrulama": {
+  "radar.lyracube.com": "HTTP 302 → giriş ekranı",
+  "piyasa-radari.pages.dev": "HTTP 302 → giriş ekranı"
+ }
+}
