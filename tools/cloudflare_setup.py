@@ -8,6 +8,7 @@ Ortam: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, CF_ACCESS_EMAILS (virgülle)
 """
 import json
 import os
+import re
 import sys
 
 import requests
@@ -18,7 +19,9 @@ ACC = os.environ["CLOUDFLARE_ACCOUNT_ID"].strip()
 DOMAIN = os.environ.get("CF_DOMAIN", "lyracube.com")
 HOST = f"{os.environ.get('CF_SUB', 'radar')}.{DOMAIN}"
 PROJECT = os.environ.get("CF_PROJECT", "piyasa-radari")
-EMAILS = [e.strip().lower() for e in os.environ.get("CF_ACCESS_EMAILS", "").split(",") if "@" in e]
+# virgül, noktalı virgül, boşluk ya da yeni satırla ayrılmış olabilir; tekrarlar ve hatalı biçimliler atılır
+EMAILS = list(dict.fromkeys(e.strip().strip("<>\"'").lower() for e in re.split(r"[,;\s]+", os.environ.get("CF_ACCESS_EMAILS", ""))
+                            if re.fullmatch(r"[^@\s<>\"']+@[^@\s<>\"']+\.[^@\s<>\"']+", e.strip().strip("<>\"'"))))
 APP_NAME = "Lyra Radar"
 OLD_NAMES = ("Piyasa Radarı",)              # yeniden adlandırma: eski adlı uygulama bulunup bu ada çevrilir (kopya açılmaz)
 st: dict = {"host": HOST}
