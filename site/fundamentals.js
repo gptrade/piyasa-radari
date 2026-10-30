@@ -557,10 +557,17 @@
     const ya = se.periods.indexOf(`${+se.periods[i].slice(0, 4) - 1}/${se.periods[i].slice(5)}`);
     const pq = i - 1;
     const fr = j => j >= 0 ? realF(se, j) : 1;
-    const chg = (a, b) => a == null || b == null || b === 0 ? "—" : `<span class="${a / b - 1 >= 0 ? "up" : "down"}">${pctS(a / b - 1, 0)}</span>`;
+    // Değişim (a − b) / |b|: taban eksiyken a/b − 1 yön değiştirir (zarar küçülünce "−%12" görünürdü). İşaret değişiminde yüzde anlamsız.
+    const chg = (a, b, is = false) => {
+      if (a == null || b == null || b === 0) return "—";
+      if (b < 0 && a >= 0) return `<span class="up" data-tip="Önceki dönem eksi, bu dönem artı: yüzde değişim anlamlı değil">${is ? "kâra geçti" : "artıya geçti"}</span>`;
+      if (b > 0 && a < 0) return `<span class="down" data-tip="Önceki dönem artı, bu dönem eksi: yüzde değişim anlamlı değil">${is ? "zarara geçti" : "eksiye geçti"}</span>`;
+      const c = (a - b) / Math.abs(b), tip = b < 0 ? ` data-tip="${is ? "Zarar" : "Eksi bakiye"} %${fmt.num(Math.abs(c) * 100, 0)} ${c >= 0 ? "azaldı" : "arttı"}"` : "";
+      return `<span class="${c >= 0 ? "up" : "down"}"${tip}>${pctS(c, 0)}</span>`;
+    };
     // Kümülatif gelir tablosu: cari ve önceki yıl aynı dönem (raporun kendi karşılaştırmalı sütunu, aynı birim)
     const isRows = (FR?.is || IS_ROWS).map(([k, l]) => { const a = se.cum[k]?.[i], b = se.cum_prev[k]?.[i];
-      return `<tr><th scope="row">${l}</th><td class="num">${bin(a == null ? null : a * fr(i))}</td><td class="num">${bin(b == null ? null : b * fr(i))}</td><td class="num">${chg(a, b != null && b < 0 && a != null && a > 0 ? null : b)}</td></tr>`; }).join("");
+      return `<tr><th scope="row">${l}</th><td class="num">${bin(a == null ? null : a * fr(i))}</td><td class="num">${bin(b == null ? null : b * fr(i))}</td><td class="num">${chg(a, b, true)}</td></tr>`; }).join("");
     const bsRows = (FR?.bs || BS_ROWS).map(([k, l]) => { const a = se.bs[k]?.[i], b = pq >= 0 ? se.bs[k]?.[pq] : null, c = ya >= 0 ? se.bs[k]?.[ya] : null;
       const ar = a == null ? null : a * fr(i), br = b == null ? null : b * fr(pq), cr = c == null ? null : c * fr(ya);
       return `<tr><th scope="row">${l}</th><td class="num">${bin(ar)}</td><td class="num">${bin(br)}</td><td class="num">${chg(ar, br)}</td><td class="num">${bin(cr)}</td><td class="num">${chg(ar, cr)}</td></tr>`; }).join("");
