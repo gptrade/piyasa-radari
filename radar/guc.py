@@ -214,14 +214,15 @@ def thrusts(b: pd.DataFrame) -> list[str]:
 
 
 def ninety_days(b: pd.DataFrame) -> list[dict]:
-    """%90 günleri: yükselen (ya da düşen) hisselerin hacmi toplam hacmin ≥ %90'ı."""
+    """%90 günleri (Lowry): yükselen (düşen) hisselerin hacmi yükselen + düşen hacmin ≥ %90'ı ve hisselerin de ≥ %85'i
+    aynı yönde. Yalnız hacim koşulu BIST'te hacmin birkaç büyük hissede toplandığı yıllarda fazla sık sinyal veriyordu."""
     out = []
-    for d, v in b["upv"].items():
-        if v is None or not np.isfinite(v):
+    for (d, v), a in zip(b["upv"].items(), b["adr"].values):
+        if v is None or not np.isfinite(v) or a is None or not np.isfinite(a):
             continue
-        if v >= 0.9:
+        if v >= 0.9 and a >= 0.85:
             out.append({"d": d.date().isoformat(), "k": "up"})
-        elif v <= 0.1:
+        elif v <= 0.1 and a <= 0.15:
             out.append({"d": d.date().isoformat(), "k": "down"})
     return out
 
