@@ -1,0 +1,64 @@
+name: guc
+
+# Piyasa Gücü: BIST genişlik, rejim, sektör rotasyonu ve güçlü hisseler (radar/guc.py).
+# Fiyatlar (Yahoo, 2010'dan; kişisel kullanım) `guc` dalında Parquet olarak saklanır, yayımlanmaz; panel yalnız guc.json'u okur.
+on:
+  schedule:
+    - cron: "5 16 * * 1-5"     # 19:05 İstanbul (kapanıştan sonra)
+    - cron: "35 18 * * 1-5"    # 21:35 (Yahoo geç güncellerse)
+  push:                         # önizleme: iş akışı ana dalda yokken elle tetiklenemiyor
+    branches: [onizleme-piyasa-gucu]
+    paths: ["radar/guc.py", ".github/workflows/guc.yml"]
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Fiyat geçmişini baştan indir"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: guc
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Girdileri geri yükle
+        run: |
+          mkdir -p site/data/guc site/data/fin
+          if git ls-remote --exit-code --heads origin guc >/dev/null 2>&1; then
+            git fetch --depth 1 origin guc && git archive FETCH_HEAD | tar -x -C site/data/guc
+          fi
+          git fetch --depth 1 origin fin
+          git archive FETCH_HEAD _universe.json _screen.json | tar -x -C site/data/fin
+
+      - name: Piyasa gücü
+        timeout-minutes: 35
+        run: python -m radar.guc ${{ inputs.full && '--full' || '' }}
+
+      - name: Veriyi guc dalına kaydet
+        if: always()
+        run: |
+          cd site/data/guc
+          [ -f guc.json ] || exit 0
+          git init -q -b guc
+          git config user.name "radar-bot"
+          git config user.email "radar-bot@users.noreply.github.com"
+          git add -A
+          git commit -qm "guc $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" guc
+          rm -rf .git

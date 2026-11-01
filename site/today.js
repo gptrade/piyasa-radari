@@ -107,7 +107,7 @@
     if (!S.loaded) { body.innerHTML = `<div class="view" aria-busy="true"><div class="kpi-grid">${Array.from({ length: 6 }, () => `<div class="kpi"><div class="skeleton sk-line w60"></div><div class="skeleton sk-line lg w40"></div></div>`).join("")}</div></div>`; return; }
     const d = new Date().toLocaleDateString("tr-TR", { timeZone: sh.TZ, weekday: "long", day: "numeric", month: "long", year: "numeric" });
     $("#tdDate").textContent = d;
-    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis()}${digest()}
+    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis()}${window.radarGuc?.card() || ""}${digest()}
       <div class="td-grid">${signalCard()}${calCard()}${pfCard()}${researchCard()}</div></div>`;
   }
 
@@ -117,6 +117,7 @@
     else if (tk) window.radar?.openTicker?.(tk.dataset.tk, tk);
   });
   addEventListener("radar:pf", () => render());
+  addEventListener("radar:guc", () => render());
   addEventListener("themechange", render);
 
   sh.register("bugun", {

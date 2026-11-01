@@ -1597,3 +1597,33 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .yk-q { display: inline-flex; align-items: flex-end; gap: 3px; height: 26px; width: 64px; vertical-align: middle; }
 .yk-q i { flex: 1; min-height: 2px; border-radius: 2px 2px 0 0; background: var(--up); opacity: .85; }
 .yk-q i.neg { background: var(--down); }
+
+/* Piyasa gücü */
+.gc-svg, .gc-rrg { width: 100%; height: auto; display: block; font: var(--fs-2xs) var(--font-mono); }
+.gc-svg text, .gc-rrg text { fill: var(--text-3); }
+.gc-svg .g { stroke: var(--grid); } .gc-svg .z, .gc-rrg .z { stroke: var(--axis); stroke-width: 1.2; }
+.gc-svg .band { stroke: var(--text-3); stroke-dasharray: 4 4; opacity: .6; } .gc-svg .bl { font-size: 10px; }
+.gc-svg .ln { fill: none; stroke-width: 1.8; stroke-linejoin: round; }
+.gc-svg .gc-hit { fill: transparent; }
+.gc-bg { opacity: .13; } .r-boga, .gc-bg.r-boga { fill: var(--up); background: var(--up); } .gc-bg.r-toparlanma, .r-toparlanma { fill: var(--series-1); background: var(--series-1); }
+.gc-bg.r-duzeltme, .r-duzeltme { fill: var(--warn-line); background: var(--warn-line); } .gc-bg.r-dip, .r-dip { fill: #9b6bd1; background: #9b6bd1; } .gc-bg.r-ayi, .r-ayi { fill: var(--down); background: var(--down); }
+.gc-key { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; } .gc-key i { display: inline-block; width: 12px; height: 10px; border-radius: 2px; opacity: .45; margin-right: 4px; vertical-align: -1px; }
+.gc-svg .mk { stroke: var(--surface); stroke-width: 1.5; } .mk.th, .gc-dot.th { fill: var(--series-1); background: var(--series-1); } .mk.u90, .gc-dot.u90 { fill: var(--up); background: var(--up); }
+.mk.d90, .gc-dot.d90 { fill: var(--down); background: var(--down); } .mk.pdv, .gc-dot.pdv { fill: #9b6bd1; background: #9b6bd1; } .mk.ndv, .gc-dot.ndv { fill: var(--warn-line); background: var(--warn-line); }
+.gc-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 2px 0 8px; vertical-align: -1px; }
+.gc-foot { margin: var(--s-2) 0 0; font-size: var(--fs-xs); }
+.gc-reg { border-left: 4px solid var(--border-strong); } .gc-reg.up { border-left-color: var(--up); } .gc-reg.down { border-left-color: var(--down); } .gc-reg.warn-t { border-left-color: var(--warn-line); }
+.gc-ck { list-style: none; margin: 0; padding: 0; font-size: var(--fs-sm); } .gc-ck li { display: flex; gap: 8px; padding: 3px 0; } .gc-ck li.ok span { color: var(--up); } .gc-ck li.no span { color: var(--down); }
+.gc-sig { display: flex; flex-wrap: wrap; gap: 6px; }
+.gc-rrg .q { opacity: .07; } .gc-rrg .q.lider { fill: var(--up); } .gc-rrg .q.zayif { fill: var(--warn-line); } .gc-rrg .q.geride { fill: var(--down); } .gc-rrg .q.iyilesen { fill: var(--series-1); }
+.gc-rrg .ql { font: var(--fw-semibold) 12px var(--font-sans); fill: var(--text-2); } .gc-rrg .ax { font: 11px var(--font-sans); }
+.gc-rrg .gc-sec { cursor: pointer; } .gc-rrg .gc-sec path { fill: none; stroke-width: 1.5; opacity: .6; } .gc-rrg .gc-sec .sl { fill: var(--text); font: 10.5px var(--font-sans); }
+.gc-rrg .gc-sec.dim { opacity: .35; } .gc-rrg .gc-sec.sel path { stroke-width: 2.5; opacity: 1; } .gc-rrg .gc-sec.sel .sl { font-weight: 700; }
+.gc-qbox { margin-bottom: var(--s-2); } .gc-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.gc-q { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--fs-xs); font-weight: var(--fw-semibold); color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
+.gc-score { display: inline-block; min-width: 2.4em; padding: 1px 6px; border-radius: 6px; font-weight: 700; text-align: center;
+  background: color-mix(in srgb, var(--up) calc(var(--v) * 0.35%), color-mix(in srgb, var(--down) calc((100 - var(--v)) * 0.25%), transparent)); }
+.gc-tbl td { white-space: nowrap; } .gc-tbl tbody tr[data-sec] { cursor: pointer; } .gc-lead .link-btn { margin-right: 4px; }
+.gc-tt { display: inline-flex; gap: 2px; vertical-align: middle; } .gc-tt i { width: 6px; height: 12px; border-radius: 2px; background: var(--border-strong); } .gc-tt i.on { background: var(--up); }
+.gc-lbl { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--text-2); }
+.gc-more { display: flex; justify-content: center; padding: var(--s-3); } .gc-go { margin-top: var(--s-2); }
