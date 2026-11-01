@@ -61,7 +61,7 @@
       return {
         id: r.disclosure_index, t: (r.tickers || "").split(/[,\s]+/)[0].toUpperCase(), name: r.company_title || "",
         pub, date: txd, price, qty: r.quantity, amount: price && r.quantity ? price * r.quantity : null,
-        own: r.ownership_pct_after, url: r.source_url, type: r.notice_type || "", kind: kindOf(r), review: !!r.needs_review, fields: r.raw_fields || {},
+        own: r.ownership_pct_after, pct: r.pct_this_transaction, url: r.source_url, type: r.notice_type || "", kind: kindOf(r), review: !!r.needs_review, fields: r.raw_fields || {},
         dateFixed: td.fixed ? (td.raw || "geçersiz") : null,
       };
     }).filter(r => r.t && r.pub));
@@ -175,8 +175,9 @@
     const m = new Map();
     for (const r of rows) {
       if (r.kind !== "tx") continue;
-      const o = m.get(r.t) || { t: r.t, name: r.name, n: 0, qty: 0, amount: 0, pq: 0, last: null, own: null, ownAt: null, tx: [], review: 0, suspect: 0 };
+      const o = m.get(r.t) || { t: r.t, name: r.name, n: 0, qty: 0, amount: 0, pq: 0, pct: null, last: null, own: null, ownAt: null, tx: [], review: 0, suspect: 0 };
       o.n++; o.qty += r.qty || 0; o.amount += r.amount || 0;
+      if (r.pct != null) o.pct = (o.pct || 0) + r.pct;
       if (r.amount) o.pq += r.qty;
       if (r.suspect) o.suspect++;
       if (!o.last || r.date > o.last) o.last = r.date;
@@ -186,7 +187,7 @@
       m.set(r.t, o);
     }
     // dönemde program açıklayıp henüz işlem bildirmeyenler de tabloda görünsün
-    for (const r of rows) if (r.kind === "program" && !m.has(r.t)) m.set(r.t, { t: r.t, name: r.name, n: 0, qty: 0, amount: 0, pq: 0, last: null, own: null, ownAt: null, tx: [], review: 0, suspect: 0 });
+    for (const r of rows) if (r.kind === "program" && !m.has(r.t)) m.set(r.t, { t: r.t, name: r.name, n: 0, qty: 0, amount: 0, pq: 0, pct: null, last: null, own: null, ownAt: null, tx: [], review: 0, suspect: 0 });
     const cut = Date.now() - S.days * DAY;
     return [...m.values()].map(o => {
       const pg = S.prog?.get(o.t);
@@ -196,6 +197,14 @@
       o.dur = pg && !pg.ended ? durShort(pg.dur) : "";
       o.newProg = !!(pg && pg.pub >= cut && !pg.ended);
       o.avg = o.pq ? o.amount / o.pq : null;
+      // program başından beri (aktif ya da son program): KAP işlem bildirimlerindeki "sermayeye oranı"nın toplamı
+      if (o.pg) {
+        const xs = S.rows.filter(r => r.t === o.t && r.kind === "tx" && r.pub >= o.pg.pub && (!o.pg.ended || r.date <= o.pg.ended));
+        o.pgPct = xs.some(r => r.pct != null) ? xs.reduce((s2, r) => s2 + (r.pct || 0), 0) : null;
+        o.pgQty = xs.reduce((s2, r) => s2 + (r.qty || 0), 0);
+        o.pgN = xs.length;
+        o.pgUse = o.pgQty && o.pg.maxQty ? o.pgQty / o.pg.maxQty : null;
+      }
       o.q = quote(o.t);
       o.ratio = o.q && o.avg ? o.q.last / o.avg : null;
       o.tx.sort((a, b) => b.date - a.date);
@@ -284,8 +293,8 @@
   // ─────────────────────────────── çizim: tablo
   function table(agg, showRatio) {
     const w = watchSet();
-    const COLS = [["t", "Hisse"], ["name", "Şirket"], ["maxQty", "Azami pay (bin)", 1], ["maxFund", "Azami fon (mn ₺)", 1], ["dur", "Süre"], ["n", "İşlem", 1], ["qty", "Adet (bin)", 1], ["amount", "Tutar (mn ₺)", 1], ["avg", "Ort. fiyat (₺)", 1],
-      ...(showRatio ? [["ratio", "Güncel / Ort.", 1]] : []), ["own", "Sermaye payı (%)", 1], ["last", "Son işlem", 1]];
+    const COLS = [["t", "Hisse"], ["name", "Şirket"], ["maxQty", "Azami pay (bin)", 1], ["maxFund", "Azami fon (mn ₺)", 1], ["dur", "Süre"], ["n", "İşlem", 1], ["qty", "Adet (bin)", 1], ["pct", "Alınan (% sermaye)", 1], ["amount", "Tutar (mn ₺)", 1], ["avg", "Ort. fiyat (₺)", 1],
+      ...(showRatio ? [["ratio", "Güncel / Ort.", 1]] : []), ["own", "Elindeki pay (% sermaye)", 1], ["last", "Son işlem", 1]];
     const k = S.sort, dir = S.dir;
     agg.sort((a, b) => {
       const va = a[k], vb = b[k];
@@ -295,7 +304,7 @@
       return (typeof va === "string" ? va.localeCompare(vb, "tr") : va - vb) * dir;
     });
     const TIPS = { maxQty: "Son program bildirimindeki geri alınabilecek azami pay (nominal ₺ ≈ adet, bin)",
-      maxFund: "Geri alım için ayrılan azami fon (ödenecek azami tutar)", dur: "Programın uygulanacağı süre", ratio: "Güncel fiyat ÷ ortalama geri alım fiyatı. 1'in üstü: şirket bugünkü fiyattan ucuza almış.", qty: "Dönemdeki toplam geri alınan pay (bin adet)", amount: "Fiyat × adet; şüpheli fiyatlı işlemler hariç" };
+      maxFund: "Geri alım için ayrılan azami fon (ödenecek azami tutar)", dur: "Programın uygulanacağı süre", ratio: "Güncel fiyat ÷ ortalama geri alım fiyatı. 1'in üstü: şirket bugünkü fiyattan ucuza almış.", qty: "Dönemdeki toplam geri alınan pay (bin adet)", pct: "Dönemde geri alınan payın sermayeye oranı: KAP işlem bildirimlerindeki oranların toplamı. Üzerine gelince program başından beri toplam ve azami pay kullanımı.", amount: "Fiyat × adet; şüpheli fiyatlı işlemler hariç" };
     const head = COLS.map(([c, l, num]) => `<th scope="col" class="${num ? "num" : ""}" aria-sort="${c === k ? (dir > 0 ? "ascending" : "descending") : "none"}">
       <button type="button" class="th-sort" data-c="${c}" ${TIPS[c] ? `data-tip="${esc(TIPS[c])}"` : ""}>${l}<span class="arr" aria-hidden="true">${c === k ? (dir > 0 ? "▲" : "▼") : "▼"}</span></button></th>`).join("");
     const total = agg.length, shown = agg.slice(0, S.limit);
@@ -313,6 +322,7 @@
         <td class="dur" ${o.pg?.dur && o.pg.dur !== o.dur ? `data-tip="${esc(o.pg.dur)}"` : ""}>${o.dur ? esc(o.dur) : "—"}</td>
         <td class="num">${o.n || "—"}${flags ? ` <span class="rv" data-tip="${esc(flags)}">⚠</span>` : ""}</td>
         <td class="num">${o.n ? bin(o.qty) : "—"}</td>
+        <td class="num">${o.pct == null ? "—" : `<span ${o.pg ? `data-tip="${esc(`Program başından (${fmt.date(o.pg.pub, { day: "numeric", month: "short", year: "numeric" })}) beri: ${o.pgN} işlem, ${fmt.int(o.pgQty)} pay${o.pgPct != null ? `, sermayenin %${fmt.num(o.pgPct, 2)}'si` : ""}${o.pgUse != null ? `<br>Azami payın %${fmt.num(o.pgUse * 100, 0)}'i kullanıldı` : ""}`)}"` : ""}>${fmt.num(o.pct, 2)}</span>`}</td>
         <td class="num"><b>${o.n ? mn(o.amount) : "—"}</b></td>
         <td class="num">${o.avg ? fmt.num(o.avg) : "—"}</td>
         ${showRatio ? `<td class="num"><span class="ratio ${dirCls(rk)}" data-tip="${esc(ratioTip)}">${o.ratio == null ? "—" : `${glyph(rk)} ${fmt.num(o.ratio)}`}</span></td>` : ""}
@@ -332,15 +342,25 @@
     if (!pg) return "";
     const bits = [pg.maxQty ? `azami ${fmt.int(pg.maxQty)} pay` : "", pg.maxFund ? `azami fon ${tlShort(pg.maxFund)}` : "", pg.dur ? `süre ${esc(durShort(pg.dur))}` : "",
 ].filter(Boolean).join(" · ");
+    const cum = o.pgN ? ` · <b>program boyunca ${fmt.int(o.pgQty)} pay${o.pgPct != null ? ` (sermayenin %${fmt.num(o.pgPct, 2)}'si)` : ""}${o.pgUse != null ? `, azami payın %${fmt.num(o.pgUse * 100, 0)}'i` : ""}</b>` : "";
     return `<p class="prog-line">${pg.ended ? `<span class="tag">program sonlandı ${fmt.date(pg.ended)}</span>` : `<span class="tag up">program</span>`}
-      <a href="${esc(pg.url)}" target="_blank" rel="noopener">${esc(pg.type || "Program bildirimi")} ↗</a> <span class="meta">${fmt.date(pg.pub, { day: "numeric", month: "short", year: "numeric" })}${bits ? " · " + bits : ""}</span></p>`;
+      <a href="${esc(pg.url)}" target="_blank" rel="noopener">${esc(pg.type || "Program bildirimi")} ↗</a> <span class="meta">${fmt.date(pg.pub, { day: "numeric", month: "short", year: "numeric" })}${bits ? " · " + bits : ""}${cum}</span></p>`;
   }
+  // Fiili dolaşım oranı MKK verisidir; kullanım koşulları kopyalama/saklamaya izin vermediği için panele alınmaz, KAP'taki sayfasına bağlanır
+  function ffLink(o) {
+    const oid = OIDS?.get(o.t);
+    const u = oid ? `https://www.kap.org.tr/tr/sirket-bilgileri/ozet/${oid}` : `https://www.kap.org.tr/tr/bist-sirketler`;
+    return `<p class="meta bb-ff">Fiili dolaşım oranı: <a href="${u}" target="_blank" rel="noopener">KAP şirket özeti → Fiili Dolaşımdaki Paylar ↗</a> <span data-tip="Fiili dolaşım verisi MKK'nındır; MKK'nın kullanım koşulları verinin kopyalanmasına ve saklanmasına izin vermediği için panelde gösterilmez.">ⓘ</span></p>`;
+  }
+  let OIDS = null;
+  fetch("data/fin/_universe.json", { cache: "force-cache" }).then(r => r.ok ? r.json() : null).then(u => { if (u) OIDS = new Map(u.members.map(m => [m.code, m.oid])); }).catch(() => {});
   function txList(o) {
-    if (!o.tx.length) return progLine(o) + `<p class="meta">Bu dönemde işlem bildirimi yok.</p>`;
-    return progLine(o) + `<table class="tx" aria-label="${esc(o.t)} işlemleri"><thead><tr><th>İşlem tarihi</th><th class="num">Fiyat (₺)</th><th class="num">Adet</th><th class="num">Tutar (₺)</th><th class="num">Sermaye payı (%)</th><th>Bildirim</th></tr></thead><tbody>` +
+    if (!o.tx.length) return progLine(o) + ffLink(o) + `<p class="meta">Bu dönemde işlem bildirimi yok.</p>`;
+    return progLine(o) + ffLink(o) + `<table class="tx" aria-label="${esc(o.t)} işlemleri"><thead><tr><th>İşlem tarihi</th><th class="num">Fiyat (₺)</th><th class="num">Adet</th><th class="num">Tutar (₺)</th><th class="num" data-tip="Bu işlemde alınan payın sermayeye oranı">İşlem / sermaye (%)</th><th class="num" data-tip="İşlemden sonra şirketin elindeki kendi paylarının sermayeye oranı">Toplam sahiplik (%)</th><th>Bildirim</th></tr></thead><tbody>` +
       o.tx.map(r => `<tr class="${r.suspect ? "sus" : ""}"><td>${fmt.date(r.date, { day: "numeric", month: "short", year: "numeric" })}${r.dateFixed ? ` <span class="rv" data-tip="Bildirimdeki işlem tarihi (${esc(r.dateFixed)}) geçersizdi; bildirim tarihi kullanıldı">⚠</span>` : ""}</td>
         <td class="num">${r.price ? fmt.num(r.price, 3) : "—"}${r.suspect ? ` <span class="rv" data-tip="Fiyat şüpheli: şirketin diğer işlemlerinden çok farklı; KAP bildirimini kontrol et">⚠</span>` : ""}</td>
         <td class="num">${fmt.int(r.qty)}</td><td class="num">${r.suspect ? "—" : fmt.num(r.amount, 0)}</td>
+        <td class="num">${r.pct == null ? "—" : fmt.num(r.pct, 3)}</td>
         <td class="num">${r.own == null ? "—" : fmt.num(r.own)}</td>
         <td>${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">KAP ${r.id} ↗</a>` : r.id}${r.review ? ` <span class="rv" data-tip="Ayrıştırma elle kontrol istiyor">⚠</span>` : ""}</td></tr>`).join("") + `</tbody></table>`;
   }
