@@ -14,37 +14,30 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Fiili dolaşım kaynakları
+      - name: VAP fiili dolasim 2
         run: |
           mkdir -p probe
-          pip install -q requests lxml
-          python - > probe/log21.txt 2>&1 <<'PY' || true
-          import re, requests
+          pip install -q requests lxml pypdf
+          python - > probe/log22.txt 2>&1 <<'PY' || true
+          import re, io, requests
           UA = {"User-Agent": "Mozilla/5.0 (compatible; LyraRadar/1.0; kisisel kullanim)"}
-          def show(u, n=1500, **kw):
+          g = lambda u, **k: requests.get(u, headers=UA, timeout=40, **k)
+          r = g("https://www.vap.org.tr/robots.txt"); print([l for l in r.text.splitlines() if l.startswith(("Disallow", "Crawl"))])
+          r = g("https://mobil.vap.org.tr/robots.txt"); print("mobil robots", r.status_code, r.text[:600])
+          from pypdf import PdfReader
+          r = g("https://www.vap.org.tr/sites/default/files/2026-09/telif-hakki-ve-cekince-ihbari.pdf")
+          print("TELIF", r.status_code); print("\n".join(p.extract_text() for p in PdfReader(io.BytesIO(r.content)).pages)[:5000])
+          r = g("https://mobil.vap.org.tr/workspace/Fiilipay.html"); print("== Fiilipay", r.status_code, len(r.text)); t = r.text
+          print(t[:3000])
+          for m in sorted(set(re.findall(r'(?:src|href)="([^"]+)"', t))): print("link", m)
+          for m in sorted(set(re.findall(r'["\'](https?://[^"\']+|/[A-Za-z0-9_/.-]*(?:api|json|data|xls|csv|service)[^"\']*)["\']', t)))[:80]: print("url", m)
+          for js in sorted(set(re.findall(r'src="([^"]+\.js[^"]*)"', t)))[:8]:
+              u = js if js.startswith("http") else "https://mobil.vap.org.tr/workspace/" + js.lstrip("./")
               try:
-                  r = requests.get(u, headers=UA, timeout=40, **kw)
-                  print("==", u, r.status_code, r.headers.get("content-type"), len(r.content))
-                  return r
-              except Exception as e:
-                  print("==", u, "HATA", e); return None
-          for u in ["https://www.vap.org.tr/robots.txt", "https://www.kap.org.tr/robots.txt", "https://www.mkk.com.tr/robots.txt"]:
-              r = show(u)
-              if r is not None: print(r.text[:800])
-          r = show("https://www.vap.org.tr/fiili-dolasim-raporu")
-          if r is not None:
-              t = r.text
-              print(t[:1500])
-              for m in sorted(set(re.findall(r'(?:href|src)="([^"]+)"', t)))[:80]: print("link", m)
-              for m in sorted(set(re.findall(r'["\'](/?(?:api|apix|Api|assets|_next)[^"\']{0,120})["\']', t)))[:60]: print("api", m)
-          r = show("https://www.vap.org.tr/")
-          if r is not None:
-              for m in sorted(set(re.findall(r'(?:href|src)="([^"]+\.js)"', r.text)))[:20]: print("js", m)
-          r = show("https://www.kap.org.tr/tr/sirket-bilgileri/ozet/2428-turkiye-vakiflar-bankasi-t-a-o")
-          if r is not None:
-              t = r.text.replace('\\"', '"')
-              for k in ["Fiili Dolaşım", "fiili dolaşım", "freeFloat", "FiiliDolasim", "Dolaşımdaki"]:
-                  for m in list(re.finditer(k, t))[:3]: print(k, "|", t[max(0, m.start()-200): m.end()+300].replace("\n", " "))
+                  jt = g(u).text
+                  print("JS", u, len(jt))
+                  for m in sorted(set(re.findall(r'["\'`]((?:https?://|/)[^"\'`\s]*(?:api|Api|json|data|Data|xls|csv|service|Service)[^"\'`\s]*)["\'`]', jt)))[:40]: print("  url", m)
+              except Exception as e: print("JS hata", u, e)
           PY
 
       - name: kaydet
