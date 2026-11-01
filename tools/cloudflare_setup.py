@@ -158,6 +158,14 @@ def pages_env():
     aud = st.get("_aud")
     org, err = cf("GET", f"/accounts/{ACC}/access/organizations")
     team = (org or {}).get("auth_domain")
+    if not team:                                   # anahtarda Access-kuruluş okuma yetkisi yoksa: giriş yönlendirmesinden
+        try:
+            loc = requests.get(f"https://{HOST}/", timeout=30, allow_redirects=False).headers.get("location", "")
+            m = re.match(r"https://([a-z0-9-]+\.cloudflareaccess\.com)/", loc)
+            team = m.group(1) if m else None
+            err = None if team else err
+        except Exception:  # noqa: BLE001
+            pass
     if not aud or not team:
         return {"hata": err or "Access uygulaması/ekip alan adı bulunamadı"}
     env = {"ACCESS_AUD": {"type": "plain_text", "value": aud}, "ACCESS_TEAM": {"type": "plain_text", "value": team},
