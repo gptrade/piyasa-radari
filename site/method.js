@@ -31,6 +31,25 @@
       <li><b>Belirsizlik.</b> %95 aralık olay gününe göre kümelenmiş standart hatayla. Geri alım gibi ardışık günlerde tekrarlanan bildirimlerde pencereler çakışır; aralık yine de biraz dar kalabilir.</li>
       <li><b>Okuma.</b> Bu geçmişin ortalaması, bir alım-satım kuralı değil. İşlem maliyeti, likidite ve açılış boşluğu yok sayılır. ABD tarafında yalnız izlenen hisseler var (seçim yanlılığı: izlenen hisseler son dönemin güçlü hisseleri olabilir). "Öncesi (5)" sütunu büyükse olay, fiyat hareketinin sonucu olabilir (ör. devre kesici).</li>
       <li><b>Kaynak.</b> Fiyat: Yahoo Finance (kişisel kullanım). Veri saatlik güncellenir; KAP geçmişi 90 gün geriye dolduruldu ve birikerek uzar.</li></ul>`)],
+    ["piyasa-gucu", "Piyasa Gücü", () => card("Genişlik ve rejim", ul([
+        ["Evren", "BIST Tüm (KAP endeks listesi) ve endeks dışı bankalar; Yahoo günlük kapanış ve hacmi, 2010'dan bugüne. Yahoo bazı bedelsiz ve bölünmeleri düzeltmediği için ±%25'i aşan tek gün hareketi sıfır getiri sayılarak temiz seri kurulur (BIST fiyat sınırı ±%10). Tatil artığı satırlar atılır."],
+        ["Ortalama üstü oran", "Kapanışı 20, 50 ve 200 günlük basit ortalamasının üstünde olan hisselerin, o ortalaması hesaplanabilen hisselere oranı."],
+        ["Yeni zirve / dip", "Kapanışı önceki 252 seansın en yükseğini aşan / en düşüğünün altına inen hisse sayısı; en az 230 seans geçmişi olanlar."],
+        ["Yükselen–düşen", "Günlük yükselen ve düşen hisse sayısı, farkının birikimli toplamı (çizgi). McClellan osilatörü oran ayarlıdır: (yükselen − düşen) / (yükselen + düşen) × 1000'in 19 ve 39 günlük EMA farkı; evren büyüklüğünden bağımsız."],
+        ["Hacim", "Yükselen hisselerin TL hacminin (kapanış × adet) yükselen + düşen hisselerin toplamına oranı. ≥ %90 alım, ≤ %10 satış günü (Lowry %90 günleri)."],
+        ["Genişlik sıçraması", "Yükselen hisse oranının 10 günlük EMA'sı 10 seans içinde %40'ın altından %61,5'in üstüne çıkar (Zweig)."],
+        ["Diverjans", "XU100 63 günlük kapanış dibindeyken yeni 52 hafta dibindeki hisse sayısı son 63 günün en yüksek değerinin yarısından azsa pozitif; XU100 63 günlük zirvedeyken yeni zirve sayısı aynı ölçüde azsa negatif (pencerenin zirvesi en az 20 hisse)."],
+        ["Rejim", "Kurallı ve açık: <b>Toparlanma</b> son 30 günde genişlik sıçraması ya da 200 günlüğün altında %90 satış ve %90 alım günlerinin birlikte görülmesi; <b>Boğa</b> XU100 200 günlüğün üstünde, 50 günlük > 200 günlük, hisselerin en az yarısı 200 günlüğün üstünde ve net yeni zirve − dip (50 gün ort.) artı; <b>Ayı</b> XU100 200 günlüğün altında, hisselerin %40'ından azı 200 günlüğün üstünde ve net yeni zirve − dip eksi; bunlara ek olarak aşırı satım (20 ya da 50 günlükte %15 altı), %90 satış günü ya da pozitif diverjans varsa <b>Dip arayışı</b>; diğer durumlar <b>Düzeltme / kararsız</b>."],
+      ])) + card("Sektör rotasyonu", ul([
+        ["Sektör endeksi", "KAP alt sektörü (en az 3 işlem gören hisse); eşit ağırlıklı, temiz günlük getirilerden zincirlenir. Nakit temettü dahil değil."],
+        ["Rotasyon grafiği", "Haftalık (cuma kapanışı). Göreli güç = sektör endeksi / XU100; oran = 100 × göreli güç / 10 haftalık EMA'sı; ivme = 100 + (oran − 4 hafta önceki oran). Bölgeler: Lider (oran ≥ 100, ivme ≥ 100), Zayıflayan, Geride, İyileşen. RRG (Relative Rotation Graph) yaklaşımına benzer, kendi formülümüzdür."],
+        ["Sektör skoru", "0–100: 3 aylık medyan hisse getirisi %25, oran %25, ivme %20, 50 günlük ortalama üstü hisse oranı %15, sektörün BIST TL hacmindeki payının son 20 / son 60 gün oranı %15; her birinin sektörler arası yüzdelik sırasının ağırlıklı ortalaması."],
+      ])) + card("Güçlü hisseler", ul([
+        ["Göreli güç", "1–99: 0,4 × 3 aylık + 0,2 × 6, 9 ve 12 aylık getiri (kısa geçmişte eksik dönem bir öncekiyle doldurulur); BIST Tüm içinde yüzdelik sıra (IBD yöntemi)."],
+        ["Trend şablonu", "Minervini'nin 7 fiyat maddesi: fiyat 150 ve 200 günlüğün üstünde; 150 > 200; 200 günlük 1 aydır yükseliyor; 50 > 150 ve 200; fiyat 50 günlüğün üstünde; 52 hafta dibinin en az %30 üstünde; zirvesine %25'ten yakın. En az 260 seans geçmiş."],
+        ["Hacim teyidi", "Son 50 seansta yükselen günlerin TL hacmi / düşen günlerin TL hacmi; 1 üstü birikim."],
+        ["Sınırlar", "Borsadan çıkmış hisseler Yahoo'da yok: eski yıllarda evren daha küçük ve hayatta kalanlardan oluşur, bu yüzden sayılar yerine oranlar esas alınır. Rejim, sinyaller ve liste geriye dönük olarak henüz test edilmedi; isabetleri ayrıca ölçülecek. Hafta içi kapanıştan sonra güncellenir."],
+      ]))],
     ["yontem-karnesi", "Yöntem Karnesi", () => card("Test kurgusu", ul([
         ["Soru", "Bir tarama ölçütü (ör. düşük F/K, yüksek F-skoru) geçmişte BIST'te sonraki ayın getirisini öngörüyor muydu?"],
         ["Nokta-zamanlı", "Her ay sonunda yalnız o güne kadar KAP'ta yayımlanmış son mali tablo kullanılır. Yayın anı bilinmeyen eski raporlarda SPK'nın yasal son günü alınır (1. ve 3. çeyrek +41, 2. çeyrek +61, yıl sonu +71 gün). Dönem sonundan 9 aydan eski tablo kullanılmaz."],

@@ -103,6 +103,15 @@ jobs:
             git archive FETCH_HEAD karne.json sigx.json | tar -x -C site/data/olay || git archive FETCH_HEAD karne.json | tar -x -C site/data/olay || true
           fi
 
+      # Piyasa gücü (guc.yml, hafta içi kapanıştan sonra) guc dalında; yalnız guc.json (fiyat Parquet'i yayımlanmaz)
+      - name: Piyasa gücünü geri yükle
+        run: |
+          rm -rf site/data/guc && mkdir -p site/data/guc
+          if git ls-remote --exit-code --heads origin guc >/dev/null 2>&1; then
+            git fetch --depth 1 origin guc
+            git archive FETCH_HEAD guc.json | tar -x -C site/data/guc || true
+          fi
+
       # Yöntem karnesi (yontem.yml, haftalık) yontem dalında; yalnız özet istatistikler
       - name: Yöntem karnesini geri yükle
         run: |
@@ -147,7 +156,7 @@ jobs:
           git config user.name "radar-bot"
           git config user.email "radar-bot@users.noreply.github.com"
           # temel analiz (fin) ve enerji verisi kendi dallarında; o dal oluşana dek (geçiş) data dalında kalır
-          if [ "${HAS_FIN:-}" = "1" ]; then git add -A -- . ':!fin' ':!enerji' ':!regulasyon' ':!olay' ':!yontem'; else git add -A -- . ':!enerji' ':!regulasyon' ':!olay' ':!yontem'; fi
+          if [ "${HAS_FIN:-}" = "1" ]; then git add -A -- . ':!fin' ':!enerji' ':!regulasyon' ':!olay' ':!yontem' ':!guc'; else git add -A -- . ':!enerji' ':!regulasyon' ':!olay' ':!yontem' ':!guc'; fi
           git commit -qm "data $(date -u +%FT%TZ)"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
           rm -rf .git
