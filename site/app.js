@@ -517,7 +517,7 @@
       </div>
       ${ta.signals?.length ? `<ul class="ta-sig">${ta.signals.map(s => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}
       ${ne ? `<p class="ne">Sonraki bilanço: <b>${fmt.date(ne.date + "T12:00:00Z", { day: "numeric", month: "long", year: "numeric" })}</b>${ne.eps_est != null ? ` · EPS beklentisi ${fmt.num(ne.eps_est)}` : ""}</p>` : ""}
-      <p class="ta-note">20 gün aralığı: ${fmt.num(ta.lo20)} – ${fmt.num(ta.hi20)} · EMA'lar ${tf === "1G" ? "5 yıllık günlük" : tf === "1H" ? "5 yıllık haftalık" : tf === "4S" ? "2 yıllık 4 saatlik (seans açılışına hizalı)" : "2 yıllık 1 saatlik"} kapanıştan, TradingView'in ta.ema yöntemiyle hesaplanır; fiyat kaynağı Yahoo olduğu için TradingView'le küçük kuruş farkları olabilir. Diğer göstergeler günlük.</p>`;
+      <p class="ta-note">20 gün aralığı: ${fmt.num(ta.lo20)} – ${fmt.num(ta.hi20)} · EMA'lar ${tf === "1G" ? "tüm geçmiş günlük" : tf === "1H" ? "tüm geçmiş haftalık" : tf === "4S" ? "2 yıllık 4 saatlik (seans açılışına hizalı)" : "2 yıllık 1 saatlik"} kapanıştan, TradingView'in ta.ema yöntemiyle hesaplanır; fiyat kaynağı Yahoo olduğu için TradingView'le küçük kuruş farkları olabilir. Diğer göstergeler günlük.</p>`;
   }
   function pricePanel(it) {
     const box = document.createElement("div");

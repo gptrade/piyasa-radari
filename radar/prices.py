@@ -522,7 +522,8 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False, valuati
     try:
         tk = yf.Ticker(yahoo or stock.yahoo)
         intraday = _series(tk.history(period="5d", interval="5m", auto_adjust=False))
-        daily = _series(tk.history(period="5y", interval="1d", auto_adjust=False))   # EMA200 yakınsaması için uzun geçmiş
+        # Tüm geçmiş: haftalık EMA200 ~4 yıl, yakınsaması çok daha uzun geçmiş ister (5 yılla TradingView'dan ~%5 sapıyordu)
+        daily = _series(tk.history(period="max", interval="1d", auto_adjust=False))
         h1 = hourly(stock, tk)
         try:
             currency = tk.fast_info.get("currency")
@@ -541,7 +542,7 @@ def fetch(stock: Stock, yahoo: str | None = None, analyst: bool = False, valuati
         return None
     if not daily and not intraday:
         return None
-    last = (intraday or daily)[-1][1]
+    last = last_price(daily, intraday, EX_TZ.get(stock.market))
     prev = prev_close(daily, intraday, EX_TZ.get(stock.market))
     keep = 130                                            # panelde ~6 aylık günlük grafik
     closes = [b[1] for b in daily]
@@ -602,6 +603,20 @@ def hourly(stock: Stock, tk) -> list[list[float]]:
     bars = [b for b in h60 if b[0] + 3600 <= cut] + m30          # 60 dk bar 30 dk verinin başladığı yerde biter
     path.write_text(json.dumps({"day": today if full else old.get("day"), "h60": h60, "m30": m30}, separators=(",", ":")))
     return bars
+
+
+def last_price(daily: list, intraday: list, tz=None, now: float | None = None) -> float | None:
+    """Son fiyat. Seans sürerken son 5 dk bar; seans bittiyse o günün resmi kapanışı (günlük bar). 5 dk barlar BIST'in
+    kapanış seansını (18:00–18:10 eşleşme) içermez: son bar 17:55'teki işlem fiyatıdır, kapanış fiyatı değil
+    (ör. VAKBN 30.10.2026: son bar 29,02, kapanış 28,88)."""
+    from datetime import datetime
+    if not intraday:
+        return daily[-1][1] if daily else None
+    now = now if now is not None else now_utc().timestamp()
+    live = now - intraday[-1][0] < 20 * 60
+    if daily and not live and datetime.fromtimestamp(daily[-1][0], tz).date() == datetime.fromtimestamp(intraday[-1][0], tz).date():
+        return daily[-1][1]
+    return intraday[-1][1]
 
 
 def prev_close(daily: list, intraday: list, tz=None) -> float | None:

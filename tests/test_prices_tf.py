@@ -29,3 +29,15 @@ def test_ema_set_alignment_with_ema8():
     st = P.ema_set(closes)
     assert st["align"] == "boğa" and set(st["ema"]) == {"8", "14", "34", "55", "200"}
     assert P.ema_set(closes[:10]) is None
+
+
+def test_last_price_uses_official_close_after_session():
+    from datetime import datetime, timedelta, timezone
+    from radar.prices import last_price
+    tz = timezone(timedelta(hours=3))
+    day = datetime(2026, 10, 30, tzinfo=tz).timestamp()
+    bar = datetime(2026, 10, 30, 17, 55, tzinfo=tz).timestamp()
+    daily, intraday = [[day - 86400 * 2, 30.62, 0], [day, 28.88, 0]], [[bar, 29.02, 0]]
+    assert last_price(daily, intraday, tz, now=bar + 3 * 3600) == 28.88        # seans bitti: resmi kapanış
+    assert last_price(daily, intraday, tz, now=bar + 60) == 29.02              # seans içi: son işlem
+    assert last_price(daily[:1], intraday, tz, now=bar + 3 * 3600) == 29.02    # bugünün günlük barı yok
