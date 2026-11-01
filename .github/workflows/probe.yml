@@ -19,18 +19,18 @@ jobs:
           mkdir -p probe
           git clone -q https://github.com/gptrade/kap-geri-alim-takibi.git /tmp/kgt
           pip install -q -r /tmp/kgt/requirements.txt
-          cd /tmp/kgt && python - > $GITHUB_WORKSPACE/probe/log24.txt 2>&1 <<'PY' || true
+          cd /tmp/kgt && python - > $GITHUB_WORKSPACE/probe/log25.txt 2>&1 <<'PY' || true
           import re, json, time
           from bs4 import BeautifulSoup
           from tracker.kap_buyback import KapClient
           c = KapClient()
-          for idx in [1686031, 1683351, 1690311, 1685514]:
+          for idx in [1673804, 1672582]:
               try:
                   d = c.disclosure_detail(idx)
                   html = (d.get("disclosureBody") or [""])[0]
                   t = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
                   print("=====", idx, len(t))
-                  print(t[:3500])
+                  print(t[-1500:])
                   for m in re.finditer(r"sermay", t, re.I): print("  >>", t[max(0, m.start()-160): m.end()+160])
               except Exception as e: print(idx, "hata", e)
               time.sleep(3)
