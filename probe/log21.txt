@@ -1,0 +1,173 @@
+== https://www.vap.org.tr/robots.txt 200 text/plain; charset=UTF-8 2027
+#
+# robots.txt
+#
+# This file is to prevent the crawling and indexing of certain parts
+# of your site by web crawlers and spiders run by sites like Yahoo!
+# and Google. By telling these "robots" where not to go on your site,
+# you save bandwidth and server resources.
+#
+# This file will be ignored unless it is at the root of your host:
+# Used:    http://example.com/robots.txt
+# Ignored: http://example.com/site/robots.txt
+#
+# For more information about the robots.txt standard, see:
+# http://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+# CSS, JS, Images
+Allow: /core/*.css$
+Allow: /core/*.css?
+Allow: /core/*.js$
+Allow: /core/*.js?
+Allow: /core/*.gif
+Allow: /core/*.jpg
+Allow: /core/*.jpeg
+Allow: /core/*.png
+Allow: /core/*.svg
+Allow: /profiles/*.css$
+Allow: /profiles/*.css?
+Allow: /profiles/*.
+== https://www.kap.org.tr/robots.txt 666 text/html 530
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-9" />
+</head>
+<body>
+<div style="margin-left:30%;margin-top:10%">
+<a href="https:/www.kap.org.tr"><img src="https://www.kap.org.tr/assets/images/errors/hata_500_transparent.png" style="border:none"/></a>
+<font face=arial />
+<p>Yasadiginiz bu erisim problemini "8080894-PPE15" hata numarasi ile </p>
+<p>kapdestek@mkk.com.tr adresine bildirebilirsiniz.</p>
+</div>
+</body>
+</html>
+== https://www.mkk.com.tr/robots.txt 200 text/plain; charset=UTF-8 2027
+#
+# robots.txt
+#
+# This file is to prevent the crawling and indexing of certain parts
+# of your site by web crawlers and spiders run by sites like Yahoo!
+# and Google. By telling these "robots" where not to go on your site,
+# you save bandwidth and server resources.
+#
+# This file will be ignored unless it is at the root of your host:
+# Used:    http://example.com/robots.txt
+# Ignored: http://example.com/site/robots.txt
+#
+# For more information about the robots.txt standard, see:
+# http://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+# CSS, JS, Images
+Allow: /core/*.css$
+Allow: /core/*.css?
+Allow: /core/*.js$
+Allow: /core/*.js?
+Allow: /core/*.gif
+Allow: /core/*.jpg
+Allow: /core/*.jpeg
+Allow: /core/*.png
+Allow: /core/*.svg
+Allow: /profiles/*.css$
+Allow: /profiles/*.css?
+Allow: /profiles/*.
+== https://www.vap.org.tr/fiili-dolasim-raporu 200 text/html; charset=UTF-8 48279
+<!DOCTYPE html><html lang="tr" dir="ltr" prefix="og: https://ogp.me/ns#"><head> <script async src="https://www.googletagmanager.com/gtag/js?id=G-SWLQQ1BKMM"></script><script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-SWLQQ1BKMM');
+</script><meta charset="utf-8" /><style>.js img.lazyload:not([src]) { visibility: hidden; }.js img.lazyloaded[data-sizes=auto] { display: block; width: 100%; }</style><meta name="abstract" content="Sermaye piyasalarımıza ait verilerin şeffaf, analitik ve doğru bir yapıda kamuoyuna sunulmasını sağlayan MKK Veri Analiz Platformu (VAP); yatırımcı, saklama ve kurumsal yönetim verilerine tek bir noktadan erişim imkanı sunar." /><meta name="keywords" content="Veri Analiz Platformu, VAP, Yatırımcı İstatistikleri, Saklama Verileri, Kurumsal Yönetim, Kurumsal Yönetim İstatistikleri, Endeksler, REKS, Fiili Dolaşım, Fiili Dolaşım Raporu, Yatırımcı Sayısı, Yatırımcı Sayıları, Finansal Oranlar, Akademik Çalışmalar, Portföy Dilimi, Pay Senedi, BIST Endeksleri, BİST Endeksleri, BIST, BİST" /><link rel="canonical" href="https://www.vap.org.tr/fiili-dolasim-raporu" /><meta property="og:determiner" content="Fiili Dolaşım Raporu" /><meta property="og:site_name" content="Fiili Dolaşım Raporu" /><meta property="og:url" content="https://www.vap.org.tr/fiili-dolasim-raporu" /><meta property="og:description" content="https://www.vap.org.tr/fiili-dolasim-raporu" /><meta property="article:
+link #
+link #main-content
+link /
+link /2014
+link /2016
+link /2016-2026-ortalama-finansal-oranlar
+link /2018
+link /2020
+link /2021
+link /2022
+link /2023
+link /2024
+link /2025
+link /bist-endeksleri-bazinda-portfoy-degerleri
+link /bist-sirketleri-kurumsal-yonetim-olgunluk-duzeyi
+link /donemsel-finansal-oranlar
+link /en/free-float-shares-data
+link /fiili-dolasim-raporu
+link /fkb-ekonomik-gorunum-endeksi
+link /fon-turleri-bazinda-degisim
+link /genel-kurul-bilgileri
+link /illere-gore-yatirimci-sayilari
+link /image-captcha-generate/16968385/1793552101
+link /image-captcha-refresh/webform_submission_contact_webform_node_6_add_form
+link /kurumsal-yonetim-olgunluk-endeksi
+link /mkk-ciro-endeksi
+link /mkk-kar-endeksi
+link /mkk-temettu-odeme-endeksi
+link /mkk-temettu-yayilim-endeksi
+link /modal/all-companies
+link /modal/spesific-company
+link /modules/contrib/cookies/js/cookiesjsr.conf.js?v=10.6.19
+link /pay-senedi-yabanci-yatirimci-sayilari-ilk-10-ulke
+link /portfoy-dilimi-bazinda-yatirimci-sayilari
+link /reks
+link /site-haritasi
+link /sites/default/files/2026-09/telif-hakki-ve-cekince-ihbari.pdf
+link /sites/default/files/2026-09/vap-internet-sitesi-gizlilik-politikasi.pdf
+link /sites/default/files/2026-09/vap_bilgi_notu_17_09_2026.pdf
+link /sites/default/files/css/css_Zr6IidVETc9WcHafo3DxptwUtlUY-2hp4AtuLaYXfD0.css?delta=1&amp;language=tr&amp;theme=vap&amp;include=eJx1UFtuAyEMvBCBI0XeZQCnsCAMTdLTlxKqRkr6Yc94_JDtnUrbA5mNBGrP-YMhZuFFqpZ2j5CRqTBHrokif0F5Psyw8-xiVynBPEBxIo_zvsbO6LSiU4WrkKAKVfKVShBjay8U9Z-i-1H6FlkCrJK7NKTHcp9Unsioaxy5jTWn4HJuqJMGkF205NLLZMIWGw2VcRUzvU7Z9gh1xebGZWahpgvdXkREJBxNWzTiKLpl79_0_pa5iNuW_x-TIDI-85L_cd9IZZtJ
+link /sites/default/files/css/css_d7f1YdetEEB0phYQ6QSIUencuyb-w3luvTSQBNcn95I.css?delta=0&amp;language=tr&amp;theme=vap&amp;include=eJx1UFtuAyEMvBCBI0XeZQCnsCAMTdLTlxKqRkr6Yc94_JDtnUrbA5mNBGrP-YMhZuFFqpZ2j5CRqTBHrokif0F5Psyw8-xiVynBPEBxIo_zvsbO6LSiU4WrkKAKVfKVShBjay8U9Z-i-1H6FlkCrJK7NKTHcp9Unsioaxy5jTWn4HJuqJMGkF205NLLZMIWGw2VcRUzvU7Z9gh1xebGZWahpgvdXkREJBxNWzTiKLpl79_0_pa5iNuW_x-TIDI-85L_cd9IZZtJ
+link /sites/default/files/css/css_mM1_Gcfqei3W4O-tSGgfdY_mWivRbXU-9TKWk1VBuGI.css?delta=2&amp;language=tr&amp;theme=vap&amp;include=eJx1UFtuAyEMvBCBI0XeZQCnsCAMTdLTlxKqRkr6Yc94_JDtnUrbA5mNBGrP-YMhZuFFqpZ2j5CRqTBHrokif0F5Psyw8-xiVynBPEBxIo_zvsbO6LSiU4WrkKAKVfKVShBjay8U9Z-i-1H6FlkCrJK7NKTHcp9Unsioaxy5jTWn4HJuqJMGkF205NLLZMIWGw2VcRUzvU7Z9gh1xebGZWahpgvdXkREJBxNWzTiKLpl79_0_pa5iNuW_x-TIDI-85L_cd9IZZtJ
+link /sites/default/files/js/js_6u-usMEl0Z9eNZtV4VztRplGapOYr2kv5urH-MW-pQ8.js?scope=footer&amp;delta=0&amp;language=tr&amp;theme=vap&amp;include=eJyFTksOgjAQvVBpj0TG8ijF_pwpKJ5eqOyIcfP-yYzN-e4hxn55FtZ2SOq0vSNDicJWvZU9ZBifKniP9PxYwJseM0flR6a4d42Uj-TQWyrVTmSa607XMUaGTCrQezMHqJWKuZGgiQk0gJssuSxFPXE7LpiTNc30uoQIiEhVD6jkg2ihFX9HNTsXfs8iRPbHL_0BH_P0dvA
+link /sites/default/files/js/js_ejOYVMBFmb9SfhQA1sLNIkqsHpWYENA2LJxba89dqoM.js?scope=footer&amp;delta=2&amp;language=tr&amp;theme=vap&amp;include=eJyFTksOgjAQvVBpj0TG8ijF_pwpKJ5eqOyIcfP-yYzN-e4hxn55FtZ2SOq0vSNDicJWvZU9ZBifKniP9PxYwJseM0flR6a4d42Uj-TQWyrVTmSa607XMUaGTCrQezMHqJWKuZGgiQk0gJssuSxFPXE7LpiTNc30uoQIiEhVD6jkg2ihFX9HNTsXfs8iRPbHL_0BH_P0dvA
+link /sites/default/files/js/js_w1z-PBe-omW15-XE0DoCwcJ9uLimbewXtCWMmR3QvOU.js?scope=header&amp;delta=0&amp;language=tr&amp;theme=vap&amp;include=eJyFTksOgjAQvVBpj0TG8ijF_pwpKJ5eqOyIcfP-yYzN-e4hxn55FtZ2SOq0vSNDicJWvZU9ZBifKniP9PxYwJseM0flR6a4d42Uj-TQWyrVTmSa607XMUaGTCrQezMHqJWKuZGgiQk0gJssuSxFPXE7LpiTNc30uoQIiEhVD6jkg2ihFX9HNTsXfs8iRPbHL_0BH_P0dvA
+link /themes/custom/vap/fonts/Vap.ttf?e47gjg
+link /themes/custom/vap/fonts/Vap.woff?e47gjg
+link /themes/custom/vap/fonts/custom_font/OpenSans-Regular.woff2
+link /themes/custom/vap/fonts/custom_font/OpenSans-SemiBold.woff2
+link /themes/custom/vap/images/faviconMKK.png
+link /themes/custom/vap/images/header/eyatirimci-logo-dikey.png
+link /themes/custom/vap/images/header/mkk-logo-dikey-tr.png
+link /themes/custom/vap/images/header/vap-logo-dikey.png
+link /uyruk-bazinda-yatirimci-sayilari
+link /yas-gruplari-bazinda-yatirimci-sayilari
+link /yerli-yabanci-pay-senedi-analizi
+link /yonetim-kurulu-istatistikleri
+link data:image/png;base64,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
+link https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js
+link https://cdn.jsdelivr.net/gh/jfeltkamp/cookiesjsr@1/dist/cookiesjsr-preloader.min.js
+link https://eyatirimci.mkk.com.tr/
+link https://mobil.vap.org.tr/workspace/Fiilipay.html
+link https://sosyal.teknofest.app/@merkezikayit
+link https://twitter.com/MerkeziKayitTur
+link https://www.googletagmanager.com/gtag/js?id=G-SWLQQ1BKMM
+link https://www.instagram.com/merkezikayitistanbul/
+link https://www.linkedin.com/company/merkezi-kayit-kurulusu-a.s.-mkk-/
+link https://www.mkk.com.tr
+link https://www.mkk.com.tr/bize-ulasin
+link https://www.mkk.com.tr/sites/default/files/2023-10/instagram.svg
+link https://www.mkk.com.tr/sites/default/files/2023-10/linkedin.svg
+link https://www.mkk.com.tr/sites/default/files/2023-10/twitterx.svg
+link https://www.mkk.com.tr/sites/default/files/2023-10/youtube.svg
+link https://www.mkk.com.tr/sites/default/files/2025-08/nextsosyal.svg
+link https://www.vap.org.tr/en/free-float-shares-data
+link https://www.vap.org.tr/fiili-dolasim-raporu
+link https://www.youtube.com/@merkezikayit
+link mailto:vaptalep@mkk.com.tr?subject=VAP%20Veri%20ve%20Bilgi%20Talebi
+== https://www.vap.org.tr/ 200 text/html; charset=UTF-8 160898
+js https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js
+js https://cdn.jsdelivr.net/gh/jfeltkamp/cookiesjsr@1/dist/cookiesjsr-preloader.min.js
+== https://www.kap.org.tr/tr/sirket-bilgileri/ozet/2428-turkiye-vakiflar-bankasi-t-a-o 200 text/html; charset=utf-8 257718
+Fiili Dolaşım |  Kuruluşu’nun bu bilgilerin doğruluğu ve tamlığı hususlarına açık veya zımni şekilde kefil veya garantör olduğu yolunda hiçbir taahhüdü bulunmamaktadır."},"actualSharesOutstandingGrid":{"tableTitle":"Fiili Dolaşımdaki Paylar","tableColumns":[{"className":"p-4 mb-3 text-sm font-semibold rounded-l-lg","columnName":"Borsa Kodu","columnKey":"isin"},{"className":"p-4 mb-3 text-sm font-semibold","columnName":"Toplam Pay Adedi","columnKey":"totalShares"},{"className":"p-4 mb-3 text-sm font-semibold","columnName":"B
+Fiili Dolaşım | assName":"p-4 mb-3 text-sm font-semibold","columnName":"Borsada İşlem Gören Pay Adedi","columnKey":"tradedShares"},{"className":"p-4 mb-3 text-sm font-semibold","columnName":"I. C Maddesi* Kapsamında Fiili Dolaşım Dışında Tutulan Borsada İşlem Gören Pay Adedi","columnKey":"exclSharesC"},{"className":"p-4 mb-3 text-sm font-semibold","columnName":"I. D ve I. E Maddeleri* Kapsamında Fiili Dolaşım Dışında Tutulan Borsada İşlem Gören Pay Adedi","columnKey":"exclSharesDE"},{"className":"p-4 mb-3 text-sm font-semib
+Fiili Dolaşım | desi* Kapsamında Fiili Dolaşım Dışında Tutulan Borsada İşlem Gören Pay Adedi","columnKey":"exclSharesC"},{"className":"p-4 mb-3 text-sm font-semibold","columnName":"I. D ve I. E Maddeleri* Kapsamında Fiili Dolaşım Dışında Tutulan Borsada İşlem Gören Pay Adedi","columnKey":"exclSharesDE"},{"className":"p-4 mb-3 text-sm font-semibold","columnName":"Fiili Dolaşımdaki Pay Adedi","columnKey":"actualSharesOutstanding","isNumber":true},{"className":"p-4 mb-3 text-sm font-semibold rounded-r-lg","columnName":"Fiili D
+fiili dolaşım | r":true},{"className":"p-4 mb-3 text-sm font-semibold rounded-r-lg","columnName":"Şirket ile Olan İlişkinin Niteliği","columnKey":"relationWithTheCompany"}],"note1":"(*) 12/06/2026 ve sonrası tarihli fiili dolaşım hesaplaması 04/06/2026 tarih ve 34/1044 sayılı Kurul İlke Kararı kapsamında yapılmaya başlanmıştır. Sermaye Piyasası Kurulu’nun 17.02.2011 tarih ve 5/157 Sayılı kararı çerçevesinde; çifte kotasyon kapsamında Borsa İstanbul’da işlem gören şirketlerin fiili dolaşımda bulunan paylarının ve fiili dolaş
+fiili dolaşım | ul İlke Kararı kapsamında yapılmaya başlanmıştır. Sermaye Piyasası Kurulu’nun 17.02.2011 tarih ve 5/157 Sayılı kararı çerçevesinde; çifte kotasyon kapsamında Borsa İstanbul’da işlem gören şirketlerin fiili dolaşımda bulunan paylarının ve fiili dolaşımdaki pay oranının hesaplanması Merkezi Kayıt Kuruluşu A.Ş. (MKK) tarafından takip edilen paylar üzerinden yapılmaktadır."}}},"authorizationAndLicenseInformationAccItem":{"accKey":"authorization_and_license_information_8","accTitle":"YETKİLENDİRME VE LİSANS BİLGİ
+fiili dolaşım | şlanmıştır. Sermaye Piyasası Kurulu’nun 17.02.2011 tarih ve 5/157 Sayılı kararı çerçevesinde; çifte kotasyon kapsamında Borsa İstanbul’da işlem gören şirketlerin fiili dolaşımda bulunan paylarının ve fiili dolaşımdaki pay oranının hesaplanması Merkezi Kayıt Kuruluşu A.Ş. (MKK) tarafından takip edilen paylar üzerinden yapılmaktadır."}}},"authorizationAndLicenseInformationAccItem":{"accKey":"authorization_and_license_information_8","accTitle":"YETKİLENDİRME VE LİSANS BİLGİLERİ","fields":{"CMBListEntryDate":{"t
+Dolaşımdaki | uşu’nun bu bilgilerin doğruluğu ve tamlığı hususlarına açık veya zımni şekilde kefil veya garantör olduğu yolunda hiçbir taahhüdü bulunmamaktadır."},"actualSharesOutstandingGrid":{"tableTitle":"Fiili Dolaşımdaki Paylar","tableColumns":[{"className":"p-4 mb-3 text-sm font-semibold rounded-l-lg","columnName":"Borsa Kodu","columnKey":"isin"},{"className":"p-4 mb-3 text-sm font-semibold","columnName":"Toplam Pay Adedi","columnKey":"totalShares"},{"className":"p-4 mb-3 text-sm font-semibold","columnName":"Borsa
+Dolaşımdaki | umnName":"I. D ve I. E Maddeleri* Kapsamında Fiili Dolaşım Dışında Tutulan Borsada İşlem Gören Pay Adedi","columnKey":"exclSharesDE"},{"className":"p-4 mb-3 text-sm font-semibold","columnName":"Fiili Dolaşımdaki Pay Adedi","columnKey":"actualSharesOutstanding","isNumber":true},{"className":"p-4 mb-3 text-sm font-semibold rounded-r-lg","columnName":"Fiili Dolaşımdaki Pay Oranı(%)","columnKey":"actualOutstandingSharesRatio"}],"note1":"(*) Fiili dolaşımdaki payların belirlenmesinde, 11.09.2026 tarihinden itib
+Dolaşımdaki | text-sm font-semibold","columnName":"Fiili Dolaşımdaki Pay Adedi","columnKey":"actualSharesOutstanding","isNumber":true},{"className":"p-4 mb-3 text-sm font-semibold rounded-r-lg","columnName":"Fiili Dolaşımdaki Pay Oranı(%)","columnKey":"actualOutstandingSharesRatio"}],"note1":"(*) Fiili dolaşımdaki payların belirlenmesinde, 11.09.2026 tarihinden itibaren Sermaye Piyasası Kurulu’nun 03.09.2026 tarihli ve 54/1626 sayılı İlke Kararı esas alınmaktadır."},"informationAboutSharesRepresentingTheCapitalGrid1":{"
