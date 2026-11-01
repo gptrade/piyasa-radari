@@ -139,6 +139,7 @@ def access():
         app, err = cf("POST", f"/accounts/{ACC}/access/apps", json=body)
     if err:
         return {"uygulama": "kurulamadı", "hata": err}
+    st["_aud"] = app.get("aud")
     pol = {"name": "Grup üyeleri", "decision": "allow", "precedence": 1,
            "include": [{"email": {"email": e}} for e in EMAILS]}
     pols, err = cf("GET", f"/accounts/{ACC}/access/apps/{app['id']}/policies")
@@ -148,6 +149,25 @@ def access():
     else:
         _, err = cf("POST", f"/accounts/{ACC}/access/apps/{app['id']}/policies", json=pol)
     return {"uygulama": "hazır", "korunan": domains, "izinli_kisi": len(EMAILS), "politika": "hazır" if not err else err}
+
+
+def pages_env():
+    """İzleme listesini web'den düzenleme (functions/api/watchlist.js) için Pages ortam değişkenleri.
+    ACCESS_AUD/ACCESS_TEAM: Access JWT doğrulaması; GH_REPO; GH_TOKEN (gizli): WATCHLIST_TOKEN secret'ı varsa.
+    Değişkenler bir sonraki Pages dağıtımında (radar turu) geçerli olur."""
+    aud = st.get("_aud")
+    org, err = cf("GET", f"/accounts/{ACC}/access/organizations")
+    team = (org or {}).get("auth_domain")
+    if not aud or not team:
+        return {"hata": err or "Access uygulaması/ekip alan adı bulunamadı"}
+    env = {"ACCESS_AUD": {"type": "plain_text", "value": aud}, "ACCESS_TEAM": {"type": "plain_text", "value": team},
+           "GH_REPO": {"type": "plain_text", "value": os.environ.get("GH_REPO", "gptrade/piyasa-radari")}}
+    tok = os.environ.get("WATCHLIST_TOKEN", "").strip()
+    if tok:
+        env["GH_TOKEN"] = {"type": "secret_text", "value": tok}
+    _, err = cf("PATCH", f"/accounts/{ACC}/pages/projects/{PROJECT}",
+                json={"deployment_configs": {"production": {"env_vars": env}, "preview": {"env_vars": env}}})
+    return {"durum": "hazır" if not err else err, "ekip": team, "github_yazma_anahtari": "var" if tok else "YOK (WATCHLIST_TOKEN secret'ı ekle)"}
 
 
 def verify():
@@ -167,7 +187,7 @@ if (st.get("anahtar") or {}).get("durum") != "active":
     json.dump({k: v for k, v in st.items() if not k.startswith("_")}, open(sys.argv[1] if len(sys.argv) > 1 else "status.json", "w"), ensure_ascii=False, indent=1)
     sys.exit(0)
 for n, f in [("alan_adi", zone), ("pages_projesi", project), ("pages_ozel_alan", pages_domain), ("dns", dns),
-             ("eposta_kodu", otp), ("access", access), ("dogrulama", verify)]:
+             ("eposta_kodu", otp), ("access", access), ("pages_ortam", pages_env), ("dogrulama", verify)]:
     step(n, f)
 st = {k: v for k, v in st.items() if not k.startswith("_")}
 json.dump(st, open(sys.argv[1] if len(sys.argv) > 1 else "status.json", "w"), ensure_ascii=False, indent=1)
