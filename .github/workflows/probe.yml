@@ -14,33 +14,26 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: KAP fiili dolasim
+      - name: Geri alim bildirim metni
         run: |
           mkdir -p probe
-          pip install -q requests
-          python - > probe/log23.txt 2>&1 <<'PY' || true
-          import re, requests, io
-          UA = {"User-Agent": "Mozilla/5.0 (compatible; LyraRadar/1.0; kisisel kullanim)"}
-          g = lambda u, **k: requests.get(u, headers=UA, timeout=40, **k)
-          try:
-              from pypdf import PdfReader
-          except ImportError:
-              import subprocess; subprocess.run(["pip", "install", "-q", "pypdf"]); from pypdf import PdfReader
-          try:
-              r = g("https://www.vap.org.tr/sites/default/files/2026-09/telif-hakki-ve-cekince-ihbari.pdf")
-              print("TELIF", r.status_code); print("\n".join(p.extract_text() for p in PdfReader(io.BytesIO(r.content)).pages)[:4000])
-          except Exception as e: print("telif hata", e)
-          r = g("https://www.kap.org.tr/tr/sirket-bilgileri/ozet/2428-turkiye-vakiflar-bankasi-t-a-o"); t = r.text.replace('\\"', '"')
-          for k in ["actualOutstandingSharesRatio", "actualSharesOutstanding"]:
-              for m in list(re.finditer(k, t))[:6]: print(k, "|", t[max(0, m.start()-250): m.end()+120].replace("\n", " "))
-          print("---- oid ile")
-          for u in ["https://www.kap.org.tr/tr/sirket-bilgileri/ozet/4028e4a140f2ed720140f37cb2a601b7", "https://www.kap.org.tr/tr/sirket-bilgileri/ozet/2428"]:
+          git clone -q https://github.com/gptrade/kap-geri-alim-takibi.git /tmp/kgt
+          pip install -q -r /tmp/kgt/requirements.txt
+          cd /tmp/kgt && python - > $GITHUB_WORKSPACE/probe/log24.txt 2>&1 <<'PY' || true
+          import re, json, time
+          from bs4 import BeautifulSoup
+          from tracker.kap_buyback import KapClient
+          c = KapClient()
+          for idx in [1686031, 1683351, 1690311, 1685514]:
               try:
-                  r = g(u, allow_redirects=True); print(u, r.status_code, r.url, len(r.text), "actualOutstandingSharesRatio" in r.text)
-              except Exception as e: print(u, "hata", e)
-          r = g("https://www.kap.org.tr/tr/bist-sirketler"); t = r.text.replace('\\"', '"')
-          links = re.findall(r'/tr/sirket-bilgileri/ozet/(\d+)-([a-z0-9-]+)', t); print("bist-sirketler link", len(links), len(set(links)), links[:3])
-          m = re.search(r'.{300}VAKBN.{300}', t); print(m.group(0) if m else None)
+                  d = c.disclosure_detail(idx)
+                  html = (d.get("disclosureBody") or [""])[0]
+                  t = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
+                  print("=====", idx, len(t))
+                  print(t[:3500])
+                  for m in re.finditer(r"sermay", t, re.I): print("  >>", t[max(0, m.start()-160): m.end()+160])
+              except Exception as e: print(idx, "hata", e)
+              time.sleep(3)
           PY
 
       - name: kaydet
