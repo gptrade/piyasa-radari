@@ -6,6 +6,7 @@
   const sh = window.shell;
   const { $, esc } = sh;
   const API = "api/watchlist";
+  const fold = t => String(t).toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ı/g, "i");
   const S = { list: null, editable: false, busy: false, msg: "", err: "", uni: null, market: "BIST" };
 
   function dialog() {
@@ -55,26 +56,64 @@
     const L = S.list, dis = S.busy || !S.editable ? "disabled" : "";
     const row = (w, m) => `<li><span class="mono"><b>${esc(w.symbol)}</b></span> <span class="t3">${esc(w.name || "")}</span>
       <button type="button" class="link-btn wl-rm" data-sym="${esc(w.symbol)}" ${dis} aria-label="${esc(w.symbol)} çıkar">Çıkar</button></li>`;
-    const opts = (S.uni || []).map(m => `<option value="${esc(m.code)}">${esc(m.title)}</option>`).join("");
     b.innerHTML = `<h2 class="cal-dlg-t" id="wlDlgT">İzleme listesini düzenle</h2>
       <p class="cal-dlg-when">Sinyal Takip, fiyat, AI özetleri ve bildirimler bu listeye göre çalışır. Değişiklik ortak listeye kaydedilir (gruptaki herkes görür).</p>
       ${S.err ? `<p class="down" role="alert">${esc(S.err)}</p>` : ""}${S.msg ? `<p class="up" role="status">${esc(S.msg)}</p>` : ""}
       ${L ? `<form id="wlAdd" class="wl-add">
           <div class="seg" role="radiogroup" aria-label="Pazar" id="wlMkt">${["BIST", "US"].map(m => `<button type="button" role="radio" data-v="${m}" aria-checked="${S.market === m}">${m === "US" ? "ABD" : m}</button>`).join("")}</div>
-          <input id="wlSym" class="fa-select" placeholder="${S.market === "US" ? "Sembol (ör. AMD)" : "Kod (ör. ASELS)"}" list="${S.market === "BIST" ? "wlUni" : ""}" autocomplete="off" required maxlength="8" ${dis}>
+          <div class="wl-ac"><input id="wlSym" class="fa-select" placeholder="${S.market === "US" ? "Sembol (ör. AMD)" : "Kod ya da şirket adı (ör. ASELS, Aselsan)"}" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" required maxlength="40" role="combobox" aria-autocomplete="list" aria-controls="wlSug" aria-expanded="false" ${dis}>
+            <ul id="wlSug" class="wl-sug" role="listbox" hidden></ul></div>
           ${S.market === "US" ? `<input id="wlTv" class="fa-select" placeholder="TradingView (ör. NASDAQ:AMD)" maxlength="20" ${dis}><input id="wlName" class="fa-select" placeholder="Şirket adı" maxlength="80" ${dis}>` : ""}
           <input id="wlAli" class="fa-select" placeholder="Haberde geçen diğer adlar (virgülle, isteğe bağlı)" maxlength="200" ${dis}>
           <button type="submit" class="btn btn-primary" ${dis}>${S.busy ? "Kaydediliyor…" : "Ekle"}</button>
-          <datalist id="wlUni">${opts}</datalist></form>
+</form>
         <div class="res-cols wl-cols"><div><p class="d-sub">BIST (${L.bist.length})</p><ul class="wl-list">${L.bist.map(w => row(w, "BIST")).join("")}</ul></div>
           <div><p class="d-sub">ABD (${L.us.length})</p><ul class="wl-list">${L.us.map(w => row(w, "US")).join("")}</ul></div></div>
         ${S.editable ? "" : `<p class="t3">Giriş doğrulanamadığı için yalnız görüntüleniyor.</p>`}` : (S.err ? "" : `<p class="t3">Yükleniyor…</p>`)}`;
     b.querySelectorAll("#wlMkt button").forEach(x => x.onclick = () => { S.market = x.dataset.v; render(); });
     b.querySelectorAll(".wl-rm").forEach(x => x.onclick = () => { if (confirm(`${x.dataset.sym} izleme listesinden çıkarılsın mı?`)) send({ remove: { symbol: x.dataset.sym } }); });
+    const inp = $("#wlSym"), sug = $("#wlSug");
+    if (inp && sug && S.market === "BIST") {
+      const have = new Set([...(L?.bist || []), ...(L?.us || [])].map(w => w.symbol));
+      let act = -1, cur = [];
+      const show = () => {
+        const q = inp.value.trim();
+        if (!q || !S.uni) { sug.hidden = true; inp.setAttribute("aria-expanded", "false"); return; }
+        const Q = q.toLocaleUpperCase("tr");
+        // kod başı ya da adın kelime başları (her sorgu kelimesi bir ad kelimesinin başı olmalı): "as" → ASELS, "türk hava" → THYAO
+        const toks = fold(q).split(/\s+/).filter(Boolean);
+        const nameHit = m => { const ws = fold(m.title).split(/[\s.,()/-]+/); return toks.every(t => ws.some(w => w.startsWith(t))); };
+        cur = S.uni.filter(m => m.code.startsWith(Q) || nameHit(m))
+          .sort((a, b) => (b.code.startsWith(Q) - a.code.startsWith(Q)) || a.code.localeCompare(b.code)).slice(0, 8);
+        act = -1;
+        sug.innerHTML = cur.length ? cur.map((m, i) => `<li role="option" id="wlo${i}" data-i="${i}" ${have.has(m.code) ? 'aria-disabled="true"' : ""}><b class="mono">${esc(m.code)}</b> <span>${esc(m.title)}</span>${have.has(m.code) ? ' <small class="t3">listede</small>' : ""}</li>`).join("")
+          : `<li class="t3" aria-disabled="true">Eşleşen BIST hissesi yok</li>`;
+        sug.hidden = false; inp.setAttribute("aria-expanded", "true");
+      };
+      const pick = i => { const m = cur[i]; if (!m || have.has(m.code)) return; inp.value = m.code; inp.dataset.title = m.title; sug.hidden = true; inp.setAttribute("aria-expanded", "false"); $("#wlAli")?.focus(); };
+      const hi = () => sug.querySelectorAll("li[data-i]").forEach(li => li.classList.toggle("on", +li.dataset.i === act));
+      inp.addEventListener("input", () => { delete inp.dataset.title; show(); });
+      inp.addEventListener("focus", show);
+      inp.addEventListener("keydown", e => {
+        if (sug.hidden) return;
+        if (e.key === "ArrowDown") { act = Math.min(cur.length - 1, act + 1); hi(); e.preventDefault(); }
+        else if (e.key === "ArrowUp") { act = Math.max(0, act - 1); hi(); e.preventDefault(); }
+        else if (e.key === "Enter" && act >= 0) { pick(act); e.preventDefault(); }
+        else if (e.key === "Escape") { sug.hidden = true; e.stopPropagation(); e.preventDefault(); }
+      });
+      sug.addEventListener("pointerdown", e => { const li = e.target.closest("li[data-i]"); if (li) { e.preventDefault(); pick(+li.dataset.i); } });
+      inp.addEventListener("blur", () => setTimeout(() => { sug.hidden = true; }, 150));
+    }
     const f = $("#wlAdd");
     if (f) f.onsubmit = e => {
       e.preventDefault();
-      const sym = $("#wlSym").value.trim().toUpperCase().split(/\s/)[0];
+      let sym = $("#wlSym").value.trim().toLocaleUpperCase("tr").split(/\s/)[0];
+      if (S.market === "BIST" && S.uni && !S.uni.some(m => m.code === sym)) {
+        const q = $("#wlSym").value.trim(), toks = fold(q).split(/\s+/).filter(Boolean);
+        const hits = S.uni.filter(m => { const ws = fold(m.title).split(/[\s.,()/-]+/); return toks.every(t => ws.some(w => w.startsWith(t))); });
+        if (hits.length === 1) sym = hits[0].code;
+        else { S.err = hits.length ? "Birden çok eşleşme var: listeden birini seç." : `${q} BIST Tüm listesinde bulunamadı.`; render(); return; }
+      }
       if (!sym) return;
       const aliases = ($("#wlAli").value || "").split(",").map(s => s.trim()).filter(Boolean);
       send({ add: { market: S.market, symbol: sym, tv: $("#wlTv")?.value.trim() || undefined, name: $("#wlName")?.value.trim() || (S.uni || []).find(m => m.code === sym)?.title, aliases } });
