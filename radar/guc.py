@@ -41,7 +41,7 @@ FIN = DATA / "fin"
 START = "2010-01-01"
 JUMP = 0.25
 BENCH = "XU100"
-YF = {"XU100": "XU100.IS"}
+YF = {"XU100": "XU100.IS", "USDTRY": "USDTRY=X"}
 HIST_DAYS = 3 * 252          # grafiklerde gösterilen geçmiş
 MIN_SECTOR = 3
 RRG_N = 10                   # hafta: göreli güç oranının ortalaması
@@ -358,6 +358,88 @@ def trend_template(c: pd.Series) -> tuple[int, list[bool]] | None:
     return sum(items), items
 
 
+# ───────────────────────────── endeks değerlemesi
+
+VAL_GROUPS = (("XU030", "BIST 30"), ("XU050", "BIST 50"), ("XU100", "BIST 100"), ("XKTUM", "Katılım Tüm"), ("XUTUM", "BIST Tüm"))
+
+
+def fin_last(doc: dict) -> tuple[float | None, float | None]:
+    """Son dönem 12A ana ortaklık net kârı ve ana ortaklık özkaynağı (o dönemin TL'si)."""
+    ser = doc.get("series") or {}
+    ni = (ser.get("ttm") or {}).get("net_parent") or (ser.get("ttm") or {}).get("net") or []
+    eq = (ser.get("bs") or {}).get("equity_parent") or []
+    last = lambda a: next((v for v in reversed(a) if v is not None), None)  # noqa: E731
+    return last(ni), last(eq)
+
+
+def secondary_classes(members: list[dict]) -> set[str]:
+    """Aynı şirketin ikincil pay sınıfları (ör. ISATR/ISBTR → ISCTR, KRDMA/KRDMB → KRDMD): piyasa değeri ana sınıftan
+    hesaplanır; bunlar toplamlara ve ısı haritasına girmez (kurucu payın fiyatı × tüm sermaye absürt değer verir)."""
+    by: dict[str, list[dict]] = {}
+    for m in members:
+        by.setdefault((m.get("oid") or m["code"]).lower(), []).append(m)
+    out = set()
+    for ms in by.values():
+        if len(ms) > 1:
+            main = max(ms, key=lambda m: (len(m.get("idx") or []), -len(m["code"])))
+            out |= {m["code"] for m in ms if m is not main}
+    return out
+
+
+def index_valuation(members: list[dict], scr: dict, ff: pd.DataFrame, docs: dict, usd: float | None) -> list[dict]:
+    """Endeks ve sektör bazında toplam piyasa değeri, F/K = Σ PD / Σ net kâr, PD/DD = Σ PD / Σ özkaynak,
+    özkaynak kârlılığı = Σ net kâr / Σ özkaynak (zarar edenler dahil; kâr toplamı eksi ise F/K yok).
+    Dönem değişimi: bugünkü piyasa değeri ve hisse getirilerinden geriye (pay sayısı değişimi yok sayılır)."""
+    tags = {m["code"]: set(m.get("idx") or []) | {"XUTUM"} for m in members}
+    sect = {m["code"]: m.get("sector") or "DİĞER" for m in members}
+    base = {}
+    sec2 = secondary_classes(members)
+    for c, r in scr.items():
+        mc = r.get("mcap")
+        if not mc or c not in tags or c in sec2:
+            continue
+        ni, eq = fin_last(docs.get(c) or {})
+        rets = {}
+        if c in ff:
+            fc = ff[c].dropna()
+            for k, n in (("1A", 21), ("3A", 63), ("1Y", 252)):
+                rets[k] = period_ret(fc, n)
+            rets["YBB"] = ytd_ret(fc)
+        base[c] = {"mcap": mc, "ni": ni, "eq": eq, "ret": rets}
+
+    def agg(name, label, codes, kind):
+        xs = [base[c] for c in codes if c in base]
+        if len(xs) < 3:
+            return None
+        mc = sum(x["mcap"] for x in xs)
+        withf = [x for x in xs if x["ni"] is not None and x["eq"] is not None]
+        ni, eq = sum(x["ni"] for x in withf), sum(x["eq"] for x in withf)
+        mcf = sum(x["mcap"] for x in withf)
+        ch = {}
+        for k in ("1A", "3A", "YBB", "1Y"):
+            then = sum(x["mcap"] / (1 + x["ret"][k]) for x in xs if x["ret"].get(k) is not None)
+            now = sum(x["mcap"] for x in xs if x["ret"].get(k) is not None)
+            ch[k] = _r(now / then - 1) if then else None
+        return {"key": name, "label": label, "kind": kind, "n": len(xs), "mcap": _r(mc, 0),
+                "mcap_usd": _r(mc / usd, 0) if usd else None,
+                "pe": _r(mcf / ni, 2) if ni > 0 else None, "pb": _r(mcf / eq, 2) if eq > 0 else None,
+                "roe": _r(ni / eq, 4) if eq > 0 else None, "cov": _r(mcf / mc, 3) if mc else None, "chg": ch}
+
+    out = []
+    total = sum(x["mcap"] for x in base.values()) or 1
+    for key, label in VAL_GROUPS:
+        r = agg(key, label, [c for c, t in tags.items() if key in t], "endeks")
+        if r:
+            out.append(r)
+    for sec in sorted({sect[c] for c in base}):
+        r = agg(sec, sec, [c for c in base if sect[c] == sec], "sektor")
+        if r:
+            out.append(r)
+    for r in out:
+        r["share"] = _r(r["mcap"] / total, 4)
+    return out
+
+
 # ───────────────────────────── birleştir
 
 def _r(v, k=4):
@@ -380,10 +462,11 @@ def series_out(b: pd.DataFrame) -> dict:
     return out
 
 
-def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None) -> dict:
+def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, docs: dict | None = None) -> dict:
     codes = {m["code"] for m in members}
     adj = wide(px, "adj")
     close = wide(px, "close")
+    wide_close = close
     vol = wide(px, "volume")
     bench = clean_index(adj[BENCH]) if BENCH in adj else None
     stocks = [c for c in adj.columns if c in codes]
@@ -476,6 +559,7 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None) -> 
     sec_by = {s["name"]: s for s in sectors}
     scr = {r["code"]: r for r in (screen or {}).get("rows", [])}
     rows = []
+    sec2 = secondary_classes(members)
     up_d = (ret > 0)
     v50 = tlv.iloc[-50:]
     udv = (v50.where(up_d.iloc[-50:]).sum() / v50.where(ret.iloc[-50:] < 0).sum().replace(0, np.nan))
@@ -489,7 +573,9 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None) -> 
         sd = sec_by.get(s)
         last = ff[c].iloc[-1]
         sr = scr.get(c, {})
+        fc = ff[c].dropna()
         rows.append({"code": c, "sector": s, "quad": sd["quad"] if sd else None, "srank": sd["rank"] if sd else None,
+                     "mcap": None if c in sec2 else _r(sr.get("mcap"), 0), "d1": _r(period_ret(fc, 1)), "w1": _r(period_ret(fc, 5)), "ytd": _r(ytd_ret(fc)),
                      "rs": int(rsr[c]), "tt": tt[0] if tt else None, "tti": tt[1] if tt else None,
                      "udv": _r(udv.get(c), 2), "tv": _r(med_tv.get(c), 0),
                      "liq": bool((med_tv.get(c) or 0) >= LIQ_TL),
@@ -497,7 +583,12 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None) -> 
                      "r1a": _r(period_ret(ff[c].dropna(), 21)), "r3a": _r(period_ret(ff[c].dropna(), 63)),
                      "f": sr.get("f"), "grade": sr.get("grade")})
     rows.sort(key=lambda r: -r["rs"])
+    usd = None
+    if "USDTRY" in wide_close.columns:
+        u = wide_close["USDTRY"].dropna()
+        usd = float(u.iloc[-1]) if len(u) else None
     return {
+        "usdtry": _r(usd, 4), "valuation": index_valuation(members, scr, ff, docs or {}, usd),
         "generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "asof": b.index[-1].date().isoformat(), "start": b.index[0].date().isoformat(),
         "universe": int(b["n"].iloc[-1]), "liq_tl": LIQ_TL,
@@ -513,14 +604,22 @@ def run(full: bool = False, offline: bool = False) -> dict:
     OUT.mkdir(parents=True, exist_ok=True)
     old = pd.read_parquet(PX) if PX.exists() else None
     if not offline:
-        px = update_px([BENCH] + sorted(m["code"] for m in members), old, full)
+        px = update_px([BENCH, "USDTRY"] + sorted(m["code"] for m in members), old, full)
         if px is None:
             raise SystemExit("Fiyat alınamadı")
         px.to_parquet(PX, compression="zstd", index=False)
     else:
         px = old
     screen = json.loads((FIN / "_screen.json").read_text(encoding="utf-8")) if (FIN / "_screen.json").exists() else None
-    doc = build(px, members, screen)
+    docs = {}
+    for p in FIN.glob("[A-Z0-9]*.json"):
+        try:
+            d = json.loads(p.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        docs[d.get("code") or p.stem] = {"series": {"ttm": {k: (d.get("series") or {}).get("ttm", {}).get(k) for k in ("net_parent", "net")},
+                                                    "bs": {"equity_parent": (d.get("series") or {}).get("bs", {}).get("equity_parent")}}}
+    doc = build(px, members, screen, docs)
     (OUT / "guc.json").write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("Piyasa gücü: %s · rejim %s · %d sektör · %d hisse", doc["asof"], doc["regime"]["state"], len(doc["sectors"]), len(doc["stocks"]))
     return doc

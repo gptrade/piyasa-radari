@@ -41,11 +41,21 @@ jobs:
             git fetch --depth 1 origin guc && git archive FETCH_HEAD | tar -x -C site/data/guc
           fi
           git fetch --depth 1 origin fin
-          git archive FETCH_HEAD _universe.json _screen.json | tar -x -C site/data/fin
+          git archive FETCH_HEAD | tar -x -C site/data/fin            # mali tablolar: endeks değerlemesi
 
       - name: Piyasa gücü
         timeout-minutes: 35
         run: python -m radar.guc ${{ inputs.full && '--full' || '' }}
+
+      - name: Varlıklar arası rejim
+        timeout-minutes: 5
+        continue-on-error: true
+        run: |
+          python -m radar.cross --regime
+          python - <<'PY'
+          from radar import cross, config
+          cross.strip(config.DATA / "guc" / "piyasa.json")      # akşam yedeği (radar turu yoksa)
+          PY
 
       - name: Veriyi guc dalına kaydet
         if: always()

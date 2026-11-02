@@ -7,8 +7,8 @@
   const { $, $$, esc, fmt } = sh;
   const SRC = "data/guc/guc.json";
   const S = { doc: null, loaded: false, loading: false, error: null, missing: false, tab: "genislik", per: "1A", range: 252,
-    sort: "rank", sdir: 1, hs: { quad: true, rs: 80, tt: 6, vol: false, liq: true, sec: "", q: "", sort: "rs", sdir: 1, limit: 60 }, selSec: null };
-  const TABS = { genislik: "Genişlik ve rejim", sektor: "Sektör rotasyonu", hisse: "Güçlü hisseler" };
+    sort: "rank", sdir: 1, tmPer: "d1", tmSec: "", vKind: "endeks", vSort: "mcap", hs: { quad: true, rs: 80, tt: 6, vol: false, liq: true, sec: "", q: "", sort: "rs", sdir: 1, limit: 60 }, selSec: null };
+  const TABS = { genislik: "Genişlik ve rejim", harita: "Isı haritası", sektor: "Sektör rotasyonu", hisse: "Güçlü hisseler", deger: "Değerleme", kuresel: "Küresel" };
   const REG = {
     boga: ["Boğa", "up", "Endeks ve genişlik birlikte güçlü"],
     duzeltme: ["Düzeltme / kararsız", "warn-t", "Endeks ile genişlik ayrışıyor"],
@@ -110,7 +110,7 @@
       f.negdiv && `<span class="tag down" data-tip="${esc(`XU100 yeni zirve yaptı ama yeni zirvedeki hisse ${f.negdiv.now} (pencere zirvesi ${f.negdiv.peak})`)}">Negatif diverjans · ${dlab(f.negdiv.d)}</span>`,
       f.oversold && `<span class="tag warn">Aşırı satım: 20/50 günlük ortalamanın üstündeki hisse < %15</span>`,
     ].filter(Boolean).join("");
-    return `<section class="card gc-reg ${r[1]}" aria-labelledby="gcRegT">
+    return `<section class="card gc-reg" data-tone="${r[1]}" aria-labelledby="gcRegT">
       <div class="card-head"><h2 class="card-title" id="gcRegT">Piyasa rejimi · <span class="${r[1]}">${r[0]}</span></h2><span class="card-meta">${dlab(g.asof)} kapanışı${compact ? ` · <a href="#piyasa-gucu/genislik">Piyasa Gücü →</a>` : ""}</span></div>
       <p class="t2">${esc(g.why)}</p>
       ${compact ? `<div class="gc-sig">${sig}</div>` : `<div class="res-cols"><div><p class="d-sub">Koşullar</p><ul class="gc-ck">${conds}</ul></div><div><p class="d-sub">Son sinyaller</p><div class="gc-sig">${sig || `<span class="t3">Son 15–30 günde sinyal yok</span>`}</div></div></div>`}
@@ -262,11 +262,37 @@
       <p class="t3 gc-foot">Göreli güç ve trend şablonu fiyat temelli göstergelerdir; tek başına alım-satım kuralı değildir. Yöntem Karnesi'ne göre BIST'te 12-1 ay momentum tek başına zayıf (t 1,7), kısa vadeli devam etkisi daha güçlü; bu listenin geçmiş başarısı ayrıca test edilecek.</p></section>`;
   }
 
+  // ─────────────────────────────── ısı haritası, değerleme, küresel (market.js)
+  const MK = () => window.radarMarket;
+  function tabMap() {
+    const secs = [...new Set(S.doc.stocks.filter(r => r.mcap).map(r => r.sector))].sort((a, b) => a.localeCompare(b, "tr"));
+    return `<section class="card" aria-labelledby="gcTmT"><div class="card-head"><h2 class="card-title" id="gcTmT">BIST ısı haritası</h2>
+        <span class="card-meta">kutu büyüklüğü piyasa değeri · renk getiri · kutuya tıkla: hisse paneli</span></div>
+      <div class="toolbar ok-tb">${seg("gcTmP", Object.fromEntries(Object.entries(MK().PERK).map(([k, v]) => [k, v[0]])), S.tmPer, "Dönem")}
+        <select id="gcTmS" class="fa-select" aria-label="Sektör"><option value="">Tüm sektörler</option>${secs.map(x => `<option ${S.tmSec === x ? "selected" : ""} value="${esc(x)}">${esc(MK().short(x))}</option>`).join("")}</select>
+        <span class="grow"></span>${MK().legend(S.tmPer)}</div>
+      <div id="gcTm" class="tm-box"></div>
+      <p class="t3 gc-foot">${dlab(S.doc.asof)} kapanışı. Piyasa değeri son fiyat × ödenmiş sermaye (aynı şirketin ikincil pay sınıfları hariç). Sektör başlığındaki getiri piyasa değeriyle ağırlıklı.</p></section>`;
+  }
+  function tabValue() {
+    return `<section class="card card-flush" aria-labelledby="gcVT"><div class="card-head"><h2 class="card-title" id="gcVT">Endeks ve sektör değerlemesi</h2>
+        ${seg("gcVK", { endeks: "Endeksler", sektor: "Sektörler" }, S.vKind, "Grup")}</div>
+      ${S.vKind === "sektor" ? `<div class="toolbar ok-tb" style="padding:0 var(--s-4)">Sırala ${seg("gcVS", { mcap: "Piyasa değeri", roe: "Kârlılık", pe: "F/K", pb: "PD/DD" }, S.vSort, "Sıralama")}</div>` : ""}
+      ${MK().valuationTable(S.vKind, S.vSort)}
+      <p class="t3 gc-foot" style="padding:0 var(--s-4) var(--s-3)">KAP mali tabloları (son dönem, son 12 ay) ve son kapanış · dolar karşılığı ${S.doc.usdtry ? `USD/TRY ${fmt.num(S.doc.usdtry, 4)}` : "—"}. F/K, PD/DD ve kârlılık şirket değerlerinin ortalaması değil, toplamların oranıdır (endeksin bütün olarak çarpanı). Dönem değişimi bugünkü pay sayısıyla, fiyat getirilerinden geriye hesaplanır. Halka açık piyasa değeri MKK verisi gerektirdiği için yok.</p></section>`;
+  }
+  function tabGlobal() {
+    const x = MK().data.cross;
+    return `${MK().stripHTML() || ""}${MK().crossCard(false) || `<p class="t3">Küresel rejim henüz hesaplanmadı (hafta içi akşam çalışır).</p>`}
+      ${x?.score_hist?.length ? `<section class="card" aria-labelledby="gcXH"><div class="card-head"><h2 class="card-title" id="gcXH">Risk iştahı puanı · son 3 yıl</h2><span class="card-meta">haftalık · ±0,5 eşikleri</span></div>
+        ${chart(x.score_hist.map(p => p[0]), [{ v: x.score_hist.map(p => p[1]), kind: "bar" }], { zero: true, h: 200, bands: [{ v: 0.5, l: "yüksek" }, { v: -0.5, l: "düşük" }], fmtY: v => fmt.num(v, 1), title: "risk iştahı" })}</section>` : ""}`;
+  }
+
   // ─────────────────────────────── görünüm
   function render() {
     const d = S.doc;
     $("#gcBody").innerHTML = `<div class="toolbar">${seg("gcTab", TABS, S.tab, "Bölüm")}<span class="grow"></span><span class="card-meta">${dlab(d.asof)} kapanışı · ${fmt.int(d.universe)} hisse</span></div>
-      ${S.tab === "sektor" ? tabSector() : S.tab === "hisse" ? tabStocks() : tabBreadth()}
+      ${S.tab === "sektor" ? tabSector() : S.tab === "hisse" ? tabStocks() : S.tab === "harita" ? tabMap() : S.tab === "deger" ? tabValue() : S.tab === "kuresel" ? tabGlobal() : tabBreadth()}
       <p class="m-foot">${window.radarMethod?.link("piyasa-gucu") || ""}</p>
       <p class="src-line">Kaynak: Yahoo Finance günlük kapanış ve hacim (kişisel kullanım; ham fiyat yayımlanmaz), KAP sektör sınıflaması · ${fmt.date(d.generated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>`;
     bind();
@@ -274,6 +300,11 @@
   function bind() {
     const segB = (id, f) => { $$(`#${id} button`).forEach(b => b.onclick = () => { f(b.dataset.v); render(); }); $(`#${id}`) && sh.radioKeys($(`#${id}`)); };
     segB("gcTab", v => { S.tab = v; sh.go("piyasa-gucu", { param: v }); });
+    segB("gcTmP", v => { S.tmPer = v; });
+    segB("gcVK", v => { S.vKind = v; });
+    segB("gcVS", v => { S.vSort = v; });
+    $("#gcTmS")?.addEventListener("change", e => { S.tmSec = e.target.value; render(); });
+    if (S.tab === "harita") MK()?.load().then(() => MK().treemap($("#gcTm"), { per: S.tmPer, sector: S.tmSec || null, height: S.tmSec ? 420 : Math.max(420, Math.min(720, innerWidth * 0.5)) }));
     segB("gcRange", v => { S.range = +v; });
     segB("gcPer", v => { S.per = v; });
     segB("gcHR", v => { S.hs.rs = +v; S.hs.limit = 60; });
@@ -303,6 +334,8 @@
     else { const s = d.series; ex.download(`bist_genislik_${ex.stamp()}.csv`, ex.toCSV(s.d.map((dd, i) => ({ tarih: dd, xu100: s.bench[i], ust20: s.p20[i], ust50: s.p50[i], ust200: s.p200[i], yeni_zirve: s.nh[i], yeni_dip: s.nl[i], yukselen: s.adv[i], dusen: s.dec[i], mcclellan: s.mco[i], yukselen_hacim: s.upv[i] }))), "text/csv;charset=utf-8"); }
   }
 
+  addEventListener("radar:market", () => { if (sh.route === "piyasa-gucu" && S.loaded && ["harita", "deger", "kuresel"].includes(S.tab)) render(); });
+  let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (sh.route === "piyasa-gucu" && S.tab === "harita") render(); }, 250); });
   window.radarGuc = { card: () => S.loaded ? regimeCard(true) : (load(), "") };
   sh.register("piyasa-gucu", {
     onShow() { if (TABS[sh.param]) S.tab = sh.param; S.loaded ? render() : S.error ? renderError() : load(); },
