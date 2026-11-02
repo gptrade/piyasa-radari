@@ -3,10 +3,10 @@
 (() => {
   "use strict";
   const sh = window.shell;
-  const { $, esc, fmt, glyph, dirCls } = sh;
+  const { $, $$, esc, fmt, glyph, dirCls } = sh;
   const DAY = 864e5;
   const MAT_W = { low: 1, medium: 2, high: 3 };
-  const S = { cal: null, loaded: false };
+  const S = { cal: null, loaded: false, tmPer: "d1" };
 
   async function getJSON(p) {
     try { const r = await fetch(`${p}?t=${Date.now()}`, { cache: "no-store" }); return r.ok ? await r.json() : null; } catch { return null; }
@@ -37,12 +37,16 @@
       ${(d.ideas || []).length ? `<div class="td-ideas">${d.ideas.slice(0, 4).map(i => `<button type="button" class="td-idea" data-tk="${esc(i.ticker)}" data-tip="${esc(i.rationale || "")}${i.risk ? `<br><b>Risk:</b> ${esc(i.risk)}` : ""}">
         <b>${esc(i.ticker)}</b><span class="tag">${esc(i.stance || "")}</span><span class="td-idea-t">${esc(i.title || "")}</span>${i.conviction ? `<span class="meta">%${i.conviction}</span>` : ""}</button>`).join("")}</div>` : ""}</section>`;
   }
+  function sectorLine(g) {
+    const s = g?.sectors || [], q = k => s.filter(x => x.quad === k).slice(0, 4).map(x => `<a href="#piyasa-gucu/sektor">${esc(window.radarMarket.short(x.name))}</a>`).join(", ");
+    return [q("lider") && `lider sektörler: ${q("lider")}`, q("iyilesen") && `iyileşen: ${q("iyilesen")}`].filter(Boolean).join(" · ") || "";
+  }
   function kpis() {
     const st = window.radar?.state, ser = st?.macro?.series || [];
     const k = (label, value, sub = "", cls = "") => `<div class="kpi"><span class="kpi-label">${label}</span><span class="kpi-value">${value}</span>${sub ? `<span class="kpi-sub ${cls}">${sub}</span>` : ""}</div>`;
     const m = code => ser.find(s => s.code === code);
     const out = [];
-    for (const [code, label, d] of [["TP.DK.USD.A.YTL", "USD/TRY", 4], ["TP.DK.EUR.A.YTL", "EUR/TRY", 4], ["TP.APIFON4", "TCMB fonlama (%)", 2]]) {
+    for (const [code, label, d] of (window.radarMarket?.data.strip?.items?.length ? [["TP.APIFON4", "TCMB fonlama (%)", 2]] : [["TP.DK.USD.A.YTL", "USD/TRY", 4], ["TP.DK.EUR.A.YTL", "EUR/TRY", 4], ["TP.APIFON4", "TCMB fonlama (%)", 2]])) {
       const s = m(code);
       if (s) out.push(k(label, fmt.num(s.last, d), s.change_pct != null ? `${glyph(s.change_pct)} ${fmt.pct(s.change_pct, 2)}` : "", dirCls(s.change_pct)));
     }
@@ -107,7 +111,18 @@
     if (!S.loaded) { body.innerHTML = `<div class="view" aria-busy="true"><div class="kpi-grid">${Array.from({ length: 6 }, () => `<div class="kpi"><div class="skeleton sk-line w60"></div><div class="skeleton sk-line lg w40"></div></div>`).join("")}</div></div>`; return; }
     const d = new Date().toLocaleDateString("tr-TR", { timeZone: sh.TZ, weekday: "long", day: "numeric", month: "long", year: "numeric" });
     $("#tdDate").textContent = d;
-    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis()}${window.radarGuc?.card() || ""}${digest()}
+    queueMicrotask(() => {
+      $$("#tdTmP button").forEach(b => b.onclick = () => { S.tmPer = b.dataset.v; render(); });
+      window.radarMarket?.treemap($("#tdTm"), { per: S.tmPer, height: innerWidth < 640 ? 360 : 400, maxStocks: 150 });
+    });
+    const MK = window.radarMarket;
+    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${MK?.stripHTML(["usdtry", "eurtry", "xu100", "xu100usd", "gram", "gold", "brent", "us10y", "dxy", "spx", "vix", "btc"]) || ""}
+      <div class="td-regimes">${window.radarGuc?.card() || ""}${MK?.crossCard(true) || ""}</div>
+      ${MK?.data.guc ? `<section class="card" aria-labelledby="tdTmT"><div class="card-head"><h2 class="card-title" id="tdTmT">BIST ısı haritası</h2>
+        <div class="seg seg-sm" role="radiogroup" aria-label="Dönem" id="tdTmP">${Object.entries(MK.PERK).map(([k, v]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${S.tmPer === k}">${v[0]}</button>`).join("")}</div>
+        <a class="link-btn" href="#piyasa-gucu/harita">Tam ekran →</a></div><div id="tdTm" class="tm-box"></div>
+        <p class="t3 gc-foot">En büyük 150 şirket · kutu = piyasa değeri, renk = getiri · ${sectorLine(MK.data.guc)}</p></section>` : ""}
+      ${kpis()}${digest()}
       <div class="td-grid">${signalCard()}${calCard()}${pfCard()}${researchCard()}</div></div>`;
   }
 
@@ -118,6 +133,7 @@
   });
   addEventListener("radar:pf", () => render());
   addEventListener("radar:guc", () => render());
+  addEventListener("radar:market", () => render());
   addEventListener("themechange", render);
 
   sh.register("bugun", {
