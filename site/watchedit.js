@@ -45,9 +45,26 @@
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
       S.list = j;
+      applyLocal(body);
       S.msg = body.add ? `${body.add.symbol} eklendi. Fiyat, haber ve sinyaller birkaç dakika içinde gelir.` : `${body.remove.symbol} çıkarıldı. Panel birkaç dakika içinde güncellenir.`;
     } catch (e) { S.err = e.message; }
     S.busy = false; render();
+  }
+
+  // Kayıt başarılıysa panel hemen güncellenir (fiyat/haber verisi yeni turla gelir); sonraki turlar 3, 6, 10 dk sonra çekilir
+  let pollT = [];
+  function applyLocal(body) {
+    const st = window.radar?.state;
+    if (st?.feed?.watchlist) {
+      if (body.remove) st.feed.watchlist = st.feed.watchlist.filter(w => w.symbol !== body.remove.symbol.toUpperCase());
+      else if (body.add && !st.feed.watchlist.some(w => w.symbol === body.add.symbol)) {
+        const m = body.add.market === "US" ? "US" : "BIST", e = [...(S.list?.bist || []), ...(S.list?.us || [])].find(w => w.symbol === body.add.symbol);
+        st.feed.watchlist.push({ symbol: body.add.symbol, name: e?.name || body.add.name || body.add.symbol, market: m, tv: e?.tv || (m === "BIST" ? `BIST:${body.add.symbol}` : body.add.symbol) });
+      }
+      window.radar.rerender?.();
+    }
+    pollT.forEach(clearTimeout);
+    pollT = [3, 6, 10].map(min => setTimeout(() => window.radar?.poll?.(), min * 60e3));
   }
 
   function render() {
