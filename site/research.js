@@ -118,6 +118,41 @@
     </section>`;
   }
 
+  // Hedef fiyat haritası: her hissede son 90 günde her kurumun SON hedefi bir nokta (güncel fiyata göre potansiyel),
+  // dikey çizgi medyan; izleme listesinde Yahoo analist hedef aralığı (en düşük–en yüksek) açık şerit olarak.
+  function targetMap(notes) {
+    const w = watch(), cut = Date.now() - 90 * 864e5, last = new Map();
+    for (const n of (notes || []).filter(inMarket)) {
+      if (!n.t || !n.tp || Date.parse(n.ts) < cut || (scope() === "watch" && !w.has(n.t))) continue;
+      const k = `${n.t}|${n.broker}`, o = last.get(k);
+      if (!o || Date.parse(n.ts) > Date.parse(o.ts)) last.set(k, n);
+    }
+    const by = new Map();
+    for (const n of last.values()) { if (!by.has(n.t)) by.set(n.t, []); by.get(n.t).push(n); }
+    let rows = [...by].map(([t, xs]) => { const p = price(t); if (!p) return null;
+      const pots = xs.map(n => ({ n, v: n.tp / p - 1 })).filter(o => o.v > -0.9 && o.v < 5).sort((a, b) => a.v - b.v);
+      if (!pots.length) return null;
+      const med = pots[Math.floor((pots.length - 1) / 2)].v + (pots.length % 2 ? 0 : (pots[pots.length / 2].v - pots[pots.length / 2 - 1].v) / 2);
+      const an = window.radar?.state?.prices?.[t]?.analyst?.targets;
+      return { t, p, pots, med, yr: an?.low && an?.high ? [an.low / p - 1, an.high / p - 1] : null };
+    }).filter(Boolean).sort((a, b) => b.pots.length - a.pots.length || b.med - a.med);
+    if (!rows.length) return "";
+    const total = rows.length; rows = rows.slice(0, S.tmAll ? 80 : 14);
+    const LO = -0.4, HI = 1.2, X = v => ((Math.max(LO, Math.min(HI, v)) - LO) / (HI - LO) * 100).toFixed(2);
+    const col = r => r === "AL" ? "var(--up)" : r === "SAT" ? "var(--down)" : "var(--text-3)";
+    const ticks = [-0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1, 1.2];
+    return `<section class="card" aria-labelledby="resTmT"><div class="card-head"><h2 class="card-title" id="resTmT">Hedef fiyat haritası</h2>
+        <span class="card-meta">son 90 gün · her kurumun son hedefi · güncel fiyata göre potansiyel</span></div>
+      <div class="rt-axis"><span></span><div class="rt-scale">${ticks.map(v => `<i style="left:${X(v)}%">${v === 0 ? "fiyat" : `${v > 0 ? "+" : "−"}%${Math.abs(v * 100)}`}</i>`).join("")}</div><span></span></div>
+      ${rows.map(r => `<div class="rt-row"><button type="button" class="tk-link mono" data-sym="${esc(r.t)}">${esc(r.t)}</button>
+        <div class="rt-track"><i class="rt-zero" style="left:${X(0)}%"></i>${r.yr ? `<i class="rt-yr" style="left:${X(r.yr[0])}%;width:${X(r.yr[1]) - X(r.yr[0])}%" data-tip="Yahoo analist hedef aralığı: ${fmt.pct(r.yr[0] * 100, 0)} … ${fmt.pct(r.yr[1] * 100, 0)}"></i>` : ""}
+          <i class="rt-med" style="left:${X(r.med)}%" data-tip="Medyan potansiyel ${fmt.pct(r.med * 100, 0)}"></i>
+          ${r.pots.map(o => `<i class="rt-dot" style="left:${X(o.v)}%;background:${col(o.n.rating)}" data-tip="${esc(`${o.n.broker} · ${o.n.rating || "—"} · hedef ${fmt.num(o.n.tp, 2)} (${fmt.pct(o.v * 100, 0)}) · ${fmt.date(o.n.ts)}`)}"></i>`).join("")}</div>
+        <span class="rt-v ${r.med > 0 ? "up" : "down"}">${fmt.pct(r.med * 100, 0)} <small class="t3">${r.pots.length} kurum</small></span></div>`).join("")}
+      <p class="t3 gc-foot"><span class="rt-key"><i style="background:var(--up)"></i>AL <i style="background:var(--text-3)"></i>TUT <i style="background:var(--down)"></i>SAT <i class="rt-k-med"></i>medyan <i class="rt-k-yr"></i>Yahoo analist aralığı</span>
+        ${total > rows.length || S.tmAll ? ` · <button type="button" class="link-btn" id="resTmAll">${S.tmAll ? "En çok kapsananlar" : `Tümü (${total})`}</button>` : ""} · −%40 ve +%120 dışı kenarda gösterilir.</p></section>`;
+  }
+
   function notesCard(notes) {
     const w = watch();
     let xs = (notes || []).filter(inMarket);
@@ -152,10 +187,11 @@
     if (!S.loaded) { box.innerHTML = sh.stateHTML ? sh.stateHTML({ kind: "loading", title: "Yükleniyor…" }) : "<p>Yükleniyor…</p>"; return; }
     if (S.error || !S.data) { box.innerHTML = `<section class="card"><p class="tp-empty">Araştırma verisi henüz yok. İlk tarama turundan sonra oluşur.</p></section>`; return; }
     const d = S.data;
-    box.innerHTML = `<div class="res-grid"><div class="res-main">${synthesisCard(d.synthesis)}${reportsCard(d.reports)}${notesCard(d.notes)}</div>
+    box.innerHTML = `<div class="res-grid"><div class="res-main">${synthesisCard(d.synthesis)}${targetMap(d.notes)}${reportsCard(d.reports)}${notesCard(d.notes)}</div>
       <div class="res-side">${consensusCard(d.consensus)}${outlookCard(d.outlooks)}</div></div>`;
     $$(".tk-link", box).forEach(b => b.onclick = () => window.radar?.openTicker(b.dataset.sym, b));
     const more = $("#resMore"); if (more) more.onclick = () => { S.limit += 30; render(); };
+    const tma = $("#resTmAll"); if (tma) tma.onclick = () => { S.tmAll = !S.tmAll; render(); };
   }
 
   function bindTools() {

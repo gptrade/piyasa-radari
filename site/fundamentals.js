@@ -667,6 +667,46 @@
         <td>${(x.installments || []).map(i => esc(i.ex || "")).join(", ") || "—"}</td></tr>`).join("")}</tbody></table>`;
   }
 
+  // ───────────── değerleme haritası: log(PD/DD) = a + b · ROE (kesitsel EKK); çizginin altı kârlılığına göre ucuz.
+  // Yöntem Karnesi: "hak edilen PD/DD'ye göre iskonto" 2017–2026'da güçlü kanıt (t ≈ 3,3).
+  function valMap(all, secSel) {
+    // PD/DD > 50: aynı şirketin ikincil pay sınıfı (ör. ISATR kurucu payı × tüm sermaye) ya da veri hatası
+    const pts = all.map(r => ({ r, x: r.r?.roe, pb: r.v?.pb, mc: r.mcap })).filter(o => o.x != null && o.pb > 0 && o.pb < 50 && o.x > -0.5 && o.x < 1.5 && o.mc > 0);
+    if (pts.length < 8) return `<section class="card"><div class="card-head"><h2 class="card-title">Değerleme haritası</h2><div class="fa-scope">${ixSeg()}${secSel}</div></div>${sh.stateHTML({ title: "Bu kapsamda yeterli şirket yok", compact: true })}</section>`;
+    const n = pts.length, mx = pts.reduce((a, o) => a + o.x, 0) / n, my = pts.reduce((a, o) => a + Math.log(o.pb), 0) / n;
+    const sxx = pts.reduce((a, o) => a + (o.x - mx) ** 2, 0), b = sxx ? pts.reduce((a, o) => a + (o.x - mx) * (Math.log(o.pb) - my), 0) / sxx : 0, a = my - b * mx;
+    pts.forEach(o => { o.fit = a + b * o.x; o.res = Math.log(o.pb) - o.fit; o.exp = Math.exp(o.fit); });
+    const W = 860, H = 440, P = { l: 52, r: 16, t: 14, b: 40 };
+    const xs = pts.map(o => o.x).sort((p, q) => p - q), x0 = Math.max(-0.3, xs[Math.floor(n * 0.01)] - 0.03), x1 = Math.min(1, xs[Math.ceil(n * 0.99) - 1] + 0.05);
+    const ly = pts.map(o => Math.log(o.pb)).sort((p, q) => p - q), y0 = Math.max(Math.log(0.1), ly[Math.floor(n * 0.01)] - 0.2), y1 = Math.min(Math.log(30), ly[Math.ceil(n * 0.99) - 1] + 0.2);
+    const X = v => P.l + (W - P.l - P.r) * (Math.max(x0, Math.min(x1, v)) - x0) / (x1 - x0), Y = v => P.t + (H - P.t - P.b) * (y1 - Math.max(y0, Math.min(y1, v))) / (y1 - y0);
+    const mmax = Math.max(...pts.map(o => o.mc)), R = o => 2.5 + Math.sqrt(o.mc / mmax) * 16;
+    const colr = o => `color-mix(in srgb, ${o.res < 0 ? "var(--up)" : "var(--down)"} ${Math.round(25 + Math.min(1, Math.abs(o.res) / 1.2) * 65)}%, var(--surface-2))`;
+    const pbT = [0.2, 0.5, 1, 2, 5, 10, 20].filter(v => Math.log(v) >= y0 && Math.log(v) <= y1), roeT = [-0.2, 0, 0.2, 0.4, 0.6, 0.8].filter(v => v >= x0 && v <= x1);
+    const big = new Set([...pts].sort((p, q) => q.mc - p.mc).slice(0, 14).map(o => o.r.code));
+    // liste: piyasa değeri ≥ 5 mr ₺ ve PD/DD ≥ 0,15 (daha düşükleri çoğunlukla bedelsiz sonrası eski pay sayısı gibi veri hatası)
+    const cheap = pts.filter(o => o.mc >= 5e9 && o.pb >= 0.15 && o.x > 0).sort((p, q) => p.res - q.res).slice(0, 12);
+    // etiket çakışmasını önle: büyükten küçüğe yerleştir, çakışırsa yukarı/aşağı kaydır, olmazsa atla
+    const labels = [];
+    for (const o of [...pts].filter(o => big.has(o.r.code)).sort((p, q) => q.mc - p.mc)) {
+      const x = X(o.x) + R(o) + 3, y0l = Y(Math.log(o.pb)) + 4, w = o.r.code.length * 6.6;
+      const y = [0, -11, 11, -20, 20].map(d => y0l + d).find(y => !labels.some(l => Math.abs(l.y - y) < 10.5 && x < l.x + l.w && l.x < x + w));
+      if (y != null) labels.push({ x, y, w, t: o.r.code });
+    }
+    const svg = `<svg class="vm-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="ROE – PD/DD haritası">
+      ${pbT.map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(Math.log(v))}" y2="${Y(Math.log(v))}" class="g"/><text x="${P.l - 6}" y="${Y(Math.log(v)) + 4}" text-anchor="end">${fmt.num(v, v < 1 ? 1 : 0)}</text>`).join("")}
+      ${roeT.map(v => `<line x1="${X(v)}" x2="${X(v)}" y1="${P.t}" y2="${H - P.b}" class="${v === 0 ? "z" : "g"}"/><text x="${X(v)}" y="${H - P.b + 16}" text-anchor="middle">%${fmt.num(v * 100, 0)}</text>`).join("")}
+      <text x="${W - P.r}" y="${H - 6}" text-anchor="end" class="ax">özkaynak kârlılığı (son 12 ay) →</text><text x="${P.l}" y="${P.t - 2}" class="ax">↑ PD/DD (log)</text>
+      <line class="vm-fit" x1="${X(x0)}" y1="${Y(a + b * x0)}" x2="${X(x1)}" y2="${Y(a + b * x1)}"/>
+      ${[...pts].sort((p, q) => q.mc - p.mc).map(o => `<circle class="vm-pt" data-code="${o.r.code}" cx="${X(o.x).toFixed(1)}" cy="${Y(Math.log(o.pb)).toFixed(1)}" r="${R(o).toFixed(1)}" fill="${colr(o)}"><title>${esc(`${o.r.code} · ${o.r.sector || ""}\nROE %${fmt.num(o.x * 100, 1)} · PD/DD ${fmt.num(o.pb, 2)} · hak edilen ${fmt.num(o.exp, 2)} (${o.res < 0 ? "%" + fmt.num((1 - Math.exp(o.res)) * 100, 0) + " iskontolu" : "%" + fmt.num((Math.exp(o.res) - 1) * 100, 0) + " primli"})`)}</title></circle>`).join("")}
+      ${labels.map(l => `<text class="vm-l" x="${l.x.toFixed(1)}" y="${l.y.toFixed(1)}">${l.t}</text>`).join("")}</svg>`;
+    return `<section class="card"><div class="card-head"><h2 class="card-title">Değerleme haritası · kârlılığa göre PD/DD</h2><div class="fa-scope">${ixSeg()}${secSel}</div></div>
+      <div class="vm-grid"><div>${svg}<p class="t3 gc-foot">${n} şirket · nokta büyüklüğü piyasa değeri · çizgi: bu kapsamda kârlılığa göre beklenen ("hak edilen") PD/DD, log(PD/DD) = ${fmt.num(a, 2)} + ${fmt.num(b, 2)} × ROE.
+          Yeşil nokta çizginin altında (kârlılığına göre ucuz), kırmızı üstünde. Bankalar ve sanayi şirketleri farklı davranır; sektör seçerek daraltmak daha adil karşılaştırma verir. Yöntem Karnesi'nde bu iskonto 2017–2026'da sonraki ay getirisini öngörmede güçlü kanıt verdi.</p></div>
+        <div><p class="d-sub">Kârlılığına göre en iskontolu</p><p class="t3 vm-note">kârlı, piyasa değeri ≥ 5 mr ₺, PD/DD ≥ 0,15 · satıra tıkla: şirket</p><table class="fa-kv vm-cheap"><thead><tr><th></th><th class="num">ROE</th><th class="num">PD/DD</th><th class="num">hak edilen</th><th class="num">iskonto</th></tr></thead>
+          <tbody>${cheap.map(o => `<tr class="row" tabindex="0" data-code="${o.r.code}"><th scope="row" class="mono">${o.r.code}</th><td class="num">%${fmt.num(o.x * 100, 0)}</td><td class="num">${fmt.num(o.pb, 2)}</td><td class="num">${fmt.num(o.exp, 2)}</td><td class="num up">%${fmt.num((1 - Math.exp(o.res)) * 100, 0)}</td></tr>`).join("")}</tbody></table></div></div></section>`;
+  }
+
   // ───────────── tarama
   const OPS = { ">=": (a, b) => a >= b, "<=": (a, b) => a <= b };
   const PCTK = k => MET[k] && (MET[k][1] === pct || MET[k][1] === pctS);
@@ -678,10 +718,11 @@
     if (!sets.includes(S.crit)) S.crit = sets[0];
     const all = rows().filter(r => (!S.scrSector || (r.sector || "Diğer") === S.scrSector) && inIx(r));
     const sectors = [...new Set(rows().map(r => r.sector || "Diğer"))].sort((a, b) => a.localeCompare(b, "tr"));
-    const tabsH = `<div class="seg fa-tabs" role="tablist"><button type="button" role="tab" data-st="metrik" aria-checked="${S.scrTab === "metrik"}">Metrik taraması</button><button type="button" role="tab" data-st="kriter" aria-checked="${S.scrTab === "kriter"}">Kriter taraması (sağlandı / sağlanmadı)</button></div>`;
+    const tabsH = `<div class="seg fa-tabs" role="tablist"><button type="button" role="tab" data-st="metrik" aria-checked="${S.scrTab === "metrik"}">Metrik taraması</button><button type="button" role="tab" data-st="kriter" aria-checked="${S.scrTab === "kriter"}">Kriter taraması (sağlandı / sağlanmadı)</button><button type="button" role="tab" data-st="harita" aria-checked="${S.scrTab === "harita"}">Değerleme haritası</button></div>`;
     const secSel = `<select id="faScrSec" class="fa-select" aria-label="Sektör"><option value="">Tüm sektörler</option>${sectors.map(s => `<option ${s === S.scrSector ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>`;
     let body;
-    if (S.scrTab === "kriter") {
+    if (S.scrTab === "harita") body = valMap(all, secSel);
+    else if (S.scrTab === "kriter") {
       const lbl = labels[S.crit] || [];
       let xs = all.map(r => ({ r, c: r.crit?.[S.crit] })).filter(o => o.c);
       if (S.allPass) xs = xs.filter(o => o.c[0] === o.c[1]);
@@ -717,6 +758,7 @@
     $("#faAllPass") && ($("#faAllPass").onchange = e => { S.allPass = e.target.checked; renderScreen(); });
     $("#faScrSec").onchange = e => { S.scrSector = e.target.value; renderScreen(); };
     bindIx(el, renderScreen);
+    $$(".vm-pt", el).forEach(c => c.onclick = () => sh.go("hisse", { param: c.dataset.code, focus: true }));
     const saveF = () => { store.set("radar.finFilters", S.filters); renderScreen(); };
     $$(".fa-f", el).forEach(f => {
       const i = +f.dataset.i;
