@@ -180,6 +180,17 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/olay.yml/dispatches" \
             -d '{"ref":"main"}' -o /dev/null -w "olay.yml tetiklendi: HTTP %{http_code}\n"
 
+      # Piyasa gücü: GitHub zamanlayıcısı güvenilmez (2 Kasım'da hiç çalışmadı). Hafta içi 16:15–16:30 ve 19:00–19:15 UTC
+      # (İstanbul 19:15 ve 22:00) turlarında tetiklenir; kapanış verisi Yahoo'ya düştükten sonra.
+      - name: Piyasa gücünü tetikle
+        continue-on-error: true
+        run: |
+          H=$(date -u +%H); M=$(date -u +%M); D=$(date -u +%u)
+          { [ "$D" -le 5 ] && { { [ "$H" = 16 ] && [ "$M" -ge 15 ] && [ "$M" -lt 30 ]; } || { [ "$H" = 19 ] && [ "$M" -lt 15 ]; }; }; } || { echo "bu tur değil"; exit 0; }
+          curl -sS -X POST -H "Authorization: Bearer ${{ github.token }}" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/guc.yml/dispatches" \
+            -d '{"ref":"main"}' -o /dev/null -w "guc.yml tetiklendi: HTTP %{http_code}\n"
+
       # Kapalı grup sitesi (Cloudflare Pages + Cloudflare Access). Secret'lar tanımlı değilse atlanır;
       # geçiş süresince GitHub Pages yayını da sürer.
       - name: Cloudflare Pages'e yükle

@@ -353,6 +353,8 @@ def run() -> dict:
         try:
             got = fn(ctx)
             entry = {"name": name, "ok": True, "count": len(got)}
+            if fn is research.collect_broker_notes:      # izleme listesi dışındaki BIST notları da veri sayılır (Araştırma'ya gider)
+                entry["count"] += len(research.PENDING)
             fails = http.FAILURES[n0:]
             if fails:
                 from collections import Counter

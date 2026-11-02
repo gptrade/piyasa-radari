@@ -284,8 +284,7 @@ def collect_reddit(ctx: Context) -> list[Item]:
 # ---------------------------------------------------------------- Basın bülteni servisleri
 PRESS_WIRES = {
     "PR Newswire": "https://www.prnewswire.com/rss/news-releases-list.rss",
-    "GlobeNewswire": ("https://www.globenewswire.com/RssFeed/orgclass/1/feedTitle/"
-                      "GlobeNewswire%20-%20News%20about%20Public%20Companies"),
+    # GlobeNewswire 30.10.2026'dan beri otomatik isteklere 403 veriyor (bot engeli): atlatılmaz, listeden çıkarıldı.
 }
 _EXCH = r"(?:NASDAQ|Nasdaq|NYSE|NYSE American|NYSE Arca|Cboe|OTCQX|OTC)(?:\s*(?:GS|GM|CM))?"
 
