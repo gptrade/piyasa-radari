@@ -1644,3 +1644,16 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .wl-sug li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
 .wl-sug li.on, .wl-sug li[data-i]:hover { background: var(--row-hover, var(--surface-2)); }
 .wl-sug li[aria-disabled="true"] { cursor: default; opacity: .6; }
+/* Telefon: üst çubuk ve Sinyal görünüm sekmeleri sayfayı yatay taşırmasın */
+@media (max-width: 520px) {
+  .topbar { gap: var(--s-2); }
+  .actions { min-width: 0; flex: 1 1 auto; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .actions::-webkit-scrollbar { display: none; }
+  .actions > * { flex: 0 0 auto; } .actions > :first-child { margin-left: auto; }
+  .actions #updated { display: none; }
+  .mkt-top button { padding: 0 5px; }
+  .actions .btn { padding-left: 8px; padding-right: 8px; }
+  .seg-views { max-width: 100%; overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
+  .seg-views::-webkit-scrollbar { display: none; }
+  .seg-views button { flex: 0 0 auto; }
+}

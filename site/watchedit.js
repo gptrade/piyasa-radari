@@ -82,7 +82,9 @@
         const Q = q.toLocaleUpperCase("tr");
         // kod başı ya da adın kelime başları (her sorgu kelimesi bir ad kelimesinin başı olmalı): "as" → ASELS, "türk hava" → THYAO
         const toks = fold(q).split(/\s+/).filter(Boolean);
-        const nameHit = m => { const ws = fold(m.title).split(/[\s.,()/-]+/); return toks.every(t => ws.some(w => w.startsWith(t))); };
+        const cq = fold(q).replace(/[^a-z0-9]/g, "");
+        const nameHit = m => { const ft = fold(m.title), ws = ft.split(/[\s.,()/-]+/);
+          return toks.every(t => ws.some(w => w.startsWith(t))) || (cq.length >= 3 && ft.replace(/[^a-z0-9]/g, "").startsWith(cq)); };   // "gürsel" → GÜR-SEL
         cur = S.uni.filter(m => m.code.startsWith(Q) || nameHit(m))
           .sort((a, b) => (b.code.startsWith(Q) - a.code.startsWith(Q)) || a.code.localeCompare(b.code)).slice(0, 8);
         act = -1;
@@ -110,7 +112,8 @@
       let sym = $("#wlSym").value.trim().toLocaleUpperCase("tr").split(/\s/)[0];
       if (S.market === "BIST" && S.uni && !S.uni.some(m => m.code === sym)) {
         const q = $("#wlSym").value.trim(), toks = fold(q).split(/\s+/).filter(Boolean);
-        const hits = S.uni.filter(m => { const ws = fold(m.title).split(/[\s.,()/-]+/); return toks.every(t => ws.some(w => w.startsWith(t))); });
+        const cq = fold(q).replace(/[^a-z0-9]/g, "");
+        const hits = S.uni.filter(m => { const ft = fold(m.title), ws = ft.split(/[\s.,()/-]+/); return toks.every(t => ws.some(w => w.startsWith(t))) || (cq.length >= 3 && ft.replace(/[^a-z0-9]/g, "").startsWith(cq)); });
         if (hits.length === 1) sym = hits[0].code;
         else { S.err = hits.length ? "Birden çok eşleşme var: listeden birini seç." : `${q} BIST Tüm listesinde bulunamadı.`; render(); return; }
       }
