@@ -40,7 +40,8 @@
     return `<section class="mk-strip" aria-label="Piyasalar">${items.map(i => {
       const m1 = i.m1 == null ? "" : i.chg_kind === "bp" ? `1 ay ${i.m1 > 0 ? "+" : ""}${fmt.num(i.m1 * 100, 0)} bp` : `1 ay ${pc(i.m1, 1)}`;
       const trend = i.spark?.length > 1 ? (i.spark.at(-1) >= i.spark[0] ? "up" : "down") : "";
-      return `<div class="mk-tile" data-tip="${esc(`${i.label} · ${dlab(i.asof)} · ${m1} · çizgi: son 3 ay`)}">
+      const fut = ["brent", "gold", "copper", "gram"].includes(i.k) ? " · vadeli işlem fiyatı (yakın kontrat): ay sonu kontrat devrinde tek günlük sıçrama olabilir" : "";
+      return `<div class="mk-tile" data-tip="${esc(`${i.label} · ${dlab(i.asof)} · ${m1} · çizgi: son 3 ay${fut}`)}">
         <span class="mk-l">${esc(i.label)}</span><span class="mk-v">${val(i)}</span>
         <span class="mk-c ${sgn(i.chg)}">${chg(i)}</span>${spark(i.spark, trend)}</div>`;
     }).join("")}</section>`;

@@ -116,7 +116,7 @@
       window.radarMarket?.treemap($("#tdTm"), { per: S.tmPer, height: innerWidth < 640 ? 360 : 400, maxStocks: 150 });
     });
     const MK = window.radarMarket;
-    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${MK?.stripHTML() || ""}
+    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${MK?.stripHTML(["usdtry", "eurtry", "xu100", "xu100usd", "gram", "gold", "brent", "us10y", "dxy", "spx", "vix", "btc"]) || ""}
       <div class="td-regimes">${window.radarGuc?.card() || ""}${MK?.crossCard(true) || ""}</div>
       ${MK?.data.guc ? `<section class="card" aria-labelledby="tdTmT"><div class="card-head"><h2 class="card-title" id="tdTmT">BIST ısı haritası</h2>
         <div class="seg seg-sm" role="radiogroup" aria-label="Dönem" id="tdTmP">${Object.entries(MK.PERK).map(([k, v]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${S.tmPer === k}">${v[0]}</button>`).join("")}</div>
