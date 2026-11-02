@@ -27,9 +27,6 @@ bist:
     name: Türk Hava Yolları
     kap: 1107-turk-hava-yollari-a-o
     aliases: ["Türk Hava Yolları", "THY"]
-  - symbol: GRTHO
-    name: Grainturk Holding AS
-    aliases: ["Grainturk"]    
 
 us:
   - symbol: NVDA
