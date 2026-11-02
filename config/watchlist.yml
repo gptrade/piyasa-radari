@@ -20,9 +20,6 @@ bist:
   - symbol: GLRMK
     name: Gülermak
     aliases: ["Gülermak"]
-  - symbol: ENTRA
-    name: IC Enterra Yenilenebilir Enerji
-    aliases: ["Enterra", "IC Enterra"]
   - symbol: THYAO
     name: Türk Hava Yolları
     kap: 1107-turk-hava-yollari-a-o
