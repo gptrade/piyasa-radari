@@ -24,6 +24,9 @@ bist:
     name: Türk Hava Yolları
     kap: 1107-turk-hava-yollari-a-o
     aliases: ["Türk Hava Yolları", "THY"]
+  - symbol: GRSEL
+    name: "Gür-Sel Turizm Taşımacılık Ve Servis Ticaret"
+    aliases: ["Gür-Sel Turizm Taşımacılık Ve Servis Ticaret","Gür-Sel"]
 
 us:
   - symbol: NVDA
