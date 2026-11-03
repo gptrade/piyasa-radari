@@ -1752,3 +1752,24 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .sp-band { fill: var(--surface-2); } .sp-bar:hover { opacity: .75; } .sp-clip { font-size: 8px; fill: var(--text-2) !important; }
 .sp-pt { fill: var(--series-1); opacity: .85; } .sp-pt.old { fill: var(--text-3); opacity: .35; }
 .sp-fit { stroke: var(--text); stroke-width: 1.5; stroke-dasharray: 5 4; }
+
+/* Geri alım: program kullanımı + olay çalışması */
+.bb-vis { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: var(--s-4); align-items: start; }
+@media (max-width: 1100px) { .bb-vis { grid-template-columns: 1fr; } }
+.pu-list { display: flex; flex-direction: column; gap: 7px; }
+.pu-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) 150px; align-items: center; gap: 10px; }
+.pu-tk { justify-self: start; }
+.pu-track { position: relative; height: 12px; background: var(--surface-2); border-radius: 6px; }
+.pu-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: var(--series-1); }
+.pu-fill.fast { background: var(--series-2); }
+.pu-time { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--text); border-radius: 1px; }
+.pu-v { font: var(--fs-sm) var(--font-mono); white-space: nowrap; } .pu-v small { font-family: var(--font-sans); }
+.pu-key i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin: 0 3px 0 6px; }
+.pu-key .pu-k1 { background: var(--series-1); } .pu-key .pu-k2 { background: var(--series-2); } .pu-key .pu-k3 { width: 2px; background: var(--text); }
+@media (max-width: 560px) { .pu-row { grid-template-columns: 56px minmax(0, 1fr); } .pu-v { grid-column: 2; } }
+.bs-band { fill: var(--series-1); opacity: .14; } .bs-line { fill: none; stroke: var(--series-1); stroke-width: 2.2; }
+.bs-dot { fill: var(--surface); stroke: var(--series-1); stroke-width: 2; }
+.bs-split th, .bs-rec th { font-weight: 400; text-align: left; } .bs-rec td, .bs-split td { white-space: nowrap; }
+.bs-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } @media (max-width: 700px) { .bs-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.bs-kpis .sp-k b { font-size: var(--fs-md, 16px); }
+.bs-split td, .bs-rec td { padding-left: 10px; }

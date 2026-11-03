@@ -125,6 +125,7 @@
     let raw = null, lastErr = null;
     for (const u of [SRC, FALLBACK]) { try { raw = await getJSON(u); break; } catch (e) { lastErr = e; } }
     try { const q = await getJSON("data/bb_quotes.json"); S.quotes = q.quotes || {}; S.quotesAt = q.generated; } catch { /* isteğe bağlı */ }
+    try { S.study = await getJSON("data/guc/bb.json"); } catch { S.study = null; }
     S.loading = false;
     if (!Array.isArray(raw)) {
       S.error = lastErr?.message || "veri okunamadı";
@@ -290,6 +291,83 @@
         ${ticks}${cols}${xl}</svg></section>`;
   }
 
+  // ─────────────────────────────── çizim: program kullanımı (aktif programlar, azami paya göre)
+  function durMonths(d) {
+    const t = durShort(d);
+    let m = /^(\d+) (yıl|ay|gün)$/.exec(t);
+    if (m) return +m[1] * (m[2] === "yıl" ? 12 : m[2] === "ay" ? 1 : 1 / 30);
+    m = /^(\d{2})\.(\d{2})\.(\d{4}) bitiş$/.exec(t);
+    return m ? { end: new Date(Date.UTC(+m[3], +m[2] - 1, +m[1], 12)) } : null;
+  }
+  function progUse() {
+    const w = sh.mine ? sh.mineSet() : (S.watch ? watchSet() : null), q = S.q.toLocaleLowerCase("tr");
+    const rows = [];
+    for (const [t, pg] of S.prog || []) {
+      if (pg.ended || !pg.maxQty || (w && !w.has(t)) || (q && !sh.match(t, q))) continue;
+      const xs = S.rows.filter(r => r.t === t && r.kind === "tx" && r.pub >= pg.pub);
+      const qty = xs.reduce((a, r) => a + (r.qty || 0), 0), use = qty / pg.maxQty;
+      const pct = xs.some(r => r.pct != null) ? xs.reduce((a, r) => a + (r.pct || 0), 0) : null;
+      const dm = durMonths(pg.dur);
+      const end = dm?.end || (typeof dm === "number" ? new Date(pg.pub.getTime() + dm * 30.44 * DAY) : null);
+      const el = end ? Math.max(0, Math.min(1, (Date.now() - pg.pub) / (end - pg.pub))) : null;
+      if (end && end < Date.now() - 30 * DAY) continue;                 // süresi çoktan dolmuş, sonlandı bildirimi gelmemiş
+      const last = xs.reduce((m, r) => (!m || r.date > m ? r.date : m), null);
+      rows.push({ t, name: xs[0]?.name || "", pg, qty, use, pct, el, end, n: xs.length, last });
+    }
+    if (!rows.length) return "";
+    // azami payın %110'undan fazlası: büyük ihtimalle yeni program bildirimi eksik ya da azami pay okunamadı → sona, uyarıyla
+    const odd = r => r.use > 1.1;
+    const act = rows.filter(r => r.n).sort((a, b) => odd(a) - odd(b) || b.use - a.use), idle = rows.filter(r => !r.n);
+    const shown = S.puAll ? act : act.slice(0, 14);
+    const bar = r => `<div class="pu-row" data-t="${esc(r.t)}"><button type="button" class="tk-link mono pu-tk" data-sym="${esc(r.t)}">${esc(r.t)}</button>
+      <div class="pu-track" data-tip="${esc(`${r.t}: program ${fmt.date(r.pg.pub, { day: "numeric", month: "short", year: "numeric" })} · ${r.n} işlem, ${fmt.int(r.qty)} / ${fmt.int(r.pg.maxQty)} pay${r.pct != null ? ` · sermayenin %${fmt.num(r.pct, 2)}'si` : ""}${r.el != null ? `<br>Sürenin %${fmt.num(r.el * 100, 0)}'i geçti (${r.end ? fmt.date(r.end, { day: "numeric", month: "short", year: "numeric" }) : ""} bitiş)` : ""}${r.last ? `<br>Son işlem ${fmt.date(r.last)}` : ""}`)}">
+        <i class="pu-fill${r.el != null && r.use > r.el + 0.05 ? " fast" : ""}" style="width:${Math.min(100, r.use * 100).toFixed(1)}%"></i>${r.el != null ? `<i class="pu-time" style="left:${(r.el * 100).toFixed(1)}%"></i>` : ""}</div>
+      <span class="pu-v"><b>%${fmt.num(r.use * 100, 0)}</b>${odd(r) ? ` <span class="rv" data-tip="Azami payı aşıyor görünüyor: yeni program bildirimi eksik ya da azami pay okunamamış olabilir; KAP'ta kontrol et">⚠</span>` : ""}${r.pct != null ? ` <small class="t3">sermaye %${fmt.num(r.pct, 2)}</small>` : ""}</span></div>`;
+    return `<section class="card" aria-labelledby="bbPuT"><div class="card-head"><h2 class="card-title" id="bbPuT">Program kullanımı</h2>
+        <span class="card-meta">aktif programlarda alınan pay ÷ azami pay · ${act.length} program işlemde${idle.length ? `, ${idle.length} henüz işlemsiz` : ""}</span></div>
+      <div class="pu-list">${shown.map(bar).join("")}</div>
+      <p class="t3 gc-foot"><span class="pu-key"><i class="pu-k1"></i>kullanım <i class="pu-k2"></i>süreden hızlı <i class="pu-k3"></i>geçen süre</span>
+        ${act.length > 14 ? ` · <button type="button" class="link-btn" id="bbPuAll">${S.puAll ? "İlk 14" : `Tümü (${act.length})`}</button>` : ""}
+        ${idle.length ? ` · işlemsiz: ${idle.slice(0, 12).map(r => esc(r.t)).join(", ")}${idle.length > 12 ? "…" : ""}` : ""}
+        · Azami pay ve süre son program bildiriminden; süre metni okunamayan programlarda zaman çizgisi yok.</p></section>`;
+  }
+
+  // ─────────────────────────────── çizim: geri alım sonrası performans (data/guc/bb.json, olay çalışması)
+  function studyCard() {
+    const d = S.study; if (!d?.path) return "";
+    const p = d.path, W = 560, Hh = 220, P = { l: 38, r: 10, t: 14, b: 26 }, n = p.mean.length;
+    const lo = Math.min(...p.lo, -1), hi = Math.max(...p.hi, 1), ext = Math.ceil(Math.max(Math.abs(lo), Math.abs(hi)));
+    const X = i => P.l + (W - P.l - P.r) * i / (n - 1), Y = v => P.t + (Hh - P.t - P.b) * (ext - v) / (2 * ext);
+    const line = a => a.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join("");
+    const band = line(p.hi) + p.lo.map((v, i) => `L${X(n - 1 - i).toFixed(1)},${Y(p.lo[n - 1 - i]).toFixed(1)}`).join("") + "Z";
+    const i0 = -p.from, step = ext > 8 ? 4 : ext > 4 ? 2 : 1;
+    const yt = []; for (let v = -ext; v <= ext; v += step) yt.push(v);
+    const svg = `<svg class="sp-svg" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Geri alım dalgası etrafında ortalama fazla getiri">
+      ${yt.map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="${v ? "g" : "z"}"/><text x="${P.l - 5}" y="${Y(v) + 3.5}" text-anchor="end">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`).join("")}
+      <line x1="${X(i0)}" x2="${X(i0)}" y1="${P.t}" y2="${Hh - P.b}" class="z"/>
+      ${[-20, 0, 20, 40, 60].map(k => `<text x="${X(k - p.from)}" y="${Hh - 8}" text-anchor="middle">${k === 0 ? "giriş" : (k > 0 ? "+" : "−") + Math.abs(k)}</text>`).join("")}
+      <path d="${band}" class="bs-band"/><path d="${line(p.mean)}" class="bs-line"/>
+      ${[5, 20, 60].map(k => { const i = i0 + k; return i < n ? `<circle cx="${X(i)}" cy="${Y(p.mean[i])}" r="3.5" class="bs-dot"><title>+${k} gün: ortalama ${fmt.pct(p.mean[i], 1)}</title></circle>` : ""; }).join("")}
+    </svg>`;
+    const R = d.res || {}, k = (lbl, r, sub) => r ? `<div class="sp-k"><span class="k-lbl">${lbl}</span><b class="${r.mean > 0 ? "up" : r.mean < 0 ? "down" : ""}">${fmt.pct(r.mean, 1)}</b><span class="t3">${sub || `medyan ${fmt.pct(r.med, 1)} · %${fmt.num(r.hit * 100, 0)}'i pozitif · t ${r.t == null ? "—" : fmt.num(r.t, 1)}`}</span></div>` : "";
+    const sp = d.split || {}, sd = sp.drop?.a20, sr = sp.rest?.a20;
+    const sig = r => r?.t != null && Math.abs(r.t) >= 2;
+    const verdict = R.a20 ? (sig(R.a20) ? `20 günlük fazla getiri istatistiksel olarak anlamlı (t ${fmt.num(R.a20.t, 1)}).` : `20 günlük fark istatistiksel olarak anlamlı değil (t ${R.a20.t == null ? "—" : fmt.num(R.a20.t, 1)}); örnek ${d.first ? fmt.date(d.first, { month: "long", year: "numeric" }) : ""}'dan beri, kısa.`) : "";
+    const rec = (d.recent || []).filter(r => r.since != null).slice(0, 10);
+    return `<section class="card" aria-labelledby="bbStT"><div class="card-head"><h2 class="card-title" id="bbStT">Geri alım sonrası performans</h2>
+        <span class="card-meta">${fmt.int(d.n_events)} geri alım dalgası · BIST 100'e göre fazla getiri, %</span></div>
+      <div class="sp-kpis bs-kpis">${k("Girişten önceki 20 gün", R.pre, `şirketler çoğunlukla düşüşten sonra alıyor · n ${R.pre?.n ?? "—"}`)}${k("+5 gün", R.a5)}${k("+20 gün", R.a20)}${k("+60 gün", R.a60)}</div>
+      <div class="sp-grid"><div><p class="d-sub">Ortalama yol · gölge basit %95 aralık · ${p.n} dalga, +60. günde ${p.n_end}</p>${svg}</div>
+        <div><p class="d-sub">20 gün sonra · öncesine göre</p>
+          <table class="fa-kv bs-split"><tbody>
+            <tr><th>Önceki 20 günde endeksten ≥%${fmt.num(-d.drop * 100, 0)} geride</th><td class="num ${sd?.mean > 0 ? "up" : "down"}">${sd ? fmt.pct(sd.mean, 1) : "—"}</td><td class="num t3">n ${sp.n_drop ?? "—"}</td></tr>
+            <tr><th>Diğerleri</th><td class="num ${sr?.mean > 0 ? "up" : "down"}">${sr ? fmt.pct(sr.mean, 1) : "—"}</td><td class="num t3">n ${sp.n_rest ?? "—"}</td></tr></tbody></table>
+          ${rec.length ? `<p class="d-sub" style="margin-top:var(--s-3)">Son dalgalar · başlangıçtan bugüne</p><table class="fa-kv bs-rec"><tbody>${rec.map(r => `<tr><th><button type="button" class="tk-link mono" data-sym="${esc(r.t)}">${esc(r.t)}</button> <span class="t3">${fmt.date(r.entry, { day: "numeric", month: "short" })}</span></th><td class="num t3" data-tip="Girişten önceki 20 günde endekse göre">${r.pre == null ? "—" : fmt.pct(r.pre * 100, 0)}</td><td class="num ${r.since > 0 ? "up" : "down"}" data-tip="${r.days} işlem günü">${fmt.pct(r.since * 100, 1)}</td></tr>`).join("")}</tbody></table>` : ""}
+        </div></div>
+      <p class="t3 gc-foot">Dalga: aynı hissede 30 günden uzun ara vermeden gelen geri alım bildirimleri; olay ilk bildirim. Giriş yayın anına göre: 09:55'ten önce yayımlandıysa o günün, sonra yayımlandıysa ertesi işlem gününün kapanışı (ileriye bakmadan).
+        ${esc(verdict)} t: dalgalar takvimde kümelendiği için giriş ayına göre ortalanıp aylar üzerinden. Geri alım şirketin kendi fiyatını desteklemesidir; bu sonuç geçmişin ortalamasıdır, tek hisse için öngörü değildir. Fiyat: Yahoo (yalnız yüzde getiriler).</p></section>`;
+  }
+
   // ─────────────────────────────── çizim: tablo
   function table(agg, showRatio) {
     const w = watchSet();
@@ -389,8 +467,10 @@
     const qAt = S.quotesAt ? ` · güncel fiyatlar ${fmt.dt(S.quotesAt)}` : "";
     $("#bbSrc").innerHTML = `Kaynak: <a href="https://github.com/gptrade/kap-geri-alim-takibi" target="_blank" rel="noopener">kap-geri-alim-takibi</a> · son bildirim ${fmt.dt(S.updated)} · ${fmt.int(S.rows.length)} kayıt${qAt} · ${window.radarMethod?.link("geri-alim") || ""}`;
     const scroll = $(".bb-scroll")?.scrollTop || 0;
-    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis(period, aggregate(period))}${dailyChart(period, aggregate(period), W)}${table(agg, showRatio)}</div>`;
+    body.innerHTML = `<div class="view" style="gap:var(--s-4)">${kpis(period, aggregate(period))}${dailyChart(period, aggregate(period), W)}<div class="bb-vis">${progUse()}${studyCard()}</div>${table(agg, showRatio)}</div>`;
     if ($(".bb-scroll")) $(".bb-scroll").scrollTop = scroll;
+    $("#bbPuAll")?.addEventListener("click", () => { S.puAll = !S.puAll; render(); });
+    $$("#bbBody .tk-link").forEach(b => b.onclick = () => window.radar?.openTicker?.(b.dataset.sym, b));
     $("#bbMore")?.addEventListener("click", () => { S.limit += PAGE; render(); });
     $("#bbShowAll")?.addEventListener("click", () => { S.limit = 1e9; render(); });
     $("#bbLess")?.addEventListener("click", () => { S.limit = PAGE; render(); $("#bbTblT")?.scrollIntoView({ block: "start" }); });
