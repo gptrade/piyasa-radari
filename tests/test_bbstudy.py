@@ -42,3 +42,4 @@ def test_study_abnormal_return_vs_bench():
     eps2 = [{**e, "pub": e["pub"].replace(hour=8) - pd.Timedelta(days=1)} for e in eps]
     doc2 = B.study(clean, bench, eps2)
     assert doc2["res"]["a5"]["mean"] > 4 and doc2["path"]["n"] == 12 and len(doc2["path"]["mean"]) == 81
+    assert abs(doc2["path"]["mean"][-B.PATH[0] + 20] - doc2["res"]["a20"]["mean"]) < 0.01

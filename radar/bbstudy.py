@@ -75,13 +75,18 @@ def entry_index(dates: pd.DatetimeIndex, pub: datetime) -> int | None:
     return i if i < len(dates) else None
 
 
-def _t(xs: list[float]) -> float | None:
-    n = len(xs)
-    if n < 6:
+def _cluster_t(vals: list[float], groups: list[str]) -> float | None:
+    """Havuzlanmış ortalamanın t'si; standart hata giriş ayına göre kümelenmiş (aynı ay içindeki dalgalar bağımsız sayılmaz)."""
+    n = len(vals)
+    by: dict[str, float] = {}
+    m = sum(vals) / n
+    for v, g in zip(vals, groups):
+        by[g] = by.get(g, 0.0) + (v - m)
+    G = len(by)
+    if G < 6:
         return None
-    m = sum(xs) / n
-    sd = math.sqrt(sum((x - m) ** 2 for x in xs) / (n - 1))
-    return round(m / (sd / math.sqrt(n)), 2) if sd else None
+    se = math.sqrt(sum(x * x for x in by.values()) * G / (G - 1)) / n
+    return round(m / se, 2) if se else None
 
 
 def summarize(evs: list[dict], key: str) -> dict | None:
@@ -89,12 +94,9 @@ def summarize(evs: list[dict], key: str) -> dict | None:
     if len(xs) < 8:
         return None
     v = np.array([e[key] for e in xs])
-    by = {}
-    for e in xs:
-        by.setdefault(e["entry"][:7], []).append(e[key])
-    months = [float(np.mean(a)) for a in by.values()]
+    t = _cluster_t(list(v), [e["entry"][:7] for e in xs])
     return {"n": len(xs), "mean": round(float(v.mean()) * 100, 2), "med": round(float(np.median(v)) * 100, 2),
-            "hit": round(float((v > 0).mean()), 2), "t": _t(months), "months": len(months)}
+            "hit": round(float((v > 0).mean()), 2), "t": t, "months": len({e["entry"][:7] for e in xs})}
 
 
 def study(clean: pd.DataFrame, bench: pd.Series, eps: list[dict], today: pd.Timestamp | None = None) -> dict:
@@ -123,16 +125,20 @@ def study(clean: pd.DataFrame, bench: pd.Series, eps: list[dict], today: pd.Time
             row["since"] = round(float(s.loc[last] / p0 - b.loc[last] / b0), 4)
             row["days"] = int(dates.get_loc(last) - i)
         evs.append(row)
-        lo, hi = i + PATH[0], i + PATH[1]
-        if lo >= 0 and hi < len(dates):
-            w = s.iloc[lo: hi + 1].values / p0 - b.iloc[lo: hi + 1].values / b0
-            if np.isfinite(w).all():
-                paths.append(w)
+        # yol: her gün için o güne verisi olan dalgalar (dengesiz panel; +20 günü özet tablodaki +20 ile aynı örnek)
+        w = np.full(PATH[1] - PATH[0] + 1, np.nan)
+        for k in range(PATH[0], PATH[1] + 1):
+            j = i + k
+            if 0 <= j < len(dates) and pd.notna(s.iloc[j]):
+                w[k - PATH[0]] = s.iloc[j] / p0 - b.iloc[j] / b0
+        paths.append(w)
     path = None
     if len(paths) >= 8:
         a = np.vstack(paths)
-        m, se = a.mean(axis=0), a.std(axis=0, ddof=1) / math.sqrt(len(a))
-        path = {"from": PATH[0], "n": len(a), "mean": [round(float(x) * 100, 2) for x in m],
+        cnt = np.isfinite(a).sum(axis=0)
+        m = np.nanmean(a, axis=0)
+        se = np.nanstd(a, axis=0, ddof=1) / np.sqrt(np.maximum(cnt, 1))
+        path = {"from": PATH[0], "n": int(cnt[-PATH[0]]), "n_end": int(cnt[-1]), "mean": [round(float(x) * 100, 2) for x in m],
                 "lo": [round(float(x) * 100, 2) for x in m - 1.96 * se], "hi": [round(float(x) * 100, 2) for x in m + 1.96 * se]}
     res = {f"a{h}": summarize(evs, f"a{h}") for h in H}
     res["pre"] = summarize(evs, "pre")
