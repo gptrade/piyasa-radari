@@ -130,7 +130,8 @@ def study(clean: pd.DataFrame, bench: pd.Series, eps: list[dict], today: pd.Time
         for k in range(PATH[0], PATH[1] + 1):
             j = i + k
             if 0 <= j < len(dates) and pd.notna(s.iloc[j]):
-                w[k - PATH[0]] = s.iloc[j] / p0 - b.iloc[j] / b0
+                # giriş öncesi "o günden girişe" getirinin eksisi (k = −20'de −öncesi); sonrası girişten o güne
+                w[k - PATH[0]] = (s.iloc[j] / p0 - b.iloc[j] / b0) if k >= 0 else -(p0 / s.iloc[j] - b0 / b.iloc[j])
         paths.append(w)
     path = None
     if len(paths) >= 8:

@@ -43,3 +43,12 @@ def test_study_abnormal_return_vs_bench():
     doc2 = B.study(clean, bench, eps2)
     assert doc2["res"]["a5"]["mean"] > 4 and doc2["path"]["n"] == 12 and len(doc2["path"]["mean"]) == 81
     assert abs(doc2["path"]["mean"][-B.PATH[0] + 20] - doc2["res"]["a20"]["mean"]) < 0.01
+
+
+def test_path_start_equals_minus_pre():
+    d = pd.bdate_range("2025-01-01", periods=200)
+    bench = pd.Series(100.0, index=d)
+    cols = {f"S{k}": pd.Series(np.r_[np.full(50 + k, 200.0), np.full(150 - k, 100.0)], index=d) for k in range(10)}
+    eps = [{"t": f"S{k}", "pub": d[60 + k].to_pydatetime().replace(hour=8), "n": 1, "pct": 0, "amt": 0} for k in range(10)]
+    doc = B.study(pd.DataFrame(cols), bench, eps)
+    assert abs(doc["path"]["mean"][0] + doc["res"]["pre"]["mean"]) < 0.01
