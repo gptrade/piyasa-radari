@@ -30,6 +30,7 @@
       if (!r.ok) throw new Error(`data/calendar.json okunamadı (HTTP ${r.status})`);
       S.cal = await r.json(); S.error = null;
     } catch (e) { S.error = e; }
+    try { const r = await fetch(`data/surprise.json?t=${Date.now()}`); S.sur = r.ok ? await r.json() : null; } catch { S.sur = null; }
     S.loaded = true;
     if (S.cal) sh.setUpdated("takvim", S.cal.generated, { label: "Takvim güncellendi", staleMin: 180 });
     badge();
@@ -94,9 +95,100 @@
 
   function chip(e, { time = true } = {}) {
     const lbl = e.members ? `${e.title} · ${e.count}` : shortTitle(e);
-    return `<li><button type="button" class="cal-chip k-${e.kind} i${e.importance}" data-i="${reg(e)}"
+    const x = cpiTag(e);
+    return `<li><button type="button" class="cal-chip k-${e.kind} i${e.importance}${x ? " has-x" : ""}" data-i="${reg(e)}"
       aria-label="${esc(`${e.timed ? hm(e) + " " : ""}${e.title}, ${KIND[e.kind]?.l || e.kind}, önem ${e.importance}`)}">
-      ${time && e.timed ? `<span class="cal-chip-t">${hm(e)}</span>` : ""}<span class="cal-chip-n">${esc(lbl)}</span>${RTAG[regionOf(e)] ? `<span class="cal-chip-m">${RTAG[regionOf(e)]}</span>` : ""}</button></li>`;
+      ${time && e.timed ? `<span class="cal-chip-t">${hm(e)}</span>` : ""}<span class="cal-chip-n">${esc(lbl)}</span>${RTAG[regionOf(e)] ? `<span class="cal-chip-m">${RTAG[regionOf(e)]}</span>` : ""}${x}</button></li>`;
+  }
+
+  // ── TÜFE sürprizi (data/surprise.json): gerçekleşen − TCMB Piyasa Katılımcıları Anketi cari ay beklentisi
+  const pp = (v, d = 2) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${fmt.num(Math.abs(v), d)}`;
+  const AYL = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+  const ymLabel = ym => `${AYL[+ym.slice(5, 7) - 1]} ${ym.slice(0, 4)}`;
+  function cpiInfo(e) {
+    if (e.key !== "tufe" || !S.sur || !e.period) return null;
+    const r = (S.sur.rows || []).find(x => ymLabel(x.m) === e.period);
+    if (r) return { done: true, ...r };
+    const p = S.sur.pending;
+    return p && p.label === e.period ? { done: false, ...p } : null;
+  }
+  function cpiTag(e) {
+    const c = cpiInfo(e); if (!c) return "";
+    return c.done ? `<span class="cal-chip-x ${c.sur >= S.sur.band ? "down" : c.sur <= -S.sur.band ? "up" : ""}">%${fmt.num(c.act, 2)} · bkl. %${fmt.num(c.exp, 2)}</span>`
+      : `<span class="cal-chip-x">bkl. %${fmt.num(c.exp, 2)}</span>`;
+  }
+  function cpiBox(e) {
+    const c = cpiInfo(e); if (!c) return "";
+    const b = S.sur.band;
+    return `<div class="cal-dlg-box"><span class="k-lbl">TCMB Piyasa Katılımcıları Anketi</span>
+      ${c.done ? `<b>Gerçekleşen aylık %${fmt.num(c.act, 2)} · beklenti %${fmt.num(c.exp, 2)} · sürpriz <span class="${c.sur >= b ? "down" : c.sur <= -b ? "up" : ""}">${pp(c.sur)} puan</span></b>
+        ${c.xb != null || c.xu != null ? `<span class="k-note">Açıklama günü: ${c.xu != null ? `BIST 100 ${fmt.pct(c.xu, 1)}` : ""}${c.xu != null && c.xb != null ? " · " : ""}${c.xb != null ? `Banka endeksi ${fmt.pct(c.xb, 1)}` : ""}</span>` : ""}`
+        : `<b>Aylık TÜFE beklentisi %${fmt.num(c.exp, 2)}</b><span class="k-note">${esc(c.src === "anket" ? "Bu ayın anketi" : "Bu ayın anketi henüz yok; önceki anketin 1 ay sonrası beklentisi")} · ±${fmt.num(b, 2)} puan dışı "belirgin sürpriz" sayılır</span>`}</div>`;
+  }
+  function surpriseCard() {
+    const d = S.sur; if (!d?.rows?.length) return "";
+    const rows = d.rows.slice(-48), b = d.band, last = d.rows[d.rows.length - 1], p = d.pending, w = d.stats?.w12;
+    const W = 720, H = 210, P = { l: 34, r: 8, t: 12, b: 26 }, LIM = 2;
+    const X = i => P.l + (W - P.l - P.r) * (i + 0.5) / rows.length, bw = Math.max(3, (W - P.l - P.r) / rows.length - 3);
+    const Y = v => P.t + (H - P.t - P.b) * (LIM - Math.max(-LIM, Math.min(LIM, v))) / (2 * LIM);
+    const col = v => v >= b ? "var(--down)" : v <= -b ? "var(--up)" : "var(--text-3)";
+    const bars = `<svg class="sp-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Son ${rows.length} ay TÜFE sürprizi">
+      <rect x="${P.l}" width="${W - P.l - P.r}" y="${Y(b)}" height="${Y(-b) - Y(b)}" class="sp-band"/>
+      ${[-2, -1, 0, 1, 2].map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="${v ? "g" : "z"}"/><text x="${P.l - 5}" y="${Y(v) + 3.5}" text-anchor="end">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`).join("")}
+      ${rows.map((r, i) => { const y0 = Y(0), y1 = Y(r.sur), cl = Math.abs(r.sur) > LIM; return `<rect class="sp-bar" x="${(X(i) - bw / 2).toFixed(1)}" width="${bw.toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}" height="${Math.max(1, Math.abs(y1 - y0)).toFixed(1)}" fill="${col(r.sur)}"><title>${esc(`${ymLabel(r.m)}: gerçekleşen %${fmt.num(r.act, 2)}, beklenti %${fmt.num(r.exp, 2)} → ${pp(r.sur)} puan${r.xb != null ? ` · banka endeksi o gün ${fmt.pct(r.xb, 1)}` : ""}`)}</title></rect>${cl ? `<text x="${X(i)}" y="${r.sur > 0 ? P.t + 9 : H - P.b - 3}" text-anchor="middle" class="sp-clip">▲</text>` : ""}`; }).join("")}
+      ${rows.map((r, i) => r.m.endsWith("-01") ? `<text x="${X(i)}" y="${H - 8}" text-anchor="middle">${r.m.slice(0, 4)}</text>` : "").join("")}
+    </svg>`;
+    // sürpriz ↔ açıklama günü banka endeksi
+    const rx = d.react?.xb || d.react?.xu, rk = d.react?.xb ? "xb" : "xu", rname = rk === "xb" ? "Banka endeksi" : "BIST 100";
+    let sc = "";
+    if (rx) {
+      const pts = d.rows.filter(r => r[rk] != null), C = d.clip || 1.5, SW = 300, SH = 222, Q = { l: 34, r: 8, t: 12, b: 38 }, YL = 7;
+      const sx = v => Q.l + (SW - Q.l - Q.r) * (Math.max(-C, Math.min(C, v)) + C) / (2 * C), sy = v => Q.t + (SH - Q.t - Q.b) * (YL - Math.max(-YL, Math.min(YL, v))) / (2 * YL);
+      const o = rx.ols_recent || rx.ols, ma = pts.filter(r => r.m >= rx.recent);
+      const my = ma.reduce((a, r) => a + r[rk], 0) / (ma.length || 1), mx = ma.reduce((a, r) => a + Math.max(-C, Math.min(C, r.sur)), 0) / (ma.length || 1);
+      sc = `<svg class="sp-svg" viewBox="0 0 ${SW} ${SH}" role="img" aria-label="Sürpriz ve açıklama günü ${rname} getirisi">
+        ${[-6, -3, 0, 3, 6].map(v => `<line x1="${Q.l}" x2="${SW - Q.r}" y1="${sy(v)}" y2="${sy(v)}" class="${v ? "g" : "z"}"/><text x="${Q.l - 5}" y="${sy(v) + 3.5}" text-anchor="end">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`).join("")}
+        <line x1="${sx(0)}" x2="${sx(0)}" y1="${Q.t}" y2="${SH - Q.b}" class="z"/>
+        ${[-1, 1].map(v => `<text x="${sx(v)}" y="${SH - Q.b + 14}" text-anchor="middle">${v > 0 ? "+" : "−"}1</text>`).join("")}
+        ${pts.map(r => `<circle cx="${sx(r.sur).toFixed(1)}" cy="${sy(r[rk]).toFixed(1)}" r="${r.m >= rx.recent ? 3.6 : 2.4}" class="${r.m >= rx.recent ? "sp-pt" : "sp-pt old"}"><title>${esc(`${ymLabel(r.m)}: sürpriz ${pp(r.sur)} puan, ${rname} ${fmt.pct(r[rk], 1)}`)}</title></circle>`).join("")}
+        ${o ? `<line class="sp-fit" x1="${sx(-C)}" y1="${sy(my + o.b * (-C - mx))}" x2="${sx(C)}" y2="${sy(my + o.b * (C - mx))}"/>` : ""}
+        <text x="${SW - Q.r}" y="${SH - 4}" text-anchor="end" class="ax">sürpriz, puan →</text>
+      </svg>`;
+    }
+    const g = rx?.groups || {}, o = rx?.ols, orc = rx?.ols_recent;
+    const verdict = o && orc ? (Math.abs(orc.t) >= 2 ? `2023 ortasından beri anlamlı: 1 puan yukarı sürpriz o gün ortalama ${fmt.pct(orc.b, 1)} (t ${fmt.num(orc.t, 1)}, ${orc.n} ay).`
+      : `Günlük tepki zayıf: 1 puan yukarı sürpriz ortalama ${fmt.pct(o.b, 1)} (t ${fmt.num(o.t, 1)}, ${o.n} ay); 2023 ortasından beri ${fmt.pct(orc.b, 1)} (t ${fmt.num(orc.t, 1)}). Tek başına işlem sinyali değil.`) : "";
+    return `<section class="card sp-card" aria-labelledby="spT"><div class="card-head"><h2 class="card-title" id="spT">Enflasyon sürprizi</h2>
+        <span class="card-meta">aylık TÜFE gerçekleşen − TCMB Piyasa Katılımcıları Anketi beklentisi · yüzde puan</span></div>
+      <div class="sp-kpis">
+        ${p ? `<div class="sp-k"><span class="k-lbl">Sıradaki · ${esc(p.label)}</span><b>bkl. %${fmt.num(p.exp, 2)}</b><span class="t3">${esc(dLabel(p.rel, { day: "numeric", month: "long", weekday: "short" }))} 10:00 · ${rel(daysTo(p.rel))}</span></div>` : ""}
+        <div class="sp-k"><span class="k-lbl">Son · ${esc(ymLabel(last.m))}</span><b class="${last.sur >= b ? "down" : last.sur <= -b ? "up" : ""}">${pp(last.sur)} puan</b><span class="t3">%${fmt.num(last.act, 2)} gerçekleşen · %${fmt.num(last.exp, 2)} beklenti</span></div>
+        ${w ? `<div class="sp-k"><span class="k-lbl">Son 12 ay</span><b>${w.above} üstünde · ${w.below} altında</b><span class="t3">ortalama mutlak sapma ${fmt.num(w.mae, 2)} puan</span></div>` : ""}
+        ${g.hi && g.lo ? `<div class="sp-k"><span class="k-lbl">${rname} açıklama günü</span><b><span class="down">${fmt.pct(g.hi.mean, 2)}</span> / <span class="up">${fmt.pct(g.lo.mean, 2)}</span></b><span class="t3">beklentiden yüksek (${g.hi.n}) / düşük (${g.lo.n}) aylarda ortalama</span></div>` : ""}
+      </div>
+      <div class="sp-grid"><div><p class="d-sub">Son ${rows.length} ay</p>${bars}</div>${sc ? `<div><p class="d-sub">Sürpriz ve aynı gün ${rname.toLowerCase()} getirisi (%) · ${pts0(d, rk)} ay</p>${sc}</div>` : ""}</div>
+      <p class="t3 gc-foot">Kırmızı: enflasyon beklentiden en az ${fmt.num(b, 2)} puan yüksek; yeşil: düşük; gri bant içi sürpriz sayılmaz. ±2 puan dışı çubuklar kırpılır (▲; 2018 ve 2021–22 kur şokları).
+        ${verdict ? esc(verdict) : ""} Noktalar: koyu 2023 ortası sonrası, açık öncesi; çizgi son dönem eğimi. Açıklama günü kuralla (ayın 3'ü, hafta sonuysa pazartesi) belirlenir. Kaynak: TÜİK ve TCMB (EVDS), endeks getirisi Yahoo.</p></section>`;
+  }
+  const pts0 = (d, k) => d.rows.filter(r => r[k] != null).length;
+
+  // ── önümüzdeki haftaların yoğunluğu (yüksek önemli olaylar türe göre)
+  const DGRP = [["cb", "Merkez bankası", ["cb"]], ["macro", "Makro veri", ["macro", "data", "report"]], ["earnings", "Bilanço", ["earnings"]], ["other", "Temettü, vade", ["dividend", "agm", "expiry"]]];
+  function density() {
+    const start = monday(todayISO()), r = S.cal?.range || [], weeks = [];
+    for (let i = 0; i < 8; i++) {
+      const mon = addDays(start, 7 * i), sun = addDays(mon, 6);
+      if (r[1] && mon > r[1]) break;
+      const evs = between(mon, sun).filter(e => e.importance >= 3);
+      weeks.push({ mon, n: evs.length, g: DGRP.map(([k, , ks]) => evs.filter(e => ks.includes(e.kind)).length), cb: evs.filter(e => e.kind === "cb").map(e => shortTitle(e).replace(/ faiz kararı.*$/i, "")) });
+    }
+    if (weeks.length < 2) return "";
+    const mx = Math.max(1, ...weeks.map(w => w.n)), cur = monday(S.anchor);
+    return `<div class="cal-dens" role="list" aria-label="Önümüzdeki haftalarda yüksek önemli olaylar">${weeks.map(w => `
+      <button type="button" role="listitem" class="cal-dw${w.mon === cur ? " on" : ""}" data-week="${w.mon}" aria-label="${esc(`${dLabel(w.mon, { day: "numeric", month: "long" })} haftası: ${w.n} yüksek önemli olay`)}">
+        <span class="cal-dw-h">${esc(dLabel(w.mon, { day: "numeric", month: "short" }))}<b>${w.n}</b></span>
+        <span class="cal-dw-bar">${w.g.map((n, j) => n ? `<i class="k-${DGRP[j][0]}" style="width:${(n / mx * 100).toFixed(1)}%" title="${esc(`${DGRP[j][1]}: ${n}`)}"></i>` : "").join("")}</span>
+        <span class="cal-dw-cb">${w.cb.length ? esc([...new Set(w.cb)].slice(0, 3).join(", ")) : "&nbsp;"}</span></button>`).join("")}</div>`;
   }
 
   // ── Hafta görünümü
@@ -125,8 +217,8 @@
       </section>`;
     }).join("");
     const out = !covered(mon, sun) ? `<div class="card cal-out">${sh.stateHTML({ kind: "empty", title: "Bu hafta takvim kapsamı dışında", msg: `Takvim ${fmt.date(S.cal.range[0], { day: "numeric", month: "long" })} – ${fmt.date(S.cal.range[1], { day: "numeric", month: "long" })} aralığını kapsar.` })}</div>` : "";
-    return `${navBar(label, evs.length ? `${evs.length} olay` : "")}${out}
-      <div class="cal-wk"><div class="cal-grid" style="--cols:${days.length}">${cols}</div>${side()}</div>`;
+    return `${navBar(label, evs.length ? `${evs.length} olay` : "")}${density()}${out}
+      <div class="cal-wk"><div class="cal-grid" style="--cols:${days.length}">${cols}</div>${side()}</div>${surpriseCard()}`;
   }
 
   // ── Ay görünümü
@@ -152,7 +244,7 @@
       <div class="card card-flush cal-month" role="grid" aria-label="${esc(label)}">
         <div class="cal-month-h" role="row">${WD.map(w => `<span role="columnheader">${w}</span>`).join("")}</div>
         <div class="cal-month-g">${cells.join("")}</div></div>
-      <p class="k-note">Hücrede en önemli 4 olay; tümü için "+ daha" ya da gün numarası (Hafta görünümü). Taralı günler takvim kapsamı dışında.</p>`;
+      <p class="k-note">Hücrede en önemli 4 olay; tümü için "+ daha" ya da gün numarası (Hafta görünümü). Taralı günler takvim kapsamı dışında.</p>${surpriseCard()}`;
   }
 
   // ── yan panel: her iş günü yayımlananlar + gösterim
@@ -192,7 +284,7 @@
     const byDay = new Map();
     evs.forEach(e => (byDay.get(e.date) || byDay.set(e.date, []).get(e.date)).push(e));
     for (const [d, list] of byDay) byDay.set(d, grouped(list).sort((a, b) => (a.when > b.when) - (a.when < b.when) || b.importance - a.importance));
-    return html + `<div class="card card-flush"><ol class="cal-list">${[...byDay].map(([d, list]) => `
+    return html + surpriseCard() + `<div class="card card-flush"><ol class="cal-list">${[...byDay].map(([d, list]) => `
       <li class="cal-day${daysTo(d) <= 1 ? " soon" : ""}"><h3 class="cal-day-h">${dayHead(d)}</h3>
         <ul>${list.map(e => `<li class="cal-ev k-${e.kind}">
           <span class="cal-t">${timeOf(e)}</span>
@@ -229,6 +321,7 @@
       <h2 class="cal-dlg-t" id="calDlgTitle">${esc(e.name && e.kind === "earnings" ? `${e.name} (${e.ticker}) bilanço` : shortTitle(e))}</h2>
       <p class="cal-dlg-when">${esc(when)}${e.session ? ` · ${esc(SESSION[e.session] || "")}` : ""}${e.period ? ` · dönem: ${esc(e.period)}` : ""} <span class="cal-rel">${rel(daysTo(e.date))}</span></p>
       ${e.detail ? `<p>${esc(e.detail)}</p>` : ""}
+      ${cpiBox(e)}
       ${e.last ? `<div class="cal-dlg-box"><span class="k-lbl">Son açıklanan</span><b>${esc(e.last)}</b><span class="k-note">Kaynak: TCMB EVDS</span></div>` : ""}
       ${e.assets?.length ? `<div class="cal-dlg-sec"><span class="k-lbl">Etkilediği varlıklar</span><div class="cal-assets">${e.assets.map(a => `<span class="tag">${esc(a)}</span>`).join("")}</div></div>` : ""}
       ${e.items?.length > 1 ? `<div class="cal-dlg-sec"><span class="k-lbl">Bu yayındaki tablolar</span><ul class="cal-items">${e.items.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
