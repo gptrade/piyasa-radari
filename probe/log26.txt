@@ -1,0 +1,50 @@
+PKA TP.PKAUO.S01.A.U | Cari Ayın Aylık TÜFE Beklentisi (% Değişim) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S01.B.U | 1 Ay Sonrasının Aylık TÜFE Beklentisi (% Değişim) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S01.C.U | 2 Ay Sonrasının Aylık TÜFE Beklentisi (% Değişim) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S01.D.U | Cari Yıl Sonu Yıllık TÜFE Beklentisi (% Değişim) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S01.E.U | 12 Ay Sonrasının Yıllık TÜFE Beklentisi (% Değişim) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S01.I.U | Gelecek Yıl Sonu Yıllık TÜFE Beklentisi (% Değişim) | 01-09-2021 01-10-2026
+PKA TP.PKAUO.S01.F.U | 24 Ay Sonrasının Yıllık TÜFE Beklentisi (% Değişim) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S01.G.U | 5 Yıl Sonrasının Yıllık TÜFE Beklentisi (% Değişim) | 01-11-2017 01-10-2026
+PKA TP.PKAUO.S03.A.U | Cari Ay Sonu BİST Repo_Ters Repo Pazarında Oluşan Gecelik Faiz Oranı Beklentisi (%) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S04.A.U | Cari Ay Sonu TCMB Bir Hafta Vadeli Repo İhale Faiz Oranı Beklentisi (%) | 01-01-2013 01-05-2025
+PKA TP.PKAUO.S04.B.U | 3 Ay Sonrasının TCMB Bir Hafta Vadeli Repo İhale Faiz Oranı Beklentisi (%) | 01-01-2013 01-05-2025
+PKA TP.PKAUO.S04.C.U | İlk Toplantı İçin TCMB Politika Faiz Oranı Beklentisi (%) | 01-06-2025 01-10-2026
+PKA TP.PKAUO.S04.F.U | İkinci Toplantı İçin TCMB Politika Faiz Oranı Beklentisi (%) | 01-06-2025 01-10-2026
+PKA TP.PKAUO.S04.G.U | Üçüncü Toplantı İçin TCMB Politika Faiz Oranı Beklentisi (%) | 01-06-2025 01-10-2026
+PKA TP.PKAUO.S04.H.U | Cari Yıl Sonu TCMB Politika Faiz Oranı Beklentisi (%) | 01-06-2025 01-10-2026
+PKA TP.PKAUO.S04.D.U | 12 Ay Sonrası TCMB Politika Faiz Oranı Beklentisi (%) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S04.I.U | Gelecek Yıl Sonu TCMB Politika Faiz Oranı Beklentisi (%) | 01-06-2025 01-10-2026
+PKA TP.PKAUO.S04.E.U | 24 Ay Sonrası TCMB Politika Faiz Oranı Beklentisi (%) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S05.A.U | Cari Ay Sonu Bankalararası Döviz Piyasası ABD Dolar Kuru Beklentisi (TL) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S05.B.U | Cari Yıl Sonu Bankalararası Döviz Piyasası ABD Dolar Kuru Beklentisi (TL) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S05.C.U | 12 Ay Sonrasının Bankalararası Döviz Piyasası ABD Dolar Kuru Beklentisi (TL) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S06.A.U | Cari Yılın Yıllık Cari İşlemler Dengesi Beklentisi | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S06.B.U | Gelecek Yılın Yıllık Cari İşlemler Dengesi Beklentisi | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S07.A.U | Cari Yılın Yıllık GSYH Büyüme Beklentisi (%) | 01-01-2013 01-10-2026
+PKA TP.PKAUO.S07.B.U | Gelecek Yılın Yıllık GSYH Büyüme Beklentisi (%) | 01-01-2013 01-10-2026
+== TP.PKAUO.S01.A.U-TP.PKAUO.S01.B.U 200 166 [{'Tarih': '2013-1', 'TP_PKAUO_S01_A_U': '0.85000000', 'TP_PKAUO_S01_B_U': '0.52000000', 'UNIXTIME': {'$numberLong': '1356994800'}}, {'Tarih': '2013-2', 'TP_PKAUO_S01_A_U': '0.53000000', 'TP_PKAUO_S01_B_U': '0.50000000', 'UNIXTIME': {'$numberLong': '1359673200'}}] [{'Tarih': '2026-8', 'TP_PKAUO_S01_A_U': '1.67000000', 'TP_PKAUO_S01_B_U': '2.08000000', 'UNIXTIME': {'$numberLong': '1785531600'}}, {'Tarih': '2026-9', 'TP_PKAUO_S01_A_U': '2.12000000', 'TP_PKAUO_S01_B_U': '1.97000000', 'UNIXTIME': {'$numberLong': '1788210000'}}, {'Tarih': '2026-10', 'TP_PKAUO_S01_A_U': '2.11000000', 'TP_PKAUO_S01_B_U': '1.18000000', 'UNIXTIME': {'$numberLong': '1790802000'}}]
+== TP.TUKFIY2025.GENEL 200 165 [{'Tarih': '2013-1', 'TP_TUKFIY2025_GENEL': '6.80880900', 'UNIXTIME': {'$numberLong': '1356994800'}}, {'Tarih': '2013-2', 'TP_TUKFIY2025_GENEL': '6.82922900', 'UNIXTIME': {'$numberLong': '1359673200'}}] [{'Tarih': '2026-7', 'TP_TUKFIY2025_GENEL': '132.31000000', 'UNIXTIME': {'$numberLong': '1782853200'}}, {'Tarih': '2026-8', 'TP_TUKFIY2025_GENEL': '134.75000000', 'UNIXTIME': {'$numberLong': '1785531600'}}, {'Tarih': '2026-9', 'TP_TUKFIY2025_GENEL': '137.23000000', 'UNIXTIME': {'$numberLong': '1788210000'}}]
+== TP.FG.J0 200 157 [{'Tarih': '2013-1', 'TP_FG_J0': '216.74000000', 'UNIXTIME': {'$numberLong': '1356994800'}}, {'Tarih': '2013-2', 'TP_FG_J0': '217.39000000', 'UNIXTIME': {'$numberLong': '1359673200'}}] [{'Tarih': '2025-11', 'TP_FG_J0': '3482.96000000', 'UNIXTIME': {'$numberLong': '1761944400'}}, {'Tarih': '2025-12', 'TP_FG_J0': '3513.87000000', 'UNIXTIME': {'$numberLong': '1764536400'}}, {'Tarih': '2026-1', 'TP_FG_J0': '3683.83000000', 'UNIXTIME': {'$numberLong': '1767214800'}}]
+G bie_pyrepo TP.API.REP.ORT.A12 | (1-2 AYLIK)Ağırlıklı Ortalama Faiz (REPO) | 01-05-1989 01-08-2020
+G bie_pyrepo TP.API.REP.ORT.A23 | (2-3 AYLIK)Ağırlıklı Ortalama Faiz (REPO) | 01-07-1993 01-07-2020
+G bie_pyrepo TP.API.REP.ORT.G1 | (1 GÜN)Ağırlıklı Ortalama Faiz (REPO) | 01-02-1988 01-08-2026
+G bie_pyrepo TP.API.REP.ORT.G1530 | (15-30 GÜN)Ağırlıklı Ortalama Faiz (REPO) | 01-01-1991 01-07-2021
+G bie_pyrepo TP.API.REP.ORT.G214 | (2-14 GÜN)Ağırlıklı Ortalama Faiz (REPO) | 01-03-1988 01-10-2026
+G bie_pyrepo TP.API.REP.TL.A12 | (1-2 AYLIK)TL Karşılığı Tutar (REPO) | 01-05-1989 01-08-2020
+G bie_pyrepo TP.API.REP.TL.A23 | (2-3 AYLIK)TL Karşılığı Tutar (REPO) | 01-07-1993 01-07-2020
+G bie_pyrepo TP.API.REP.TL.G1 | (1 GÜN)TL Karşılığı Tutar (Bin TL)(REPO) | 01-02-1988 01-08-2026
+G bie_pyrepo TP.API.REP.TL.G1530 | (15-30 GÜN)TL Karşılığı Tutar (REPO) | 01-01-1991 01-07-2021
+G bie_pyrepo TP.API.REP.TL.G214 | (2-14 GÜN)TL Karşılığı Tutar (REPO) | 01-03-1988 01-10-2026
+G bie_pyrepo TP.API.TREP.ORT.A12 | (1-2 AYLIK)Ağırlıklı Ortalama Faiz (TERS REPO) | 01-11-1987 01-05-2001
+G bie_pyrepo TP.API.TREP.ORT.A23 | (2-3 AYLIK)Ağırlıklı Ortalama Faiz (TERS REPO) | 01-02-1988 01-07-1998
+G bie_pyrepo TP.API.TREP.ORT.G1 | (1 GÜN)Ağırlıklı Ortalama Faiz (TERS REPO) | 01-05-1987 01-10-2026
+G bie_pyrepo TP.API.TREP.ORT.G1530 | (15-30 GÜN)Ağırlıklı Ortalama Faiz (TERS REPO) | 01-03-1987 01-08-2001
+G bie_pyrepo TP.API.TREP.ORT.G214 | (2-14 GÜN)Ağırlıklı Ortalama Faiz (TERS REPO) | 01-04-1987 01-10-2026
+G bie_pyrepo TP.API.TREP.TL.A12 | (1-2 AYLIK)TL Karşılığı Tutar (TERS REPO) | 01-11-1987 01-05-2001
+G bie_pyrepo TP.API.TREP.TL.A23 | (2-3 AYLIK)TL Karşılığı Tutar (TERS REPO) | 01-02-1988 01-07-1998
+G bie_pyrepo TP.API.TREP.TL.G1 | (1 GÜN)TL Karşılığı Tutar (TERS REPO) | 01-05-1987 01-10-2026
+G bie_pyrepo TP.API.TREP.TL.G1530 | (15-30 GÜN)TL Karşılığı Tutar (TERS REPO) | 01-03-1987 01-08-2001
+G bie_pyrepo TP.API.TREP.TL.G214 | (2-14 GÜN)TL Karşılığı Tutar (TERS REPO) | 01-04-1987 01-10-2026
+DG 400 {"status":"400","message":"Bad Request. Check parameters."}
+DG1 hata 200 [null]
