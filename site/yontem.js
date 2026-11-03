@@ -103,6 +103,21 @@
       <tbody>${fs.map(row).join("")}</tbody></table></div></section>`;
   }
 
+  // Yöntem × dönem ısı tablosu: hangi yöntem hangi dönemde çalışmış (en iyi − en kötü dilim farkının t değeri)
+  function heat(d) {
+    const fs = d.factors.filter(f => (S.grp === "all" || f.group === S.grp) && f.n);
+    const names = [...new Set(fs.flatMap(f => (f.subs || []).map(x => x.name)))];
+    if (!names.length) return "";
+    const order = [...fs].sort((a, b) => (b.ls_t ?? -9) - (a.ls_t ?? -9));
+    const cell = (t, ls, n) => { if (t == null) return `<td class="yk-h na">—</td>`;
+      const k = Math.max(-1, Math.min(1, t / 4)), bg = `color-mix(in srgb, ${k >= 0 ? "var(--up)" : "var(--down)"} ${Math.round(Math.abs(k) * 70)}%, var(--surface))`;
+      return `<td class="yk-h num" style="background:${bg}" data-tip="${esc(`t ${fmt.num(t, 2)} · aylık fark ${pc(ls)}${n ? ` · ${n} ay` : ""}`)}"><b>${fmt.num(t, 1)}</b></td>`; };
+    return `<section class="card card-flush" aria-labelledby="ykHT"><div class="card-head"><h2 class="card-title" id="ykHT">Dönemlere göre</h2>
+        <span class="card-meta">t değeri · yeşil çalışmış, kırmızı ters çalışmış · |t| ≥ 2 anlamlı, ≥ 3 güçlü</span></div>
+      <div class="tbl-scroll"><table class="tx yk-heat"><thead><tr><th>Yöntem</th>${names.map(n => `<th class="num">${esc(n)}</th>`).join("")}<th class="num">Tüm dönem</th></tr></thead>
+      <tbody>${order.map(f => `<tr data-k="${f.key}" class="${S.sel === f.key ? "is-sel" : ""}"><th scope="row">${esc(f.name)}</th>${names.map(n => { const x = (f.subs || []).find(y => y.name === n); return x ? cell(x.t, x.ls, x.n) : cell(null); }).join("")}${cell(f.ls_t, f.ls, f.n)}</tr>`).join("")}</tbody></table></div></section>`;
+  }
+
   function chart(f) {
     const c = f.cum;
     if (!c || c.m.length < 2) return "";
@@ -141,7 +156,7 @@
     const d = S.doc;
     $("#ykBody").innerHTML = `${controls()}${kpis(d)}
       <p class="card-foot fa-oos">Geriye dönük test; gelecek getirinin garantisi değildir. Borsadan çıkmış şirketler veri kaynağında olmadığı için sonuçlar bir miktar iyimserdir. Ayrıntı: ${window.radarMethod?.link("yontem-karnesi") || "Metodoloji"}</p>
-      ${list(d)}${detail(d)}
+      ${list(d)}${detail(d)}${heat(d)}
       <p class="src-line">Kaynak: KAP mali tabloları (yayın anına göre), TCMB EVDS TÜFE, fiyat Yahoo (kişisel kullanım; ham fiyat yayımlanmaz) · ${fmt.date(d.generated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>`;
     bind();
   }
@@ -150,6 +165,7 @@
     const segB = (id, f) => { $$(`#${id} button`).forEach(b => b.onclick = () => { f(b.dataset.v); render(); }); sh.radioKeys($(`#${id}`)); };
     segB("ykG", v => { S.grp = v; });
     segB("ykS", v => { S.sort = v; });
+    $$("#ykBody .yk-heat tbody tr").forEach(tr => tr.onclick = () => { S.sel = tr.dataset.k; render(); $("#ykDtT")?.scrollIntoView({ block: "nearest", behavior: "smooth" }); });
     $$("#ykBody .yk-tbl tbody tr").forEach(tr => tr.onclick = () => { S.sel = S.sel === tr.dataset.k ? null : tr.dataset.k; render(); $("#ykDtT")?.scrollIntoView({ block: "nearest", behavior: "smooth" }); });
   }
 

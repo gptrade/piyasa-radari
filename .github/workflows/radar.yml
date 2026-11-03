@@ -109,7 +109,7 @@ jobs:
           rm -rf site/data/guc && mkdir -p site/data/guc
           if git ls-remote --exit-code --heads origin guc >/dev/null 2>&1; then
             git fetch --depth 1 origin guc
-            git archive FETCH_HEAD guc.json cross.json | tar -x -C site/data/guc || git archive FETCH_HEAD guc.json | tar -x -C site/data/guc || true
+            git archive FETCH_HEAD guc.json cross.json bb.json | tar -x -C site/data/guc || git archive FETCH_HEAD guc.json cross.json | tar -x -C site/data/guc || git archive FETCH_HEAD guc.json | tar -x -C site/data/guc || true
           fi
 
       # Yöntem karnesi (yontem.yml, haftalık) yontem dalında; yalnız özet istatistikler
@@ -154,6 +154,14 @@ jobs:
         continue-on-error: true
         timeout-minutes: 3
         run: python -m radar.cross
+
+      # TÜFE sürprizi: gerçekleşen − TCMB Piyasa Katılımcıları Anketi beklentisi (6 saatte bir; açıklama günü saatte bir)
+      - name: Makro sürpriz
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python -m radar.surprise
 
       - name: Veriyi data dalına kaydet
         run: |
