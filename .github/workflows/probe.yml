@@ -21,7 +21,7 @@ jobs:
           mkdir -p probe
           git clone -q -b onizleme-gorsel3 --depth 1 https://github.com/gptrade/piyasa-radari.git /tmp/pr
           cd /tmp/pr && pip install -q -r requirements.txt && mkdir -p site/data
-          python -m radar.surprise --force > $GITHUB_WORKSPACE/probe/log27.txt 2>&1 || true
+          python -m radar.surprise --force > $GITHUB_WORKSPACE/probe/log28.txt 2>&1 || true
           cp site/data/surprise.json $GITHUB_WORKSPACE/probe/surprise.json || true
 
       - name: kaydet
