@@ -31,6 +31,8 @@ S_EXP, S_EXP1, S_CPI = "TP.PKAUO.S01.A.U", "TP.PKAUO.S01.B.U", "TP.TUKFIY2025.GE
 START = date(2013, 1, 1)
 AY = ["", "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
 BAND = 0.25  # |sürpriz| ≥ 0,25 puan: "belirgin"
+CLIP = 1.5   # regresyonda sürpriz ±1,5 puanda kırpılır (2018 ve 2021-22 kur şoklarında 4-10 puanlık sapmalar)
+RECENT = "2023-07"  # para politikasında sadeleşmeye dönüş sonrası alt dönem
 
 
 def _num(v):
@@ -104,7 +106,7 @@ def reactions(days: list[date]) -> dict[str, dict[str, float]]:
         return {}
     import yfinance as yf
     df = yf.download("XU100.IS XBANK.IS", start=(min(days) - timedelta(days=10)).isoformat(), interval="1d",
-                     group_by="ticker", auto_adjust=False, progress=False, threads=True)
+                     group_by="ticker", auto_adjust=False, progress=False, threads=False)
     out: dict[str, dict[str, float]] = {}
     for tk, k in (("XU100.IS", "xu"), ("XBANK.IS", "xb")):
         try:
@@ -169,20 +171,23 @@ def build(exp: dict, exp1: dict, mom: dict, react: dict | None = None, today: da
         pts = [(r["sur"], r[k]) for r in rows if k in r]
         if not pts:
             continue
-        ols = _ols([p[0] for p in pts], [p[1] for p in pts])
+        clip = lambda v: max(-CLIP, min(CLIP, v))  # noqa: E731
+        ols = _ols([clip(p[0]) for p in pts], [p[1] for p in pts])
+        rec = [(r["sur"], r[k]) for r in rows if k in r and r["m"] >= RECENT]
+        ols_recent = _ols([clip(p[0]) for p in rec], [p[1] for p in rec])
         grp = {}
         for g, f in (("hi", lambda s: s >= BAND), ("mid", lambda s: -BAND < s < BAND), ("lo", lambda s: s <= -BAND)):
             v = [y for s, y in pts if f(s)]
             if v:
                 grp[g] = {"n": len(v), "mean": round(sum(v) / len(v), 2), "up": round(sum(y > 0 for y in v) / len(v), 2)}
-        react_stats[k] = {"ols": ols, "groups": grp, "since": next(r["m"] for r in rows if k in r)}
+        react_stats[k] = {"ols": ols, "ols_recent": ols_recent, "recent": RECENT, "groups": grp, "since": next(r["m"] for r in rows if k in r)}
     roll = []
     for i in range(len(rows)):
         w = rows[max(0, i - 5): i + 1]
         roll.append(round(sum(r["sur"] for r in w), 2))
     for r, v in zip(rows, roll):
         r["c6"] = v
-    return {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "band": BAND,
+    return {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "band": BAND, "clip": CLIP,
             "rows": rows, "pending": pending, "stats": stats, "react": react_stats,
             "source": "EVDS: TÜFE (TÜİK) ve Piyasa Katılımcıları Anketi (TCMB); tepki: Yahoo, açıklama günü getirisi"}
 
