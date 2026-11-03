@@ -47,6 +47,12 @@ jobs:
         timeout-minutes: 35
         run: python -m radar.guc ${{ inputs.full && '--full' || '' }}
 
+      # Geri alım sonrası performans (olay çalışması): KAP geri alım dalgaları, BIST 100'e göre fazla getiri
+      - name: Geri alım olay çalışması
+        timeout-minutes: 5
+        continue-on-error: true
+        run: python -m radar.bbstudy
+
       - name: Varlıklar arası rejim
         timeout-minutes: 5
         continue-on-error: true
