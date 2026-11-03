@@ -20,7 +20,7 @@ jobs:
           git clone -q -b onizleme-gorsel4 --depth 1 https://github.com/gptrade/piyasa-radari.git /tmp/pr
           cd /tmp/pr && pip install -q -r requirements.txt && mkdir -p site/data/guc
           git fetch -q --depth 1 origin guc && git archive FETCH_HEAD | tar -x -C site/data/guc
-          python -m radar.bbstudy > $GITHUB_WORKSPACE/probe/log30.txt 2>&1 || true
+          python -m radar.bbstudy > $GITHUB_WORKSPACE/probe/log31.txt 2>&1 || true
           cp site/data/guc/bb.json $GITHUB_WORKSPACE/probe/bb.json || true
 
       - name: kaydet
