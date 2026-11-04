@@ -14,13 +14,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: ABD isi haritasi
+      - name: Nasdaq-100 bilesenleri
         run: |
           mkdir -p probe
-          git clone -q -b onizleme-bugun2 --depth 1 https://github.com/gptrade/piyasa-radari.git /tmp/pr
-          cd /tmp/pr && pip install -q -r requirements.txt && mkdir -p site/data
-          ( time python -m radar.usmap --force ) > $GITHUB_WORKSPACE/probe/log33.txt 2>&1 || true
-          cp site/data/us_map.json site/data/us_shares.json $GITHUB_WORKSPACE/probe/ || true
+          pip install -q pandas lxml requests
+          python - > probe/log34.txt 2>&1 <<'PY' || true
+          import io, requests, pandas as pd
+          h = requests.get("https://en.wikipedia.org/wiki/Nasdaq-100", headers={"User-Agent": "lyra-radar/1.0 (personal research)"}, timeout=30).text
+          for t in pd.read_html(io.StringIO(h)):
+              cols = [str(c) for c in t.columns]
+              if any("Ticker" in c or "Symbol" in c for c in cols) and len(t) > 90:
+                  print(cols, len(t)); t.to_csv("probe/ndx.csv", index=False); break
+          PY
 
       - name: kaydet
         if: always()
