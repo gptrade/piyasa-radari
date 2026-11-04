@@ -31,3 +31,11 @@ def test_due_session_and_after_close():
     night = datetime(2026, 11, 4, 22, 0, tzinfo=timezone.utc)
     assert U.due({"generated": datetime(2026, 11, 3, 23, tzinfo=timezone.utc).isoformat()}, night)
     assert not U.due({"generated": datetime(2026, 11, 4, 21, tzinfo=timezone.utc).isoformat()}, night)
+
+
+def test_dual_class_merged():
+    idx = pd.bdate_range("2026-01-02", periods=30)
+    px = pd.DataFrame({"GOOGL": 100.0, "GOOG": 100.0}, index=idx)
+    ms = [{"code": "GOOGL", "name": "A", "sector": "X"}, {"code": "GOOG", "name": "A", "sector": "X"}]
+    d = U.build(px, ms, {"GOOGL": {"n": 2}, "GOOG": {"n": 3}})
+    assert [r["code"] for r in d["stocks"]] == ["GOOGL"] and d["stocks"][0]["mcap"] == 500

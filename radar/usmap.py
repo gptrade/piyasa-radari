@@ -28,6 +28,7 @@ SHARES = DATA / "us_shares.json"
 SP500 = ROOT / "config" / "sp500.csv"
 SHARE_TTL = timedelta(days=7)
 SHARE_BATCH = 120
+DUAL = {"GOOG": "GOOGL", "FOX": "FOXA", "NWS": "NWSA"}
 SESSION = (13 * 60 + 30, 20 * 60 + 15)   # UTC dakika (yaz saatinde de geniş kalır)
 
 
@@ -132,6 +133,13 @@ def build(px: pd.DataFrame, ms: list[dict], shares: dict) -> dict:
                      "d1": _r(last / back(1) - 1) if back(1) else None, "w1": _r(last / back(5) - 1) if back(5) else None,
                      "r1a": _r(last / back(21) - 1) if back(21) else None, "ytd": _r(last / y0 - 1) if y0 else None,
                      "stale": s.index[-1] < asof or None})
+    # ikinci pay sınıfları ana sınıfa eklenir (GOOG → GOOGL): aynı şirket haritada iki kez görünmesin
+    by = {r["code"]: r for r in rows}
+    for sec, main in DUAL.items():
+        if sec in by and main in by:
+            if by[sec]["mcap"] and by[main]["mcap"]:
+                by[main]["mcap"] += by[sec]["mcap"]
+            rows.remove(by[sec])
     return {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "asof": asof.date().isoformat(),
             "n": len(rows), "with_mcap": sum(1 for r in rows if r["mcap"]), "stocks": rows,
             "source": "Yahoo (kişisel kullanım; yalnız yüzde getiri ve piyasa değeri)"}
