@@ -18,13 +18,15 @@ jobs:
         run: |
           mkdir -p probe
           pip install -q pandas lxml requests
-          python - > probe/log34.txt 2>&1 <<'PY' || true
+          python - > probe/log35.txt 2>&1 <<'PY' || true
           import io, requests, pandas as pd
           h = requests.get("https://en.wikipedia.org/wiki/Nasdaq-100", headers={"User-Agent": "lyra-radar/1.0 (personal research)"}, timeout=30).text
-          for t in pd.read_html(io.StringIO(h)):
+          print(len(h))
+          for i, t in enumerate(pd.read_html(io.StringIO(h))):
               cols = [str(c) for c in t.columns]
-              if any("Ticker" in c or "Symbol" in c for c in cols) and len(t) > 90:
-                  print(cols, len(t)); t.to_csv("probe/ndx.csv", index=False); break
+              print(i, cols, len(t))
+              if len(t) > 90:
+                  t.to_csv(f"probe/ndx{i}.csv", index=False)
           PY
 
       - name: kaydet
