@@ -1,0 +1,102 @@
+Ticker,Company,ISIN,ICB Industry[2],ICB Subsector[2]
+ADBE,Adobe Inc.,US00724F1012,Technology,Software
+AMD,Advanced Micro Devices,US0079031078,Technology,Semiconductors
+ABNB,Airbnb,US0090661010,Consumer Discretionary,Diversified Commercial Services
+ALNY,Alnylam Pharmaceuticals,US02043Q1076,Health Care,Biotechnology
+GOOGL,Alphabet Inc. (Class A),US02079K3059,Technology,Software
+GOOG,Alphabet Inc. (Class C),US02079K1079,Technology,Software
+AMZN,Amazon,US0231351067,Consumer Discretionary,Catalog/Specialty Distribution
+AEP,American Electric Power,US0255371017,Utilities,Electric Utilities
+AMGN,Amgen,US0311621009,Health Care,Biotechnology
+ADI,Analog Devices,US0326541051,Technology,Semiconductors
+AAPL,Apple Inc.,US0378331005,Technology,Computer Hardware
+AMAT,Applied Materials,US0382221051,Technology,Semiconductors
+APP,AppLovin,US03831W1080,Technology,Software
+ARM,Arm Holdings,US0420682058,Technology,Semiconductors
+ASML,ASML Holding,USN070592100,Technology,Industrial Machinery
+ALAB,Astera Labs,US04626A1034,Technology,Semiconductors
+ADSK,Autodesk,US0527691069,Technology,Software
+ADP,Automatic Data Processing,US0530151036,Industrials,Diversified Commercial Services
+AXON,Axon Enterprise,US05464C1018,Industrials,Ordnance & Accessories
+BKR,Baker Hughes,US05722G1004,Energy,Oil Equipment & Services
+BKNG,Booking Holdings,US09857L1089,Consumer Discretionary,Transportation Services
+AVGO,Broadcom,US11135F1012,Technology,Semiconductors
+CDNS,Cadence Design Systems,US1273871087,Technology,Software
+CTAS,Cintas,US1729081059,Industrials,Garments & Clothing
+CSCO,Cisco,US17275R1023,Telecommunications,Computer Communications Equipment
+CCEP,Coca-Cola Europacific Partners,GB00BDCPN049,Consumer Staples,Soft Drinks
+CMCSA,Comcast,US20030N1019,Telecommunications,Cable & Other Pay Television Services
+CEG,Constellation Energy,US21037T1097,Utilities,Electric Utilities
+CPRT,Copart,US2172041061,Consumer Discretionary,Retail
+CRWV,CoreWeave,US21873S1087,Technology,Computer Services
+COST,Costco,US22160K1051,Consumer Discretionary,Department/Specialty Retail Stores
+CRWD,CrowdStrike,US22788C1053,Technology,Software
+CSX,CSX Corporation,US1264081035,Industrials,Railroads
+DDOG,Datadog,US23804L1035,Technology,Software
+DXCM,DexCom,US2521311074,Health Care,Medical/Dental Instruments
+FANG,Diamondback Energy,US25278X1090,Energy,Oil & Gas Production
+DASH,DoorDash,US25809K1051,Technology,Software
+EXC,Exelon,US30161N1019,Utilities,Power Generation
+FAST,Fastenal,US3119001044,Industrials,Construction & Materials
+FER,Ferrovial,NL0015001FS8,Industrials,"Military, Government, Technical"
+FTNT,Fortinet,US34959E1091,Technology,Computer Peripheral Equipment
+GEHC,GE HealthCare,US36266G1076,Health Care,Medical Electronics
+GILD,Gilead Sciences,US3755581036,Health Care,Biotechnology
+HONA,Honeywell Aerospace,US43849R1059,Industrials,Aerospace
+HON,Honeywell Technologies,US4385162056,Industrials,Diversified Industrials
+IDXX,Idexx Laboratories,US45168D1046,Health Care,Biotechnology
+INTC,Intel,US4581401001,Technology,Semiconductors
+INTU,Intuit,US4612021034,Technology,Computer Software
+ISRG,Intuitive Surgical,US46120E6023,Health Care,Industrial Specialties
+KDP,Keurig Dr Pepper,US49271V1008,Consumer Staples,Soft Drinks
+KLAC,KLA Corporation,US4824801009,Technology,Electronic Components
+LRCX,Lam Research,US5128073062,Technology,Industrial Machinery
+LIN,Linde plc,IE000S9YS762,Basic Materials,Major Chemicals
+LITE,Lumentum,US55024U1097,Technology,Communication Equipment
+MAR,Marriott International,US5719032022,Consumer Discretionary,Hotels/Resorts
+MRVL,Marvell Technology,US5738741041,Technology,Semiconductors
+MELI,Mercado Libre,US58733R1023,Consumer Discretionary,Catalog/Specialty Distribution
+META,Meta Platforms,US30303M1027,Technology,Software
+MCHP,Microchip Technology,US5950171042,Technology,Semiconductors
+MU,Micron Technology,US5951121038,Technology,Semiconductors
+MSFT,Microsoft,US5949181045,Technology,Software
+MSTR,MicroStrategy,US5949724083,Technology,Software
+MRNA,Moderna,US60770K1079,Health Care,Biotechnology
+MDLZ,Mondelez International,US6092071058,Consumer Staples,Packaged Foods
+MPWR,Monolithic Power Systems,US6098391054,Technology,Semiconductors
+MNST,Monster Beverage,US61174X1090,Consumer Staples,Soft Drinks
+NBIS,Nebius Group,NL0009805522,Technology,Computer Services
+NFLX,"Netflix, Inc.",US64110L1061,Consumer Discretionary,Consumer Electronics
+NVDA,Nvidia,US67066G1040,Technology,Semiconductors
+NXPI,NXP Semiconductors,NL0009538784,Technology,Semiconductors
+ORLY,O'Reilly Automotive,US67103H1077,Consumer Discretionary,Specialty Retailers
+ODFL,Old Dominion Freight Line,US6795801009,Industrials,Trucking
+PCAR,Paccar,US6937181088,Consumer Discretionary,Motor Vehicles
+PLTR,Palantir Technologies,US69608A1088,Technology,Software
+PANW,Palo Alto Networks,US6974351057,Technology,Computer Peripheral Equipment
+PAYX,Paychex,US7043261079,Industrials,Diversified Commercial Services
+PYPL,PayPal,US70450Y1038,Industrials,Diversified Commercial Services
+PDD,PDD Holdings,US7223041028,Technology,EDP Services
+PEP,PepsiCo,US7134481081,Consumer Staples,Soft Drinks
+QCOM,Qualcomm,US7475251036,Technology,Semiconductors
+REGN,Regeneron Pharmaceuticals,US75886F1075,Health Care,Biotechnology
+RKLB,Rocket Lab,US7731211089,Industrials,Aerospace
+ROP,Roper Technologies,US7766961061,Technology,Software
+ROST,Ross Stores,US7782961038,Consumer Discretionary,Clothing/Shoe/Accessory Stores
+SNDK,Sandisk,US80004C2008,Technology,Electronic Components
+STX,Seagate Technology,IE00BKVD2N49,Technology,Electronic Components
+SHOP,Shopify,CA82509L1076,Technology,Software
+SPCX,SpaceX,US84615Q1031,Telecommunications,Telecommunications Services
+SBUX,Starbucks,US8552441094,Consumer Discretionary,Restaurants
+SNPS,Synopsys,US8716071076,Technology,Software
+TMUS,T-Mobile US,US8725901040,Telecommunications,Telecommunications Services
+TTWO,Take-Two Interactive,US8740541094,Consumer Discretionary,Miscellaneous Amusement & Recreation Services
+TER,Teradyne,US8807701029,Technology,Semiconductors
+TSLA,"Tesla, Inc.",US88160R1014,Consumer Discretionary,Automobiles & Parts
+TXN,Texas Instruments,US8825081040,Technology,Semiconductors
+TRI,Thomson Reuters,CA8849038812,Technology,Software
+VRTX,Vertex Pharmaceuticals,US92532F1003,Health Care,Biotechnology
+WMT,Walmart,US9311421039,Consumer Discretionary,Department/Specialty Retail Stores
+WDC,Western Digital,US9581021055,Technology,Electronic Components
+WDAY,"Workday, Inc.",US98138H1014,Technology,Software
+XEL,Xcel Energy,US98389B1008,Utilities,Conventional Electricity

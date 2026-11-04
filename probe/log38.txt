@@ -1,0 +1,15 @@
+208722
+0 ['Ticker', 'Company', 'ISIN', 'ICB Industry[2]', 'ICB Subsector[2]'] 101
+1 ['vteList of NASDAQ-100 companies', 'vteList of NASDAQ-100 companies.1'] 1
+2 ['vteNasdaq, Inc.', 'vteNasdaq, Inc..1', 'vteNasdaq, Inc..2'] 4
+3 ['vteStock market indices', 'vteStock market indices.1'] 34
+4 ['0', '1'] 2
+5 ['0', '1'] 4
+6 ['0', '1'] 5
+7 ['0', '1'] 5
+8 ['0', '1'] 2
+9 ['0', '1'] 3
+10 ['0', '1'] 5
+11 ['0', '1'] 2
+12 ['vteMajor United States stock market indices', 'vteMajor United States stock market indices.1'] 1
+13 ['vteMajor stock market indices of the Americas', 'vteMajor stock market indices of the Americas.1'] 8
