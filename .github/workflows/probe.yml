@@ -14,14 +14,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Geri alim olay calismasi
+      - name: ABD isi haritasi
         run: |
           mkdir -p probe
-          git clone -q -b onizleme-gorsel4 --depth 1 https://github.com/gptrade/piyasa-radari.git /tmp/pr
-          cd /tmp/pr && pip install -q -r requirements.txt && mkdir -p site/data/guc
-          git fetch -q --depth 1 origin guc && git archive FETCH_HEAD | tar -x -C site/data/guc
-          python -m radar.bbstudy > $GITHUB_WORKSPACE/probe/log32.txt 2>&1 || true
-          cp site/data/guc/bb.json $GITHUB_WORKSPACE/probe/bb.json || true
+          git clone -q -b onizleme-bugun2 --depth 1 https://github.com/gptrade/piyasa-radari.git /tmp/pr
+          cd /tmp/pr && pip install -q -r requirements.txt && mkdir -p site/data
+          ( time python -m radar.usmap --force ) > $GITHUB_WORKSPACE/probe/log33.txt 2>&1 || true
+          cp site/data/us_map.json site/data/us_shares.json $GITHUB_WORKSPACE/probe/ || true
 
       - name: kaydet
         if: always()
