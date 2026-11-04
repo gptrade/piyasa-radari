@@ -1,0 +1,7 @@
+2026-11-04 18:09:19,377 yfinance INFO Failed to create TzCache, reason: Error creating TzCache folder: '/home/runner/.cache/py-yfinance' reason: [Errno 17] File exists: '/home/runner/.cache/py-yfinance'. TzCache will not be used. Tip: You can direct cache to use a different location with 'set_tz_cache_location(mylocation)'
+2026-11-04 18:09:32,216 radar.usmap INFO ABD pay sayısı: 503 yenilendi, 0 eksik
+2026-11-04 18:10:01,835 radar.usmap INFO ABD ısı haritası: 502 hisse (502 piyasa değerli), 2026-11-04
+
+real	0m43.287s
+user	0m9.264s
+sys	0m0.400s
