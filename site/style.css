@@ -1826,3 +1826,12 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .tn-chip:hover { border-color: var(--border-strong); }
 .tp-sum { font: var(--fw-semibold) var(--fs-md) var(--font-mono); margin-bottom: var(--s-2); }
 @media (max-width: 560px) { .tb-row { grid-template-columns: 56px minmax(0, 1fr); } .tb-v { grid-column: 2; text-align: left; } .tc-row { grid-template-columns: 82px 10px minmax(0, 1fr) auto; gap: 6px; } }
+
+/* Kullanıcılar */
+.us-add { display: flex; gap: var(--s-2); max-width: 560px; } .us-add .input { flex: 1; min-width: 0; }
+.us-help { font-size: var(--fs-xs); margin: var(--s-2) 0 0; max-width: 760px; }
+.us-msg { margin: var(--s-2) 0 0; font-size: var(--fs-sm); }
+.us-tbl td { vertical-align: middle; } .us-q { max-width: 220px; }
+.us-card .input { height: 36px; padding: 0 var(--s-3); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); font-size: var(--fs-md); }
+.us-card .input:focus-visible, .us-q:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--accent); }
+.us-q { height: 30px; padding: 0 var(--s-2); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); }
