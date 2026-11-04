@@ -25,7 +25,24 @@ PROJECT = os.environ.get("CF_PROJECT", "piyasa-radari")
 # virgül, noktalı virgül, boşluk ya da yeni satırla ayrılmış olabilir; tekrarlar ve hatalı biçimliler atılır
 EMAILS = list(dict.fromkeys(e.strip().strip("<>\"'").lower() for e in re.split(r"[,;\s]+", os.environ.get("CF_ACCESS_EMAILS", ""))
                             if re.fullmatch(r"[^@\s<>\"']+@[^@\s<>\"']+\.[^@\s<>\"']+", e.strip().strip("<>\"'"))))
-UTOK = os.environ.get("CF_USERS_TOKEN", "").strip()
+def clean_token(raw: str) -> str:
+    """Gizli değişkene yanlışlıkla Cloudflare'in "test" komutu (curl … -H "Authorization: Bearer XXX") yapıştırılmış olabilir:
+    'Bearer'dan sonraki parçayı al; yoksa tek parça olmalı (boşluk/tırnak içermeyen)."""
+    raw = (raw or "").strip()
+    m = re.search(r"Bearer\s+([A-Za-z0-9_\-.]{20,})", raw)
+    if m:
+        return m.group(1)
+    return raw if re.fullmatch(r"[A-Za-z0-9_\-.]{20,}", raw) else ""
+
+
+def redact(text: str) -> str:
+    """Hata metinlerinde anahtar benzeri dizileri ve Authorization başlıklarını gizle (durum dosyası herkese açık dalda)."""
+    text = re.sub(r"(?i)(bearer|authorization)[^,;}\]]*", r"\1 [gizlendi]", str(text))
+    return re.sub(r"[A-Za-z0-9_\-]{24,}", "[gizlendi]", text)
+
+
+UTOK_RAW = os.environ.get("CF_USERS_TOKEN", "")
+UTOK = clean_token(UTOK_RAW)
 ADMINS = [e.strip().lower() for e in re.split(r"[,;\s]+", os.environ.get("CF_ADMIN_EMAILS", "")) if "@" in e] or EMAILS[:1]
 GROUP_NAME = "Lyra Radar kullanıcıları"
 APP_NAME = "Lyra Radar"
@@ -53,7 +70,7 @@ def cf(method, path, tok=None, **kw):
     except ValueError:
         j = {"success": False, "errors": [{"message": f"HTTP {r.status_code}"}]}
     if not j.get("success"):
-        return None, "; ".join(f"{e.get('code', '')} {e.get('message', '')}" for e in j.get("errors") or [])[:300]
+        return None, redact("; ".join(f"{e.get('code', '')} {e.get('message', '')}" for e in j.get("errors") or []))[:300]
     return j.get("result"), None
 
 
@@ -61,7 +78,7 @@ def step(name, fn):
     try:
         st[name] = fn()
     except Exception as e:  # noqa: BLE001
-        st[name] = f"hata: {type(e).__name__}: {str(e)[:200]}"
+        st[name] = f"hata: {type(e).__name__}: {redact(str(e))[:200]}"
 
 
 def token():
@@ -181,7 +198,7 @@ def access():
     n = len((grp or {}).get("include") or []) if grp else len(EMAILS)
     return {"uygulama": "hazır", "korunan": domains, "izinli_kisi": n, "politika": "hazır" if not err else err,
             "kisi_yonetimi": ("Access grubu (sitedeki Kullanıcılar sayfası)" if grp else
-                              f"e-posta listesi (CF_USERS_TOKEN {'hatası: ' + str(st.get('_group_err')) if UTOK else 'yok'})"),
+                              f"e-posta listesi (CF_USERS_TOKEN {'hatası: ' + str(st.get('_group_err')) if UTOK else ('biçimi geçersiz: yalnız anahtarın kendisini yapıştır' if UTOK_RAW.strip() else 'yok')})"),
             "yonetici": [mask(a) for a in ADMINS]}
 
 
@@ -213,7 +230,7 @@ def pages_env():
     _, err = cf("PATCH", f"/accounts/{ACC}/pages/projects/{PROJECT}",
                 json={"deployment_configs": {"production": {"env_vars": env}, "preview": {"env_vars": env}}})
     return {"durum": "hazır" if not err else err, "ekip": team, "github_yazma_anahtari": "var" if tok else "YOK (WATCHLIST_TOKEN secret'ı ekle)",
-            "kullanici_yonetimi": "hazır" if "CF_USERS_TOKEN" in env else "kapalı (CF_USERS_TOKEN secret'ı yok)"}
+            "kullanici_yonetimi": "hazır" if "CF_USERS_TOKEN" in env else "kapalı (ayrıntı: access → kisi_yonetimi)"}
 
 
 def verify():
