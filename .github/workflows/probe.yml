@@ -18,9 +18,9 @@ jobs:
         run: |
           mkdir -p probe
           pip install -q pandas lxml requests
-          python - > probe/log35.txt 2>&1 <<'PY' || true
+          python - > probe/log36.txt 2>&1 <<'PY' || true
           import io, requests, pandas as pd
-          h = requests.get("https://en.wikipedia.org/wiki/Nasdaq-100", headers={"User-Agent": "lyra-radar/1.0 (personal research)"}, timeout=30).text
+          h = requests.get("https://en.wikipedia.org/wiki/List_of_Nasdaq-100_companies", headers={"User-Agent": "lyra-radar/1.0 (personal research)"}, timeout=30).text
           print(len(h))
           for i, t in enumerate(pd.read_html(io.StringIO(h))):
               cols = [str(c) for c in t.columns]
