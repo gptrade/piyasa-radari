@@ -5,6 +5,9 @@
 - E-posta kodu (one-time PIN) giriş yöntemi
 Kayıtlara gizli bilgi yazmaz: yalnız durum özeti (status.json) üretir.
 Ortam: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, CF_ACCESS_EMAILS (virgülle), CF_DOMAIN, CF_SUB, CF_PROJECT
+Kullanıcı yönetimi (isteğe bağlı): CF_USERS_TOKEN (Access grupları düzenleme yetkili anahtar), CF_ADMIN_EMAILS (yoksa
+CF_ACCESS_EMAILS'in ilki). Anahtar varsa izinli kişiler "Lyra Radar kullanıcıları" Access grubunda tutulur ve sitedeki
+Kullanıcılar sayfasından (functions/api/users.js) yönetilir; CF_ACCESS_EMAILS yalnız grubu ilk kez doldurur.
 """
 import json
 import os
@@ -22,15 +25,25 @@ PROJECT = os.environ.get("CF_PROJECT", "piyasa-radari")
 # virgül, noktalı virgül, boşluk ya da yeni satırla ayrılmış olabilir; tekrarlar ve hatalı biçimliler atılır
 EMAILS = list(dict.fromkeys(e.strip().strip("<>\"'").lower() for e in re.split(r"[,;\s]+", os.environ.get("CF_ACCESS_EMAILS", ""))
                             if re.fullmatch(r"[^@\s<>\"']+@[^@\s<>\"']+\.[^@\s<>\"']+", e.strip().strip("<>\"'"))))
+UTOK = os.environ.get("CF_USERS_TOKEN", "").strip()
+ADMINS = [e.strip().lower() for e in re.split(r"[,;\s]+", os.environ.get("CF_ADMIN_EMAILS", "")) if "@" in e] or EMAILS[:1]
+GROUP_NAME = "Lyra Radar kullanıcıları"
 APP_NAME = "Lyra Radar"
 OLD_NAMES = ("Piyasa Radarı",)              # yeniden adlandırma: eski adlı uygulama bulunup bu ada çevrilir (kopya açılmaz)
 st: dict = {"host": HOST}
 
 
-def cf(method, path, **kw):
+def mask(e: str) -> str:
+    """Durum dosyası herkese açık dalda: e-postayı maskele (g***@alan.com)."""
+    u, _, d = e.partition("@")
+    return f"{u[:1]}***@{d}"
+
+
+def cf(method, path, tok=None, **kw):
     import time
+    hd = {**H, "Authorization": f"Bearer {tok}"} if tok else H
     for attempt in range(4):
-        r = requests.request(method, API + path, headers=H, timeout=60, **kw)
+        r = requests.request(method, API + path, headers=hd, timeout=60, **kw)
         if r.status_code != 429:
             break
         time.sleep(20 * (attempt + 1))
@@ -140,15 +153,36 @@ def access():
     if err:
         return {"uygulama": "kurulamadı", "hata": err}
     st["_aud"] = app.get("aud")
-    pol = {"name": "Grup üyeleri", "decision": "allow", "precedence": 1,
-           "include": [{"email": {"email": e}} for e in EMAILS]}
+    include, grp = [{"email": {"email": e}} for e in EMAILS], None
+    if UTOK:                                       # kişiler Access grubunda; sitedeki Kullanıcılar sayfası grubu düzenler
+        gs, gerr = cf("GET", f"/accounts/{ACC}/access/groups", tok=UTOK)
+        g = next((x for x in gs or [] if x.get("name") == GROUP_NAME), None)
+        if g is None and not gerr:                 # ilk kez: CF_ACCESS_EMAILS ile doldur
+            g, gerr = cf("POST", f"/accounts/{ACC}/access/groups", tok=UTOK, json={"name": GROUP_NAME, "include": include})
+        elif g:                                    # var olan grup: üyeliğe dokunma, yalnız yöneticiler eksikse ekle
+            have = {(x.get("email") or {}).get("email", "").lower() for x in g.get("include") or []}
+            miss = [a for a in ADMINS if a not in have]
+            if miss:
+                g, gerr = cf("PUT", f"/accounts/{ACC}/access/groups/{g['id']}", tok=UTOK,
+                             json={"name": GROUP_NAME, "include": (g.get("include") or []) + [{"email": {"email": a}} for a in miss]})
+        if g and not gerr:
+            grp = g
+            st["_group"] = g["id"]
+            include = [{"group": {"id": g["id"]}}]
+        else:
+            st["_group_err"] = gerr
+    pol = {"name": "Grup üyeleri", "decision": "allow", "precedence": 1, "include": include}
     pols, err = cf("GET", f"/accounts/{ACC}/access/apps/{app['id']}/policies")
     p = next((x for x in pols or [] if x.get("name") == pol["name"]), None)
     if p:
         _, err = cf("PUT", f"/accounts/{ACC}/access/apps/{app['id']}/policies/{p['id']}", json=pol)
     else:
         _, err = cf("POST", f"/accounts/{ACC}/access/apps/{app['id']}/policies", json=pol)
-    return {"uygulama": "hazır", "korunan": domains, "izinli_kisi": len(EMAILS), "politika": "hazır" if not err else err}
+    n = len((grp or {}).get("include") or []) if grp else len(EMAILS)
+    return {"uygulama": "hazır", "korunan": domains, "izinli_kisi": n, "politika": "hazır" if not err else err,
+            "kisi_yonetimi": ("Access grubu (sitedeki Kullanıcılar sayfası)" if grp else
+                              f"e-posta listesi (CF_USERS_TOKEN {'hatası: ' + str(st.get('_group_err')) if UTOK else 'yok'})"),
+            "yonetici": [mask(a) for a in ADMINS]}
 
 
 def pages_env():
@@ -170,12 +204,16 @@ def pages_env():
         return {"hata": err or "Access uygulaması/ekip alan adı bulunamadı"}
     env = {"ACCESS_AUD": {"type": "plain_text", "value": aud}, "ACCESS_TEAM": {"type": "plain_text", "value": team},
            "GH_REPO": {"type": "plain_text", "value": os.environ.get("GH_REPO", "gptrade/piyasa-radari")}}
+    if UTOK and st.get("_group"):
+        env |= {"CF_ACCOUNT_ID": {"type": "plain_text", "value": ACC}, "ACCESS_GROUP_ID": {"type": "plain_text", "value": st["_group"]},
+                "ADMIN_EMAILS": {"type": "plain_text", "value": ",".join(ADMINS)}, "CF_USERS_TOKEN": {"type": "secret_text", "value": UTOK}}
     tok = os.environ.get("WATCHLIST_TOKEN", "").strip()
     if tok:
         env["GH_TOKEN"] = {"type": "secret_text", "value": tok}
     _, err = cf("PATCH", f"/accounts/{ACC}/pages/projects/{PROJECT}",
                 json={"deployment_configs": {"production": {"env_vars": env}, "preview": {"env_vars": env}}})
-    return {"durum": "hazır" if not err else err, "ekip": team, "github_yazma_anahtari": "var" if tok else "YOK (WATCHLIST_TOKEN secret'ı ekle)"}
+    return {"durum": "hazır" if not err else err, "ekip": team, "github_yazma_anahtari": "var" if tok else "YOK (WATCHLIST_TOKEN secret'ı ekle)",
+            "kullanici_yonetimi": "hazır" if "CF_USERS_TOKEN" in env else "kapalı (CF_USERS_TOKEN secret'ı yok)"}
 
 
 def verify():

@@ -25,6 +25,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CF_ACCESS_EMAILS: ${{ secrets.CF_ACCESS_EMAILS }}
           WATCHLIST_TOKEN: ${{ secrets.WATCHLIST_TOKEN }}
+          CF_USERS_TOKEN: ${{ secrets.CF_USERS_TOKEN }}
+          CF_ADMIN_EMAILS: ${{ secrets.CF_ADMIN_EMAILS }}
           GH_REPO: ${{ github.repository }}
           CF_DOMAIN: lyracube.com
           CF_SUB: radar
