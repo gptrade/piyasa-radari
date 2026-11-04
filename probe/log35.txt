@@ -1,0 +1,19 @@
+226919
+0 ['0', '1'] 11
+1 ['Category', 'All-Time Highs[13]', 'All-Time Highs[13].1'] 2
+2 ['Year', 'Closing level', 'Change in Index in Points', 'Change in Index in\xa0%'] 41
+3 ['Milestone (closing)[13]', 'Date of Record (closing)[13]', 'Trading Days[13]'] 31
+4 ['Milestone (closing)[13]', 'Date of Record (closing)[13]', 'Trading Days[13]'] 3
+5 ['vteList of NASDAQ-100 companies', 'vteList of NASDAQ-100 companies.1'] 1
+6 ['vteNasdaq, Inc.', 'vteNasdaq, Inc..1', 'vteNasdaq, Inc..2'] 4
+7 ['vteStock market indices', 'vteStock market indices.1'] 34
+8 ['0', '1'] 2
+9 ['0', '1'] 4
+10 ['0', '1'] 5
+11 ['0', '1'] 5
+12 ['0', '1'] 2
+13 ['0', '1'] 3
+14 ['0', '1'] 5
+15 ['0', '1'] 2
+16 ['vteMajor United States stock market indices', 'vteMajor United States stock market indices.1'] 1
+17 ['vteMajor stock market indices of the Americas', 'vteMajor stock market indices of the Americas.1'] 8
