@@ -14,20 +14,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Nasdaq-100 bilesenleri
+      - name: ABD isi haritasi ndx
         run: |
           mkdir -p probe
-          pip install -q pandas lxml requests
-          python - > probe/log38.txt 2>&1 <<'PY' || true
-          import io, requests, pandas as pd
-          h = requests.get("https://en.wikipedia.org/wiki/List_of_NASDAQ-100_companies", headers={"User-Agent": "lyra-radar/1.0 (personal research)"}, timeout=30).text
-          print(len(h)); open("probe/ndx.html", "w").write(h)
-          for i, t in enumerate(pd.read_html(io.StringIO(h))):
-              cols = [str(c) for c in t.columns]
-              print(i, cols, len(t))
-              if len(t) > 90:
-                  t.to_csv(f"probe/ndx{i}.csv", index=False)
-          PY
+          git clone -q -b onizleme-ndx --depth 1 https://github.com/gptrade/piyasa-radari.git /tmp/pr
+          cd /tmp/pr && pip install -q -r requirements.txt && mkdir -p site/data
+          python -m radar.usmap --force > $GITHUB_WORKSPACE/probe/log39.txt 2>&1 || true
+          cp site/data/us_map.json $GITHUB_WORKSPACE/probe/ || true
 
       - name: kaydet
         if: always()
