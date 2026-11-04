@@ -4,7 +4,7 @@
   piyasa değeri (dolaşımdaki pay × son fiyat) yazılır.
 * Pay sayısı: Yahoo fast_info.shares; data/us_shares.json önbelleğinde, her turda en eski 120 hisse yenilenir (7 gün).
 * Sıklık: ABD seansında (13:30–20:15 UTC, hafta içi) 30 dakikada bir, diğer saatlerde günde bir (son seans gelmediyse).
-Bileşenler: config/sp500.csv (sembol, ad, GICS sektörü).
+Bileşenler: config/sp500.csv ve config/ndx100.csv (sembol, ad, sektör); her satırda ix: hangi endekste.
 Çıktı: site/data/us_map.json.
 """
 from __future__ import annotations
@@ -26,6 +26,7 @@ log = logging.getLogger("radar.usmap")
 OUT = DATA / "us_map.json"
 SHARES = DATA / "us_shares.json"
 SP500 = ROOT / "config" / "sp500.csv"
+NDX = ROOT / "config" / "ndx100.csv"
 SHARE_TTL = timedelta(days=7)
 SHARE_BATCH = 120
 DUAL = {"GOOG": "GOOGL", "FOX": "FOXA", "NWS": "NWSA"}
@@ -33,13 +34,20 @@ SESSION = (13 * 60 + 30, 20 * 60 + 15)   # UTC dakika (yaz saatinde de geniş ka
 
 
 def members() -> list[dict]:
-    rows = []
-    with SP500.open(encoding="utf-8") as f:
-        for r in csv.DictReader(line for line in f if not line.startswith("#")):
-            s = (r.get("symbol") or "").strip()
-            if s:
-                rows.append({"code": s, "yf": s.replace(".", "-"), "name": (r.get("name") or "").strip(), "sector": (r.get("sector") or "").strip()})
-    return rows
+    """S&P 500 ∪ Nasdaq-100; her hissede hangi endekslerde olduğu (ix: sp, ndx)."""
+    by: dict[str, dict] = {}
+    for path, ix in ((SP500, "sp"), (NDX, "ndx")):
+        if not path.exists():
+            continue
+        with path.open(encoding="utf-8") as f:
+            for r in csv.DictReader(line for line in f if not line.startswith("#")):
+                s = (r.get("symbol") or "").strip()
+                if not s:
+                    continue
+                m = by.setdefault(s, {"code": s, "yf": s.replace(".", "-"), "name": (r.get("name") or "").strip(),
+                                      "sector": (r.get("sector") or "").strip(), "ix": []})
+                m["ix"].append(ix)
+    return list(by.values())
 
 
 def due(prev: dict | None, now: datetime) -> bool:
@@ -128,7 +136,7 @@ def build(px: pd.DataFrame, ms: list[dict], shares: dict) -> dict:
         ye = prev_year[m["code"]].dropna() if m["code"] in prev_year else None
         y0 = float(ye.iloc[-1]) if ye is not None and len(ye) else None
         n = (shares.get(m["code"]) or {}).get("n")
-        rows.append({"code": m["code"], "name": m["name"], "sector": m["sector"],
+        rows.append({"code": m["code"], "name": m["name"], "sector": m["sector"], "ix": m.get("ix") or ["sp"],
                      "mcap": _r(n * last, 0) if n else None,
                      "d1": _r(last / back(1) - 1) if back(1) else None, "w1": _r(last / back(5) - 1) if back(5) else None,
                      "r1a": _r(last / back(21) - 1) if back(21) else None, "ytd": _r(last / y0 - 1) if y0 else None,

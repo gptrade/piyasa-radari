@@ -8,7 +8,10 @@ from radar import usmap as U
 
 def test_members_parse_and_yahoo_symbol():
     ms = U.members()
-    assert len(ms) > 490
+    assert len(ms) > 500
+    ix = {m["code"]: m["ix"] for m in ms}
+    assert ix["AAPL"] == ["sp", "ndx"] and ix["ASML"] == ["ndx"] and ix["JPM"] == ["sp"]
+    assert sum("ndx" in v for v in ix.values()) >= 100
     brk = [m for m in ms if m["code"].startswith("BRK")]
     assert brk and "-" in brk[0]["yf"] and all(m["sector"] for m in ms)
 

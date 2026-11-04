@@ -140,11 +140,11 @@
     return `color-mix(in srgb, ${v >= 0 ? "var(--up)" : "var(--down)"} ${p}%, var(--surface-2))`;
   }
   function treemap(el, { per = "d1", sector = null, height = 520, maxStocks = 9999, src = "bist" } = {}) {
-    const us = src === "us", g = us ? M.us : M.guc;
+    const us = src === "us" || src === "sp" || src === "ndx", ix = src === "ndx" ? "ndx" : "sp", g = us ? M.us : M.guc;
     if (!el || !g?.stocks) { if (el) el.innerHTML = `<p class="t3">${us ? "ABD ısı haritası verisi henüz oluşmadı; ilk radar turundan sonra gelir." : "Isı haritası verisi yok."}</p>`; return; }
     const W = Math.max(300, Math.round(el.getBoundingClientRect().width) || 900), H = height;
     const lim = PERK[per][1];
-    const rows = g.stocks.filter(r => r.mcap > 0 && (!sector || r.sector === sector)).sort((a, b) => b.mcap - a.mcap).slice(0, maxStocks);
+    const rows = g.stocks.filter(r => r.mcap > 0 && (!sector || r.sector === sector) && (!us || (r.ix || ["sp"]).includes(ix))).sort((a, b) => b.mcap - a.mcap).slice(0, maxStocks);
     const bySec = new Map();
     rows.forEach(r => { if (!bySec.has(r.sector)) bySec.set(r.sector, []); bySec.get(r.sector).push(r); });
     const secs = [...bySec].map(([name, xs]) => ({ name, xs, v: xs.reduce((s, r) => s + r.mcap, 0) }));
@@ -165,7 +165,7 @@
       }
       svg += `</g>`;
     }
-    el.innerHTML = `<svg class="tm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${us ? "S&P 500" : "BIST"} ısı haritası">${svg}</svg>`;
+    el.innerHTML = `<svg class="tm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${us ? (ix === "ndx" ? "Nasdaq-100" : "S&P 500") : "BIST"} ısı haritası">${svg}</svg>`;
     el.querySelectorAll(".tm-c").forEach(n => n.addEventListener("click", () => us ? window.open(`https://finance.yahoo.com/quote/${n.dataset.tk.replace(".", "-")}/`, "_blank", "noopener") : window.radar?.openTicker?.(n.dataset.tk, n)));
   }
   function legend(per) {
