@@ -5,15 +5,15 @@
   "use strict";
   const sh = window.shell;
   const { esc, fmt } = sh;
-  const M = { strip: null, cross: null, guc: null, loading: null };
+  const M = { strip: null, cross: null, guc: null, us: null, loading: null };
 
   async function getJSON(p) {
     try { const r = await fetch(`${p}?t=${Date.now()}`, { cache: "no-store" }); return r.ok ? await r.json() : null; } catch { return null; }
   }
   function load(force = false) {
     if (M.loading && !force) return M.loading;
-    M.loading = Promise.all([getJSON("data/piyasa.json"), getJSON("data/guc/cross.json"), getJSON("data/guc/guc.json")])
-      .then(([a, b, c]) => { M.strip = a; M.cross = b; M.guc = c; dispatchEvent(new Event("radar:market")); return M; });
+    M.loading = Promise.all([getJSON("data/piyasa.json"), getJSON("data/guc/cross.json"), getJSON("data/guc/guc.json"), getJSON("data/us_map.json")])
+      .then(([a, b, c, d]) => { M.strip = a; M.cross = b; M.guc = c; M.us = d; dispatchEvent(new Event("radar:market")); return M; });
     return M.loading;
   }
 
@@ -31,12 +31,40 @@
   }
 
   // ─────────────────────────────── piyasa şeridi
-  function stripHTML(keys = null) {
+  // TCMB ağırlıklı ortalama fonlama maliyeti: EVDS (data/macro.json, radar turu) → şerit kutusu
+  function fundingItem() {
+    const s = (window.radar?.state?.macro?.series || []).find(x => x.code === "TP.APIFON4");
+    if (!s || s.last == null) return null;
+    const h = (s.history || []).map(x => x[1]).filter(v => v != null);
+    const iso = (s.date || "").split("-").reverse().join("-");
+    const m1 = h.length > 22 ? s.last - h[h.length - 23] : null;
+    return { k: "fon", label: "TCMB fonlama", unit: "%", dec: 2, last: s.last, chg: s.change, chg_kind: "bp", m1, asof: iso, spark: h.slice(-44), src: "TCMB EVDS · ağırlıklı ortalama fonlama maliyeti" };
+  }
+  // Mantıksal gruplar: Türkiye (kur, faiz, borsa, altın) · Küresel piyasalar · Emtia ve kripto
+  const GROUPS = [["Türkiye", ["usdtry", "eurtry", "fon", "xu100", "xu100usd", "gram"]], ["Küresel", ["spx", "vix", "us10y", "dxy"]], ["Emtia ve kripto", ["brent", "gold", "btc"]]];
+  function stripHTML(keys = null, { groups = false } = {}) {
     const d = M.strip;
     if (!d?.items?.length) return "";
-    const items = keys ? d.items.filter(i => keys.includes(i.k)) : d.items;
-    const val = i => i.k === "us10y" ? `%${fmt.num(i.last, 2)}` : `${i.unit === "$" ? "$" : ""}${fmt.num(i.last, i.dec)}${i.unit === "₺" ? " ₺" : ""}`;
-    const chg = i => i.chg_kind === "bp" ? `${i.chg > 0 ? "+" : i.chg < 0 ? "−" : ""}${fmt.num(Math.abs(i.chg) * 100, 0)} bp` : pc(i.chg, 2);
+    const pool = [...d.items, fundingItem()].filter(Boolean);
+    const items = keys ? pool.filter(i => keys.includes(i.k)) : d.items;
+    const pct = i => i.k === "us10y" || i.k === "fon";
+    const val = i => pct(i) ? `%${fmt.num(i.last, 2)}` : `${i.unit === "$" ? "$" : ""}${fmt.num(i.last, i.dec)}${i.unit === "₺" ? " ₺" : ""}`;
+    const bp = v => `${v > 0 ? "+" : v < 0 ? "−" : ""}${fmt.num(Math.abs(v) * 100, 0)} bp`;
+    const chg = i => i.chg == null ? "—" : i.chg_kind === "bp" ? bp(i.chg) : pc(i.chg, 2);
+    const tile = i => {
+      const m1 = i.m1 == null ? "" : i.chg_kind === "bp" ? `1 ay ${bp(i.m1)}` : `1 ay ${pc(i.m1, 1)}`;
+      const trend = i.spark?.length > 1 ? (i.spark.at(-1) >= i.spark[0] ? "up" : "down") : "";
+      const fut = ["brent", "gold", "copper", "gram"].includes(i.k) ? " · vadeli işlem fiyatı (yakın kontrat): ay sonu kontrat devrinde tek günlük sıçrama olabilir" : "";
+      const cc = sgn(i.chg);
+      return `<div class="mk-tile" data-tip="${esc(`${i.label} · ${dlab(i.asof)} · ${m1} · çizgi: son 3 ay${fut}${i.src ? ` · ${i.src}` : ""}`)}">
+        <span class="mk-l">${esc(i.label)}</span><span class="mk-v">${val(i)}</span>
+        <span class="mk-c ${cc}">${chg(i)}</span>${spark(i.spark, trend)}</div>`;
+    };
+    if (groups) {
+      const by = new Map(items.map(i => [i.k, i]));
+      return `<section class="mk-strip mk-groups" aria-label="Piyasalar">${GROUPS.map(([g, ks]) => { const xs = ks.map(k => by.get(k)).filter(Boolean);
+        return xs.length ? `<div class="mk-grp" style="--n:${xs.length}"><h3 class="mk-gh">${esc(g)}</h3><div class="mk-gt">${xs.map(tile).join("")}</div></div>` : ""; }).join("")}</section>`;
+    }
     return `<section class="mk-strip" aria-label="Piyasalar">${items.map(i => {
       const m1 = i.m1 == null ? "" : i.chg_kind === "bp" ? `1 ay ${i.m1 > 0 ? "+" : ""}${fmt.num(i.m1 * 100, 0)} bp` : `1 ay ${pc(i.m1, 1)}`;
       const trend = i.spark?.length > 1 ? (i.spark.at(-1) >= i.spark[0] ? "up" : "down") : "";
@@ -103,15 +131,17 @@
 
   const PERK = { d1: ["1G", 0.04], w1: ["1H", 0.08], r1a: ["1A", 0.15], ytd: ["YBB", 0.5] };
   const SHORT = { "GAYRİMENKUL YATIRIM ORTAKLIKLARI": "GYO", "HOLDİNGLER VE YATIRIM ŞİRKETLERİ": "Holding", "KİMYA İLAÇ PETROL LASTİK VE PLASTİK ÜRÜNLER": "Kimya-petrol", "METAL EŞYA MAKİNE ELEKTRİKLİ CİHAZLAR VE ULAŞIM ARAÇLARI": "Metal eşya-makine", "GIDA, İÇECEK VE TÜTÜN": "Gıda-içecek", "ELEKTRİK GAZ VE BUHAR": "Elektrik", "TAŞ VE TOPRAĞA DAYALI SANAYİ": "Taş-toprak", "ULAŞTIRMA VE DEPOLAMA": "Ulaştırma", "TEKSTİL, GİYİM EŞYASI VE DERİ": "Tekstil", "BİLİŞİM": "Bilişim", "BANKALAR": "Bankalar", "ANA METAL SANAYİ": "Ana metal", "PERAKENDE TİCARET": "Perakende", "TOPTAN TİCARET": "Toptan", "SİGORTA ŞİRKETLERİ": "Sigorta", "İNŞAAT VE BAYINDIRLIK İŞLERİ": "İnşaat", "SAVUNMA": "Savunma", "TELEKOMÜNİKASYON": "Telekom", "MADENCİLİK VE TAŞ OCAKÇILIĞI": "Madencilik", "METAL CEVHERİ MADENCİLİĞİ": "Metal cevheri" };
-  const short = n => SHORT[n] || n.split(/\s+/).slice(0, 2).join(" ").replace(/\s(VE|İLE)$/, "").toLocaleLowerCase("tr").replace(/(^|\s)\S/g, c => c.toLocaleUpperCase("tr"));
+  const US_SEC = { "Information Technology": "Teknoloji", "Communication Services": "İletişim", "Consumer Discretionary": "Tüketici (döngüsel)", "Consumer Staples": "Temel tüketim",
+    "Health Care": "Sağlık", "Financials": "Finans", "Industrials": "Sanayi", "Energy": "Enerji", "Materials": "Malzeme", "Real Estate": "Gayrimenkul", "Utilities": "Kamu hizmetleri" };
+  const short = n => US_SEC[n] || SHORT[n] || n.split(/\s+/).slice(0, 2).join(" ").replace(/\s(VE|İLE)$/, "").toLocaleLowerCase("tr").replace(/(^|\s)\S/g, c => c.toLocaleUpperCase("tr"));
   function color(v, lim) {
     if (v == null) return "var(--surface-2)";
     const t = Math.min(1, Math.abs(v) / lim), p = Math.round(18 + t * 72);
     return `color-mix(in srgb, ${v >= 0 ? "var(--up)" : "var(--down)"} ${p}%, var(--surface-2))`;
   }
-  function treemap(el, { per = "d1", sector = null, height = 520, maxStocks = 9999 } = {}) {
-    const g = M.guc;
-    if (!el || !g?.stocks) return;
+  function treemap(el, { per = "d1", sector = null, height = 520, maxStocks = 9999, src = "bist" } = {}) {
+    const us = src === "us", g = us ? M.us : M.guc;
+    if (!el || !g?.stocks) { if (el) el.innerHTML = `<p class="t3">${us ? "ABD ısı haritası verisi henüz oluşmadı; ilk radar turundan sonra gelir." : "Isı haritası verisi yok."}</p>`; return; }
     const W = Math.max(300, Math.round(el.getBoundingClientRect().width) || 900), H = height;
     const lim = PERK[per][1];
     const rows = g.stocks.filter(r => r.mcap > 0 && (!sector || r.sector === sector)).sort((a, b) => b.mcap - a.mcap).slice(0, maxStocks);
@@ -128,15 +158,15 @@
       if (lbl) svg += `<text class="tm-sl" x="${s.x + 4}" y="${s.y + 11}">${esc(short(s.name))} <tspan class="${sgn(ret)}">${pc(ret, 1)}</tspan></text>`;
       for (const r of inner) {
         const v = r[per], fs = Math.max(8, Math.min(18, Math.sqrt(r.w * r.h) / 4.2));
-        svg += `<g class="tm-c" data-tk="${esc(r.code)}"><rect x="${r.x + 0.5}" y="${r.y + 0.5}" width="${Math.max(0, r.w - 1)}" height="${Math.max(0, r.h - 1)}" fill="${color(v, lim)}"><title>${esc(`${r.code} · ${short(r.sector)}\n${PERK[per][0]} ${pc(v, 2)} · piyasa değeri ${fmt.num(r.mcap / 1e9, 1)} mr ₺`)}</title></rect>`;
+        svg += `<g class="tm-c" data-tk="${esc(r.code)}"><rect x="${r.x + 0.5}" y="${r.y + 0.5}" width="${Math.max(0, r.w - 1)}" height="${Math.max(0, r.h - 1)}" fill="${color(v, lim)}"><title>${esc(`${r.code}${r.name ? " · " + r.name : ""} · ${short(r.sector)}\n${PERK[per][0]} ${pc(v, 2)} · piyasa değeri ${us ? `${fmt.num(r.mcap / 1e9, 0)} mr $` : `${fmt.num(r.mcap / 1e9, 1)} mr ₺`}`)}</title></rect>`;
         if (r.w > 34 && r.h > 18) svg += `<text class="tm-t" x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + (r.h > 34 ? -2 : fs / 3)}" font-size="${fs}">${esc(r.code)}</text>`;
         if (r.w > 38 && r.h > 34) svg += `<text class="tm-v" x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + fs * 0.9}" font-size="${Math.max(8, fs * 0.72)}">${pc(v, 1)}</text>`;
         svg += `</g>`;
       }
       svg += `</g>`;
     }
-    el.innerHTML = `<svg class="tm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="BIST ısı haritası">${svg}</svg>`;
-    el.querySelectorAll(".tm-c").forEach(n => n.addEventListener("click", () => window.radar?.openTicker?.(n.dataset.tk, n)));
+    el.innerHTML = `<svg class="tm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${us ? "S&P 500" : "BIST"} ısı haritası">${svg}</svg>`;
+    el.querySelectorAll(".tm-c").forEach(n => n.addEventListener("click", () => us ? window.open(`https://finance.yahoo.com/quote/${n.dataset.tk.replace(".", "-")}/`, "_blank", "noopener") : window.radar?.openTicker?.(n.dataset.tk, n)));
   }
   function legend(per) {
     const lim = PERK[per][1];
@@ -160,6 +190,6 @@
         ${["1A", "3A", "YBB", "1Y"].map(k => `<td class="num ${sgn(r.chg?.[k])}">${pc(r.chg?.[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   }
 
-  window.radarMarket = { load, get data() { return M; }, stripHTML, crossCard, treemap, legend, valuationTable, spark, short, PERK };
+  window.radarMarket = { load, get data() { return M; }, GROUPS, stripHTML, crossCard, treemap, legend, valuationTable, spark, short, PERK };
   load();
 })();

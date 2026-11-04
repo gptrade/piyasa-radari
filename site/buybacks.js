@@ -147,6 +147,22 @@
   window.radarBB = {
     get loaded() { return S.loaded; },
     ensure() { if (!S.loaded && !S.loading) load(); },
+    // Bugün ekranı: son işlem günü (bildirim tarihine göre) şirket bazında toplam
+    latest(n = 6) {
+      if (!S.loaded) return null;
+      const tx = S.rows.filter(r => r.kind === "tx" && !r.suspect);
+      if (!tx.length) return null;
+      const dk = r => fmt.dayKey(r.pub);
+      const last = tx.reduce((m, r) => (dk(r) > m ? dk(r) : m), "");
+      const by = new Map();
+      for (const r of tx.filter(r => dk(r) === last)) {
+        const o = by.get(r.t) || { t: r.t, name: r.name, amount: 0, pct: null, qty: 0 };
+        o.amount += r.amount || 0; o.qty += r.qty || 0; if (r.pct != null) o.pct = (o.pct || 0) + r.pct;
+        by.set(r.t, o);
+      }
+      const rows = [...by.values()].sort((a, b) => b.amount - a.amount);
+      return { day: last, n: rows.length, total: rows.reduce((a, r) => a + r.amount, 0), rows: rows.slice(0, n) };
+    },
     forTicker(t) {
       if (!S.loaded) return null;
       const tx = S.rows.filter(r => r.t === t && r.kind === "tx").sort((a, b) => b.date - a.date).slice(0, 5);

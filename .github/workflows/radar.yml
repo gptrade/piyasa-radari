@@ -163,6 +163,12 @@ jobs:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python -m radar.surprise
 
+      # ABD ısı haritası: S&P 500 getirileri ve piyasa değeri (seansta 30 dk'da bir, sonra günde bir)
+      - name: ABD ısı haritası
+        continue-on-error: true
+        timeout-minutes: 6
+        run: python -m radar.usmap
+
       - name: Veriyi data dalına kaydet
         run: |
           cd site/data
