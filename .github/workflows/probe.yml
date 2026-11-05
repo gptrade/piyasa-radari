@@ -17,11 +17,11 @@ jobs:
       - name: Access giris yolu
         run: |
           mkdir -p probe
-          for u in https://radar.lyracube.com/ https://piyasa-radari.pages.dev/ "https://piyasa-radari.pages.dev/cdn-cgi/access/authorized?nonce=x&state=y" "https://radar.lyracube.com/cdn-cgi/access/authorized?nonce=x&state=y"; do
+          for u in https://piyasa-radari.pages.dev "https://piyasa-radari.pages.dev/#takvim" "https://piyasa-radari.pages.dev/data/feed.json?t=1" "https://abc123.piyasa-radari.pages.dev/x" "https://piyasa-radari.pages.dev/cdn-cgi/access/authorized?nonce=x&state=y" https://radar.lyracube.com/; do
             echo "== $u"
             curl -sS -o /dev/null -m 20 -w "kod %{http_code} · ip %{remote_ip} · süre %{time_total}s · yön %{redirect_url}\n" "$u" 2>&1 | sed -E 's/(state|nonce|kid|token)=[^& ]*/\1=…/g'
-          done > probe/log40.txt 2>&1
-          for h in piyasa-radari.pages.dev radar.lyracube.com; do echo "== dig $h"; dig +short $h; done >> probe/log40.txt 2>&1 || true
+          done > probe/log41.txt 2>&1
+          for h in piyasa-radari.pages.dev radar.lyracube.com; do echo "== dig $h"; dig +short $h; done >> probe/log41.txt 2>&1 || true
 
       - name: kaydet
         if: always()
