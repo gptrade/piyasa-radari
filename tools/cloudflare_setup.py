@@ -233,13 +233,56 @@ def pages_env():
             "kullanici_yonetimi": "hazır" if "CF_USERS_TOKEN" in env else "kapalı (ayrıntı: access → kisi_yonetimi)"}
 
 
+REDIR_LIST = "lyra_radar_pagesdev"
+
+
+def pagesdev_redirect():
+    """*.pages.dev → özel alan adı (Cloudflare Bulk Redirects; Pages belgelerinde önerilen yöntem). Kimse pages.dev adresinde
+    giriş yapmaya çalışmasın: bazı ağlar *.pages.dev'i engelliyor ve giriş sonrası dönüş orada kopuyor.
+    Yol ve sorgu korunur, önizleme alt alan adları (*.piyasa-radari.pages.dev) da yönlenir. Yetki: Account Filter Lists +
+    Account Rulesets (düzenleme); ana anahtarda yoksa kullanıcı anahtarıyla denenir."""
+    sub = st.get("_sub")
+    if not sub:
+        return "atlandı (pages.dev adı bilinmiyor)"
+    item = {"redirect": {"source_url": f"{sub}/", "target_url": f"https://{HOST}/", "status_code": 301, "include_subdomains": True,
+                         "subpath_matching": True, "preserve_path_suffix": True, "preserve_query_string": True}}
+    last = None
+    for tok in [None] + ([UTOK] if UTOK else []):
+        lists, err = cf("GET", f"/accounts/{ACC}/rules/lists", tok=tok)
+        if err:
+            last = err
+            continue
+        lst = next((x for x in lists or [] if x.get("name") == REDIR_LIST), None)
+        if not lst:
+            lst, err = cf("POST", f"/accounts/{ACC}/rules/lists", tok=tok, json={"name": REDIR_LIST, "kind": "redirect", "description": "Lyra Radar: pages.dev → özel alan adı"})
+            if err:
+                last = err
+                continue
+        # listeyi tek kayda indir (PUT tüm öğeleri değiştirir)
+        _, err = cf("PUT", f"/accounts/{ACC}/rules/lists/{lst['id']}/items", tok=tok, json=[item])
+        if err:
+            last = err
+            continue
+        rs, err = cf("GET", f"/accounts/{ACC}/rulesets/phases/http_request_redirect/entrypoint", tok=tok)
+        rules = [r for r in (rs or {}).get("rules") or [] if REDIR_LIST not in (r.get("expression") or "")]
+        rules.append({"expression": f"http.request.full_uri in ${REDIR_LIST}", "description": "Lyra Radar pages.dev yönlendirmesi",
+                      "action": "redirect", "action_parameters": {"from_list": {"name": REDIR_LIST, "key": "http.request.full_uri"}}})
+        _, err = cf("PUT", f"/accounts/{ACC}/rulesets/phases/http_request_redirect/entrypoint", tok=tok,
+                    json={"name": "default", "kind": "root", "phase": "http_request_redirect", "rules": rules})
+        if err:
+            last = err
+            continue
+        return {"durum": "hazır", "anahtar": "ana" if tok is None else "kullanıcı", "hedef": f"https://{HOST}/"}
+    return {"hata": last, "cozum": "Cloudflare anahtarına 'Account Filter Lists: Edit' ve 'Account Rulesets: Edit' (hesap) izinlerini ekle"}
+
+
 def verify():
     out = {}
     for h in [HOST] + ([st["_sub"]] if st.get("_sub") else []):
         try:
             r = requests.get(f"https://{h}/", timeout=30, allow_redirects=False)
             loc = r.headers.get("location", "")
-            out[h] = f"HTTP {r.status_code}" + (" → giriş ekranı" if "cloudflareaccess.com" in loc else (" → AÇIK (korumasız!)" if r.status_code == 200 else ""))
+            out[h] = f"HTTP {r.status_code}" + (" → giriş ekranı" if "cloudflareaccess.com" in loc else f" → {HOST}" if HOST in loc else (" → AÇIK (korumasız!)" if r.status_code == 200 else ""))
         except Exception as e:  # noqa: BLE001
             out[h] = f"erişilemedi ({type(e).__name__})"
     return out
@@ -250,7 +293,7 @@ if (st.get("anahtar") or {}).get("durum") != "active":
     json.dump({k: v for k, v in st.items() if not k.startswith("_")}, open(sys.argv[1] if len(sys.argv) > 1 else "status.json", "w"), ensure_ascii=False, indent=1)
     sys.exit(0)
 for n, f in [("alan_adi", zone), ("pages_projesi", project), ("pages_ozel_alan", pages_domain), ("dns", dns),
-             ("eposta_kodu", otp), ("access", access), ("pages_ortam", pages_env), ("dogrulama", verify)]:
+             ("eposta_kodu", otp), ("access", access), ("pages_ortam", pages_env), ("pagesdev_yonlendirme", pagesdev_redirect), ("dogrulama", verify)]:
     step(n, f)
 st = {k: v for k, v in st.items() if not k.startswith("_")}
 json.dump(st, open(sys.argv[1] if len(sys.argv) > 1 else "status.json", "w"), ensure_ascii=False, indent=1)
