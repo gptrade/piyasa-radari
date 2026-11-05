@@ -14,13 +14,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: ABD isi haritasi ndx
+      - name: Access giris yolu
         run: |
           mkdir -p probe
-          git clone -q -b onizleme-ndx --depth 1 https://github.com/gptrade/piyasa-radari.git /tmp/pr
-          cd /tmp/pr && pip install -q -r requirements.txt && mkdir -p site/data
-          python -m radar.usmap --force > $GITHUB_WORKSPACE/probe/log39.txt 2>&1 || true
-          cp site/data/us_map.json $GITHUB_WORKSPACE/probe/ || true
+          for u in https://radar.lyracube.com/ https://piyasa-radari.pages.dev/ "https://piyasa-radari.pages.dev/cdn-cgi/access/authorized?nonce=x&state=y" "https://radar.lyracube.com/cdn-cgi/access/authorized?nonce=x&state=y"; do
+            echo "== $u"
+            curl -sS -o /dev/null -m 20 -w "kod %{http_code} · ip %{remote_ip} · süre %{time_total}s · yön %{redirect_url}\n" "$u" 2>&1 | sed -E 's/(state|nonce|kid|token)=[^& ]*/\1=…/g'
+          done > probe/log40.txt 2>&1
+          for h in piyasa-radari.pages.dev radar.lyracube.com; do echo "== dig $h"; dig +short $h; done >> probe/log40.txt 2>&1 || true
 
       - name: kaydet
         if: always()
