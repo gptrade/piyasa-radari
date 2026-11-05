@@ -14,14 +14,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Access giris yolu
+      - name: Access giris sayfasi
         run: |
           mkdir -p probe
-          for u in https://piyasa-radari.pages.dev "https://piyasa-radari.pages.dev/#takvim" "https://piyasa-radari.pages.dev/data/feed.json?t=1" "https://abc123.piyasa-radari.pages.dev/x" "https://piyasa-radari.pages.dev/cdn-cgi/access/authorized?nonce=x&state=y" https://radar.lyracube.com/; do
-            echo "== $u"
-            curl -sS -o /dev/null -m 20 -w "kod %{http_code} · ip %{remote_ip} · süre %{time_total}s · yön %{redirect_url}\n" "$u" 2>&1 | sed -E 's/(state|nonce|kid|token)=[^& ]*/\1=…/g'
-          done > probe/log41.txt 2>&1
-          for h in piyasa-radari.pages.dev radar.lyracube.com; do echo "== dig $h"; dig +short $h; done >> probe/log41.txt 2>&1 || true
+          L=$(curl -s -o /dev/null -w "%{redirect_url}" https://radar.lyracube.com/)
+          curl -s -L "$L" -o /tmp/login.html
+          python3 - > probe/log42.txt <<'PY'
+          import re, base64, json, urllib.parse
+          h = open("/tmp/login.html", encoding="utf-8", errors="ignore").read()
+          print("uzunluk", len(h), "pages.dev geçiyor:", h.count("pages.dev"), "radar.lyracube.com geçiyor:", h.count("radar.lyracube.com"))
+          for m in set(re.findall(r"https?://[a-z0-9.-]+(?:pages\.dev|lyracube\.com)[^\"'\s<]{0,60}", h)):
+              print("adres:", re.sub(r"(nonce|state|kid|meta|token)=[^&]*", r"\1=…", m))
+          PY
 
       - name: kaydet
         if: always()
