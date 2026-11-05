@@ -99,3 +99,15 @@ def test_outlook_retried_until_summarized(tmp_path, monkeypatch):
     st = json.loads((tmp_path / "st.json").read_text()); st["outlook_x_try"] = "2000-01-01"
     (tmp_path / "st.json").write_text(json.dumps(st))
     assert rs.collect_outlooks(ctx) == []                      # özet yazıldı: artık atlanır
+
+
+def test_us_ticker_and_tidy():
+    from radar import research as R
+    assert R.us_ticker("Apple") == "AAPL" and R.us_ticker("Palantir") == "PLTR" and R.us_ticker("Arista Networks") == "ANET"
+    assert R.us_ticker("Bilinmeyen Şirket") is None
+    st = {"reports": [{"broker": "Ak Yatırım / Akbank", "tickers": ["XU100", "THYAO"], "thesis": "x"},
+                      {"broker": "Kurum belirtilmemiş", "tickers": [], "thesis": "Günlük kur ve emtia tablosu", "sector": ""}],
+          "notes": [{"broker": "ÜNLÜ Menkul Değerler", "t": None, "name": "Apple"}]}
+    R.tidy(st)
+    assert st["reports"][0]["broker"] == "Ak Yatırım" and st["reports"][0]["tickers"] == ["THYAO"] and not st["reports"][0]["thin"]
+    assert st["reports"][1]["thin"] and st["notes"][0]["t"] == "AAPL" and st["notes"][0]["broker"] == "ÜNLÜ & Co"

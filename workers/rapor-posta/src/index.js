@@ -1,4 +1,6 @@
-// rapor@<alan adı> → gizli rapor reposunun gelen/ klasörü.
+// rapor@<alan adı> → gizli rapor reposunun gelen/ klasörü (konu satırında [şirket] / [sektör] / [strateji] varsa o klasör).
+// - Dosya adı: <gün>_<konu>-<sha1 ilk 10>[_<asıl gönderici alan adı>].<uzantı>; alan adı kurum için ipucudur
+//   (elle iletilen postada iletilen mesajın "Kimden/From" satırından okunur).
 // - Yalnız izinli göndericiler (GONDERENLER: "ad@x.com, @kurum.com.tr") kabul edilir; diğerleri reddedilir.
 // - PDF ve görsel ekler olduğu gibi kaydedilir; eki olmayan uzun bültenler metin (.md) olarak kaydedilir.
 // - Dosya adı içerik özetiyle (sha1) başlar: aynı rapor iki kez gelirse ikinci kez yazılmaz.
@@ -41,6 +43,26 @@ async function tg(env, text) {
       body: JSON.stringify({ chat_id: env.TG_CHAT, text, disable_web_page_preview: true }),
     });
   } catch (e) { /* bildirim isteğe bağlı */ }
+}
+
+// Konu satırı etiketi → klasör. Etiket yoksa gelen/ (türü yapay zekâ seçer).
+const TAGS = [["sirket", /[\[#(]\s*(?:ş|s)irket\s*[\])]?/i], ["sektor", /[\[#(]\s*sekt(?:ö|o)r\s*[\])]?/i], ["strateji", /[\[#(]\s*strateji\s*[\])]?/i]];
+export function folderOf(subject) {
+  for (const [f, rx] of TAGS) if (rx.test(subject || "")) return f;
+  return "gelen";
+}
+export function stripTags(subject) {
+  return TAGS.reduce((s, [, rx]) => s.replace(rx, " "), String(subject || "")).replace(/\s+/g, " ").trim();
+}
+// Asıl gönderici alan adı: iletilmiş postada gövdedeki "Kimden:/From:/Gönderen:" satırı; yoksa zarf göndericisi.
+// Ücretsiz posta sağlayıcıları (gmail vb.) kurum ipucu değildir.
+const FREE = /^(gmail|googlemail|hotmail|outlook|live|yahoo|icloud|me|yandex|proton(mail)?|msn|mail)\./i;
+export function senderDomain(mail) {
+  const text = mail.text || String(mail.html || "").replace(/<[^>]+>/g, " ");
+  const cands = [];
+  for (const m of text.matchAll(/(?:^|\n)\s*(?:\*?\s*)?(?:from|kimden|gönderen|gonderen|de)\s*:\s*\*?[^\n]{0,120}?[\w.+-]+@([\w-]+(?:\.[\w-]+)+)/gi)) cands.push(m[1]);
+  cands.push((String(mail.from?.address || "").split("@")[1] || ""));
+  return (cands.map(d => d.toLowerCase().replace(/[^a-z0-9.-]/g, "")).find(d => d.includes(".") && !FREE.test(d)) || "");
 }
 
 export function slug(s, n = 40) {
@@ -128,13 +150,13 @@ export default {
       return;
     }
     const day = new Date().toISOString().slice(0, 10);
-    const base = slug(mail.subject);
+    const folder = folderOf(mail.subject), base = slug(stripTags(mail.subject)), dom = senderDomain(mail);
     let ok = 0, dup = 0;
     const errs = [];
     for (const f of files) {
       const h = await sha1(f.data);
       try {
-        const r = await put(env, `gelen/${day}_${base}-${h.slice(0, 10)}.${f.ext}`, f.data, `Gelen rapor ${day}`);
+        const r = await put(env, `${folder}/${day}_${base}-${h.slice(0, 10)}${dom ? "_" + dom : ""}.${f.ext}`, f.data, `Gelen rapor ${day}`);
         r === "var" ? dup++ : ok++;
       } catch (e) {
         errs.push(String(e.message || e).slice(0, 160));
@@ -145,7 +167,8 @@ export default {
       await tg(env, `❌ rapor@: "${mail.subject || ""}" kaydedilemedi (${errs.length}/${files.length} dosya).\n${errs[0]}\nGitHub anahtarının süresi dolmuş olabilir: RAPOR_YAZMA_TOKEN'ı yenileyip eposta-kurulum iş akışını çalıştır.`);
     }
     if (ok || dup) {
-      await tg(env, ok ? `📥 rapor@: "${mail.subject || ""}" alındı (${ok} dosya${dup ? `, ${dup} tanesi zaten vardı` : ""}). Radar 15–30 dk içinde özetler.`
+      const tur = folder === "gelen" ? "türü yapay zekâ belirleyecek" : `tür: ${{ sirket: "şirket", sektor: "sektör", strateji: "strateji" }[folder]} (konu etiketi)`;
+      await tg(env, ok ? `📥 rapor@: "${mail.subject || ""}" alındı (${ok} dosya${dup ? `, ${dup} tanesi zaten vardı` : ""}; ${tur}${dom ? `; gönderen ${dom}` : ""}). Radar 15–30 dk içinde özetler.`
                        : `♻️ rapor@: "${mail.subject || ""}" daha önce alınmış (aynı dosya), yeniden işlenmedi.`);
     }
   },
