@@ -268,12 +268,15 @@ def pagesdev_redirect():
         rules.append({"expression": f"http.request.full_uri in ${REDIR_LIST}", "description": "Lyra Radar pages.dev yönlendirmesi",
                       "action": "redirect", "action_parameters": {"from_list": {"name": REDIR_LIST, "key": "http.request.full_uri"}}})
         _, err = cf("PUT", f"/accounts/{ACC}/rulesets/phases/http_request_redirect/entrypoint", tok=tok,
-                    json={"name": "default", "kind": "root", "phase": "http_request_redirect", "rules": rules})
+                    json={"rules": rules})
         if err:
             last = err
             continue
         return {"durum": "hazır", "anahtar": "ana" if tok is None else "kullanıcı", "hedef": f"https://{HOST}/"}
-    return {"hata": last, "cozum": "Cloudflare anahtarına 'Account Filter Lists: Edit' ve 'Account Rulesets: Edit' (hesap) izinlerini ekle"}
+    out = {"hata": last}
+    if last and ("10000" in last or "uthentication" in last):
+        out["cozum"] = "Cloudflare anahtarına 'Account Filter Lists: Edit' ve 'Account Rulesets: Edit' (hesap) izinlerini ekle"
+    return out
 
 
 def verify():
