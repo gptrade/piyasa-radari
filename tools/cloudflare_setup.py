@@ -152,24 +152,45 @@ def otp():
     return "eklendi" if not err else {"hata": err}
 
 
+def ensure_app(apps, name, domain, domains, launcher, old_names=()):
+    a = next((x for x in apps or [] if x.get("name") in (name, *old_names)), None)
+    body = {"name": name, "type": "self_hosted", "domain": domain, "self_hosted_domains": domains,
+            "session_duration": "720h", "app_launcher_visible": launcher, "auto_redirect_to_identity": False}
+    return cf("PUT", f"/accounts/{ACC}/access/apps/{a['id']}", json=body) if a else cf("POST", f"/accounts/{ACC}/access/apps", json=body)
+
+
+def set_policy(app, include):
+    pol = {"name": "Grup üyeleri", "decision": "allow", "precedence": 1, "include": include}
+    pols, _ = cf("GET", f"/accounts/{ACC}/access/apps/{app['id']}/policies")
+    p = next((x for x in pols or [] if x.get("name") == pol["name"]), None)
+    if p:
+        return cf("PUT", f"/accounts/{ACC}/access/apps/{app['id']}/policies/{p['id']}", json=pol)[1]
+    return cf("POST", f"/accounts/{ACC}/access/apps/{app['id']}/policies", json=pol)[1]
+
+
+PAGES_APP = "Lyra Radar (pages.dev)"
+
+
 def access():
+    """İki Access uygulaması: (1) asıl adres radar.<alan adı> — girişler buraya döner; (2) *.pages.dev ayrı uygulama.
+    Eskiden ikisi tek uygulamadaydı ve Cloudflare giriş sonrası dönüşü pages.dev'e yapıyordu; *.pages.dev'i engelleyen
+    ağlarda giriş orada kopuyordu. pages.dev ayrıca radar adresine yönlendirilir (pagesdev_redirect)."""
     sub = st.get("_sub")
     if not EMAILS:
         return "atlandı (CF_ACCESS_EMAILS secret'ı yok)"
-    domains = [HOST] + ([sub, f"*.{sub}"] if sub else [])
+    domains = [HOST]
     res, err = cf("GET", f"/accounts/{ACC}/access/apps")
     if err:
         return {"hata": err}
-    app = next((a for a in res or [] if a.get("name") in (APP_NAME, *OLD_NAMES)), None)
-    body = {"name": APP_NAME, "type": "self_hosted", "domain": HOST, "self_hosted_domains": domains,
-            "session_duration": "720h", "app_launcher_visible": True, "auto_redirect_to_identity": False}
-    if app:
-        app, err = cf("PUT", f"/accounts/{ACC}/access/apps/{app['id']}", json=body)
-    else:
-        app, err = cf("POST", f"/accounts/{ACC}/access/apps", json=body)
+    app, err = ensure_app(res, APP_NAME, HOST, domains, True, OLD_NAMES)
     if err:
         return {"uygulama": "kurulamadı", "hata": err}
     st["_aud"] = app.get("aud")
+    papp = None
+    if sub:
+        papp, perr = ensure_app(res, PAGES_APP, sub, [sub, f"*.{sub}"], False)
+        if perr:
+            st["_pages_app_err"] = perr
     include, grp = [{"email": {"email": e}} for e in EMAILS], None
     if UTOK:                                       # kişiler Access grubunda; sitedeki Kullanıcılar sayfası grubu düzenler
         gs, gerr = cf("GET", f"/accounts/{ACC}/access/groups", tok=UTOK)
@@ -188,15 +209,12 @@ def access():
             include = [{"group": {"id": g["id"]}}]
         else:
             st["_group_err"] = gerr
-    pol = {"name": "Grup üyeleri", "decision": "allow", "precedence": 1, "include": include}
-    pols, err = cf("GET", f"/accounts/{ACC}/access/apps/{app['id']}/policies")
-    p = next((x for x in pols or [] if x.get("name") == pol["name"]), None)
-    if p:
-        _, err = cf("PUT", f"/accounts/{ACC}/access/apps/{app['id']}/policies/{p['id']}", json=pol)
-    else:
-        _, err = cf("POST", f"/accounts/{ACC}/access/apps/{app['id']}/policies", json=pol)
+    err = set_policy(app, include)
+    perr2 = set_policy(papp, include) if papp else None
     n = len((grp or {}).get("include") or []) if grp else len(EMAILS)
     return {"uygulama": "hazır", "korunan": domains, "izinli_kisi": n, "politika": "hazır" if not err else err,
+            "pages_dev_uygulamasi": (f"hazır (ayrı uygulama: {sub}, *.{sub})" if papp and not perr2 else
+                                     {"hata": st.get("_pages_app_err") or perr2}) if sub else "atlandı",
             "kisi_yonetimi": ("Access grubu (sitedeki Kullanıcılar sayfası)" if grp else
                               f"e-posta listesi (CF_USERS_TOKEN {'hatası: ' + str(st.get('_group_err')) if UTOK else ('biçimi geçersiz: yalnız anahtarın kendisini yapıştır' if UTOK_RAW.strip() else 'yok')})"),
             "yonetici": [mask(a) for a in ADMINS]}
