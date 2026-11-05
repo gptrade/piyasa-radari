@@ -30,7 +30,7 @@ def test_units_and_order(tmp_path):
     assert [(x["kind"], x["path"].name) for x in u] == [
         ("sirket", "2026-10-07_THYAO_IsYatirim.txt"), ("sirket", "ekran.jpg"), ("sektor", "2026-10-07_bankacilik_GarantiBBVA")]
     assert [f.name for f in u[2]["files"]] == ["1.png", "2.png", "10.png"]
-    assert pr.name_hints(u[0]["path"]) == {"date": "2026-10-07", "subject": "THYAO", "broker": "IsYatirim"}
+    assert pr.name_hints(u[0]["path"]) == {"date": "2026-10-07", "subject": "THYAO", "broker": "IsYatirim", "domain": None}
 
 
 def test_content_text_vs_media(tmp_path):
@@ -175,3 +175,14 @@ def test_quota_block_does_not_count_as_failure(tmp_path, monkeypatch):
     for _ in range(pr.MAX_TRIES + 2):
         res = pr.process(ai, set(), {"max_per_run": 99}, root=root, done_path=done)
     assert res["status"].get("failed") is None and res["status"]["waiting"] == len(pr.units(root))
+
+
+def test_name_hints_sender_domain_and_broker_pick(tmp_path):
+    p = tmp_path / "2026-11-05_sabah-notu-abc1234567_research.gedik.com.tr.pdf"
+    p.write_bytes(b"%PDF")
+    h = pr.name_hints(p)
+    assert h["domain"] == "research.gedik.com.tr" and h["broker"] == "Gedik Yatırım" and h["date"] == "2026-11-05"
+    assert pr.pick_broker("AK YATIRIM MENKUL DEĞERLER A.Ş.", None) == "Ak Yatırım"
+    assert pr.pick_broker("Kurum belirtilmemiş", "Gedik Yatırım") == "Gedik Yatırım"
+    assert pr.pick_broker("petrokimya 2", "Deniz Yatırım") == "Deniz Yatırım"
+    assert pr.pick_broker(None, None) == "Kurum belirtilmemiş"

@@ -1835,3 +1835,42 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .us-card .input { height: 36px; padding: 0 var(--s-3); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); font-size: var(--fs-md); }
 .us-card .input:focus-visible, .us-q:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--accent); }
 .us-q { height: 30px; padding: 0 var(--s-2); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); }
+
+/* Araştırma: sekmeler + Strateji */
+.res-tabs { margin-bottom: var(--s-3); width: fit-content; max-width: 100%; overflow-x: auto; }
+.res-tabs .n { font: var(--fs-2xs) var(--font-mono); color: var(--text-3); margin-left: 4px; }
+.res-body > .card { margin: 0; }
+.res-out-grid { max-width: 980px; }
+.rs-status { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); font-size: var(--fs-sm); color: var(--text-2); }
+.rs-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--up); flex: none; }
+.rs-status.warn { border-color: color-mix(in srgb, var(--warn, #d97706) 50%, var(--border)); } .rs-status.warn .rs-dot { background: var(--warn, #d97706); }
+.vt { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 10px; align-items: center; }
+.vt-b { font-size: var(--fs-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vt-r { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 2px; }
+.vt-c { display: block; height: 16px; border-radius: 3px; background: var(--surface-2); }
+.vt-c.up { background: var(--up); } .vt-c.down { background: var(--down); } .vt-c.flat { background: color-mix(in srgb, var(--text-3) 55%, var(--surface-2)); }
+.vt-ax i { font: 9px var(--font-mono); color: var(--text-3); text-align: left; height: auto; }
+.vt-key .vt-c { display: inline-block; width: 12px; height: 10px; vertical-align: -1px; margin: 0 3px 0 8px; }
+@media (max-width: 640px) { .vt { grid-template-columns: 92px minmax(0, 1fr); } .vt-c { height: 12px; } }
+.rs-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: var(--s-4); align-items: start; }
+.rs-side { display: flex; flex-direction: column; gap: var(--s-4); } .rs-side > .card { margin: 0; }
+@media (max-width: 1000px) { .rs-grid { grid-template-columns: 1fr; } }
+.rs-bar { display: inline-block; width: 80px; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; vertical-align: middle; }
+.rs-bar i { display: block; height: 100%; background: var(--series-1); border-radius: 4px; } .rs-bar.neg i { background: var(--down); }
+.rs-brk { font-size: var(--fs-xs); max-width: 260px; }
+.rs-th { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.rs-th li { display: grid; grid-template-columns: minmax(0, 1fr) 90px 22px; align-items: center; gap: 8px; font-size: var(--fs-sm); }
+.rs-th .rs-bar { width: 100%; }
+.rl-tools { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
+.rl-sel { height: 30px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); padding: 0 8px; max-width: 200px; }
+.rl { display: flex; flex-direction: column; }
+.rl-i { border-top: 1px solid var(--border); } .rl-i:first-child { border-top: 0; }
+.rl-i > summary { display: flex; align-items: center; gap: 8px; padding: 8px 4px; cursor: pointer; list-style: none; font-size: var(--fs-sm); flex-wrap: wrap; }
+.rl-i > summary::-webkit-details-marker { display: none; }
+.rl-i > summary:hover { background: var(--row-hover); }
+.rl-sum { flex: 1; min-width: 0; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-st { font-size: var(--fs-xs); } .rl-i .td-age { margin-left: auto; }
+.rl-b { padding: 0 4px 10px; } .rl-src { font-size: var(--fs-2xs); margin: 4px 0 0; }
+.rs-mini .tp-sub { margin: 4px 0 0; }
+.rs-tp td.nw { white-space: nowrap; } .rs-tp .rs-bar { width: 60px; }
+.rs-th li { grid-template-columns: minmax(0, 1fr) 70px 22px; } .rs-th li > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

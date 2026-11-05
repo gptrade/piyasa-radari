@@ -20,8 +20,8 @@ import statistics
 from datetime import datetime, timedelta
 from urllib.parse import quote_plus
 
-from . import http
-from .config import DATA
+from . import brokers, http
+from .config import DATA, ROOT
 from .models import UTC, Item, iso, make_id, now_utc, parse_iso
 from .sources import Context
 from .sources.feeds import entries_to_items, fetch_feed
@@ -436,6 +436,142 @@ def synthesize(analyzer, store: dict, items: list[dict], watch: list) -> dict | 
     return out
 
 
+# ------------------------------------------------------------------ düzenleme: kurum adı, ABD hisse kodu, boş bülten
+_SUFFIX = re.compile(r"\b(inc|incorporated|corp|corporation|co|company|holdings?|group|plc|ltd|limited|the|class [abc]|n\.?v|s\.?a|ag|se|labs?|laboratories)\b\.?", re.I)
+
+
+def _nm(s: str) -> str:
+    s = re.sub(r"\.com\b", "", (s or "").lower()).replace("&", " and ")
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]", " ", _SUFFIX.sub(" ", s))).strip()
+
+
+_US_NAMES: dict | None = None
+
+
+def us_names() -> dict:
+    """Normalize şirket adı → ABD sembolü (S&P 500 + Nasdaq-100 listelerinden)."""
+    global _US_NAMES
+    if _US_NAMES is None:
+        import csv
+        _US_NAMES = {}
+        for f in ("sp500.csv", "ndx100.csv"):
+            p = ROOT / "config" / f
+            if not p.exists():
+                continue
+            with p.open(encoding="utf-8") as fh:
+                for r in csv.DictReader(x for x in fh if not x.startswith("#")):
+                    if r.get("symbol") and r.get("name"):
+                        _US_NAMES.setdefault(_nm(r["name"]), r["symbol"].strip())
+    return _US_NAMES
+
+
+def us_ticker(name: str | None) -> str | None:
+    """Notta yalnız şirket adı varsa (çoğu ABD notu: "Raymond James, Dine Brands…") sembolü bul: tam eşleşme ya da tek aday önek."""
+    names = us_names()
+    if re.fullmatch(r"[A-Z]{2,5}", (name or "").strip()) and name.strip() in set(names.values()):
+        return name.strip()                                  # ad yerine sembol yazılmış (AMD)
+    k = _nm(name or "")
+    if len(k) < 3:
+        return None
+    if k in names:
+        return names[k]
+    c = [v for n, v in names.items() if n.startswith(k + " ")]
+    return c[0] if len(set(c)) == 1 else None
+
+
+BIST_ALIAS = {"erdemir": "EREGL", "kardemir": "KRDMD", "tav": "TAVHL", "tav havalimanlari": "TAVHL", "thy": "THYAO", "turk hava yollari": "THYAO",
+              "sisecam": "SISE", "garanti": "GARAN", "garanti bbva": "GARAN", "akbank": "AKBNK", "is bankasi": "ISCTR", "yapi kredi": "YKBNK",
+              "turkcell": "TCELL", "turk telekom": "TTKOM", "koc holding": "KCHOL", "sabanci": "SAHOL", "sabanci holding": "SAHOL",
+              "tupras": "TUPRS", "ford otosan": "FROTO", "tofas": "TOASO", "bim": "BIMAS", "migros": "MGROS", "pegasus": "PGSUS",
+              "enka": "ENKAI", "enka insaat": "ENKAI", "aselsan": "ASELS", "turkiye sigorta": "TURSG", "cimsa": "CIMSA", "arcelik": "ARCLK",
+              "petkim": "PETKM", "halkbank": "HALKB", "vakifbank": "VAKBN", "coca cola icecek": "CCOLA", "anadolu efes": "AEFES",
+              "ulker": "ULKER", "astor": "ASTOR", "sasa": "SASA", "hektas": "HEKTS", "dogus otomotiv": "DOAS", "otokar": "OTKAR",
+              "mavi": "MAVI", "logo": "LOGO", "aksa": "AKSA", "aksa enerji": "AKSEN", "turk traktor": "TTRAK", "emlak konut": "EKGYO",
+              "oyak cimento": "OYAKC", "kontrolmatik": "KONTR", "europower": "EUPWR", "gubre fabrikalari": "GUBRF", "koza altin": "KOZAL"}
+
+
+def _fold(s: str) -> str:
+    t = (s or "").lower().translate(str.maketrans("çğıöşüâîû", "cgiosuaiu")).replace("i̇", "i")
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]", " ", t)).strip()
+
+
+_BIST: dict | None = None
+
+
+def bist_names() -> dict:
+    """KAP unvanının ilk kelimesi (ya da ilk iki) → BIST kodu; tek adaylılar (fin/_universe.json)."""
+    global _BIST
+    if _BIST is None:
+        _BIST = {}
+        try:
+            u = json.loads((DATA / "fin" / "_universe.json").read_text(encoding="utf-8")).get("members") or []
+        except (FileNotFoundError, ValueError):
+            u = []
+        cnt: dict = {}
+        for m in u:
+            w = _fold(m.get("title") or "").split()
+            for k in {" ".join(w[:1]), " ".join(w[:2])}:
+                if len(k) >= 4:
+                    cnt.setdefault(k, set()).add(m["code"])
+        _BIST = {k: next(iter(v)) for k, v in cnt.items() if len(v) == 1}
+    return _BIST
+
+
+def bist_ticker(name: str | None) -> str | None:
+    k = _fold(name or "")
+    if not k or k in ("tl", "turk", "turkiye", "borsa", "bist"):
+        return None
+    return BIST_ALIAS.get(k) or bist_names().get(k)
+
+
+GENERIC_SECTOR = re.compile(r"genel|piyasa|strateji|çoklu|makro|global|küresel", re.I)
+
+
+def thin(r: dict) -> bool:
+    """İçi boş bülten: hisse, öneri, hedef ya da belirli bir sektör yok ve tez kısa (ör. yalnız kur/emtia tablosu)."""
+    if r.get("tickers") or r.get("top_picks") or r.get("tp") or (r.get("mp") or {}).get("added"):
+        return False
+    sec = r.get("sector") or ""
+    return (not sec or bool(GENERIC_SECTOR.search(sec))) and len(r.get("thesis") or "") < 220 or r.get("broker") == brokers.UNKNOWN and not r.get("tickers")
+
+
+BULLETIN_HINT = re.compile(r"günlük|sabah|bülten|güne |önceki gün|bugün|dün |gün sonu|haftalık|tepki alım|destek|direnç|endeks(i|inde)? .{0,40}(yüksel|geril|düş)", re.I)
+STRATEGY_HINT = re.compile(r"model portföy|strateji raporu|aylık strateji|çeyreklik|yıllık|yıl sonu hedef|202[7-9]|görünüm raporu|outlook", re.I)
+
+
+def legacy_type(r: dict) -> str:
+    """Bülten türü eklenmeden önce "strateji" sayılan kayıtlar: Türk aracı kurumların kısa vadeli piyasa yorumları bülten."""
+    t = r.get("thesis") or ""
+    if STRATEGY_HINT.search(t):
+        return "strateji"
+    local = r.get("broker") in brokers.LOCAL or r.get("broker") == brokers.UNKNOWN
+    return "bulten" if local or BULLETIN_HINT.search(t) else "strateji"
+
+
+def tidy(store: dict) -> None:
+    known = {n for n, _, _ in brokers.BROKERS}
+    for r in store.get("reports", []):
+        b = brokers.canon(r.get("broker")) or brokers.UNKNOWN
+        # tanınmayan, tamamen küçük harfli ad (ör. "petrokimya 2") kurum değil, e-posta konu satırıdır
+        if b not in known and re.fullmatch(r"[a-zçğıöşü0-9 .\-]+", b):
+            b = brokers.UNKNOWN
+        r["broker"] = b
+        if r.get("type") == "strateji" and not r.get("src"):          # eski kayıt: tür yeniden (src = yeni okuyucu)
+            r["type"] = legacy_type(r)
+        r["tickers"] = [t for t in (r.get("tickers") or []) if t not in ("XU100", "XU030", "XBANK", "XUSIN", "BIST100", "BIST")]
+        r["thin"] = thin(r)
+    for n in store.get("notes", []):
+        if n.get("broker"):
+            n["broker"] = brokers.canon(n["broker"])
+        if not n.get("t") and n.get("name"):
+            tb = bist_ticker(n["name"]) if n.get("m") != "US" else None
+            tu = None if tb else (n["name"] if n.get("m") == "US" and re.fullmatch(r"[A-Z]{2,5}", n["name"] or "") else us_ticker(n["name"]))
+            if tb:
+                n["t"], n["m"] = tb, "BIST"
+            elif tu:
+                n["t"], n["m"] = tu, "US"
+
+
 def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dict:
     """Kurum notlarını ve görünümleri research.json'a yazar; günde bir sentez üretir."""
     store = load()
@@ -483,6 +619,7 @@ def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dic
         new = synthesize(analyzer, store, items, watch)
         if new:
             store["synthesis"] = new
+    tidy(store)
     store["consensus"] = {s.symbol: c for s in watch if (c := consensus(store["notes"], s.symbol))}
     store["generated"] = iso(now_utc())
     STORE.write_text(json.dumps(store, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

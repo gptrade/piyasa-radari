@@ -1,7 +1,7 @@
 """Gizli rapor kutusu: kullanıcının gizli GitHub reposuna (gptrade/piyasa-radari-raporlar) yüklediği aracı kurum
 raporları. İş akışı repoyu RAPOR_REPO_TOKEN ile `_raporlar/` klasörüne çeker (site/ dışında: yayımlanmaz).
 
-Klasörler: sirket/ · sektor/ · strateji/ · gelen/ (rapor@ e-posta adresine gelenler, türü AI belirler). Her biri altında
+Klasörler: sirket/ · sektor/ · strateji/ · bulten/ · gelen/ (rapor@ e-posta adresine gelenler, türü AI belirler). Her biri altında
 - tek dosya = bir rapor: .pdf .txt .md .jpg .jpeg .png
 - alt klasör = çok sayfalı rapor (sayfalar ada göre sıralanır: 1.jpg, 2.jpg …)
 
@@ -23,7 +23,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from . import http
+from . import brokers, http
 from .config import DATA
 from .models import UTC, Item, iso, make_id, now_utc
 
@@ -31,7 +31,7 @@ log = logging.getLogger("radar.private_reports")
 
 ROOT = Path(os.environ.get("RAPOR_DIR", "_raporlar"))
 DONE = DATA / "private_reports_done.json"         # yalnız sha1 listesi (dosya adı yok)
-KINDS = {"sirket": "Şirket raporu", "sektor": "Sektör raporu", "strateji": "Strateji / model portföy"}
+KINDS = {"sirket": "Şirket raporu", "sektor": "Sektör raporu", "strateji": "Strateji / model portföy", "bulten": "Bülten (günlük/haftalık)"}
 INBOX = "gelen"          # rapor@ adresine gelen postalar (workers/rapor-posta): türü AI belirler
 TEXT_EXT = {".txt", ".md"}
 IMG_EXT = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
@@ -75,7 +75,12 @@ def name_hints(p: Path) -> dict:
     m = re.match(r"(\d{4}-\d{2}-\d{2})[_\- ]*(.*)", stem)
     date, rest = (m.group(1), m.group(2)) if m else (None, stem)
     parts = [x for x in re.split(r"[_]+", rest) if x]
-    return {"date": date, "subject": parts[0] if parts else None, "broker": " ".join(parts[1:]) or None}
+    out = {"date": date, "subject": parts[0] if parts else None, "broker": " ".join(parts[1:]) or None, "domain": None}
+    # e-posta alıcısı asıl gönderici alan adını sona ekler: <gün>_<konu>-<sha>_<alan adı>
+    if brokers.looks_like_domain(out["broker"]):
+        out["domain"] = out["broker"].lower()
+        out["broker"] = brokers.from_domain(out["domain"])
+    return out
 
 
 def _shrink(data: bytes, mime: str) -> tuple[str, bytes]:
@@ -124,7 +129,7 @@ REPORT_TOOL = {
     "input_schema": {
         "type": "object",
         "properties": {
-            "type": {"type": "string", "enum": ["sirket", "sektor", "strateji"]},
+            "type": {"type": "string", "enum": ["sirket", "sektor", "strateji", "bulten"]},
             "broker": {"type": "string", "description": "Raporu yayımlayan kurum"},
             "date": {"type": "string", "description": "Rapor tarihi YYYY-AA-GG (yoksa boş)"},
             "tickers": {"type": "array", "items": {"type": "string"}, "description": "Raporun konu ettiği hisse kodları (BIST kodu ya da ABD sembolü)"},
@@ -154,7 +159,7 @@ REPORT_TOOL = {
     },
 }
 REPORT_FMT = """
-Yanıtını SADECE şu alanlara sahip tek bir JSON nesnesi olarak ver: {"type": "sirket|sektor|strateji", "broker": "...",
+Yanıtını SADECE şu alanlara sahip tek bir JSON nesnesi olarak ver: {"type": "sirket|sektor|strateji|bulten", "broker": "...",
 "date": "YYYY-AA-GG", "tickers": ["KOD"], "sector": "...", "rating": "AL|TUT|SAT", "target_price": sayı, "prev_target": sayı,
 "currency": "TRY|USD|EUR", "estimate_changes": [{"metric": "...", "period": "...", "new": "...", "old": "...", "change": "..."}],
 "top_picks": [{"ticker": "KOD", "rating": "AL", "target_price": sayı}], "model_portfolio": {"added": [], "removed": []},
@@ -165,7 +170,11 @@ verilecek. Rapordaki bilgileri yapılandırılmış biçimde çıkar: kurum, tar
 varsa önceki hedef), tahmin değişiklikleri, sektör/strateji raporlarında öne çıkan hisseler ve model portföy değişiklikleri.
 Kurallar: Yalnız raporda yazanı kullan, rakam uydurma; okunamayan alanı boş bırak. "thesis" alanını KENDİ cümlelerinle,
 kısa yaz; rapordan cümle kopyalama. Hisse kodlarını BIST kodu (ör. THYAO) ya da ABD sembolü olarak yaz.
-"sentiment" ana hisse (şirket raporu) ya da sektör/piyasa (diğerleri) için kısa vadeli olası etkidir. Yanıt dili Türkçe."""
+"sentiment" ana hisse (şirket raporu) ya da sektör/piyasa (diğerleri) için kısa vadeli olası etkidir.
+Strateji ve bülten raporlarında: "model_portfolio" alanına rapordaki model portföy / öneri listesine bu sayıda EKLENEN ve
+ÇIKARILAN hisseleri yaz (yalnız açıkça belirtilmişse); "top_picks" alanına kurumun bu sayıda öne çıkardığı / önerdiği
+hisseleri yaz (yalnız hisse adı geçen piyasa haberi değil). Bültende bunlar günün/haftanın önerileri ya da takip listesidir.
+Tür ayrımı: kısa vadeli (gün/hafta) piyasa akışı = bulten; ay ve daha uzun vadeli görüş, model portföy = strateji. Yanıt dili Türkçe."""
 
 
 def _known(done_path: Path = DONE) -> set:
@@ -207,6 +216,17 @@ def norm_rating(r: str | None) -> str | None:
     return None
 
 
+def pick_broker(ai: str | None, hint: str | None) -> str:
+    """Kurum: yapay zekânın okuduğu ad tanınan bir kurumsa o; değilse gönderici alan adından gelen; o da yoksa okunan ad."""
+    a = brokers.canon(ai) if ai and ai != brokers.UNKNOWN else None
+    known = {n for n, _, _ in brokers.BROKERS}
+    if a in known:
+        return a
+    if hint:
+        return brokers.canon(hint)
+    return (a or brokers.UNKNOWN)[:60]
+
+
 def public_record(x: dict, sha: str, kind: str, hints: dict, published: str) -> dict:
     """research.json'a yazılacak, yayımlanabilir alanlar (ayrıntılı özet ve dosya adı yok)."""
     tps = []
@@ -215,7 +235,8 @@ def public_record(x: dict, sha: str, kind: str, hints: dict, published: str) -> 
             tps.append({"t": str(t["ticker"]).upper().replace(".IS", "")[:8], "rating": norm_rating(t.get("rating")),
                         "tp": t.get("target_price")})
     return {
-        "id": f"rapor-{sha[:16]}", "type": x.get("type") or kind, "broker": (x.get("broker") or hints.get("broker") or "?")[:60],
+        "id": f"rapor-{sha[:16]}", "type": kind if kind in KINDS and kind != x.get("type") and hints.get("folder_fixed") else (x.get("type") or kind),
+        "broker": pick_broker(x.get("broker"), hints.get("broker")),
         "date": x.get("date") or hints.get("date") or published[:10], "ts": published,
         "tickers": [str(t).upper().replace(".IS", "")[:8] for t in (x.get("tickers") or [])][:12],
         "sector": (x.get("sector") or "")[:60], "rating": norm_rating(x.get("rating")),
@@ -243,7 +264,7 @@ def notes_from_record(r: dict) -> list[dict]:
                     "tp": p["tp"], "prev": None, "action": "set", "cur": r["cur"] or "TRY",
                     "m": "US" if r["cur"] == "USD" else "BIST", "id": f"{r['id']}-p{i}",
                     "ts": f"{r['date']}T12:00:00Z" if re.match(r"\d{4}-\d{2}-\d{2}$", r["date"] or "") else r["ts"],
-                    "src": "Sektör raporu" if r["type"] == "sektor" else "Strateji raporu", "url": "",
+                    "src": {"sektor": "Sektör raporu", "bulten": "Bülten"}.get(r["type"], "Strateji raporu"), "url": "",
                     "title": f"{r['broker']} {KINDS.get(r['type'], 'rapor').lower()}: öne çıkan {p['t']}"})
     for t in (r["mp"].get("added") or []):
         out.append({"broker": r["broker"], "t": str(t).upper()[:8], "name": None, "rating": "AL", "dir": 1, "tp": None,
@@ -294,7 +315,10 @@ def telegram(r: dict, x: dict) -> bool:
         return False
     e = html.escape
     tp = f" · hedef <b>{r['tp']:g} {e(r['cur'] or '')}</b>" + (f" (önce {r['prev']:g})" if r["prev"] else "") if r["tp"] else ""
+    tur = "konu etiketi" if r.get("src") == "etiket" else "yapay zekâ"
     lines = [f"📄 <b>{e(r['broker'])}</b> · {e(KINDS.get(r['type'], 'Rapor'))} · {e(r['date'] or '')}",
+             f"<i>Tür: {e(KINDS.get(r['type'], 'Rapor'))} ({tur} belirledi) · {len(r['top_picks'])} hisse öne çıkarıldı"
+             + (f" · model portföy +{len(r['mp'].get('added') or [])}/−{len(r['mp'].get('removed') or [])}" if r["mp"] else "") + "</i>",
              f"{e(', '.join(r['tickers']) or r['sector'] or '')} {e(r['rating'] or '')}{tp}".strip()]
     if r["thesis"]:
         lines += ["", e(r["thesis"])]
@@ -358,14 +382,17 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
             done.add(u["sha"])
             continue
         hints = name_hints(u["path"])
-        where = (KINDS[u["kind"]] if u["kind"] in KINDS else
-                 "E-postayla geldi; türü sen belirle (günlük/haftalık bülten ve piyasa yorumu = strateji)")
+        hints["folder_fixed"] = u["kind"] in KINDS          # klasör (ya da e-posta konu etiketi) türü belirler
+        where = (f"{KINDS[u['kind']]} (tür kesin; 'type' alanına '{u['kind']}' yaz)" if u["kind"] in KINDS else
+                 "E-postayla geldi; türü sen belirle: tek şirket = sirket; tek sektör = sektor; "
+                 "günlük/haftalık piyasa bülteni, sabah notu, gün sonu yorumu, teknik görünüm, günün önerileri = bulten; "
+                 "aylık/çeyreklik/yıllık strateji raporu, model portföy ya da öneri listesi güncellemesi, makro/küresel görünüm = strateji")
         prompt = (f"Klasör: {where}\nDosya adı ipuçları: tarih={hints['date'] or '?'}, konu={hints['subject'] or '?'}, "
-                  f"kurum={hints['broker'] or '?'}\n\n"
+                  f"kurum={hints['broker'] or '?'}{', gönderici alan adı=' + hints['domain'] if hints.get('domain') else ''}\n\n"
                   + (f"RAPOR METNİ:\n{text}" if text else "RAPOR: ekteki sayfa görüntülerinde."))
         x = analyzer.ask_json(REPORT_SYSTEM, prompt, REPORT_TOOL, REPORT_FMT, max_tokens=3000, media=media or None)
         if isinstance(x, dict) and not x.get("broker") and (x.get("thesis") or x.get("tickers") or x.get("sector")):
-            x["broker"] = hints.get("broker") or "Kurum belirtilmemiş"     # içerik var, kurum adı okunamadı
+            x["broker"] = hints.get("broker") or brokers.UNKNOWN          # içerik var, kurum adı okunamadı
         if not isinstance(x, dict) or not x.get("broker"):
             if analyzer.enabled and not getattr(analyzer, "last_blocked", False):   # sağlayıcı yanıt verdi ama rapor çıkmadı (kota değil)
                 tries[u["sha"]] = tries.get(u["sha"], 0) + 1      # AI yanıt verdi ama rapor çıkaramadı
@@ -379,6 +406,7 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
         if text:
             x = grounded(x, text)
         r = public_record(x, u["sha"], u["kind"] if u["kind"] in KINDS else "strateji", hints, iso(now_utc()))
+        r["src"] = "etiket" if u["kind"] in KINDS else "AI"                 # türü kim belirledi
         res["records"].append(r)
         res["notes"] += notes_from_record(r)
         it = feed_item(r, x, watch)

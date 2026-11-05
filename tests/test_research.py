@@ -99,3 +99,24 @@ def test_outlook_retried_until_summarized(tmp_path, monkeypatch):
     st = json.loads((tmp_path / "st.json").read_text()); st["outlook_x_try"] = "2000-01-01"
     (tmp_path / "st.json").write_text(json.dumps(st))
     assert rs.collect_outlooks(ctx) == []                      # özet yazıldı: artık atlanır
+
+
+def test_us_ticker_and_tidy():
+    from radar import research as R
+    assert R.us_ticker("Apple") == "AAPL" and R.us_ticker("Palantir") == "PLTR" and R.us_ticker("Arista Networks") == "ANET"
+    assert R.us_ticker("Bilinmeyen Şirket") is None
+    st = {"reports": [{"broker": "Ak Yatırım / Akbank", "tickers": ["XU100", "THYAO"], "thesis": "x"},
+                      {"broker": "Kurum belirtilmemiş", "tickers": [], "thesis": "Günlük kur ve emtia tablosu", "sector": ""}],
+          "notes": [{"broker": "ÜNLÜ Menkul Değerler", "t": None, "name": "Apple"}]}
+    R.tidy(st)
+    assert st["reports"][0]["broker"] == "Ak Yatırım" and st["reports"][0]["tickers"] == ["THYAO"] and not st["reports"][0]["thin"]
+    assert st["reports"][1]["thin"] and st["notes"][0]["t"] == "AAPL" and st["notes"][0]["broker"] == "ÜNLÜ & Co"
+
+
+def test_legacy_bulletin_vs_strategy():
+    from radar import research as R
+    st = {"reports": [{"broker": "Gedik Yatırım", "type": "strateji", "tickers": [], "thesis": "BIST100 güne yatay başlangıç bekleniyor; destek 10.700."},
+                      {"broker": "Goldman Sachs Asset Management", "type": "strateji", "tickers": [], "thesis": "Küresel büyüme 2027'de yavaşlıyor; outlook."},
+                      {"broker": "Ak Yatırım", "type": "strateji", "src": "AI", "tickers": ["THYAO"], "thesis": "Aylık model portföy"}], "notes": []}
+    R.tidy(st)
+    assert [r["type"] for r in st["reports"]] == ["bulten", "strateji", "strateji"]
