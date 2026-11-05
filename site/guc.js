@@ -7,7 +7,7 @@
   const { $, $$, esc, fmt } = sh;
   const SRC = "data/guc/guc.json";
   const S = { doc: null, loaded: false, loading: false, error: null, missing: false, tab: "genislik", per: "1A", range: 252,
-    sort: "rank", sdir: 1, tmPer: "d1", tmSec: "", vKind: "endeks", vSort: "mcap", hs: { quad: true, rs: 80, tt: 6, vol: false, liq: true, sec: "", q: "", sort: "rs", sdir: 1, limit: 60 }, selSec: null };
+    sort: "rank", sdir: 1, tmPer: "d1", tmSec: "", tmSize: "mcap", vKind: "endeks", vSort: "mcap", hs: { quad: true, rs: 80, tt: 6, vol: false, liq: true, sec: "", q: "", sort: "rs", sdir: 1, limit: 60 }, selSec: null };
   const TABS = { genislik: "Genişlik ve rejim", harita: "Isı haritası", sektor: "Sektör rotasyonu", hisse: "Güçlü hisseler", deger: "Değerleme", kuresel: "Küresel" };
   const REG = {
     boga: ["Boğa", "up", "Endeks ve genişlik birlikte güçlü"],
@@ -267,12 +267,13 @@
   function tabMap() {
     const secs = [...new Set(S.doc.stocks.filter(r => r.mcap).map(r => r.sector))].sort((a, b) => a.localeCompare(b, "tr"));
     return `<section class="card" aria-labelledby="gcTmT"><div class="card-head"><h2 class="card-title" id="gcTmT">BIST ısı haritası</h2>
-        <span class="card-meta">kutu büyüklüğü piyasa değeri · renk getiri · kutuya tıkla: hisse paneli</span></div>
+        <span class="card-meta">kutu büyüklüğü ${S.tmSize === "tv" ? "günlük işlem hacmi" : "piyasa değeri"} · renk getiri · kutuya tıkla: hisse paneli</span></div>
       <div class="toolbar ok-tb">${seg("gcTmP", Object.fromEntries(Object.entries(MK().PERK).map(([k, v]) => [k, v[0]])), S.tmPer, "Dönem")}
+        ${seg("gcTmZ", { mcap: "Piyasa değeri", tv: "İşlem hacmi" }, S.tmSize, "Kutu boyutu")}
         <select id="gcTmS" class="fa-select" aria-label="Sektör"><option value="">Tüm sektörler</option>${secs.map(x => `<option ${S.tmSec === x ? "selected" : ""} value="${esc(x)}">${esc(MK().short(x))}</option>`).join("")}</select>
         <span class="grow"></span>${MK().legend(S.tmPer)}</div>
       <div id="gcTm" class="tm-box"></div>
-      <p class="t3 gc-foot">${dlab(S.doc.asof)} kapanışı. Piyasa değeri son fiyat × ödenmiş sermaye (aynı şirketin ikincil pay sınıfları hariç). Sektör başlığındaki getiri piyasa değeriyle ağırlıklı.</p></section>`;
+      <p class="t3 gc-foot">${dlab(S.doc.asof)} kapanışı. Piyasa değeri son fiyat × ödenmiş sermaye (aynı şirketin ikincil pay sınıfları hariç); işlem hacmi son 20 günün günlük medyanı. Sektör başlığındaki getiri piyasa değeriyle ağırlıklı. Gri kutu: değişim yok (±%0,05).</p></section>`;
   }
   function tabValue() {
     return `<section class="card card-flush" aria-labelledby="gcVT"><div class="card-head"><h2 class="card-title" id="gcVT">Endeks ve sektör değerlemesi</h2>
@@ -301,10 +302,11 @@
     const segB = (id, f) => { $$(`#${id} button`).forEach(b => b.onclick = () => { f(b.dataset.v); render(); }); $(`#${id}`) && sh.radioKeys($(`#${id}`)); };
     segB("gcTab", v => { S.tab = v; sh.go("piyasa-gucu", { param: v }); });
     segB("gcTmP", v => { S.tmPer = v; });
+    segB("gcTmZ", v => { S.tmSize = v; });
     segB("gcVK", v => { S.vKind = v; });
     segB("gcVS", v => { S.vSort = v; });
     $("#gcTmS")?.addEventListener("change", e => { S.tmSec = e.target.value; render(); });
-    if (S.tab === "harita") MK()?.load().then(() => MK().treemap($("#gcTm"), { per: S.tmPer, sector: S.tmSec || null, height: S.tmSec ? 420 : Math.max(420, Math.min(720, innerWidth * 0.5)) }));
+    if (S.tab === "harita") MK()?.load().then(() => MK().treemap($("#gcTm"), { per: S.tmPer, size: S.tmSize, sector: S.tmSec || null, height: S.tmSec ? 420 : Math.max(420, Math.min(720, innerWidth * 0.5)) }));
     segB("gcRange", v => { S.range = +v; });
     segB("gcPer", v => { S.per = v; });
     segB("gcHR", v => { S.hs.rs = +v; S.hs.limit = 60; });

@@ -134,38 +134,52 @@
   const US_SEC = { "Information Technology": "Teknoloji", "Communication Services": "İletişim", "Consumer Discretionary": "Tüketici (döngüsel)", "Consumer Staples": "Temel tüketim",
     "Health Care": "Sağlık", "Financials": "Finans", "Industrials": "Sanayi", "Energy": "Enerji", "Materials": "Malzeme", "Real Estate": "Gayrimenkul", "Utilities": "Kamu hizmetleri" };
   const short = n => US_SEC[n] || SHORT[n] || n.split(/\s+/).slice(0, 2).join(" ").replace(/\s(VE|İLE)$/, "").toLocaleLowerCase("tr").replace(/(^|\s)\S/g, c => c.toLocaleUpperCase("tr"));
+  // |değişim| < %0,05 (işlem görmeyen ya da yatay) nötr gri: sıfır yeşile boyanmasın
+  const FLAT = 0.0005;
   function color(v, lim) {
     if (v == null) return "var(--surface-2)";
-    const t = Math.min(1, Math.abs(v) / lim), p = Math.round(18 + t * 72);
+    if (Math.abs(v) < FLAT) return "color-mix(in srgb, var(--text-3) 22%, var(--surface-2))";
+    const t = Math.min(1, Math.abs(v) / lim), p = Math.round(22 + t * 68);
     return `color-mix(in srgb, ${v >= 0 ? "var(--up)" : "var(--down)"} ${p}%, var(--surface-2))`;
   }
-  function treemap(el, { per = "d1", sector = null, height = 520, maxStocks = 9999, src = "bist" } = {}) {
+  // Halka açıklığı çok düşük, pratikte işlem görmeyen hisseler (QNBTR, ENPRA…): günlük işlem hacmi (20 gün medyanı)
+  // piyasa değerinin %0,01'inden azsa "piyasa değeri" boyutunda haritayı domine etmesin diye dışarıda kalır.
+  const THIN = 1e-4;
+  const thin = r => r.tv != null && r.mcap > 0 && r.tv / r.mcap < THIN;
+  function treemap(el, { per = "d1", sector = null, height = 520, maxStocks = 9999, src = "bist", size = "mcap" } = {}) {
     const us = src === "us" || src === "sp" || src === "ndx", ix = src === "ndx" ? "ndx" : "sp", g = us ? M.us : M.guc;
     if (!el || !g?.stocks) { if (el) el.innerHTML = `<p class="t3">${us ? "ABD ısı haritası verisi henüz oluşmadı; ilk radar turundan sonra gelir." : "Isı haritası verisi yok."}</p>`; return; }
     const W = Math.max(300, Math.round(el.getBoundingClientRect().width) || 900), H = height;
     const lim = PERK[per][1];
-    const rows = g.stocks.filter(r => r.mcap > 0 && (!sector || r.sector === sector) && (!us || (r.ix || ["sp"]).includes(ix))).sort((a, b) => b.mcap - a.mcap).slice(0, maxStocks);
+    const byTv = !us && size === "tv", sz = r => byTv ? r.tv : r.mcap;
+    const base = g.stocks.filter(r => r.mcap > 0 && (!sector || r.sector === sector) && (!us || (r.ix || ["sp"]).includes(ix)));
+    const out = us || byTv ? [] : base.filter(thin).sort((a, b) => b.mcap - a.mcap);
+    const rows = base.filter(r => sz(r) > 0 && !out.includes(r)).sort((a, b) => sz(b) - sz(a)).slice(0, maxStocks);
     const bySec = new Map();
     rows.forEach(r => { if (!bySec.has(r.sector)) bySec.set(r.sector, []); bySec.get(r.sector).push(r); });
-    const secs = [...bySec].map(([name, xs]) => ({ name, xs, v: xs.reduce((s, r) => s + r.mcap, 0) }));
+    const secs = [...bySec].map(([name, xs]) => ({ name, xs, v: xs.reduce((s, r) => s + sz(r), 0), mc: xs.reduce((s, r) => s + r.mcap, 0) }));
+    const secRet = new Map();
+    for (const [name] of bySec) { const xs = base.filter(r => r.sector === name), mc = xs.reduce((a, r) => a + r.mcap, 0); secRet.set(name, xs.reduce((a, r) => a + (r[per] ?? 0) * r.mcap, 0) / mc); }
     const PAD = 1, HEAD = 15;
     let svg = "";
     for (const s of squarify(secs, 0, 0, W, H)) {
-      const ret = s.xs.reduce((a, r) => a + (r[per] ?? 0) * r.mcap, 0) / s.v;
+      const ret = secRet.get(s.name);      // sektör getirisi her zaman tüm hisselerle, piyasa değeri ağırlıklı (gizlenen sığ hisseler dahil)
       const lbl = s.w > 60 && s.h > 30;
-      const inner = squarify(s.xs.map(r => ({ ...r, v: r.mcap })), s.x + PAD, s.y + (lbl ? HEAD : PAD), s.w - 2 * PAD, s.h - (lbl ? HEAD : PAD) - PAD);
+      const inner = squarify(s.xs.map(r => ({ ...r, v: sz(r) })), s.x + PAD, s.y + (lbl ? HEAD : PAD), s.w - 2 * PAD, s.h - (lbl ? HEAD : PAD) - PAD);
       svg += `<g class="tm-sec" data-sec="${esc(s.name)}"><rect class="tm-sbg" x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}"/>`;
       if (lbl) svg += `<text class="tm-sl" x="${s.x + 4}" y="${s.y + 11}">${esc(short(s.name))} <tspan class="${sgn(ret)}">${pc(ret, 1)}</tspan></text>`;
       for (const r of inner) {
         const v = r[per], fs = Math.max(8, Math.min(18, Math.sqrt(r.w * r.h) / 4.2));
-        svg += `<g class="tm-c" data-tk="${esc(r.code)}"><rect x="${r.x + 0.5}" y="${r.y + 0.5}" width="${Math.max(0, r.w - 1)}" height="${Math.max(0, r.h - 1)}" fill="${color(v, lim)}"><title>${esc(`${r.code}${r.name ? " · " + r.name : ""} · ${short(r.sector)}\n${PERK[per][0]} ${pc(v, 2)} · piyasa değeri ${us ? `${fmt.num(r.mcap / 1e9, 0)} mr $` : `${fmt.num(r.mcap / 1e9, 1)} mr ₺`}`)}</title></rect>`;
+        svg += `<g class="tm-c" data-tk="${esc(r.code)}"><rect x="${r.x + 0.5}" y="${r.y + 0.5}" width="${Math.max(0, r.w - 1)}" height="${Math.max(0, r.h - 1)}" fill="${color(v, lim)}"><title>${esc(`${r.code}${r.name ? " · " + r.name : ""} · ${short(r.sector)}\n${PERK[per][0]} ${pc(v, 2)} · piyasa değeri ${us ? `${fmt.num(r.mcap / 1e9, 0)} mr $` : `${fmt.num(r.mcap / 1e9, 1)} mr ₺`}${!us && r.tv != null ? ` · günlük işlem ${fmt.num(r.tv / 1e6, r.tv < 1e7 ? 1 : 0)} mn ₺` : ""}`)}</title></rect>`;
         if (r.w > 34 && r.h > 18) svg += `<text class="tm-t" x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + (r.h > 34 ? -2 : fs / 3)}" font-size="${fs}">${esc(r.code)}</text>`;
         if (r.w > 38 && r.h > 34) svg += `<text class="tm-v" x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + fs * 0.9}" font-size="${Math.max(8, fs * 0.72)}">${pc(v, 1)}</text>`;
         svg += `</g>`;
       }
       svg += `</g>`;
     }
-    el.innerHTML = `<svg class="tm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${us ? (ix === "ndx" ? "Nasdaq-100" : "S&P 500") : "BIST"} ısı haritası">${svg}</svg>`;
+    const note = out.length ? `<p class="tm-ex t3">Çok sığ işlem gördüğü için bu boyutta gösterilmeyen (günlük işlem hacmi piyasa değerinin %0,01'inden az; halka açıklık çok düşük): ${out.slice(0, 10).map(r => `<button type="button" class="tm-exb" data-tk="${esc(r.code)}">${esc(r.code)}</button> <span>${pc(r[per], 1)}</span>`).join(" · ")}${out.length > 10 ? ` ve ${out.length - 10} hisse` : ""}</p>` : "";
+    el.innerHTML = `<svg class="tm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${us ? (ix === "ndx" ? "Nasdaq-100" : "S&P 500") : "BIST"} ısı haritası">${svg}</svg>${note}`;
+    el.querySelectorAll(".tm-exb").forEach(n => n.addEventListener("click", () => window.radar?.openTicker?.(n.dataset.tk, n)));
     el.querySelectorAll(".tm-c").forEach(n => n.addEventListener("click", () => us ? window.open(`https://finance.yahoo.com/quote/${n.dataset.tk.replace(".", "-")}/`, "_blank", "noopener") : window.radar?.openTicker?.(n.dataset.tk, n)));
   }
   function legend(per) {
