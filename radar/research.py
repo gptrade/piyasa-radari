@@ -535,6 +535,19 @@ def thin(r: dict) -> bool:
     return (not sec or bool(GENERIC_SECTOR.search(sec))) and len(r.get("thesis") or "") < 220 or r.get("broker") == brokers.UNKNOWN and not r.get("tickers")
 
 
+BULLETIN_HINT = re.compile(r"günlük|sabah|bülten|güne |önceki gün|bugün|dün |gün sonu|haftalık|tepki alım|destek|direnç|endeks(i|inde)? .{0,40}(yüksel|geril|düş)", re.I)
+STRATEGY_HINT = re.compile(r"model portföy|strateji raporu|aylık strateji|çeyreklik|yıllık|yıl sonu hedef|202[7-9]|görünüm raporu|outlook", re.I)
+
+
+def legacy_type(r: dict) -> str:
+    """Bülten türü eklenmeden önce "strateji" sayılan kayıtlar: Türk aracı kurumların kısa vadeli piyasa yorumları bülten."""
+    t = r.get("thesis") or ""
+    if STRATEGY_HINT.search(t):
+        return "strateji"
+    local = r.get("broker") in brokers.LOCAL or r.get("broker") == brokers.UNKNOWN
+    return "bulten" if local or BULLETIN_HINT.search(t) else "strateji"
+
+
 def tidy(store: dict) -> None:
     known = {n for n, _, _ in brokers.BROKERS}
     for r in store.get("reports", []):
@@ -543,6 +556,8 @@ def tidy(store: dict) -> None:
         if b not in known and re.fullmatch(r"[a-zçğıöşü0-9 .\-]+", b):
             b = brokers.UNKNOWN
         r["broker"] = b
+        if r.get("type") == "strateji" and not r.get("src"):          # eski kayıt: tür yeniden (src = yeni okuyucu)
+            r["type"] = legacy_type(r)
         r["tickers"] = [t for t in (r.get("tickers") or []) if t not in ("XU100", "XU030", "XBANK", "XUSIN", "BIST100", "BIST")]
         r["thin"] = thin(r)
     for n in store.get("notes", []):

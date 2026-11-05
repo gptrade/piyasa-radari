@@ -10,7 +10,7 @@
   const { $, $$, esc, fmt, store } = sh;
   const S = { data: null, loaded: false, error: null, scope: store.get("radar.resScope", "watch"), q: "", limit: 30,
     tab: store.get("radar.resTab", "ozet"), win: 30, kind: "", broker: "", thin: false };
-  const TABS = { ozet: "Özet", strateji: "Strateji", notlar: "Hisse notları", gorunum: "Kurum görünümleri" };
+  const TABS = { ozet: "Özet", strateji: "Kurum raporları", notlar: "Hisse notları", gorunum: "Küresel görünümler" };
   if (!TABS[S.tab]) S.tab = "ozet";
   const RAT = { AL: "up", SAT: "down", TUT: "flat" };
   const ACT = { up: "▲ yükseltti", down: "▼ düşürdü", init: "kapsama başladı", keep: "korudu", set: "belirledi", add: "model portföye ekledi", remove: "model portföyden çıkardı" };
@@ -67,7 +67,7 @@
   }
 
   // Kullanıcının gizli rapor kutusundan okunan raporlar (yalnız yapılandırılmış alanlar ve kısa tez)
-  const KIND_TR = { sirket: "Şirket", sektor: "Sektör", strateji: "Strateji" };
+  const KIND_TR = { sirket: "Şirket", sektor: "Sektör", strateji: "Strateji", bulten: "Bülten" };
   const VIEW = { olumlu: "up", olumsuz: "down", "nötr": "flat" };
   function outlookCard(os) {
     return `<section class="card" aria-labelledby="resOutT">
@@ -166,12 +166,12 @@
   const repDate = r => r.date || dayKey(r.ts);
   const reports = () => (S.data?.reports || []).filter(r => sh.market === "ALL" || (r.cur === "USD" ? "US" : "BIST") === sh.market);
   function feedStatus(rs) {
-    if (!rs.length) return `<p class="rs-status t3">Rapor kutusunda henüz rapor yok. Raporları rapor@ adresine ilet; konu satırına [şirket], [sektör] ya da [strateji] yazarsan tür o olur.</p>`;
+    if (!rs.length) return `<p class="rs-status t3">Rapor kutusunda henüz rapor yok. Raporları rapor@ adresine ilet; konu satırına [bülten], [strateji], [sektör] ya da [şirket] yazarsan tür o olur.</p>`;
     const last = rs.reduce((m, r) => (r.ts > m ? r.ts : m), ""), wk = rs.filter(r => Date.now() - Date.parse(r.ts) < 7 * DAY);
     const age = (Date.now() - Date.parse(last)) / 36e5, wd = new Date().getDay(), stale = age > 48 && wd > 0 && wd < 6;
     const by = k => wk.filter(r => r.type === k).length;
     return `<p class="rs-status ${stale ? "warn" : ""}"><span class="rs-dot" aria-hidden="true"></span>Rapor kutusu: son rapor <b>${fmt.ago(last)}</b> · bu hafta ${wk.length} rapor
-      (${by("strateji")} strateji, ${by("sektor")} sektör, ${by("sirket")} şirket)${stale ? ` · <b>2 günden uzun süredir yeni rapor gelmedi</b>; rapor@ iletimini kontrol et` : ""}</p>`;
+      (${by("bulten")} bülten, ${by("strateji")} strateji, ${by("sektor")} sektör, ${by("sirket")} şirket)${stale ? ` · <b>2 günden uzun süredir yeni rapor gelmedi</b>; rapor@ iletimini kontrol et` : ""}</p>`;
   }
   // Kurum görüşü zaman çizelgesi: satır = kurum, sütun = gün (son 30 gün), renk = piyasaya/sektöre bakış
   function viewTimeline(rs) {
@@ -186,7 +186,7 @@
       const r = v[v.length - 1], st = SENT[sentOf(r)] || SENT.neutral;
       return `<i class="vt-c ${st[1]}" data-tip="${esc(`${b} · ${fmt.date(d + "T12:00:00Z")} · ${st[0]}${v.length > 1 ? ` (${v.length} rapor)` : ""}<br>${(r.thesis || "").slice(0, 180)}`)}"></i>`; };
     return `<section class="card" aria-labelledby="vtT"><div class="card-head"><h2 class="card-title" id="vtT">Kurumların piyasa görüşü</h2>
-        <span class="card-meta">son 30 gün · strateji ve sektör raporları · son 7 günde <span class="up">${cnt("bullish")} olumlu</span>, ${cnt("neutral")} nötr, <span class="down">${cnt("bearish")} olumsuz</span></span></div>
+        <span class="card-meta">son 30 gün · bülten, strateji ve sektör raporları · son 7 günde <span class="up">${cnt("bullish")} olumlu</span>, ${cnt("neutral")} nötr, <span class="down">${cnt("bearish")} olumsuz</span></span></div>
       <div class="vt" style="--n:${N}">${rows.map(([b]) => `<span class="vt-b" title="${esc(b)}">${esc(b)}</span><span class="vt-r">${days.map(d => cell(b, d)).join("")}</span>`).join("")}
         <span></span><span class="vt-r vt-ax">${days.map((d, i) => `<i>${i % 7 === 0 || i === N - 1 ? +d.slice(8) : ""}</i>`).join("")}</span></div>
       <p class="t3 gc-foot"><span class="vt-key"><i class="vt-c up"></i>olumlu <i class="vt-c flat"></i>nötr <i class="vt-c down"></i>olumsuz</span> · kurumun o günkü raporundaki kısa vadeli piyasa/sektör görüşü (AI'ın rapordan çıkardığı) · kutuya gel: tez</p></section>`;
@@ -195,10 +195,10 @@
   function topPicks(rs) {
     const cut = new Date(Date.now() - S.win * DAY).toISOString().slice(0, 10), m = new Map();
     for (const r of rs) {
-      if (repDate(r) < cut) continue;
+      if (repDate(r) < cut || (S.tpSrc === "bulten" && r.type !== "bulten") || (S.tpSrc === "uzun" && r.type === "bulten")) continue;
       const add = (t, tp, how) => { t = String(t || "").toUpperCase(); if (!t || /^X[A-Z]{2,4}$/.test(t)) return;
         const o = m.get(t) || { t, b: new Map(), tps: [], last: "" }; o.b.set(r.broker, how); if (tp) o.tps.push(tp); if (repDate(r) > o.last) o.last = repDate(r); m.set(t, o); };
-      (r.top_picks || []).forEach(p => add(p.t, p.tp, "öne çıkardı"));
+      (r.top_picks || []).forEach(p => add(p.t, p.tp, r.type === "bulten" ? "bültende öne çıkardı" : `${(KIND_TR[r.type] || "").toLowerCase()} raporunda öne çıkardı`));
       (r.mp?.added || []).forEach(t => add(t, null, "model portföye ekledi"));
       if (r.type === "sirket" && r.rating === "AL" && r.tickers?.[0]) add(r.tickers[0], r.tp, "AL raporu");
     }
@@ -206,7 +206,8 @@
     if (!rows.length) return "";
     const mx = Math.max(...rows.map(r => r.b.size)), med = a => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor((s.length - 1) / 2)] : null; };
     return `<section class="card card-flush" aria-labelledby="tpT"><div class="card-head"><h2 class="card-title" id="tpT">Kurumların öne çıkardığı hisseler</h2>
-        <div class="seg seg-sm" role="radiogroup" aria-label="Dönem" id="rsWin">${[[7, "7 gün"], [30, "30 gün"]].map(([v, l]) => `<button type="button" role="radio" data-v="${v}" aria-checked="${S.win === v}">${l}</button>`).join("")}</div></div>
+        <div class="rl-tools"><div class="seg seg-sm" role="radiogroup" aria-label="Kaynak" id="rsTpSrc">${[["", "Tümü"], ["bulten", "Bültenler"], ["uzun", "Strateji/sektör/şirket"]].map(([v, l]) => `<button type="button" role="radio" data-v="${v}" aria-checked="${(S.tpSrc || "") === v}">${l}</button>`).join("")}</div>
+        <div class="seg seg-sm" role="radiogroup" aria-label="Dönem" id="rsWin">${[[7, "7 gün"], [30, "30 gün"]].map(([v, l]) => `<button type="button" role="radio" data-v="${v}" aria-checked="${S.win === v}">${l}</button>`).join("")}</div></div></div>
       <div class="tbl-scroll"><table class="tx rs-tp"><thead><tr><th>Hisse</th><th>Kurum sayısı</th><th>Kurumlar</th><th class="num">Medyan hedef</th><th class="num">Potansiyel</th><th class="num">Son</th></tr></thead><tbody>
       ${rows.map(o => { const tp = med(o.tps), p = price(o.t), pot = tp && p ? tp / p - 1 : null;
         return `<tr><td><button type="button" class="tk-link mono" data-sym="${esc(o.t)}">${esc(o.t)}</button></td>
@@ -214,7 +215,7 @@
           <td class="t3 rs-brk">${[...o.b].map(([b, h]) => `<span data-tip="${esc(h)}">${esc(b)}</span>`).join(", ")}</td>
           <td class="num">${tp ? fmt.num(tp, 2) : "—"}</td><td class="num">${pot == null ? "—" : `<span class="${pot > 0 ? "up" : "down"}">${fmt.pct(pot * 100, 0)}</span>`}</td>
           <td class="num t3">${fmt.date(o.last + "T12:00:00Z", { day: "numeric", month: "short" })}</td></tr>`; }).join("")}</tbody></table></div>
-      <p class="t3 gc-foot" style="padding:0 var(--s-4) var(--s-3)">Strateji/sektör raporlarında öne çıkarılan, model portföye eklenen ya da şirket raporunda AL verilen hisseler · kurum başına bir kez sayılır.</p></section>`;
+      <p class="t3 gc-foot" style="padding:0 var(--s-4) var(--s-3)">Bültenlerde günün/haftanın önerisi olarak, strateji/sektör raporlarında öne çıkarılan, model portföye eklenen ya da şirket raporunda AL verilen hisseler · kurum başına bir kez sayılır · bülten önerileri kısa vadelidir.</p></section>`;
   }
   // Ortak temalar: raporlardaki katalizör ve risk başlıklarının konulara göre sayımı (son 14 gün, rapor başına bir kez)
   const THEMES = [["Enflasyon", /enflasyon|tüfe|üfe|fiyat artış/i], ["Faiz / TCMB", /faiz|tcmb|ppk|para politika|sıkı(laş)?ma|gevşe/i],
@@ -254,7 +255,7 @@
     const brs = [...new Set(rs.map(r => r.broker))].sort((a, b) => a.localeCompare(b, "tr"));
     const tk = t => `<button type="button" class="tk-link" data-sym="${esc(t)}">${esc(t)}</button>${w.has(t) ? `<span class="mine-dot">●</span>` : ""}`;
     return `<section class="card" aria-labelledby="rlT"><div class="card-head"><h2 class="card-title" id="rlT">Raporlar</h2>
-        <div class="rl-tools"><div class="seg seg-sm" role="radiogroup" aria-label="Tür" id="rsKind">${[["", "Tümü"], ["strateji", "Strateji"], ["sektor", "Sektör"], ["sirket", "Şirket"]].map(([k, l]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${S.kind === k}">${l}</button>`).join("")}</div>
+        <div class="rl-tools"><div class="seg seg-sm" role="radiogroup" aria-label="Tür" id="rsKind">${[["", "Tümü"], ["bulten", "Bülten"], ["strateji", "Strateji"], ["sektor", "Sektör"], ["sirket", "Şirket"]].map(([k, l]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${S.kind === k}">${l}</button>`).join("")}</div>
         <select id="rsBroker" class="rl-sel" aria-label="Kurum"><option value="">Tüm kurumlar</option>${brs.map(b => `<option ${S.broker === b ? "selected" : ""}>${esc(b)}</option>`).join("")}</select></div></div>
       ${xs.length ? `<div class="rl">${xs.slice(0, 40).map(r => { const st = SENT[sentOf(r)];
         return `<details class="rl-i"><summary><span class="tag">${KIND_TR[r.type] || "Rapor"}</span><b>${esc(r.broker)}</b>
@@ -282,8 +283,8 @@
     if (!wk.length) return "";
     const m = new Map(); wk.forEach(r => (r.top_picks || []).forEach(p => { const o = m.get(p.t) || new Set(); o.add(r.broker); m.set(p.t, o); }));
     const top = [...m].sort((a, b) => b[1].size - a[1].size).slice(0, 8), c = k => wk.filter(r => sentOf(r) === k).length;
-    return `<section class="card rs-mini" aria-labelledby="smT"><div class="card-head"><h2 class="card-title" id="smT">Strateji raporları · bu hafta</h2><button type="button" class="link-btn" data-go-tab="strateji">Strateji sekmesi →</button></div>
-      <p class="t2">${wk.length} rapor · kurum görüşü <span class="up">${c("bullish")} olumlu</span>, ${c("neutral")} nötr, <span class="down">${c("bearish")} olumsuz</span></p>
+    return `<section class="card rs-mini" aria-labelledby="smT"><div class="card-head"><h2 class="card-title" id="smT">Kurum raporları · bu hafta</h2><button type="button" class="link-btn" data-go-tab="strateji">Tümü →</button></div>
+      <p class="t2">${wk.length} rapor (${wk.filter(r => r.type === "bulten").length} bülten) · kurum görüşü <span class="up">${c("bullish")} olumlu</span>, ${c("neutral")} nötr, <span class="down">${c("bearish")} olumsuz</span></p>
       ${top.length ? `<p class="tp-sub">En çok öne çıkarılan: ${top.map(([t, b]) => `<button type="button" class="tk-link mono" data-sym="${esc(t)}">${esc(t)}</button> <span class="t3">${b.size}</span>`).join(" · ")}</p>` : ""}</section>`;
   }
 
@@ -302,6 +303,7 @@
     $$(".res-tabs [data-tab]", box).forEach(b => b.onclick = () => { S.tab = b.dataset.tab; store.set("radar.resTab", S.tab); render(); $(`.res-tabs [data-tab="${S.tab}"]`)?.focus(); });
     $$("[data-go-tab]", box).forEach(b => b.onclick = () => { S.tab = b.dataset.goTab; store.set("radar.resTab", S.tab); render(); scrollTo({ top: 0 }); });
     $$("#rsWin button", box).forEach(b => b.onclick = () => { S.win = +b.dataset.v; render(); });
+    $$("#rsTpSrc button", box).forEach(b => b.onclick = () => { S.tpSrc = b.dataset.v; render(); });
     $$("#rsKind button", box).forEach(b => b.onclick = () => { S.kind = b.dataset.v; render(); });
     const sel = $("#rsBroker"); if (sel) sel.onchange = () => { S.broker = sel.value; render(); };
     const th = $("#rsThin"); if (th) th.onclick = () => { S.thin = !S.thin; render(); };

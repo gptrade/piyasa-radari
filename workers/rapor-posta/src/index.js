@@ -1,4 +1,4 @@
-// rapor@<alan adı> → gizli rapor reposunun gelen/ klasörü (konu satırında [şirket] / [sektör] / [strateji] varsa o klasör).
+// rapor@<alan adı> → gizli rapor reposunun gelen/ klasörü (konu satırında [şirket] / [sektör] / [strateji] / [bülten] varsa o klasör).
 // - Dosya adı: <gün>_<konu>-<sha1 ilk 10>[_<asıl gönderici alan adı>].<uzantı>; alan adı kurum için ipucudur
 //   (elle iletilen postada iletilen mesajın "Kimden/From" satırından okunur).
 // - Yalnız izinli göndericiler (GONDERENLER: "ad@x.com, @kurum.com.tr") kabul edilir; diğerleri reddedilir.
@@ -46,7 +46,7 @@ async function tg(env, text) {
 }
 
 // Konu satırı etiketi → klasör. Etiket yoksa gelen/ (türü yapay zekâ seçer).
-const TAGS = [["sirket", /[\[#(]\s*(?:ş|s)irket\s*[\])]?/i], ["sektor", /[\[#(]\s*sekt(?:ö|o)r\s*[\])]?/i], ["strateji", /[\[#(]\s*strateji\s*[\])]?/i]];
+const TAGS = [["sirket", /[\[#(]\s*(?:ş|s)irket\s*[\])]?/i], ["sektor", /[\[#(]\s*sekt(?:ö|o)r\s*[\])]?/i], ["strateji", /[\[#(]\s*strateji\s*[\])]?/i], ["bulten", /[\[#(]\s*b(?:ü|u)lten\s*[\])]?/i]];
 export function folderOf(subject) {
   for (const [f, rx] of TAGS) if (rx.test(subject || "")) return f;
   return "gelen";
@@ -167,7 +167,7 @@ export default {
       await tg(env, `❌ rapor@: "${mail.subject || ""}" kaydedilemedi (${errs.length}/${files.length} dosya).\n${errs[0]}\nGitHub anahtarının süresi dolmuş olabilir: RAPOR_YAZMA_TOKEN'ı yenileyip eposta-kurulum iş akışını çalıştır.`);
     }
     if (ok || dup) {
-      const tur = folder === "gelen" ? "türü yapay zekâ belirleyecek" : `tür: ${{ sirket: "şirket", sektor: "sektör", strateji: "strateji" }[folder]} (konu etiketi)`;
+      const tur = folder === "gelen" ? "türü yapay zekâ belirleyecek" : `tür: ${{ sirket: "şirket", sektor: "sektör", strateji: "strateji", bulten: "bülten" }[folder]} (konu etiketi)`;
       await tg(env, ok ? `📥 rapor@: "${mail.subject || ""}" alındı (${ok} dosya${dup ? `, ${dup} tanesi zaten vardı` : ""}; ${tur}${dom ? `; gönderen ${dom}` : ""}). Radar 15–30 dk içinde özetler.`
                        : `♻️ rapor@: "${mail.subject || ""}" daha önce alınmış (aynı dosya), yeniden işlenmedi.`);
     }

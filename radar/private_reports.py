@@ -1,7 +1,7 @@
 """Gizli rapor kutusu: kullanıcının gizli GitHub reposuna (gptrade/piyasa-radari-raporlar) yüklediği aracı kurum
 raporları. İş akışı repoyu RAPOR_REPO_TOKEN ile `_raporlar/` klasörüne çeker (site/ dışında: yayımlanmaz).
 
-Klasörler: sirket/ · sektor/ · strateji/ · gelen/ (rapor@ e-posta adresine gelenler, türü AI belirler). Her biri altında
+Klasörler: sirket/ · sektor/ · strateji/ · bulten/ · gelen/ (rapor@ e-posta adresine gelenler, türü AI belirler). Her biri altında
 - tek dosya = bir rapor: .pdf .txt .md .jpg .jpeg .png
 - alt klasör = çok sayfalı rapor (sayfalar ada göre sıralanır: 1.jpg, 2.jpg …)
 
@@ -31,7 +31,7 @@ log = logging.getLogger("radar.private_reports")
 
 ROOT = Path(os.environ.get("RAPOR_DIR", "_raporlar"))
 DONE = DATA / "private_reports_done.json"         # yalnız sha1 listesi (dosya adı yok)
-KINDS = {"sirket": "Şirket raporu", "sektor": "Sektör raporu", "strateji": "Strateji / model portföy"}
+KINDS = {"sirket": "Şirket raporu", "sektor": "Sektör raporu", "strateji": "Strateji / model portföy", "bulten": "Bülten (günlük/haftalık)"}
 INBOX = "gelen"          # rapor@ adresine gelen postalar (workers/rapor-posta): türü AI belirler
 TEXT_EXT = {".txt", ".md"}
 IMG_EXT = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
@@ -129,7 +129,7 @@ REPORT_TOOL = {
     "input_schema": {
         "type": "object",
         "properties": {
-            "type": {"type": "string", "enum": ["sirket", "sektor", "strateji"]},
+            "type": {"type": "string", "enum": ["sirket", "sektor", "strateji", "bulten"]},
             "broker": {"type": "string", "description": "Raporu yayımlayan kurum"},
             "date": {"type": "string", "description": "Rapor tarihi YYYY-AA-GG (yoksa boş)"},
             "tickers": {"type": "array", "items": {"type": "string"}, "description": "Raporun konu ettiği hisse kodları (BIST kodu ya da ABD sembolü)"},
@@ -159,7 +159,7 @@ REPORT_TOOL = {
     },
 }
 REPORT_FMT = """
-Yanıtını SADECE şu alanlara sahip tek bir JSON nesnesi olarak ver: {"type": "sirket|sektor|strateji", "broker": "...",
+Yanıtını SADECE şu alanlara sahip tek bir JSON nesnesi olarak ver: {"type": "sirket|sektor|strateji|bulten", "broker": "...",
 "date": "YYYY-AA-GG", "tickers": ["KOD"], "sector": "...", "rating": "AL|TUT|SAT", "target_price": sayı, "prev_target": sayı,
 "currency": "TRY|USD|EUR", "estimate_changes": [{"metric": "...", "period": "...", "new": "...", "old": "...", "change": "..."}],
 "top_picks": [{"ticker": "KOD", "rating": "AL", "target_price": sayı}], "model_portfolio": {"added": [], "removed": []},
@@ -171,9 +171,10 @@ varsa önceki hedef), tahmin değişiklikleri, sektör/strateji raporlarında ö
 Kurallar: Yalnız raporda yazanı kullan, rakam uydurma; okunamayan alanı boş bırak. "thesis" alanını KENDİ cümlelerinle,
 kısa yaz; rapordan cümle kopyalama. Hisse kodlarını BIST kodu (ör. THYAO) ya da ABD sembolü olarak yaz.
 "sentiment" ana hisse (şirket raporu) ya da sektör/piyasa (diğerleri) için kısa vadeli olası etkidir.
-Strateji/bülten raporlarında: "model_portfolio" alanına rapordaki model portföy / öneri listesine bu sayıda EKLENEN ve
+Strateji ve bülten raporlarında: "model_portfolio" alanına rapordaki model portföy / öneri listesine bu sayıda EKLENEN ve
 ÇIKARILAN hisseleri yaz (yalnız açıkça belirtilmişse); "top_picks" alanına kurumun bu sayıda öne çıkardığı / önerdiği
-hisseleri yaz (yalnız hisse adı geçen piyasa haberi değil). Yanıt dili Türkçe."""
+hisseleri yaz (yalnız hisse adı geçen piyasa haberi değil). Bültende bunlar günün/haftanın önerileri ya da takip listesidir.
+Tür ayrımı: kısa vadeli (gün/hafta) piyasa akışı = bulten; ay ve daha uzun vadeli görüş, model portföy = strateji. Yanıt dili Türkçe."""
 
 
 def _known(done_path: Path = DONE) -> set:
@@ -263,7 +264,7 @@ def notes_from_record(r: dict) -> list[dict]:
                     "tp": p["tp"], "prev": None, "action": "set", "cur": r["cur"] or "TRY",
                     "m": "US" if r["cur"] == "USD" else "BIST", "id": f"{r['id']}-p{i}",
                     "ts": f"{r['date']}T12:00:00Z" if re.match(r"\d{4}-\d{2}-\d{2}$", r["date"] or "") else r["ts"],
-                    "src": "Sektör raporu" if r["type"] == "sektor" else "Strateji raporu", "url": "",
+                    "src": {"sektor": "Sektör raporu", "bulten": "Bülten"}.get(r["type"], "Strateji raporu"), "url": "",
                     "title": f"{r['broker']} {KINDS.get(r['type'], 'rapor').lower()}: öne çıkan {p['t']}"})
     for t in (r["mp"].get("added") or []):
         out.append({"broker": r["broker"], "t": str(t).upper()[:8], "name": None, "rating": "AL", "dir": 1, "tp": None,
@@ -383,8 +384,9 @@ def process(analyzer, watch: set, cfg: dict, root: Path = ROOT, done_path: Path 
         hints = name_hints(u["path"])
         hints["folder_fixed"] = u["kind"] in KINDS          # klasör (ya da e-posta konu etiketi) türü belirler
         where = (f"{KINDS[u['kind']]} (tür kesin; 'type' alanına '{u['kind']}' yaz)" if u["kind"] in KINDS else
-                 "E-postayla geldi; türü sen belirle: tek şirket = sirket, tek sektör = sektor, "
-                 "günlük/haftalık bülten, piyasa yorumu, model portföy = strateji")
+                 "E-postayla geldi; türü sen belirle: tek şirket = sirket; tek sektör = sektor; "
+                 "günlük/haftalık piyasa bülteni, sabah notu, gün sonu yorumu, teknik görünüm, günün önerileri = bulten; "
+                 "aylık/çeyreklik/yıllık strateji raporu, model portföy ya da öneri listesi güncellemesi, makro/küresel görünüm = strateji")
         prompt = (f"Klasör: {where}\nDosya adı ipuçları: tarih={hints['date'] or '?'}, konu={hints['subject'] or '?'}, "
                   f"kurum={hints['broker'] or '?'}{', gönderici alan adı=' + hints['domain'] if hints.get('domain') else ''}\n\n"
                   + (f"RAPOR METNİ:\n{text}" if text else "RAPOR: ekteki sayfa görüntülerinde."))

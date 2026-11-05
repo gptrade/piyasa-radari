@@ -53,6 +53,8 @@ BROKERS: list[tuple[str, str, tuple[str, ...]]] = [
 _RX = [(name, re.compile(rx, re.I)) for name, rx, _ in BROKERS]
 DOMAINS = {d: name for name, _, ds in BROKERS for d in ds}
 UNKNOWN = "Kurum belirtilmemiş"
+FOREIGN = {"Capital Economics", "Goldman Sachs", "J.P. Morgan", "Morgan Stanley", "BlackRock", "sentix"}
+LOCAL = {n for n, _, _ in BROKERS} - FOREIGN          # Türk aracı kurumlar
 
 
 def canon(name: str | None) -> str | None:
