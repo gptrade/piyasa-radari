@@ -1,0 +1,61 @@
+{
+ "host": "radar.lyracube.com",
+ "anahtar": {
+  "uzunluk": 53,
+  "bosluk": false,
+  "hesap_id_uzunluk": 32,
+  "hesap_id_hex": true,
+  "durum": "active"
+ },
+ "alan_adi": {
+  "durum": "active",
+  "ns": [
+   "dawn.ns.cloudflare.com",
+   "troy.ns.cloudflare.com"
+  ]
+ },
+ "pages_projesi": {
+  "durum": "var",
+  "pages_dev": "piyasa-radari.pages.dev",
+  "domains": [
+   "piyasa-radari.pages.dev",
+   "radar.lyracube.com"
+  ]
+ },
+ "pages_ozel_alan": {
+  "durum": "active",
+  "dogrulama": "active"
+ },
+ "dns": "var",
+ "eposta_kodu": {
+  "hata": "1010 "
+ },
+ "access": {
+  "uygulama": "hazır",
+  "korunan": [
+   "radar.lyracube.com"
+  ],
+  "izinli_kisi": 10,
+  "politika": "hazır",
+  "pages_dev_uygulamasi": "hazır (ayrı uygulama: piyasa-radari.pages.dev, *.piyasa-radari.pages.dev)",
+  "kisi_yonetimi": "Access grubu (sitedeki Kullanıcılar sayfası)",
+  "yonetici": [
+   "g***@gmail.com"
+  ]
+ },
+ "pages_ortam": {
+  "durum": "hazır",
+  "ekip": "lyracube.cloudflareaccess.com",
+  "github_yazma_anahtari": "var",
+  "kullanici_yonetimi": "hazır"
+ },
+ "pagesdev_yonlendirme": {
+  "durum": "hazır",
+  "anahtar": "kullanıcı",
+  "hedef": "https://radar.lyracube.com/"
+ },
+ "dogrulama": {
+  "radar.lyracube.com": "HTTP 302 → giriş ekranı",
+  "piyasa-radari.pages.dev": "HTTP 301 → radar.lyracube.com"
+ }
+}
