@@ -168,16 +168,18 @@
     queueMicrotask(() => {
       $$("#tdTmP button").forEach(b => b.onclick = () => { S.tmPer = b.dataset.v; render(); });
       $$("#tdTmS button").forEach(b => b.onclick = () => { S.tmSrc = b.dataset.v; render(); });
-      MK?.treemap($("#tdTm"), { per: S.tmPer, height: innerWidth < 640 ? 360 : 420, maxStocks: ndx ? 101 : us ? 250 : 150, src });
+      $$("#tdTmZ button").forEach(b => b.onclick = () => { S.tmSize = b.dataset.v; render(); });
+      MK?.treemap($("#tdTm"), { per: S.tmPer, size: S.tmSize || "mcap", height: innerWidth < 640 ? 360 : 420, maxStocks: ndx ? 101 : us ? 250 : 150, src });
     });
     const keys = MK?.GROUPS?.flatMap(g => g[1]);
     const tmFoot = us ? `${ndx ? "Nasdaq-100'ün tamamı" : "S&P 500'ün en büyük 250 şirketi"} · kutu = piyasa değeri ($), renk = getiri · hisseye tıkla: Yahoo Finance${MK?.data.us?.asof ? ` · ${fmt.date(MK.data.us.asof + "T12:00:00Z")}` : ""}`
-      : `En büyük 150 şirket · kutu = piyasa değeri, renk = getiri · ${sectorLine(MK?.data.guc)}`;
+      : `En büyük 150 şirket · kutu = ${(S.tmSize || "mcap") === "tv" ? "günlük işlem hacmi" : "piyasa değeri"}, renk = getiri · ${sectorLine(MK?.data.guc)}`;
     const lower = [signalCard(), calCard(), researchCard(), bbCard(), pfCard()].filter(Boolean);
     body.innerHTML = `<div class="view" style="gap:var(--s-4)">${MK?.stripHTML(keys, { groups: true }) || ""}
       <div class="td-regimes">${window.radarGuc?.card() || ""}${MK?.crossCard(true) || ""}</div>
       ${MK?.data.guc || MK?.data.us ? `<section class="card" aria-labelledby="tdTmT"><div class="card-head td-tm-head"><h2 class="card-title" id="tdTmT">Isı haritası</h2>
         <div class="seg seg-sm" role="radiogroup" aria-label="Piyasa" id="tdTmS">${[["bist", "BIST"], ["sp", "S&P 500"], ["ndx", "Nasdaq-100"]].map(([k, l]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${src === k}">${l}</button>`).join("")}</div>
+        ${us ? "" : `<div class="seg seg-sm" role="radiogroup" aria-label="Kutu boyutu" id="tdTmZ">${[["mcap", "Piyasa değeri"], ["tv", "İşlem hacmi"]].map(([k, l]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${(S.tmSize || "mcap") === k}">${l}</button>`).join("")}</div>`}
         <div class="seg seg-sm" role="radiogroup" aria-label="Dönem" id="tdTmP">${Object.entries(MK.PERK).map(([k, v]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${S.tmPer === k}">${v[0]}</button>`).join("")}</div>
         ${us ? "" : `<a class="link-btn" href="#piyasa-gucu/harita">Tam ekran →</a>`}</div><div id="tdTm" class="tm-box"></div>
         <p class="t3 gc-foot">${tmFoot}</p></section>` : ""}
