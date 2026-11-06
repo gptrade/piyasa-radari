@@ -191,7 +191,7 @@
         ${top.length ? `<span class="en-sc-t">${top.map(g => `<span><span class="en-sc-tn">${esc(g.name)}</span><b>${gw(g.src[s])}</b></span>`).join("")}</span>` : ""}
       </button>`;
     }).join("");
-    return `<section aria-labelledby="enScT"><div class="en-sec-h"><h2 class="card-title" id="enScT">Kaynaklar</h2><span class="card-meta">karta tıkla: tüm sekmeyi o kaynağa süz${S.src ? ` · <button type="button" class="link-btn" id="enSrcClear">Süzgeci kaldır</button>` : ""}</span></div>
+    return `<section aria-labelledby="enScT"><div class="en-sec-h"><h2 class="card-title" id="enScT">Kaynaklar</h2><span class="card-meta">${S.src ? `<button type="button" class="link-btn" id="enSrcClear">Süzgeci kaldır</button>` : ""}</span></div>
       <div class="en-sc-grid">${cards}</div></section>`;
   }
   function national() {
@@ -507,7 +507,7 @@
     }).join("");
     const total = rows.length;
     return `<section class="card card-flush" aria-labelledby="enTblT">
-      <div class="card-head"><h2 class="card-title" id="enTblT">Gruplar ve şirketler (${fmt.int(total)})</h2><span class="card-meta">satıra tıkla: santraller · başlığa tıkla: sırala</span></div>
+      <div class="card-head"><h2 class="card-title" id="enTblT">Gruplar ve şirketler (${fmt.int(total)})</h2><span class="card-meta"></span></div>
       <div class="tbl-scroll en-scroll"><table class="tbl en-tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
       ${total > shown.length || S.limit > PAGE ? `<div class="tbl-foot"><span>${fmt.int(shown.length)} / ${fmt.int(total)} gösteriliyor</span>
         <span>${total > shown.length ? `<button type="button" class="link-btn" id="enMore">${Math.min(PAGE, total - shown.length)} daha</button> · <button type="button" class="link-btn" id="enAll">Tümü</button>` : `<button type="button" class="link-btn" id="enLess">İlk ${PAGE} satıra dön</button>`}</span></div>` : ""}
@@ -592,7 +592,7 @@
     const bySrc = {}; all.forEach(u => { bySrc[u.s] = (bySrc[u.s] || 0) + u.mw; });
     const th = (c, l, num) => `<th scope="col" class="${num ? "num" : ""}" aria-sort="${c === k ? (dir > 0 ? "ascending" : "descending") : "none"}"><button type="button" class="th-sort" data-uc="${c}">${l}<span class="arr" aria-hidden="true">${c === k ? (dir > 0 ? "▲" : "▼") : "▼"}</span></button></th>`;
     return `${groupChip()}<section class="card card-flush" aria-labelledby="enUT">
-      <div class="card-head"><h2 class="card-title" id="enUT">Santraller ve üniteler (${fmt.int(all.length)})</h2><span class="card-meta">${mw(tot)} MW · satıra tıkla: haritada aç</span></div>
+      <div class="card-head"><h2 class="card-title" id="enUT">Santraller ve üniteler (${fmt.int(all.length)})</h2><span class="card-meta">${mw(tot)} MW</span></div>
       <div class="en-map-ctl">${seg("enScope", "Kapsam", scopeOpts([["tr", "Türkiye"], ["ab", "Yurt dışı"], ["all", "Tümü"]]), S.scope)}${seg("enSt", "Durum", [["op", "İşletmede"], ["pipe", "Yatırım hattı"], ["all", "Tümü"]], S.st)}</div>
       <div style="padding:0 var(--s-4) var(--s-3)">${mixBar(bySrc, tot)}</div>
       <div class="tbl-scroll en-scroll"><table class="tbl en-add en-units"><thead><tr>${th("n", "Santral / ünite")}<th scope="col">Sahipler</th>${th("s", "Kaynak")}${th("mw", "MW", 1)}${th("st", "Durum")}${th("y", "Başlangıç", 1)}${th("p", "İl / ülke")}</tr></thead><tbody>

@@ -92,7 +92,7 @@
         <td class="num">${fmt.int(f.n || 0)}<span class="t3 ok-sub">${fmt.int(f.stocks || 0)} hisse</span></td></tr>`;
     };
     return `<section class="card card-flush" aria-labelledby="ykTbT">
-      <div class="card-head"><h2 class="card-title" id="ykTbT">Yöntemler</h2><span class="card-meta">satıra tıkla: birikimli getiri, alt dönemler, reel TL ve USD</span></div>
+      <div class="card-head"><h2 class="card-title" id="ykTbT">Yöntemler</h2><span class="card-meta"></span></div>
       <div class="tbl-scroll"><table class="tx ok-tbl yk-tbl"><thead><tr>
         <th scope="col">Yöntem</th><th scope="col">Sonuç</th>
         <th scope="col" class="num" data-tip="Her ay en iyi %20 ile en kötü %20'lik dilimin ertesi ay getiri farkı (eşit ağırlık); aylık ortalama ve Newey-West t">Aylık fark (Ü−A)</th>

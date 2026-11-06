@@ -170,7 +170,7 @@
         <div class="kpi"><span class="kpi-label">Son veri</span><span class="kpi-value fa-small">${fmt.date(S.screen.updated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span><span class="kpi-sub">Fiyatlar saatlik, tablolar KAP'ta yayımlandıkça</span></div>
       </div>
       <section class="card card-flush">
-        <div class="card-head"><h2 class="card-title">Şirketler</h2><span class="card-meta">Genel skor = kalite %60 + değerleme %40 · satıra tıkla</span></div>
+        <div class="card-head"><h2 class="card-title">Şirketler</h2><span class="card-meta">Genel skor = kalite %60 + değerleme %40</span></div>
         <div class="toolbar fa-tools">
           <label class="search"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m13.5 13.5 3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
             <input type="search" id="faQ" placeholder="Kod ya da şirket adı" value="${esc(S.q)}" aria-label="Şirket ara"></label>
@@ -219,7 +219,7 @@
     all.forEach(r => (by[r.sector || "Diğer"] ||= []).push(r));
     const rows_ = Object.entries(by).map(([sec, xs]) => ({ sec, n: xs.length, pe: med(xs.map(r => r.v?.pe)), pb: med(xs.map(r => r.v?.pb)),
       ev: med(xs.map(r => r.v?.ev_ebitda)), roe: med(xs.map(r => r.r?.roe)), ov: med(xs.map(r => r.overall)) })).sort((a, b) => b.n - a.n || a.sec.localeCompare(b.sec, "tr"));
-    return `<section class="card card-flush"><div class="card-head"><h2 class="card-title">Sektörler</h2><span class="card-meta">medyan değerler · satıra tıkla, tabloyu süz</span></div>
+    return `<section class="card card-flush"><div class="card-head"><h2 class="card-title">Sektörler</h2><span class="card-meta">medyan değerler</span></div>
       <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Sektör</th><th class="num">Şirket</th><th class="num">F/K</th><th class="num">PD/DD</th><th class="num">FD/FAVÖK</th><th class="num">ROE</th><th class="num">Genel skor</th></tr></thead>
       <tbody>${rows_.map(r => `<tr class="row" tabindex="0" data-sec="${esc(r.sec)}"><td>${esc(r.sec)}</td><td class="num">${r.n}</td><td class="num">${x(r.pe)}</td><td class="num">${x(r.pb)}</td><td class="num">${x(r.ev)}</td><td class="num">${pct(r.roe)}</td><td class="num">${r.ov == null ? "—" : Math.round(r.ov)}</td></tr>`).join("")}</tbody></table></div></section>`;
   }
@@ -703,7 +703,7 @@
     return `<section class="card"><div class="card-head"><h2 class="card-title">Değerleme haritası · kârlılığa göre PD/DD</h2><div class="fa-scope">${ixSeg()}${secSel}</div></div>
       <div class="vm-grid"><div>${svg}<p class="t3 gc-foot">${n} şirket · nokta büyüklüğü piyasa değeri · çizgi: bu kapsamda kârlılığa göre beklenen ("hak edilen") PD/DD, log(PD/DD) = ${fmt.num(a, 2)} + ${fmt.num(b, 2)} × ROE.
           Yeşil nokta çizginin altında (kârlılığına göre ucuz), kırmızı üstünde. Bankalar ve sanayi şirketleri farklı davranır; sektör seçerek daraltmak daha adil karşılaştırma verir. Yöntem Karnesi'nde bu iskonto 2017–2026'da sonraki ay getirisini öngörmede güçlü kanıt verdi.</p></div>
-        <div><p class="d-sub">Kârlılığına göre en iskontolu</p><p class="t3 vm-note">kârlı, piyasa değeri ≥ 5 mr ₺, PD/DD ≥ 0,15 · satıra tıkla: şirket</p><table class="fa-kv vm-cheap"><thead><tr><th></th><th class="num">ROE</th><th class="num">PD/DD</th><th class="num">hak edilen</th><th class="num">iskonto</th></tr></thead>
+        <div><p class="d-sub">Kârlılığına göre en iskontolu</p><p class="t3 vm-note">kârlı, piyasa değeri ≥ 5 mr ₺, PD/DD ≥ 0,15</p><table class="fa-kv vm-cheap"><thead><tr><th></th><th class="num">ROE</th><th class="num">PD/DD</th><th class="num">hak edilen</th><th class="num">iskonto</th></tr></thead>
           <tbody>${cheap.map(o => `<tr class="row" tabindex="0" data-code="${o.r.code}"><th scope="row" class="mono">${o.r.code}</th><td class="num">%${fmt.num(o.x * 100, 0)}</td><td class="num">${fmt.num(o.pb, 2)}</td><td class="num">${fmt.num(o.exp, 2)}</td><td class="num up">%${fmt.num((1 - Math.exp(o.res)) * 100, 0)}</td></tr>`).join("")}</tbody></table></div></div></section>`;
   }
 

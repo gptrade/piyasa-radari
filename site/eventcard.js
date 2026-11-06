@@ -118,7 +118,7 @@
       <td class="num ${o.pre && Math.abs(o.pre.m) > 1.5 ? "warn-t" : "t3"}" data-tip="Olaydan önceki 5 seansta kıyasa göre fark. Büyükse olay öncesinde bilgi fiyata girmiş olabilir ya da olay fiyat hareketinin sonucudur (ör. devre kesici).">${pc(o.pre?.m)}</td></tr>`;
     const few = a.list.filter(o => o.n < 5).length;
     return `<section class="card card-flush" aria-labelledby="okTbT">
-      <div class="card-head"><h2 class="card-title" id="okTbT">Olay tipine göre anormal getiri</h2><span class="card-meta">satıra tıkla: yol grafiği ve son olaylar${few ? ` · ${few} tip 5 olaydan az, gizli` : ""}</span></div>
+      <div class="card-head"><h2 class="card-title" id="okTbT">Olay tipine göre anormal getiri</h2><span class="card-meta">${few ? `${few} tip 5 olaydan az, gizli` : ""}</span></div>
       <div class="tbl-scroll"><table class="tbl ok-tbl" data-h="${S.h}"><thead><tr>${th("type", "Olay tipi", "", false)}${th("n", "Olay")}<th class="num hz1">1 seans</th><th class="num hz5">5 seans</th><th class="num hz20">20 seans</th>${th("pre", "Öncesi (5)")}</tr></thead>
       <tbody>${row(a.all)}${list.map(row).join("")}</tbody></table></div>
       <p class="card-foot ok-foot">"Tüm olaylar" Borsa tedbirlerini (çoğu devre kesici: fiyat hareketinin sonucu) içermez. Renk yalnız %95 aralık sıfırı dışarıda bırakınca: <span class="up">yeşil</span> kıyastan iyi, <span class="down">kırmızı</span> kötü. Aralıklar olay gününe göre kümelenmiş: piyasanın genel düştüğü bir günde onlarca olay tek bir gözlem gibi ağırlık taşır. Sıralama: ${S.h} seans.</p>

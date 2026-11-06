@@ -1285,7 +1285,7 @@
         <td class="num">${o.n ? `<span data-tip="Son haber: ${esc(fmt.full(o.last))}">${fmt.int(o.n)}</span>` : "0"}</td>
         <td><span class="k-top-t" ${o.top ? `data-tip="${esc(o.top.title)}"` : ""}>${top}</span></td></tr>`;
     }).join("");
-    $("#sigCount").textContent = rows.length ? `${fmt.int(rows.length)} hisse · satıra tıkla: hisse paneli (teknik görünüm ve haberler)` : "";
+    $("#sigCount").textContent = rows.length ? `${fmt.int(rows.length)} hisse` : "";
     $("#sigState").innerHTML = rows.length ? "" : stateHTML({ kind: "empty", title: "Bu filtrelerle hisse yok", msg: "Filtreleri gevşet ya da temizle." });
   }
   function pickTicker(t) {

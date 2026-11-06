@@ -12,7 +12,7 @@
   const SERIES = ["--series-1", "--series-2", "--series-3", "--series-4", "--series-5"];
 
   const S = { rows: null, quotes: {}, quotesAt: null, loaded: false, loading: false, error: null,
-    days: 30, q: "", watch: false, suspectOnly: false, sort: "amount", dir: -1, open: new Set(), updated: null, limit: 20 };
+    days: 30, q: "", watch: false, suspectOnly: false, sort: "last", dir: -1, open: new Set(), updated: null, limit: 20 };
   const PAGE = 20;
 
   // ─────────────────────────────── birimler (başlıkta yazar, hücrede yalnız sayı)
@@ -198,6 +198,7 @@
       if (r.amount) o.pq += r.qty;
       if (r.suspect) o.suspect++;
       if (!o.last || r.date > o.last) o.last = r.date;
+      if (!o.lastPub || r.pub > o.lastPub) o.lastPub = r.pub;          // aynı gün içinde sıralama: bildirim saati
       if (r.own != null && (!o.ownAt || r.pub > o.ownAt)) { o.own = r.own; o.ownAt = r.pub; }
       o.review += r.review ? 1 : 0;
       o.tx.push(r);
@@ -390,8 +391,9 @@
     const COLS = [["t", "Hisse"], ["name", "Şirket"], ["maxQty", "Azami pay (bin)", 1], ["maxFund", "Azami fon (mn ₺)", 1], ["dur", "Süre"], ["n", "İşlem", 1], ["qty", "Adet (bin)", 1], ["pct", "Alınan (% sermaye)", 1], ["amount", "Tutar (mn ₺)", 1], ["avg", "Ort. fiyat (₺)", 1],
       ...(showRatio ? [["ratio", "Güncel / Ort.", 1]] : []), ["own", "Elindeki pay (% sermaye)", 1], ["last", "Son işlem", 1]];
     const k = S.sort, dir = S.dir;
+    const val = (o, c) => c === "last" ? (o.lastPub || o.last) : o[c];
     agg.sort((a, b) => {
-      const va = a[k], vb = b[k];
+      const va = val(a, k), vb = val(b, k);
       if (va == null && vb == null) return 0;
       if (va == null) return 1;
       if (vb == null) return -1;
@@ -421,11 +423,11 @@
         <td class="num">${o.avg ? fmt.num(o.avg) : "—"}</td>
         ${showRatio ? `<td class="num"><span class="ratio ${dirCls(rk)}" data-tip="${esc(ratioTip)}">${o.ratio == null ? "—" : `${glyph(rk)} ${fmt.num(o.ratio)}`}</span></td>` : ""}
         <td class="num">${o.own == null ? "—" : fmt.num(o.own)}</td>
-        <td class="num">${o.last ? `<span data-tip="${esc(fmt.date(o.last, { day: "numeric", month: "long", year: "numeric" }))}">${fmt.date(o.last)}</span>` : "—"}</td>
+        <td class="num">${o.last ? `<span data-tip="${esc(`İşlem ${fmt.date(o.last, { day: "numeric", month: "long", year: "numeric" })}${o.lastPub ? ` · son bildirim ${fmt.dt(o.lastPub)}` : ""}`)}">${fmt.date(o.last)}</span>` : "—"}</td>
       </tr>${open ? `<tr class="drawer"><td colspan="${COLS.length}">${txList(o)}</td></tr>` : ""}`;
     }).join("");
     return `<section class="card card-flush" aria-labelledby="bbTblT">
-      <div class="card-head"><h2 class="card-title" id="bbTblT">Şirket bazında (${agg.length})</h2><span class="card-meta">satıra tıkla: işlemler · başlığa tıkla: sırala${showRatio ? "" : " · güncel fiyat verisi yok"}</span></div>
+      <div class="card-head"><h2 class="card-title" id="bbTblT">Şirket bazında (${agg.length})</h2><span class="card-meta">${showRatio ? "" : "güncel fiyat verisi yok"}</span></div>
       <div class="tbl-scroll bb-scroll"><table class="tbl bb-tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
       ${total > shown.length || S.limit > PAGE ? `<div class="tbl-foot"><span>${fmt.int(shown.length)} / ${fmt.int(total)} şirket gösteriliyor</span>
         <span>${total > shown.length ? `<button type="button" class="link-btn" id="bbMore">${Math.min(PAGE, total - shown.length)} şirket daha göster</button> · <button type="button" class="link-btn" id="bbShowAll">Tümünü göster</button>` : `<button type="button" class="link-btn" id="bbLess">İlk ${PAGE} şirkete dön</button>`}</span></div>` : ""}

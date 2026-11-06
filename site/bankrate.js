@@ -130,7 +130,7 @@
           · havuz ${bp(-(pool?.y1 ?? 0) * 100)} / 100 bp indirim</span></div>
       ${S.full ? `<p class="br-warn">2023 dahil örneklemde duyarlılık belirgin şekilde küçülüyor (havuz ${bp(-(S.doc.sample?.full_pool?.y1 ?? 0) * 100)} ↔ 2024+ ${bp(-(S.doc.pool?.y1 ?? 0) * 100)}). 2023'te KKM ve menkul kıymet tesis kuralları fonlama maliyetini politika faizinden kopardı; bugünkü rejime 2024+ modeli daha yakın, ama sonuç düzenleme ortamına duyarlı. β sütunları ana modelden.</p>` : ""}
       <div class="tbl-scroll"><table class="tbl br-tbl"><thead><tr>${COLS.map(th).join("")}</tr></thead><tbody>${body}</tbody></table></div>
-      <p class="card-foot br-foot">β'lar 1 puan politika faizi değişiminin aktif getirisine / fonlama maliyetine (ortalama aktife göre, puan) yansıması. Satıra tıkla: grafikte göster. Aralık ±1,645 standart hata (%90).</p>
+      <p class="card-foot br-foot">β'lar 1 puan politika faizi değişiminin aktif getirisine / fonlama maliyetine (ortalama aktife göre, puan) yansıması. Aralık ±1,645 standart hata (%90).</p>
     </section>`;
   }
 

@@ -234,7 +234,7 @@
       <section class="card" aria-labelledby="gcRrgT"><div class="card-head"><h2 class="card-title" id="gcRrgT">Rotasyon grafiği</h2><span class="card-meta">haftalık · ${S.selSec ? esc(short(S.selSec)) : "ilk 6, lider ve bölge değiştirenler"} · ${d.sectors[0]?.tail.length || 8} hafta izi</span></div>
         ${rrgChart(d.sectors)}
         <p class="t3 gc-foot">Yatay: sektörün eşit ağırlıklı endeksinin XU100'e oranı, kendi 10 haftalık ortalamasına göre (100 üstü = endeksten güçlü). Dikey: bu oranın 4 haftalık değişimi (100 üstü = güçleniyor). Sektörler genelde saat yönünde döner: İyileşen → Lider → Zayıflayan → Geride. İyileşen'den Lider'e geçiş en erken rotasyon işaretidir. RRG benzeri, kendi formülümüz.</p></section>
-      <section class="card" aria-labelledby="gcQT"><div class="card-head"><h2 class="card-title" id="gcQT">Bölgelere göre</h2><span class="card-meta">noktaya ya da satıra tıkla</span></div>
+      <section class="card" aria-labelledby="gcQT"><div class="card-head"><h2 class="card-title" id="gcQT">Bölgelere göre</h2><span class="card-meta"></span></div>
         ${["lider", "iyilesen", "zayif", "geride"].map(q => { const xs = d.sectors.filter(s => s.quad === q); return `<div class="gc-qbox"><p class="d-sub"><span class="gc-q" style="--c:${QUAD[q][1]}">${QUAD[q][0]}</span> ${xs.length}</p><div class="gc-chips">${xs.map(s => `<button type="button" class="chip" aria-pressed="${S.selSec === s.name}" data-sec="${esc(s.name)}">${esc(short(s.name))}${s.quad_prev !== s.quad ? " •" : ""}</button>`).join("") || `<span class="t3">—</span>`}</div></div>`; }).join("")}
         <p class="t3 gc-foot">• bu hafta bölge değiştirdi.</p></section></div>
       <section class="card card-flush" aria-labelledby="gcSecT"><div class="card-head"><h2 class="card-title" id="gcSecT">Sektör skoru</h2>${seg("gcPer", Object.fromEntries(PERS.map(p => [p, p])), S.per, "Getiri dönemi")}</div>
@@ -291,7 +291,7 @@
   function tabMap() {
     const secs = [...new Set(S.doc.stocks.filter(r => r.mcap).map(r => r.sector))].sort((a, b) => a.localeCompare(b, "tr"));
     return `<section class="card" aria-labelledby="gcTmT"><div class="card-head"><h2 class="card-title" id="gcTmT">BIST ısı haritası</h2>
-        <span class="card-meta">kutu büyüklüğü ${S.tmSize === "tv" ? "günlük işlem hacmi" : "piyasa değeri"} · renk getiri · kutuya tıkla: hisse paneli</span></div>
+        <span class="card-meta">kutu büyüklüğü ${S.tmSize === "tv" ? "günlük işlem hacmi" : "piyasa değeri"} · renk getiri</span></div>
       <div class="toolbar ok-tb">${seg("gcTmP", Object.fromEntries(Object.entries(MK().PERK).map(([k, v]) => [k, v[0]])), S.tmPer, "Dönem")}
         ${seg("gcTmZ", { mcap: "Piyasa değeri", tv: "İşlem hacmi" }, S.tmSize, "Kutu boyutu")}
         <select id="gcTmS" class="fa-select" aria-label="Sektör"><option value="">Tüm sektörler</option>${secs.map(x => `<option ${S.tmSec === x ? "selected" : ""} value="${esc(x)}">${esc(MK().short(x))}</option>`).join("")}</select>

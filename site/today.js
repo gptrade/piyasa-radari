@@ -172,7 +172,7 @@
       MK?.treemap($("#tdTm"), { per: S.tmPer, size: S.tmSize || "mcap", height: innerWidth < 640 ? 360 : 420, maxStocks: ndx ? 101 : us ? 250 : 150, src });
     });
     const keys = MK?.GROUPS?.flatMap(g => g[1]);
-    const tmFoot = us ? `${ndx ? "Nasdaq-100'ün tamamı" : "S&P 500'ün en büyük 250 şirketi"} · kutu = piyasa değeri ($), renk = getiri · hisseye tıkla: Yahoo Finance${MK?.data.us?.asof ? ` · ${fmt.date(MK.data.us.asof + "T12:00:00Z")}` : ""}`
+    const tmFoot = us ? `${ndx ? "Nasdaq-100'ün tamamı" : "S&P 500'ün en büyük 250 şirketi"} · kutu = piyasa değeri ($), renk = getiri${MK?.data.us?.asof ? ` · ${fmt.date(MK.data.us.asof + "T12:00:00Z")}` : ""}`
       : `En büyük 150 şirket · kutu = ${(S.tmSize || "mcap") === "tv" ? "günlük işlem hacmi" : "piyasa değeri"}, renk = getiri · ${sectorLine(MK?.data.guc)}`;
     const lower = [signalCard(), calCard(), researchCard(), bbCard(), pfCard()].filter(Boolean);
     body.innerHTML = `<div class="view" style="gap:var(--s-4)">${MK?.stripHTML(keys, { groups: true }) || ""}
