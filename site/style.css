@@ -1898,3 +1898,10 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .gk-big b { font: var(--fw-semibold) var(--fs-xl) var(--font-mono); margin-right: 4px; }
 .gk-split { display: flex; height: 6px; border-radius: 3px; overflow: hidden; } .gk-split i.up { background: var(--up); } .gk-split i.down { background: var(--down); }
 .gc-univ { gap: var(--s-2); align-items: center; flex-wrap: wrap; } .gc-univ-n { font-size: var(--fs-xs); }
+/* tahmin revizyonları: etiket + değer, sığmazsa değer alt satıra */
+.est-l { list-style: none; margin: var(--s-2) 0; padding: 0; font-size: var(--fs-sm); }
+.est-l li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; padding: 4px 0; }
+.est-l li + li { border-top: 1px solid var(--border); }
+.est-k { color: var(--text-2); min-width: 0; }
+.est-v { font-family: var(--font-mono); white-space: nowrap; margin-left: auto; font-size: var(--fs-xs); }
+.est-v .t3 { font-family: var(--font-sans); }

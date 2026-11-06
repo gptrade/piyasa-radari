@@ -91,8 +91,21 @@
   const MINE_ROUTES = new Set(["sinyal", "takvim", "arastirma", "geri-alim", "olay-karnesi"]);
   if (!["ALL", "BIST", "US"].includes(S.market)) S.market = "ALL";
 
+  // Rapor tahmin revizyonları (AI'ın yazdığı "381,470 mn TL" gibi metinler): ortak birim tek kez yazılır, yön renklenir;
+  // etiket ve değer sığmazsa değer kendiliğinden alt satıra iner (dar panellerde iki satıra bölünmez).
+  function estHTML(list) {
+    if (!list?.length) return "";
+    const unitOf = v => (String(v || "").match(/\s*([^\d\s.,−+%-][^\d]*|%)\s*$/) || [])[1] || "";
+    const digits = v => String(v || "").replace(/[^\d]/g, "");
+    return `<ul class="est-l">${list.map(e => {
+      const u = unitOf(e.new), o = e.old && u && unitOf(e.old) === u ? String(e.old).slice(0, String(e.old).lastIndexOf(u)).trim() : e.old;
+      const n = u ? String(e.new).slice(0, String(e.new).lastIndexOf(u)).trim() : e.new;
+      const a = digits(o), b = digits(n), cmp = a && b && a.length === b.length ? Math.sign(+b - +a) : 0;
+      return `<li><span class="est-k">${esc(e.metric)}${e.period ? ` <span class="t3">(${esc(e.period)})</span>` : ""}</span>
+        <span class="est-v">${o ? `${esc(o)} → ` : ""}<b class="${cmp > 0 ? "up" : cmp < 0 ? "down" : ""}">${esc(n || "")}</b>${u ? ` <span class="t3">${esc(u)}</span>` : ""}${e.change ? ` <span class="t3">(${esc(e.change)})</span>` : ""}</span></li>`; }).join("")}</ul>`;
+  }
   const shell = {
-    $, $$, esc, fmt, store, glyph, dirCls, TZ, fold, match, compact,
+    $, $$, esc, fmt, store, glyph, dirCls, TZ, fold, match, compact, estHTML,
     get route() { return S.route; },
     get param() { return S.param; },
     get market() { return S.market; },

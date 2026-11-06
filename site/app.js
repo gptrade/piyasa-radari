@@ -1129,7 +1129,7 @@
     sec.innerHTML = `<p class="d-sub">Aracı kurum görüşleri <span class="t3">· son 120 gün</span></p>
       ${c ? `<p class="tp-sub">${fmt.int(c.n)} kurum · <span class="up">${c.dist.AL} AL</span> · ${c.dist.TUT} TUT · <span class="down">${c.dist.SAT} SAT</span>${c.median_tp ? ` · medyan hedef <b>${fmt.num(c.median_tp, 2)} ${cur}</b>${up != null ? ` (<span class="${dirCls(up > 0 ? 1 : -1)}">${fmt.pct(up)}</span>)` : ""}` : ""}</p>` : ""}
       ${rangeHTML}
-      ${rep ? `<div class="doc-sum"><p class="d-sub">Son rapor · ${esc(rep.broker)} · ${esc(rep.date || "")}</p>${rep.thesis ? `<p class="d-sum">${esc(rep.thesis)}</p>` : ""}${(rep.est || []).length ? `<table class="doc-figs"><tbody>${rep.est.slice(0, 4).map(e => `<tr><th scope="row">${esc(e.metric)}${e.period ? ` (${esc(e.period)})` : ""}</th><td>${[e.old, e.new].filter(Boolean).map(esc).join(" → ")}</td></tr>`).join("")}</tbody></table>` : ""}</div>` : ""}
+      ${rep ? `<div class="doc-sum"><p class="d-sub">Son rapor · ${esc(rep.broker)} · ${esc(rep.date || "")}</p>${rep.thesis ? `<p class="d-sum">${esc(rep.thesis)}</p>` : ""}${window.shell.estHTML((rep.est || []).slice(0, 4))}</div>` : ""}
       ${notes.length ? `<table class="tx an-tx"><thead><tr><th>Tarih</th><th>Kurum</th><th>Tavsiye</th><th class="num">Hedef</th></tr></thead><tbody>${notes.map(n => `
         <tr><td>${fmt.date(n.ts)}</td><td>${n.url ? `<a href="${esc(n.url)}" target="_blank" rel="noopener" data-tip="${esc(n.title)}">${esc(n.broker)}</a>` : esc(n.broker)}</td>
         <td><span class="${RAT_CLS[n.rating] || ""}" data-tip="${esc(ACT_TR[n.action] || "")}">${esc(n.rating || "—")}</span></td>

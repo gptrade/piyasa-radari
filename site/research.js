@@ -266,7 +266,7 @@
           <div class="rl-b">${r.thesis ? `<p class="d-sum">${esc(r.thesis)}</p>` : ""}
             ${(r.top_picks || []).length ? `<p class="tp-sub">Öne çıkanlar: ${r.top_picks.map(p => tk(p.t) + (p.tp ? ` <span class="t3">${fmt.num(p.tp, 2)}</span>` : "")).join(" · ")}</p>` : ""}
             ${(r.tickers || []).length && r.type !== "sirket" ? `<p class="tp-sub t3">Geçen hisseler: ${r.tickers.map(tk).join(" ")}</p>` : ""}
-            ${(r.est || []).length ? `<table class="doc-figs"><tbody>${r.est.map(e => `<tr><th scope="row">${esc(e.metric)}${e.period ? ` (${esc(e.period)})` : ""}</th><td>${[e.old, e.new].filter(Boolean).map(esc).join(" → ")}${e.change ? ` (${esc(e.change)})` : ""}</td></tr>`).join("")}</tbody></table>` : ""}
+            ${sh.estHTML(r.est)}
             ${(r.catalysts || []).length || (r.risks || []).length ? `<p class="doc-risks">${(r.catalysts || []).length ? `<b>Katalizörler:</b> ${r.catalysts.map(esc).join(" · ")}` : ""}${(r.risks || []).length ? ` <b>Riskler:</b> ${r.risks.map(esc).join(" · ")}` : ""}</p>` : ""}
             ${r.src ? `<p class="t3 rl-src">Türü ${r.src === "etiket" ? "konu satırı etiketi" : "yapay zekâ"} belirledi</p>` : ""}</div></details>`; }).join("")}</div>`
         : `<p class="tp-empty">Bu filtrede rapor yok.</p>`}
