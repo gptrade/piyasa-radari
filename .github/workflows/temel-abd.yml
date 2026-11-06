@@ -42,7 +42,7 @@ jobs:
           # piyasa değeri ve momentum: ABD ısı haritası (data dalı)
           if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
             git fetch --depth 1 origin data
-            git archive FETCH_HEAD us_map.json | tar -x -C site/data || true
+            git archive FETCH_HEAD us_map.json us_shares.json | tar -x -C site/data || git archive FETCH_HEAD us_map.json | tar -x -C site/data || true
           fi
 
       - name: ABD temel analiz verisi

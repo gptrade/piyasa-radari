@@ -154,9 +154,13 @@ def build(px: pd.DataFrame, ms: list[dict], shares: dict) -> dict:
                      "mom": mom, "stale": s.index[-1] < asof or None})
     # ikinci pay sınıfları ana sınıfa eklenir (GOOG → GOOGL): aynı şirket haritada iki kez görünmesin
     by = {r["code"]: r for r in rows}
+    ns = {r["code"]: (shares.get(r["code"]) or {}).get("n") for r in rows}
     for sec, main in DUAL.items():
         if sec in by and main in by:
-            if by[sec]["mcap"] and by[main]["mcap"]:
+            same = ns.get(sec) and ns.get(main) and abs(ns[sec] / ns[main] - 1) < 0.01
+            # Yahoo çoğu zaman iki sınıfa da şirketin toplam pay sayısını verir: o durumda toplamak değeri ikiye katlar
+            if by[sec]["mcap"] and by[main]["mcap"] and not same:
+                by[main]["mc0"] = by[main]["mcap"]        # yalnız ana sınıf (temel taramada pay başı değer için)
                 by[main]["mcap"] += by[sec]["mcap"]
             rows.remove(by[sec])
     return {"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "asof": asof.date().isoformat(),

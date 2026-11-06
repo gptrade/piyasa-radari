@@ -44,3 +44,5 @@ def test_dual_class_merged():
     ms = [{"code": "GOOGL", "name": "A", "sector": "X"}, {"code": "GOOG", "name": "A", "sector": "X"}]
     d = U.build(px, ms, {"GOOGL": {"n": 2}, "GOOG": {"n": 3}})
     assert [r["code"] for r in d["stocks"]] == ["GOOGL"] and d["stocks"][0]["mcap"] == 500
+    d = U.build(px, ms, {"GOOGL": {"n": 12}, "GOOG": {"n": 12}})          # Yahoo iki sınıfa da toplam payı verirse
+    assert d["stocks"][0]["mcap"] == 1200

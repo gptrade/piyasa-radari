@@ -34,11 +34,13 @@ INDEX_URL = "https://www.sec.gov/Archives/edgar/daily-index/{y}/QTR{q}/form.{d}.
 QUARTERS = 20                     # 5 yıl
 STALE_DAYS = 30                   # dosyalama görülmese de bu kadar günde bir yenilenir
 PAUSE = 0.2
+SER_VER = 2                       # seri şeması/eşleme değişince tüm şirketler yeniden indirilir
 
 # BIST seri kalemi → (us-gaap etiketleri öncelik sırasıyla, işaret). İşaret −1: gider/ödeme, BIST şemasında eksi tutulur.
 DUR = {
     "revenue": (["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet",
-                 "RevenueFromContractWithCustomerIncludingAssessedTax", "RevenuesNetOfInterestExpense"], 1),
+                 "RevenueFromContractWithCustomerIncludingAssessedTax", "RevenuesNetOfInterestExpense",
+                 "RegulatedAndUnregulatedOperatingRevenue", "ElectricUtilityRevenue", "RevenuesExcludingInterestAndDividends"], 1),
     "cogs": (["CostOfRevenue", "CostOfGoodsAndServicesSold", "CostOfGoodsSold", "CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization"], -1),
     "gross": (["GrossProfit"], 1),
     "gna": (["SellingGeneralAndAdministrativeExpense", "GeneralAndAdministrativeExpense"], -1),
@@ -56,7 +58,7 @@ DUR = {
     "cfo": (["NetCashProvidedByUsedInOperatingActivities", "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations"], 1),
     "capex": (["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets",
                "PaymentsForCapitalImprovements"], -1),
-    "dividends_paid": (["PaymentsOfDividendsCommonStock", "PaymentsOfDividends"], -1),
+    "dividends_paid": (["PaymentsOfDividendsCommonStock", "PaymentsOfDividends", "PaymentsOfOrdinaryDividends"], -1),
     "interest_paid": (["InterestPaidNet", "InterestPaid"], -1),
 }
 INST = {
@@ -126,10 +128,11 @@ def _units(tagdoc: dict, unit: str = "USD") -> list[dict]:
     return u.get(unit) or (next(iter(u.values())) if len(u) == 1 else [])
 
 
-def quarterly_flow(facts: list[dict]) -> dict[str, float]:
+def quarterly_flow(facts: list[dict], key=None) -> dict[str, float]:
     """Süreli (gelir tablosu / nakit akışı) bir etiketin çeyreklik değerleri {pk: değer}.
 
     Doğrudan ~3 aylık değerler öncelikli; yoksa aynı başlangıçlı YTD değerlerin farkı (6A−3A, 9A−6A, 12A−9A)."""
+    key = key or quarter_key
     by = _latest(facts)
     direct: dict[str, float] = {}
     ytd: dict[str, list] = {}
@@ -138,42 +141,64 @@ def quarterly_flow(facts: list[dict]) -> dict[str, float]:
             continue
         days = (_d(end) - _d(start)).days
         if 80 <= days <= 100:
-            direct[quarter_key(end)] = float(f["val"])
+            direct[key(end)] = float(f["val"])
         if 80 <= days <= 380:
             ytd.setdefault(start, []).append((end, days, float(f["val"])))
     derived: dict[str, float] = {}
     for start, xs in ytd.items():
         xs.sort()
         for (e0, d0, v0), (e1, d1, v1) in zip(xs, xs[1:]):
-            if 75 <= d1 - d0 <= 105:
-                derived.setdefault(quarter_key(e1), v1 - v0)
+            if 75 <= d1 - d0 <= 120:                      # 16 haftalık son çeyrekler (AutoZone) dahil
+                derived.setdefault(key(e1), v1 - v0)
     out = {**derived, **direct}
     return out
 
 
-def annual_flow(facts: list[dict]) -> dict[str, float]:
+def annual_flow(facts: list[dict], key=None) -> dict[str, float]:
     """Yıllık (~12 ay) değerler {mali yıl sonu pk: değer}."""
-    return {quarter_key(e): float(f["val"]) for (s, e), f in _latest(facts).items()
+    key = key or quarter_key
+    return {key(e): float(f["val"]) for (s, e), f in _latest(facts).items()
             if s and 350 <= (_d(e) - _d(s)).days <= 380}
 
 
-def instant(facts: list[dict]) -> dict[str, float]:
+def instant(facts: list[dict], key=None) -> dict[str, float]:
+    key = key or quarter_key
     out, seen = {}, {}
     for (s, e), f in _latest(facts).items():
         if s:
             continue
-        pk = quarter_key(e)
+        pk = key(e)
         if pk not in seen or e > seen[pk]:
             out[pk], seen[pk] = float(f["val"]), e
     return out
 
 
-def _pick(gaap: dict, tags: list[str], fn) -> dict[str, float]:
+def fiscal_keys(gaap: dict):
+    """Mali çeyrek sonları bilanço tarihlerinden zincirlenir: en son tarih en yakın takvim çeyreğine, öncekiler birer
+    çeyrek geriye yazılır. 52-53 haftalık ve 12/12/12/16 haftalık takvimlerde iki çeyreğin aynı anahtara düşmesi önlenir."""
+    ends = sorted({f["end"] for t in ("Assets", "LiabilitiesAndStockholdersEquity") if t in gaap
+                   for f in _units(gaap[t]) if f.get("end") and not f.get("start")}, reverse=True)
+    chain: list[tuple[date, str]] = []
+    for e in ends:
+        d = _d(e)
+        if not chain:
+            chain.append((d, quarter_key(e)))
+        elif (chain[-1][0] - d).days >= 60:
+            chain.append((d, _shift(chain[-1][1], -max(1, round((chain[-1][0] - d).days / 91.3)))))
+
+    def key(end: str) -> str:
+        d = _d(end)
+        best = min(chain, key=lambda c: abs((c[0] - d).days), default=None)
+        return best[1] if best and abs((best[0] - d).days) <= 25 else quarter_key(end)
+    return key
+
+
+def _pick(gaap: dict, tags: list[str], fn, key=None) -> dict[str, float]:
     """Etiketleri öncelik sırasıyla birleştirir: önceki etiketin boş bıraktığı dönemleri sonraki doldurur."""
     out: dict[str, float] = {}
     for t in tags:
         if t in gaap:
-            for pk, v in fn(_units(gaap[t])).items():
+            for pk, v in fn(_units(gaap[t]), key).items():
                 out.setdefault(pk, v)
     return out
 
@@ -181,16 +206,17 @@ def _pick(gaap: dict, tags: list[str], fn) -> dict[str, float]:
 def build_series(facts: dict, quarters: int = QUARTERS) -> dict | None:
     """companyfacts → BIST seri şeması (metrics.View ile okunur). Yeterli veri yoksa None."""
     gaap = (facts.get("facts") or {}).get("us-gaap") or {}
+    key = fiscal_keys(gaap)
     q: dict[str, dict] = {}
     for item, (tags, sign) in DUR.items():
-        qv = _pick(gaap, tags, quarterly_flow)
-        av = _pick(gaap, tags, annual_flow)
+        qv = _pick(gaap, tags, quarterly_flow, key)
+        av = _pick(gaap, tags, annual_flow, key)
         for pk, a in av.items():                         # 4. çeyrek (ya da eksik tek çeyrek) = yıllık − diğer üçü
             prev = [qv.get(_shift(pk, -k)) for k in (1, 2, 3)]
             if pk not in qv and None not in prev:
                 qv[pk] = a - sum(prev)
         q[item] = {pk: v * sign for pk, v in qv.items()}
-    bs = {item: _pick(gaap, tags, instant) for item, tags in INST.items()}
+    bs = {item: _pick(gaap, tags, instant, key) for item, tags in INST.items()}
     rev = q["revenue"]
     if not rev and not q["net_parent"]:
         return None
@@ -218,6 +244,8 @@ def build_series(facts: dict, quarters: int = QUARTERS) -> dict | None:
                                 "equity_parent", "minority", "retained")}
     out_bs["intangibles"] = [(g("goodwill", i) or 0) + (g("intang_x", i) or 0) if g("goodwill", i) is not None or g("intang_x", i) is not None
                              else None for i in range(n)]
+    out_bs["equity_parent"] = [g("equity_parent", i) if g("equity_parent", i) is not None else
+                               (g("equity_total", i) - (g("minority", i) or 0) if g("equity_total", i) is not None else None) for i in range(n)]
     out_bs["equity_total"] = [g("equity_total", i) if g("equity_total", i) is not None else
                               (g("equity_parent", i) + (g("minority", i) or 0) if g("equity_parent", i) is not None else None) for i in range(n)]
     out_bs["total_liab"] = [g("total_liab", i) if g("total_liab", i) is not None else
@@ -310,12 +338,15 @@ def universe() -> list[dict]:
     """us_map.json (piyasa değeri, momentum, endeks etiketi, sektör) yoksa yalnız bileşen listeleri."""
     from .. import usmap
     mp = {r["code"]: r for r in (_load(USMAP, {}).get("stocks") or [])}
+    ysh = _load(usmap.SHARES, {}).get("shares", {})
     out = []
     for m in usmap.members():
         if m["code"] in usmap.DUAL:                       # GOOG → GOOGL: aynı şirket bir kez
             continue
         r = mp.get(m["code"], {})
-        out.append({**m, "mcap": r.get("mcap"), "mom": r.get("mom")})
+        n = ((ysh.get(m["code"]) or {}).get("n"))
+        own = r.get("mc0") or r.get("mcap")
+        out.append({**m, "mcap": r.get("mcap"), "mom": r.get("mom"), "ysh": n, "px": own / n if own and n else None})
     return out
 
 
@@ -343,6 +374,8 @@ def refresh(budget: int = 120, now: datetime | None = None) -> dict:
         st["index_day"] = day.isoformat()
         day += timedelta(days=1)
     fetched = st.get("fetched") or {}
+    if st.get("ver") != SER_VER:
+        fetched, st["ver"] = {}, SER_VER
     missing = [m["code"] for m in ms if m["code"] not in fetched and ciks.get(m["code"])]
     stale = sorted((c for c, t in fetched.items() if now - datetime.fromisoformat(t) > timedelta(days=STALE_DAYS)), key=fetched.get)
     order = list(dict.fromkeys(sorted(queue) + missing + stale))
@@ -377,11 +410,16 @@ def build_screen(ms: list[dict] | None = None) -> int:
         if not doc or not m.get("mcap"):
             continue
         ser = doc["series"]
-        sh = next((x for x in reversed(ser["bs"]["paid_capital"]) if x), None)
+        pc = ser["bs"]["paid_capital"]
+        sh = pc[-1]
+        ysh = m.get("ysh")
+        if ysh and (not sh or not 0.33 < sh / ysh < 3):     # SEC'te pay sayısı yok ya da birim/sınıf uyumsuz → Yahoo
+            pc[-1] = sh = ysh
         if not sh:
             continue
+        price = m.get("px") or m["mcap"] / sh                 # pay başı değer; SEC toplam pay × fiyat = tüm sınıflar
         try:
-            met = M.company(doc, m["mcap"] / sh, None, m.get("mom"))
+            met = M.company(doc, price, None, m.get("mom"))
         except Exception:  # noqa: BLE001
             log.exception("ABD metrik hesaplanamadı: %s", m["code"])
             continue

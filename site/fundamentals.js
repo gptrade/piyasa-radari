@@ -14,6 +14,7 @@
     scrTab: "kriter", crit: "Benjamin Graham — Savunmacı Yatırımcı", allPass: true, scrSector: "",
     filters: store.get("radar.finFilters", [["pe", "<=", 15], ["roe", ">=", 0.1]]),
     cmp: store.get("radar.finCmp", []), cmpMetric: "rev_growth",
+    mkt: store.get("radar.finMkt", "bist"), usIx: store.get("radar.finUsIx", ""), us: null, usErr: null, cur: "₺",
   };
 
   // ───────────── biçimler
@@ -23,9 +24,9 @@
   const tl = v => {
     if (v == null || !isFinite(v)) return "—";
     const a = Math.abs(v);
-    if (a >= 1e9) return fmt.num(v / 1e9, 2) + " mr ₺";
-    if (a >= 1e6) return fmt.num(v / 1e6, 1) + " mn ₺";
-    return fmt.num(v, 0) + " ₺";
+    if (a >= 1e9) return fmt.num(v / 1e9, 2) + " mr " + S.cur;
+    if (a >= 1e6) return fmt.num(v / 1e6, 1) + " mn " + S.cur;
+    return fmt.num(v, 0) + " " + S.cur;
   };
   const bin = v => v == null ? "—" : fmt.num(v / 1000, 0);
   const days = v => v == null ? "—" : fmt.num(v, 0) + " gün";
@@ -225,9 +226,20 @@
   }
   // Endeks süzgeci (Tümü · BIST-30 · BIST-50 · BIST-100 · Katılım)
   const IXS = [["", "Tümü"], ["XU030", "BIST-30"], ["XU050", "BIST-50"], ["XU100", "BIST-100"], ["XKTUM", "Katılım"]];
-  const inIx = r => !S.ix || (r.idx || []).includes(S.ix);
-  const ixSeg = () => `<div class="seg" role="radiogroup" aria-label="Endeks">${IXS.map(([k, l]) => `<button type="button" role="radio" data-ix="${k}" aria-checked="${S.ix === k}">${l}</button>`).join("")}</div>`;
-  function bindIx(el, cb) { $$("[data-ix]", el).forEach(b => b.onclick = () => { S.ix = b.dataset.ix; store.set("radar.finIx", S.ix); cb(); }); }
+  const IXS_US = [["", "Tümü"], ["sp", "S&P 500"], ["ndx", "Nasdaq-100"], ["dji", "Dow 30"]];
+  const isUS = () => S.mkt === "us" && sh.route === "tarama";
+  const inIx = r => { const k = isUS() ? S.usIx : S.ix; return !k || (r.idx || []).includes(k); };
+  const ixSeg = () => { const us = isUS(), cur = us ? S.usIx : S.ix;
+    return `<div class="seg" role="radiogroup" aria-label="Endeks">${(us ? IXS_US : IXS).map(([k, l]) => `<button type="button" role="radio" data-ix="${k}" aria-checked="${cur === k}">${l}</button>`).join("")}</div>`; };
+  const mktSeg = () => `<div class="seg" role="radiogroup" aria-label="Piyasa">${[["bist", "Borsa İstanbul"], ["us", "ABD"]].map(([k, l]) => `<button type="button" role="radio" data-mkt="${k}" aria-checked="${S.mkt === k}">${l}</button>`).join("")}</div>`;
+  function bindIx(el, cb) { $$("[data-ix]", el).forEach(b => b.onclick = () => {
+    if (isUS()) { S.usIx = b.dataset.ix; store.set("radar.finUsIx", S.usIx); } else { S.ix = b.dataset.ix; store.set("radar.finIx", S.ix); }
+    cb(); }); }
+  async function loadUS() {
+    if (S.us || S.usErr) return;
+    try { S.us = await getJSON("data/fin_us/_screen.json"); } catch (e) { S.usErr = e; }
+    if (sh.route === "tarama") renderScreen();
+  }
   function bindRows(el) {
     $$("tr.row[data-sec]", el).forEach(tr => { const f = () => { S.sector = tr.dataset.sec; renderOverview(); $("#view-temel").scrollIntoView?.({ block: "start" }); };
       tr.onclick = f; tr.onkeydown = e => { if (e.key === "Enter") f(); }; });
@@ -736,7 +748,7 @@
   };
   function critChips(sets, labels, passN) {
     const chip = s2 => { const n = passN(s2); return `<button type="button" class="chip" data-set="${esc(s2)}" aria-pressed="${s2 === S.crit}" data-tip="${esc(`${labels[s2].length} kriter · ${n} hisse hepsini sağlıyor (seçili kapsamda)`)}">${esc(s2)} <span class="n ${n ? "" : "z"}">${n}</span></button>`; };
-    const groups = (S.screen.criteria_groups || []).map(([g, ks]) => [g, ks.filter(k => sets.includes(k))]).filter(([, ks]) => ks.length);
+    const groups = ((S.mkt === "us" && sh.route === "tarama" ? S.us : S.screen).criteria_groups || []).map(([g, ks]) => [g, ks.filter(k => sets.includes(k))]).filter(([, ks]) => ks.length);
     const seen = new Set(groups.flatMap(([, ks]) => ks)), rest = sets.filter(k => !seen.has(k));
     if (rest.length) groups.push(["Diğer", rest]);
     if (groups.length < 2) return `<div class="chips">${sets.map(chip).join("")}</div>`;
@@ -745,12 +757,25 @@
   function renderScreen() {
     const el = $("#view-tarama");
     if (notReady(el)) return;
-    const labels = S.screen.criteria_labels || {};
+    if (S.mkt === "us" && !S.us) {
+      if (!S.usErr) { loadUS(); el.innerHTML = `<section class="card"><div class="card-head">${mktSeg()}</div><div class="skeleton sk-block" style="height:220px"></div></section>`; }
+      else el.innerHTML = `<section class="card"><div class="card-head">${mktSeg()}</div>${sh.stateHTML({ title: "ABD temel analiz verisi henüz hazır değil", msg: "SEC EDGAR verisi günlük olarak derlenir; ilk derleme tamamlanınca burada görünür.", compact: true })}</section>`;
+      $$("[data-mkt]", el).forEach(b => b.onclick = () => { S.mkt = b.dataset.mkt; store.set("radar.finMkt", S.mkt); S.scrSector = ""; renderScreen(); });
+      return;
+    }
+    S.cur = S.mkt === "us" ? "$" : "₺";
+    try { renderScreen_(el); } finally { S.cur = "₺"; }
+  }
+  function renderScreen_(el) {
+    const scr = S.mkt === "us" ? S.us : S.screen, src = scr.rows || [];
+    const labels = scr.criteria_labels || {};
     const sets = Object.keys(labels);
     if (!sets.includes(S.crit)) S.crit = sets[0];
-    const all = rows().filter(r => (!S.scrSector || (r.sector || "Diğer") === S.scrSector) && inIx(r));
-    const sectors = [...new Set(rows().map(r => r.sector || "Diğer"))].sort((a, b) => a.localeCompare(b, "tr"));
+    const all = src.filter(r => (!S.scrSector || (r.sector || "Diğer") === S.scrSector) && inIx(r));
+    const sectors = [...new Set(src.map(r => r.sector || "Diğer"))].sort((a, b) => a.localeCompare(b, "tr"));
     const tabsH = `<div class="seg fa-tabs" role="tablist"><button type="button" role="tab" data-st="metrik" aria-checked="${S.scrTab === "metrik"}">Metrik taraması</button><button type="button" role="tab" data-st="kriter" aria-checked="${S.scrTab === "kriter"}">Kriter taraması (sağlandı / sağlanmadı)</button><button type="button" role="tab" data-st="harita" aria-checked="${S.scrTab === "harita"}">Değerleme haritası</button></div>`;
+    const us = S.mkt === "us";
+    const mktH = `<div class="fa-mkt">${mktSeg()}${us ? `<span class="t3">SEC EDGAR · tutarlar USD, büyümeler nominal · ${src.length} şirket</span>` : ""}</div>`;
     const secSel = `<select id="faScrSec" class="fa-select" aria-label="Sektör"><option value="">Tüm sektörler</option>${sectors.map(s => `<option ${s === S.scrSector ? "selected" : ""}>${esc(s)}</option>`).join("")}</select>`;
     let body;
     if (S.scrTab === "harita") body = valMap(all, secSel);
@@ -791,7 +816,9 @@
           <tbody>${xs.sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1)).map(r => `<tr class="row" tabindex="0" data-code="${r.code}"><td><b class="mono">${r.code}</b><button type="button" class="tk-open tk-pi" data-sym="${r.code}" aria-label="${r.code} hisse paneli" data-tip="Hisse paneli">◧</button> <span class="muted fa-name">${esc(trTitle(r.title))}</span></td>
             ${keys.map(k => `<td class="num">${MET[k][1](mval(r, k))}</td>`).join("")}<td class="num">${r.overall ?? "—"} ${gradeTag(r.grade)}</td></tr>`).join("") || `<tr><td colspan="${keys.length + 2}">${sh.stateHTML({ title: "Eşleşen hisse yok", compact: true })}</td></tr>`}</tbody></table></div></section>`;
     }
-    el.innerHTML = tabsH + body;
+    el.innerHTML = `<div class="fa-scr-top">${tabsH}${mktH}</div>` + body;
+    if (us) $$("tr.row[data-code]", el).forEach(tr => { tr.classList.remove("row"); tr.removeAttribute("tabindex"); });   // ABD şirket sayfası yok
+    $$("[data-mkt]", el).forEach(b => b.onclick = () => { S.mkt = b.dataset.mkt; store.set("radar.finMkt", S.mkt); S.scrSector = ""; renderScreen(); });
     $$("[data-st]", el).forEach(b => b.onclick = () => { S.scrTab = b.dataset.st; renderScreen(); });
     $$("[data-set]", el).forEach(b => b.onclick = () => { S.crit = b.dataset.set; S.critLimit = 25; renderScreen(); });
     $("#crMore") && ($("#crMore").onclick = () => { S.critLimit = (S.critLimit || 25) + 25; renderScreen(); });
@@ -799,7 +826,7 @@
     $("#faAllPass") && ($("#faAllPass").onchange = e => { S.allPass = e.target.checked; S.critLimit = 25; renderScreen(); });
     $("#faScrSec").onchange = e => { S.scrSector = e.target.value; renderScreen(); };
     bindIx(el, renderScreen);
-    $$(".vm-pt", el).forEach(c => c.onclick = () => sh.go("hisse", { param: c.dataset.code, focus: true }));
+    if (!us) $$(".vm-pt", el).forEach(c => c.onclick = () => sh.go("hisse", { param: c.dataset.code, focus: true }));
     const saveF = () => { store.set("radar.finFilters", S.filters); renderScreen(); };
     $$(".fa-f", el).forEach(f => {
       const i = +f.dataset.i;
