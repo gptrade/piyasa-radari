@@ -65,9 +65,11 @@
     const x = i => P.l + (W - P.l - P.r) * i / (n - 1), y = v => P.t + (h - P.t - P.b) * (hi - v) / (hi - lo);
     const bw = Math.max(1, (W - P.l - P.r) / n * 0.8);
     const ticks = [lo + pad, (lo + hi) / 2, hi - pad];
-    const months = []; let pm = "";
-    dates.forEach((d, i) => { const m = d.slice(0, 7); if (m !== pm) { pm = m; months.push(i); } });
-    const step = Math.ceil(months.length / (W / 90));
+    // kısa dönemlerde (≤ 3 ay) haftalık gün etiketi, uzun dönemlerde ay etiketi
+    const short = dates.length <= 70, months = []; let pm = "";
+    dates.forEach((d, i) => { const m = short ? String(Math.floor((Date.parse(d) / 864e5 + 3) / 7)) : d.slice(0, 7); if (m !== pm) { pm = m; months.push(i); } });
+    if (short && months.length > 1 && months[1] - months[0] < 3) months.shift();   // yarım ilk hafta etiketi üst üste binmesin
+    const step = Math.ceil(months.length / (W / (short ? 70 : 90)));
     let bgs = "";
     if (bg) {
       const idx = new Map(dates.map((d, i) => [d, i]));
@@ -79,7 +81,7 @@
       ${ticks.map(t => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(t)}" y2="${y(t)}" class="g"/><text x="${P.l - 6}" y="${y(t) + 4}" text-anchor="end">${fmtY(t)}</text>`).join("")}
       ${zero ? `<line x1="${P.l}" x2="${W - P.r}" y1="${y(0)}" y2="${y(0)}" class="z"/>` : ""}
       ${bands.map(b => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(b.v)}" y2="${y(b.v)}" class="band"/><text x="${W - P.r - 4}" y="${y(b.v) - 4}" text-anchor="end" class="bl">${esc(b.l)}</text>`).join("")}
-      ${months.filter((_, k) => k % step === 0).map(i => `<text x="${x(i)}" y="${h - 6}" text-anchor="middle">${dlab(dates[i]).split(" ").slice(1).join(" ")}</text>`).join("")}
+      ${months.filter((_, k) => k % step === 0).map(i => `<text x="${x(i)}" y="${h - 6}" text-anchor="middle">${short ? dlab(dates[i]).split(" ").slice(0, 2).join(" ") : dlab(dates[i]).split(" ").slice(1).join(" ")}</text>`).join("")}
       ${series.map(s => s.kind === "bar"
         ? s.v.map((v, i) => v == null ? "" : `<rect x="${x(i) - bw / 2}" y="${Math.min(y(0), y(v))}" width="${bw}" height="${Math.max(0.5, Math.abs(y(v) - y(0)))}" fill="${s.color || (v >= 0 ? "var(--up)" : "var(--down)")}" opacity="${s.op ?? 0.85}"/>`).join("")
         : `<path class="ln" style="stroke:${s.color}" d="${s.v.map((v, i) => v == null ? "" : `${i && s.v[i - 1] != null ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("")}"/>`).join("")}
@@ -118,6 +120,27 @@
   }
 
   // ─────────────────────────────── 1. genişlik
+  // Genişlik özet kutuları: her kutu tek soruya cevap verir, değer + kısa yorum (kesilmeden)
+  function breadthKpis(d, L, ewr1a) {
+    const zone = v => v == null ? ["", "—"] : v <= 0.15 ? ["down", "aşırı satım"] : v >= 0.85 ? ["up", "aşırı alım"] : v < 0.4 ? ["warn-t", "zayıf"] : v > 0.6 ? ["up", "güçlü"] : ["", "nötr"];
+    const ma = [["20 gün", "p20"], ["50 gün", "p50"], ["200 gün", "p200"]].map(([l, k]) => { const v = L(k), z = zone(v);
+      return `<li><span class="gk-l">${l}</span><span class="gk-bar"><i class="${z[0]}" style="width:${v == null ? 0 : (v * 100).toFixed(0)}%"></i><b style="left:15%"></b><b style="left:85%"></b></span><span class="gk-v">${pp(v)}</span><span class="gk-z ${z[0]}">${z[1]}</span></li>`; }).join("");
+    const adv = L("adv"), dec = L("dec"), tot = (adv || 0) + (dec || 0), ap = tot ? adv / tot : null;
+    const nh = L("nh"), nl = L("nl"), n50 = d.regime.c.nhl50;
+    const box = (t, body, tip = "") => `<div class="gk" ${tip ? `data-tip="${esc(tip)}"` : ""}><h3 class="gk-t">${t}</h3>${body}</div>`;
+    return `<div class="gk-grid">
+      ${box("Ortalamasının üstündeki hisseler", `<ul class="gk-ma">${ma}</ul><p class="gk-n">BIST Tüm hisselerinin yüzdesi · çizgiler %15 (aşırı satım) ve %85 (aşırı alım)</p>`)}
+      ${box("52 haftanın zirvesi / dibi", `<div class="gk-big"><span><b class="up">${fmt.int(nh)}</b> yeni zirve</span><span><b class="down">${fmt.int(nl)}</b> yeni dip</span></div>
+        <p class="gk-n">Son 50 günde ortalama günde ${fmt.num(Math.abs(n50), 0)} hisse ${n50 < 0 ? "daha fazla dipte" : "daha fazla zirvede"} (net ${n50 > 0 ? "+" : ""}${fmt.num(n50, 0)})</p>`)}
+      ${box("Bugün yükselen / düşen", `<div class="gk-big"><span><b class="up">${fmt.int(adv)}</b> yükselen</span><span><b class="down">${fmt.int(dec)}</b> düşen</span></div>
+        <span class="gk-split"><i class="up" style="flex:${adv || 0.001}"></i><i class="down" style="flex:${dec || 0.001}"></i></span>
+        <p class="gk-n">Hisselerin %${fmt.num((ap || 0) * 100, 0)}'i yükseldi · yükselen hisselerin hacim payı ${pp(L("upv"))}</p>`,
+        "Yükselen hacim payı: yükselen hisselerin TL hacminin, yükselen + düşen hisselerin toplam hacmine oranı. %90 üstü/%10 altı günler grafikte işaretli.")}
+      ${box("Küçükler mi büyükler mi? (1 ay)", `<div class="gk-big"><span><b class="${sgn(ewr1a)}">${pc(ewr1a)}</b></span></div>
+        <p class="gk-n">${ewr1a == null ? "" : ewr1a < -0.02 ? "Eşit ağırlıklı BIST Tüm, XU100'ün gerisinde: hareket büyük hisselerde yoğun, tabana yayılmıyor." : ewr1a > 0.02 ? "Eşit ağırlıklı BIST Tüm, XU100'ün önünde: hareket küçük hisselere yayılmış." : "Eşit ağırlıklı BIST Tüm ile XU100 başa baş."}</p>`,
+        "Eşit ağırlıklı BIST Tüm endeksinin XU100'e oranının son 1 aydaki değişimi")}
+    </div>`;
+  }
   function tabBreadth() {
     const d = S.doc, s = d.series, n = s.d.length, k = Math.min(S.range, n), sl = a => a.slice(n - k);
     const D = sl(s.d), L = i => s[i].at(-1);
@@ -132,13 +155,8 @@
     const ewr1a = s.ew_rel.length > 22 ? s.ew_rel.at(-1) / s.ew_rel.at(-22) - 1 : null;
     const card = (id, title, meta, body, foot = "") => `<section class="card" aria-labelledby="${id}"><div class="card-head"><h2 class="card-title" id="${id}">${title}</h2><span class="card-meta">${meta}</span></div>${body}${foot ? `<p class="t3 gc-foot">${foot}</p>` : ""}</section>`;
     return `${regimeCard()}
-      <div class="kpi-grid">
-        ${kpi("20 / 50 / 200 günlük ort. üstü", `${pp(L("p20"))} · ${pp(L("p50"))} · ${pp(L("p200"))}`, "hisse oranı · %15 altı aşırı satım, %85 üstü aşırı alım")}
-        ${kpi("Yeni zirve / dip (52 hafta)", `<span class="up">${fmt.int(L("nh"))}</span> / <span class="down">${fmt.int(L("nl"))}</span>`, `net 50 gün ort. ${fmt.num(d.regime.c.nhl50, 0)}`)}
-        ${kpi("Yükselen / düşen", `<span class="up">${fmt.int(L("adv"))}</span> / <span class="down">${fmt.int(L("dec"))}</span>`, `yükselen hacim payı ${pp(L("upv"))}`, "Yükselen hisselerin TL hacminin, yükselen + düşen hisselerin toplam hacmine oranı. %90 üstü/%10 altı günler aşağıda işaretli.")}
-        ${kpi("Eşit ağırlık / XU100 (1 ay)", `<span class="${sgn(ewr1a)}">${pc(ewr1a)}</span>`, "eksi: yükseliş/düşüş büyük hisselerde, tabana yayılmıyor", "Eşit ağırlıklı BIST Tüm endeksinin XU100'e oranının son 1 aydaki değişimi")}
-      </div>
-      <div class="toolbar">${seg("gcRange", { 126: "6A", 252: "1Y", 504: "2Y", 756: "3Y" }, S.range, "Grafik dönemi")}<span class="grow"></span><span class="card-meta">Arka plan: rejim · <i class="gc-dot th"></i> sıçrama <i class="gc-dot u90"></i> %90 alım <i class="gc-dot d90"></i> %90 satış <i class="gc-dot pdv"></i> pozitif / <i class="gc-dot ndv"></i> negatif diverjans</span></div>
+      ${breadthKpis(d, L, ewr1a)}
+      <div class="toolbar">${seg("gcRange", { 21: "1A", 63: "3A", 126: "6A", 252: "1Y", 504: "2Y", 756: "3Y" }, S.range, "Grafik dönemi")}<span class="grow"></span><span class="card-meta">Arka plan: rejim · <i class="gc-dot th"></i> sıçrama <i class="gc-dot u90"></i> %90 alım <i class="gc-dot d90"></i> %90 satış <i class="gc-dot pdv"></i> pozitif / <i class="gc-dot ndv"></i> negatif diverjans</span></div>
       ${card("gcC1", "XU100 ve piyasa rejimi", "kapanış · arka plan rejim", chart(D, [{ v: sl(s.bench), kind: "line", color: "var(--text)", label: "XU100" }], { bg, marks, h: 240, fmtY: v => fmt.num(v, 0), title: "XU100" }),
         `<span class="gc-key"><i class="r-boga"></i>Boğa <i class="r-toparlanma"></i>Toparlanma <i class="r-duzeltme"></i>Düzeltme <i class="r-dip"></i>Dip arayışı <i class="r-ayi"></i>Ayı</span>`)}
       <div class="fa-two">
