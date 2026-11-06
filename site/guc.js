@@ -6,7 +6,7 @@
   const sh = window.shell;
   const { $, $$, esc, fmt } = sh;
   const SRC = "data/guc/guc.json";
-  const S = { doc: null, loaded: false, loading: false, error: null, missing: false, tab: "genislik", per: "1A", range: 252,
+  const S = { doc: null, loaded: false, loading: false, error: null, missing: false, tab: "genislik", per: "1A", range: 252, univ: "tum",
     sort: "rank", sdir: 1, tmPer: "d1", tmSec: "", tmSize: "mcap", vKind: "endeks", vSort: "mcap", hs: { quad: true, rs: 80, tt: 6, vol: false, liq: true, sec: "", q: "", sort: "rs", sdir: 1, limit: 60 }, selSec: null };
   const TABS = { genislik: "Genişlik ve rejim", harita: "Isı haritası", sektor: "Sektör rotasyonu", hisse: "Güçlü hisseler", deger: "Değerleme", kuresel: "Küresel" };
   const REG = {
@@ -66,9 +66,9 @@
     const bw = Math.max(1, (W - P.l - P.r) / n * 0.8);
     const ticks = [lo + pad, (lo + hi) / 2, hi - pad];
     // kısa dönemlerde (≤ 3 ay) haftalık gün etiketi, uzun dönemlerde ay etiketi
-    const short = dates.length <= 70, months = []; let pm = "";
-    dates.forEach((d, i) => { const m = short ? String(Math.floor((Date.parse(d) / 864e5 + 3) / 7)) : d.slice(0, 7); if (m !== pm) { pm = m; months.push(i); } });
-    if (short && months.length > 1 && months[1] - months[0] < 3) months.shift();   // yarım ilk hafta etiketi üst üste binmesin
+    const short = dates.length <= 70, daily = dates.length <= 10, months = []; let pm = "";
+    dates.forEach((d, i) => { const m = daily ? d : short ? String(Math.floor((Date.parse(d) / 864e5 + 3) / 7)) : d.slice(0, 7); if (m !== pm) { pm = m; months.push(i); } });
+    if (short && !daily && months.length > 1 && months[1] - months[0] < 3) months.shift();   // yarım ilk hafta etiketi üst üste binmesin
     const step = Math.ceil(months.length / (W / (short ? 70 : 90)));
     let bgs = "";
     if (bg) {
@@ -93,9 +93,9 @@
   const sma = (xs, n) => xs.map((_, i) => { if (i < n - 1) return null; let s = 0, c = 0; for (let j = i - n + 1; j <= i; j++) if (xs[j] != null) { s += xs[j]; c++; } return c ? s / c : null; });
 
   // ─────────────────────────────── rejim kartı (Bugün sayfası da kullanır)
-  function regimeCard(compact = false) {
+  function regimeCard(compact = false, g = S.doc?.regime) {
     if (!S.loaded) return "";
-    const g = S.doc.regime, c = g.c, f = g.flags, r = REG[g.state] || REG.duzeltme;
+    const c = g.c, f = g.flags, r = REG[g.state] || REG.duzeltme;
     const ck = (ok, txt, tip = "") => `<li class="${ok ? "ok" : "no"}" ${tip ? `data-tip="${esc(tip)}"` : ""}><span aria-hidden="true">${ok ? "✓" : "✗"}</span>${txt}</li>`;
     const conds = [
       ck(c.above200, "XU100 200 günlük ortalamanın üstünde"),
@@ -129,7 +129,7 @@
     const nh = L("nh"), nl = L("nl"), n50 = d.regime.c.nhl50;
     const box = (t, body, tip = "") => `<div class="gk" ${tip ? `data-tip="${esc(tip)}"` : ""}><h3 class="gk-t">${t}</h3>${body}</div>`;
     return `<div class="gk-grid">
-      ${box("Ortalamasının üstündeki hisseler", `<ul class="gk-ma">${ma}</ul><p class="gk-n">BIST Tüm hisselerinin yüzdesi · çizgiler %15 (aşırı satım) ve %85 (aşırı alım)</p>`)}
+      ${box("Ortalamasının üstündeki hisseler", `<ul class="gk-ma">${ma}</ul><p class="gk-n">${S.univ === "xu100" ? "XU100 bileşenlerinin" : "BIST Tüm hisselerinin"} yüzdesi · çizgiler %15 (aşırı satım) ve %85 (aşırı alım)</p>`)}
       ${box("52 haftanın zirvesi / dibi", `<div class="gk-big"><span><b class="up">${fmt.int(nh)}</b> yeni zirve</span><span><b class="down">${fmt.int(nl)}</b> yeni dip</span></div>
         <p class="gk-n">Son 50 günde ortalama günde ${fmt.num(Math.abs(n50), 0)} hisse ${n50 < 0 ? "daha fazla dipte" : "daha fazla zirvede"} (net ${n50 > 0 ? "+" : ""}${fmt.num(n50, 0)})</p>`)}
       ${box("Bugün yükselen / düşen", `<div class="gk-big"><span><b class="up">${fmt.int(adv)}</b> yükselen</span><span><b class="down">${fmt.int(dec)}</b> düşen</span></div>
@@ -137,12 +137,15 @@
         <p class="gk-n">Hisselerin %${fmt.num((ap || 0) * 100, 0)}'i yükseldi · yükselen hisselerin hacim payı ${pp(L("upv"))}</p>`,
         "Yükselen hacim payı: yükselen hisselerin TL hacminin, yükselen + düşen hisselerin toplam hacmine oranı. %90 üstü/%10 altı günler grafikte işaretli.")}
       ${box("Küçükler mi büyükler mi? (1 ay)", `<div class="gk-big"><span><b class="${sgn(ewr1a)}">${pc(ewr1a)}</b></span></div>
-        <p class="gk-n">${ewr1a == null ? "" : ewr1a < -0.02 ? "Eşit ağırlıklı BIST Tüm, XU100'ün gerisinde: hareket büyük hisselerde yoğun, tabana yayılmıyor." : ewr1a > 0.02 ? "Eşit ağırlıklı BIST Tüm, XU100'ün önünde: hareket küçük hisselere yayılmış." : "Eşit ağırlıklı BIST Tüm ile XU100 başa baş."}</p>`,
-        "Eşit ağırlıklı BIST Tüm endeksinin XU100'e oranının son 1 aydaki değişimi")}
+        <p class="gk-n">${ewr1a == null ? "" : ewr1a < -0.02 ? `Eşit ağırlıklı ${EWN()}, XU100'ün gerisinde: hareket büyük hisselerde yoğun, tabana yayılmıyor.` : ewr1a > 0.02 ? `Eşit ağırlıklı ${EWN()}, XU100'ün önünde: hareket küçük hisselere yayılmış.` : `Eşit ağırlıklı ${EWN()} ile XU100 başa baş.`}</p>`,
+        `Eşit ağırlıklı ${EWN()} sepetinin XU100'e oranının son 1 aydaki değişimi`)}
     </div>`;
   }
+  // Genişlik evreni: BIST Tüm (varsayılan) ya da yalnız XU100 bileşenleri (aynı ölçüler, ayrı rejim)
+  const EWN = () => S.univ === "xu100" ? "XU100 (her hisse aynı ağırlık)" : "BIST Tüm";
+  const viewDoc = () => S.univ === "xu100" && S.doc.views?.xu100 ? { ...S.doc, ...S.doc.views.xu100 } : S.doc;
   function tabBreadth() {
-    const d = S.doc, s = d.series, n = s.d.length, k = Math.min(S.range, n), sl = a => a.slice(n - k);
+    const d = viewDoc(), s = d.series, n = s.d.length, k = Math.min(S.range, n), sl = a => a.slice(n - k);
     const D = sl(s.d), L = i => s[i].at(-1);
     const nhl = s.nh.map((v, i) => v == null || s.nl[i] == null ? null : v - s.nl[i]);
     const ewr = sl(s.ew_rel), ewr0 = ewr.find(v => v != null);
@@ -154,13 +157,16 @@
       ...ev.div.map(e => ({ d: e.d, cls: e.k === "pos" ? "pdv" : "ndv", tip: `${e.k === "pos" ? "Pozitif" : "Negatif"} diverjans ${dlab(e.d)}` }))];
     const ewr1a = s.ew_rel.length > 22 ? s.ew_rel.at(-1) / s.ew_rel.at(-22) - 1 : null;
     const card = (id, title, meta, body, foot = "") => `<section class="card" aria-labelledby="${id}"><div class="card-head"><h2 class="card-title" id="${id}">${title}</h2><span class="card-meta">${meta}</span></div>${body}${foot ? `<p class="t3 gc-foot">${foot}</p>` : ""}</section>`;
-    return `${regimeCard()}
+    const xv = S.doc.views?.xu100;
+    const univ = xv ? `<div class="toolbar gc-univ"><span class="t3">Evren</span>${seg("gcUniv", { tum: `BIST Tüm · ${fmt.int(S.doc.universe)} hisse`, xu100: `BIST 100 · ${fmt.int(xv.universe)} hisse` }, S.univ, "Genişlik evreni")}
+      <span class="t3 gc-univ-n">${S.univ === "xu100" ? "Ölçüler yalnız XU100 bileşenleriyle; bugünkü bileşen listesi geçmişe uygulanır." : "Ölçüler borsadaki tüm hisselerle."}</span></div>` : "";
+    return `${univ}${regimeCard(false, d.regime)}
       ${breadthKpis(d, L, ewr1a)}
-      <div class="toolbar">${seg("gcRange", { 21: "1A", 63: "3A", 126: "6A", 252: "1Y", 504: "2Y", 756: "3Y" }, S.range, "Grafik dönemi")}<span class="grow"></span><span class="card-meta">Arka plan: rejim · <i class="gc-dot th"></i> sıçrama <i class="gc-dot u90"></i> %90 alım <i class="gc-dot d90"></i> %90 satış <i class="gc-dot pdv"></i> pozitif / <i class="gc-dot ndv"></i> negatif diverjans</span></div>
+      <div class="toolbar">${seg("gcRange", { 5: "1H", 21: "1A", 63: "3A", 126: "6A", 252: "1Y", 504: "2Y", 756: "3Y" }, S.range, "Grafik dönemi")}<span class="grow"></span><span class="card-meta">Arka plan: rejim · <i class="gc-dot th"></i> sıçrama <i class="gc-dot u90"></i> %90 alım <i class="gc-dot d90"></i> %90 satış <i class="gc-dot pdv"></i> pozitif / <i class="gc-dot ndv"></i> negatif diverjans</span></div>
       ${card("gcC1", "XU100 ve piyasa rejimi", "kapanış · arka plan rejim", chart(D, [{ v: sl(s.bench), kind: "line", color: "var(--text)", label: "XU100" }], { bg, marks, h: 240, fmtY: v => fmt.num(v, 0), title: "XU100" }),
         `<span class="gc-key"><i class="r-boga"></i>Boğa <i class="r-toparlanma"></i>Toparlanma <i class="r-duzeltme"></i>Düzeltme <i class="r-dip"></i>Dip arayışı <i class="r-ayi"></i>Ayı</span>`)}
       <div class="fa-two">
-        ${card("gcC2", "Ortalamanın üstündeki hisse oranı", "BIST Tüm", chart(D, [{ v: sl(s.p50).map(v => v == null ? null : v * 100), color: "var(--series-1)", label: "50 günlük" }, { v: sl(s.p200).map(v => v == null ? null : v * 100), color: "var(--series-2)", label: "200 günlük" }, { v: sl(s.p20).map(v => v == null ? null : v * 100), color: "var(--text-3)", label: "20 günlük" }], { bands: [{ v: 15, l: "aşırı satım" }, { v: 85, l: "aşırı alım" }], fmtY: v => `%${fmt.num(v, 0)}`, title: "ortalama üstü oran", w: 520, h: 260 }),
+        ${card("gcC2", "Ortalamanın üstündeki hisse oranı", S.univ === "xu100" ? "XU100 bileşenleri" : "BIST Tüm", chart(D, [{ v: sl(s.p50).map(v => v == null ? null : v * 100), color: "var(--series-1)", label: "50 günlük" }, { v: sl(s.p200).map(v => v == null ? null : v * 100), color: "var(--series-2)", label: "200 günlük" }, { v: sl(s.p20).map(v => v == null ? null : v * 100), color: "var(--text-3)", label: "20 günlük" }], { bands: [{ v: 15, l: "aşırı satım" }, { v: 85, l: "aşırı alım" }], fmtY: v => `%${fmt.num(v, 0)}`, title: "ortalama üstü oran", w: 520, h: 260 }),
           "Dipler çoğunlukla 20 ve 50 günlükte %15'in altında oluşur; endeks yeni dip yaparken bu oran daha yüksekte kalıyorsa satış zayıflıyor demektir.")}
         ${card("gcC3", "Net yeni zirve − yeni dip", "52 hafta · çizgi 50 günlük ortalama", chart(D, [{ v: sl(nhl), kind: "bar" }, { v: sl(sma(nhl, 50)), color: "var(--text)" }], { zero: true, title: "net yeni zirve dip", w: 520, h: 260 }),
           `En az 11 aylık geçmişi olan ${fmt.int(L("nhl_n"))} hisse. Endeks yeni dip yaparken yeni dipteki hisse sayısı azalıyorsa pozitif diverjans.`)}
@@ -326,6 +332,7 @@
     $("#gcTmS")?.addEventListener("change", e => { S.tmSec = e.target.value; render(); });
     if (S.tab === "harita") MK()?.load().then(() => MK().treemap($("#gcTm"), { per: S.tmPer, size: S.tmSize, sector: S.tmSec || null, height: S.tmSec ? 420 : Math.max(420, Math.min(720, innerWidth * 0.5)) }));
     segB("gcRange", v => { S.range = +v; });
+    segB("gcUniv", v => { S.univ = v; });
     segB("gcPer", v => { S.per = v; });
     segB("gcHR", v => { S.hs.rs = +v; S.hs.limit = 60; });
     segB("gcHT", v => { S.hs.tt = +v; S.hs.limit = 60; });

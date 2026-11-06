@@ -38,7 +38,7 @@ def test_clean_index_rescales_redenomination():
     assert abs(c.iloc[1] / c.iloc[0] - 1.01) < 1e-9 and abs(c.iloc[2] / c.iloc[1] - 1) < 0.02
 
 
-def test_build_end_to_end_and_holiday_rows():
+def test_build_end_to_end_and_holiday_rows(monkeypatch):
     px = _px()
     d = G.build(px, _members())
     s = d["series"]
@@ -54,6 +54,12 @@ def test_build_end_to_end_and_holiday_rows():
     nxt[["close", "adj"]] = nxt[["close", "adj"]].mul(np.where(np.arange(len(nxt)) % 2, 1.02, 0.99), axis=0)
     d2 = G.build(pd.concat([px, extra, nxt]), _members())
     assert d2["series"]["adv"][-1] + d2["series"]["dec"][-1] > 0
+    # BIST 100 evreni: idx etiketli ilk 60+ hisse için ayrı genişlik görünümü
+    monkeypatch.setattr(G, "XU100_MIN", 20)
+    ms = [{**m, "idx": ["XU100"]} if i < 35 else m for i, m in enumerate(_members())]
+    d3 = G.build(px, ms)
+    v = d3["views"]["xu100"]
+    assert v["universe"] <= 35 and len(v["series"]["d"]) == len(d3["series"]["d"]) and v["regime"]["state"] in G_STATES
 
 
 G_STATES = {"boga", "duzeltme", "ayi", "dip", "toparlanma"}

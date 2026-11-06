@@ -41,6 +41,7 @@ FIN = DATA / "fin"
 START = "2010-01-01"
 JUMP = 0.25
 BENCH = "XU100"
+XU100_MIN = 60          # BIST 100 genişlik görünümü için en az bu kadar bileşenin fiyatı olmalı
 YF = {"XU100": "XU100.IS", "USDTRY": "USDTRY=X"}
 HIST_DAYS = 3 * 252          # grafiklerde gösterilen geçmiş
 MIN_SECTOR = 3
@@ -462,8 +463,24 @@ def series_out(b: pd.DataFrame) -> dict:
     return out
 
 
+def _events(b: pd.DataFrame) -> tuple[dict, dict, dict]:
+    events = {"thrust": thrusts(b), "ninety": ninety_days(b), "div": divergences(b)}
+    reg = regime(b, events)
+    since = b.index[-HIST_DAYS] if len(b) > HIST_DAYS else b.index[0]
+    ev_out = {"thrust": [e for e in events["thrust"] if pd.Timestamp(e) >= since],
+              "ninety": [e for e in events["ninety"] if pd.Timestamp(e["d"]) >= since],
+              "div": [e for e in events["div"] if pd.Timestamp(e["d"]) >= since]}
+    return events, reg, ev_out
+
+
+def view_out(b: pd.DataFrame) -> dict:
+    events, reg, ev_out = _events(b)
+    return {"universe": int(b["n"].iloc[-1]), "regime": reg, "regime_hist": regime_history(b, events), "events": ev_out, "series": series_out(b)}
+
+
 def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, docs: dict | None = None) -> dict:
     codes = {m["code"] for m in members}
+    idx_of = {m["code"]: set(m.get("idx") or []) for m in members}
     adj = wide(px, "adj")
     close = wide(px, "close")
     wide_close = close
@@ -478,13 +495,15 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, doc
     clean, ret = clean_prices(adj)
     tlv = (close * vol).where(close.notna())
     b = breadth(clean, ret, tlv, bench)
+    # BIST 100 evreni: aynı genişlik ölçüleri yalnız XU100 bileşenleriyle (bugünkü bileşenler; geçmişte endekse
+    # girip çıkanlar için hayatta kalma yanlılığı var, notta belirtilir)
+    xu = [c for c in clean.columns if "XU100" in (idx_of.get(c) or ())]
+    views = {}
+    if len(xu) >= XU100_MIN:
+        b2 = breadth(clean[xu], ret[xu], tlv[xu], bench)
+        views["xu100"] = view_out(b2)
     clean, ret, tlv = clean.loc[b.index[0]:], ret.loc[b.index[0]:], tlv.loc[b.index[0]:]
-    events = {"thrust": thrusts(b), "ninety": ninety_days(b), "div": divergences(b)}
-    reg = regime(b, events)
-    since = b.index[-HIST_DAYS] if len(b) > HIST_DAYS else b.index[0]
-    ev_out = {"thrust": [e for e in events["thrust"] if pd.Timestamp(e) >= since],
-              "ninety": [e for e in events["ninety"] if pd.Timestamp(e["d"]) >= since],
-              "div": [e for e in events["div"] if pd.Timestamp(e["d"]) >= since]}
+    events, reg, ev_out = _events(b)
 
     # ── sektörler
     sec_of = {m["code"]: m.get("sector") or "DİĞER" for m in members}
@@ -593,7 +612,7 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, doc
         "asof": b.index[-1].date().isoformat(), "start": b.index[0].date().isoformat(),
         "universe": int(b["n"].iloc[-1]), "liq_tl": LIQ_TL,
         "regime": reg, "regime_hist": regime_history(b, events), "events": ev_out,
-        "series": series_out(b), "sectors": sectors, "stocks": rows,
+        "series": series_out(b), "views": views, "sectors": sectors, "stocks": rows,
     }
 
 
