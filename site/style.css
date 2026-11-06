@@ -1775,10 +1775,11 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .bs-split td, .bs-rec td { padding-left: 10px; }
 
 /* Bugün: gruplu piyasa şeridi */
-.mk-strip.mk-groups { display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-4); }
-.mk-grp { flex: var(--n) 1 calc(var(--n) * 136px); min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.mk-strip.mk-groups { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--s-3) var(--s-2); }
+.mk-grp { grid-column: span min(var(--n), 6); min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .mk-gh { margin: 0; font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: var(--fw-semibold); }
 .mk-gt { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: var(--s-2); }
+@media (min-width: 641px) and (max-width: 1100px) { .mk-strip.mk-groups { grid-template-columns: repeat(3, minmax(0, 1fr)); } .mk-grp { grid-column: 1 / -1; } .mk-gt { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 640px) {
   .mk-strip.mk-groups { display: flex; flex-direction: column; flex-wrap: nowrap; margin: 0; padding: 0; overflow: visible; gap: var(--s-3); }
   .mk-grp { flex: none; width: 100%; } .mk-gt { display: flex; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; margin: 0 calc(-1 * var(--s-4)); padding: 0 var(--s-4); }
