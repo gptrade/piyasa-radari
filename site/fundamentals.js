@@ -567,11 +567,11 @@
       if (b < 0 && a >= 0) return `<span class="${cls(true, pol)}" data-tip="Önceki dönem eksi, bu dönem artı: yüzde değişim anlamlı değil">${is ? "kâra geçti" : nd ? "net borca geçti" : "artıya geçti"}</span>`;
       if (b > 0 && a < 0) return `<span class="${cls(false, pol)}" data-tip="Önceki dönem artı, bu dönem eksi: yüzde değişim anlamlı değil">${is ? "zarara geçti" : nd ? "net nakde geçti" : "eksiye geçti"}</span>`;
       const c = (a - b) / Math.abs(b), tip = b < 0 ? ` data-tip="${is ? "Zarar" : nd ? "Net nakit" : "Eksi bakiye"} %${fmt.num(Math.abs(c) * 100, 0)} ${c >= 0 ? "azaldı" : "arttı"}"`
-        : pol < 0 ? ` data-tip="Bu kalemin artışı olumsuz sayılır (kırmızı)"` : pol === 0 ? ` data-tip="Büyüklük kalemi: artış tek başına iyi ya da kötü değil"` : "";
+        : pol < 0 ? ` data-tip="Bu kalemin artışı olumsuz sayılır (kırmızı)"` : pol === 0 ? ` data-tip="Fonlama kalemi: artış tek başına iyi ya da kötü değil"` : "";
       return `<span class="${cls(c >= 0, pol)}"${tip}>${pctS(c, 0)}</span>`;
     };
-    const POL = { fin_debt: -1, net_debt: -1, current_assets: 0, noncurrent_assets: 0, total_assets: 0, loans: 0, deposits: 0, borrowings: 0,
-      securities_issued: 0, cash: 0, fin_assets: 0, tech_reserves: 0, monetary: 0 };
+    // Varlıklar, banka kredi ve mevduatı büyüdükçe yeşil; borçlar kırmızı; fonlama kalemleri (alınan kredi, ihraç, teknik karşılık) nötr
+    const POL = { fin_debt: -1, net_debt: -1, borrowings: 0, securities_issued: 0, tech_reserves: 0, monetary: 0 };
     // Kümülatif gelir tablosu: cari ve önceki yıl aynı dönem (raporun kendi karşılaştırmalı sütunu, aynı birim)
     const isRows = (FR?.is || IS_ROWS).map(([k, l]) => { const a = se.cum[k]?.[i], b = se.cum_prev[k]?.[i];
       return `<tr><th scope="row">${l}</th><td class="num">${bin(a == null ? null : a * fr(i))}</td><td class="num">${bin(b == null ? null : b * fr(i))}</td><td class="num">${chg(a, b, true, POL[k] ?? 1, k)}</td></tr>`; }).join("");
