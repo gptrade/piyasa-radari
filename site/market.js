@@ -177,9 +177,8 @@
       }
       svg += `</g>`;
     }
-    const note = out.length ? `<p class="tm-ex t3">Çok sığ işlem gördüğü için bu boyutta gösterilmeyen (günlük işlem hacmi piyasa değerinin %0,01'inden az; halka açıklık çok düşük): ${out.slice(0, 10).map(r => `<button type="button" class="tm-exb" data-tk="${esc(r.code)}">${esc(r.code)}</button> <span>${pc(r[per], 1)}</span>`).join(" · ")}${out.length > 10 ? ` ve ${out.length - 10} hisse` : ""}</p>` : "";
+    const note = out.length ? `<p class="tm-ex t3"><span data-tip="${esc(`Günlük işlem hacmi piyasa değerinin %0,01'inden az (halka açıklık çok düşük) olduğu için gösterilmiyor: ${out.map(r => `${r.code} ${pc(r[per], 1)}`).join(", ")}. "İşlem hacmi" boyutunda haritadalar.`)}">ⓘ ${out.length} sığ hisse gizli</span></p>` : "";
     el.innerHTML = `<svg class="tm-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${us ? (ix === "ndx" ? "Nasdaq-100" : "S&P 500") : "BIST"} ısı haritası">${svg}</svg>${note}`;
-    el.querySelectorAll(".tm-exb").forEach(n => n.addEventListener("click", () => window.radar?.openTicker?.(n.dataset.tk, n)));
     el.querySelectorAll(".tm-c").forEach(n => n.addEventListener("click", () => us ? window.open(`https://finance.yahoo.com/quote/${n.dataset.tk.replace(".", "-")}/`, "_blank", "noopener") : window.radar?.openTicker?.(n.dataset.tk, n)));
   }
   function legend(per) {

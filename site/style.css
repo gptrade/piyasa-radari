@@ -1875,7 +1875,7 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .rs-mini .tp-sub { margin: 4px 0 0; }
 .rs-tp td.nw { white-space: nowrap; } .rs-tp .rs-bar { width: 60px; }
 .rs-th li { grid-template-columns: minmax(0, 1fr) 70px 22px; } .rs-th li > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tm-ex { margin: 6px 0 0; font-size: var(--fs-xs); line-height: 1.6; }
+.tm-ex { margin: 4px 0 0; font-size: var(--fs-2xs); text-align: right; } .tm-ex span { cursor: help; }
 .tm-exb { font: var(--fw-semibold) var(--fs-xs) var(--font-mono); background: none; border: 0; padding: 0; color: var(--text-2); text-decoration: underline dotted; cursor: pointer; }
 
 /* Piyasa Gücü: genişlik özet kutuları */
