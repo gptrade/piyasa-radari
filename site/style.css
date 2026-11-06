@@ -1905,3 +1905,4 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .est-k { color: var(--text-2); min-width: 0; }
 .est-v { font-family: var(--font-mono); white-space: nowrap; margin-left: auto; font-size: var(--fs-xs); }
 .est-v .t3 { font-family: var(--font-sans); }
+.est-v.long { white-space: normal; flex-basis: 100%; margin-left: 0; font-family: var(--font-sans); font-size: var(--fs-sm); color: var(--text); }

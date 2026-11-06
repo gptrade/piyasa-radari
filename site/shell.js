@@ -104,8 +104,14 @@
       return `<li><span class="est-k">${esc(e.metric)}${e.period ? ` <span class="t3">(${esc(e.period)})</span>` : ""}</span>
         <span class="est-v">${o ? `${esc(o)} → ` : ""}<b class="${cmp > 0 ? "up" : cmp < 0 ? "down" : ""}">${esc(n || "")}</b>${u ? ` <span class="t3">${esc(u)}</span>` : ""}${e.change ? ` <span class="t3">(${esc(e.change)})</span>` : ""}</span></li>`; }).join("")}</ul>`;
   }
+  // Etiket–değer listesi (belge özeti rakamları vb.): kısa değer etiketin sağında; sığmazsa ya da uzunsa alt satırda tam genişlik
+  function kvHTML(pairs) {
+    if (!pairs?.length) return "";
+    return `<ul class="est-l">${pairs.map(([k, v]) => { const t = String(v ?? ""), long = t.length > 34;
+      return `<li><span class="est-k">${esc(k)}</span><span class="est-v${long ? " long" : ""}">${esc(t)}</span></li>`; }).join("")}</ul>`;
+  }
   const shell = {
-    $, $$, esc, fmt, store, glyph, dirCls, TZ, fold, match, compact, estHTML,
+    $, $$, esc, fmt, store, glyph, dirCls, TZ, fold, match, compact, estHTML, kvHTML,
     get route() { return S.route; },
     get param() { return S.param; },
     get market() { return S.market; },

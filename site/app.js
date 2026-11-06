@@ -331,7 +331,7 @@
       .map(([k, v]) => [k.replace(/_/g, " ").replace(/^./, c => c.toLocaleUpperCase("tr")), v]);
     return `<div class="doc-sum"><p class="d-sub">Belge özeti · ${docLabel(d)}</p>
       ${a.key_points?.length ? `<ul class="doc-points">${a.key_points.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
-      ${figs.length ? `<table class="doc-figs"><tbody>${figs.map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table>` : ""}
+      ${window.shell.kvHTML(figs)}
       ${a.risks?.length ? `<p class="doc-risks"><b>Riskler:</b> ${a.risks.map(esc).join(" · ")}</p>` : ""}
       <p class="doc-note">AI özeti; rakamları kaynak belgeden doğrula.</p></div>`;
   }
