@@ -1897,3 +1897,4 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .gk-big { display: flex; gap: var(--s-4); flex-wrap: wrap; align-items: baseline; font-size: var(--fs-sm); color: var(--text-2); }
 .gk-big b { font: var(--fw-semibold) var(--fs-xl) var(--font-mono); margin-right: 4px; }
 .gk-split { display: flex; height: 6px; border-radius: 3px; overflow: hidden; } .gk-split i.up { background: var(--up); } .gk-split i.down { background: var(--down); }
+.gc-univ { gap: var(--s-2); align-items: center; flex-wrap: wrap; } .gc-univ-n { font-size: var(--fs-xs); }
