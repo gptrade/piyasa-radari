@@ -731,19 +731,26 @@
     if (S.scrTab === "harita") body = valMap(all, secSel);
     else if (S.scrTab === "kriter") {
       const lbl = labels[S.crit] || [];
-      let xs = all.map(r => ({ r, c: r.crit?.[S.crit] })).filter(o => o.c);
+      const passN = set => all.filter(r => { const c = r.crit?.[set]; return c && c[1] > 0 && c[0] === c[1]; }).length;
+      let xs = all.map(r => ({ r, c: r.crit?.[S.crit] })).filter(o => o.c && o.c[1] > 0);      // hiçbir kriteri hesaplanamayan (0/0) dışarıda
+      const nAll = xs.filter(o => o.c[0] === o.c[1]).length;
       if (S.allPass) xs = xs.filter(o => o.c[0] === o.c[1]);
       xs.sort((a, b) => b.c[0] / b.c[1] - a.c[0] / a.c[1] || (b.r.overall ?? 0) - (a.r.overall ?? 0));
+      const lim = S.allPass ? xs.length : (S.critLimit || 25), shown = xs.slice(0, lim);
+      const cell = v => `<td class="cr-c"><span class="cr-d ${v == null ? "na" : v ? "ok" : "no"}" aria-label="${v == null ? "veri yok" : v ? "sağlandı" : "sağlanmadı"}">${v == null ? "–" : v ? "✓" : "✗"}</span></td>`;
       body = `<section class="card"><div class="fa-two fa-crit-head"><div><h2 class="card-title">Kriter seti</h2>
-          <div class="chips">${sets.map(s => `<button type="button" class="chip" data-set="${esc(s)}" aria-pressed="${s === S.crit}">${esc(s)} <span class="n">${labels[s].length}</span></button>`).join("")}</div>
-          <label class="fa-check"><input type="checkbox" id="faAllPass" ${S.allPass ? "checked" : ""}> Yalnızca tüm kriterleri sağlayanlar</label></div>
+          <div class="chips">${sets.map(s2 => { const n = passN(s2); return `<button type="button" class="chip" data-set="${esc(s2)}" aria-pressed="${s2 === S.crit}" data-tip="${esc(`${labels[s2].length} kriter · ${n} hisse hepsini sağlıyor (seçili kapsamda)`)}">${esc(s2)} <span class="n ${n ? "" : "z"}">${n}</span></button>`; }).join("")}</div>
+          <p class="card-meta">Rozet: seçili kapsamda tüm kriterleri sağlayan hisse sayısı</p></div>
           <div><h2 class="card-title">Kapsam</h2><div class="fa-scope">${ixSeg()}${secSel}</div><p class="card-meta">${all.length} hisse taranır</p></div></div></section>
-        <section class="card card-flush"><div class="card-head"><h2 class="card-title">${xs.length} hisse · uyum oranına göre sıralı</h2><span class="card-meta">✓ sağlandı · ✗ sağlanmadı · — veri yok</span></div>
-          <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Hisse</th><th class="num">Uyum</th>${lbl.map((l, i) => `<th class="num" data-tip="${esc(l)}">${i + 1}</th>`).join("")}</tr></thead>
-          <tbody>${xs.map(({ r, c }) => `<tr class="row" tabindex="0" data-code="${r.code}"><td><b class="mono">${r.code}</b><button type="button" class="tk-open tk-pi" data-sym="${r.code}" aria-label="${r.code} hisse paneli" data-tip="Hisse paneli">◧</button> <span class="muted fa-name">${esc(r.sector || "")}</span></td>
-            <td class="num"><b>${c[0]}/${c[1]}</b> <small class="muted">%${Math.round(c[0] / c[1] * 100)}</small></td>
-            ${c[3].map(v => `<td class="num ${v == null ? "muted" : v ? "up" : "down"}">${v == null ? "—" : v ? "✓" : "✗"}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="${lbl.length + 2}">${sh.stateHTML({ title: "Tüm kriterleri sağlayan hisse yok", msg: "Filtreyi gevşetmek için kutunun işaretini kaldır.", compact: true })}</td></tr>`}</tbody></table></div>
-          <div class="card-foot fa-legend-crit"><b>Kriterler</b><ol>${lbl.map(l => `<li>${esc(l)}</li>`).join("")}</ol></div></section>`;
+        <section class="card card-flush"><div class="card-head cr-head"><h2 class="card-title">${esc(S.crit)}</h2>
+            <label class="fa-check"><input type="checkbox" id="faAllPass" ${S.allPass ? "checked" : ""}> Yalnızca tüm kriterleri sağlayanlar <span class="t3">(${nAll})</span></label></div>
+          <ol class="cr-legend">${lbl.map((l, i) => `<li><span class="cr-no">${i + 1}</span>${esc(l)}</li>`).join("")}</ol>
+          <div class="tbl-scroll"><table class="tbl fa-tbl cr-tbl"><thead><tr><th>Hisse</th><th>Uyum</th>${lbl.map((l, i) => `<th class="cr-c" data-tip="${esc(l)}">${i + 1}</th>`).join("")}<th class="cr-sp"></th></tr></thead>
+          <tbody>${shown.map(({ r, c }) => `<tr class="row" tabindex="0" data-code="${r.code}"><td class="cr-tk"><b class="mono">${r.code}</b><button type="button" class="tk-open tk-pi" data-sym="${r.code}" aria-label="${r.code} hisse paneli" data-tip="Hisse paneli">◧</button> <span class="muted fa-name">${esc(trTitle(r.title))}</span></td>
+            <td class="cr-u"><span class="cr-bar"><i class="${c[0] === c[1] ? "full" : ""}" style="width:${(c[0] / c[1] * 100).toFixed(0)}%"></i></span><b class="mono">${c[0]}/${c[1]}</b></td>
+            ${c[3].map(cell).join("")}<td class="cr-sp"></td></tr>`).join("") || `<tr><td colspan="${lbl.length + 3}">${sh.stateHTML({ title: "Tüm kriterleri sağlayan hisse yok", msg: "Filtreyi gevşetmek için kutunun işaretini kaldır.", compact: true })}</td></tr>`}</tbody></table></div>
+          ${xs.length > shown.length ? `<div class="cr-more"><span class="t3">${xs.length} hissenin ${shown.length}'i gösteriliyor</span><button type="button" class="btn btn-sm" id="crMore">25 daha</button><button type="button" class="link-btn" id="crAll">Tümünü göster</button></div>` : ""}
+          <p class="t3 gc-foot" style="padding:0 var(--s-4) var(--s-3)">✓ sağlandı · ✗ sağlanmadı · – veri yok · uyum oranına, eşitlikte genel skora göre sıralı</p></section>`;
     } else {
       const xs = all.filter(r => S.filters.every(([k, op, v]) => { const a = mval(r, k); return a != null && OPS[op](a, v); }));
       const keys = [...new Set(S.filters.map(f => f[0]))];
@@ -761,8 +768,10 @@
     }
     el.innerHTML = tabsH + body;
     $$("[data-st]", el).forEach(b => b.onclick = () => { S.scrTab = b.dataset.st; renderScreen(); });
-    $$("[data-set]", el).forEach(b => b.onclick = () => { S.crit = b.dataset.set; renderScreen(); });
-    $("#faAllPass") && ($("#faAllPass").onchange = e => { S.allPass = e.target.checked; renderScreen(); });
+    $$("[data-set]", el).forEach(b => b.onclick = () => { S.crit = b.dataset.set; S.critLimit = 25; renderScreen(); });
+    $("#crMore") && ($("#crMore").onclick = () => { S.critLimit = (S.critLimit || 25) + 25; renderScreen(); });
+    $("#crAll") && ($("#crAll").onclick = () => { S.critLimit = 1e9; renderScreen(); });
+    $("#faAllPass") && ($("#faAllPass").onchange = e => { S.allPass = e.target.checked; S.critLimit = 25; renderScreen(); });
     $("#faScrSec").onchange = e => { S.scrSector = e.target.value; renderScreen(); };
     bindIx(el, renderScreen);
     $$(".vm-pt", el).forEach(c => c.onclick = () => sh.go("hisse", { param: c.dataset.code, focus: true }));
