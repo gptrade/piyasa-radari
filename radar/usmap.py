@@ -1,10 +1,10 @@
 """ABD ısı haritası verisi: S&P 500 hisselerinin piyasa değeri ve getirileri (1G, 1H, 1A, YBB).
 
-* Fiyat: Yahoo (yfinance), tek toplu günlük indirme (1 yıl). Ham fiyat yayımlanmaz; yalnız yüzde getiriler ve
+* Fiyat: Yahoo (yfinance), tek toplu günlük indirme (13 ay; 12-1 ay momentum temel taramada kullanılır). Ham fiyat yayımlanmaz; yalnız yüzde getiriler ve
   piyasa değeri (dolaşımdaki pay × son fiyat) yazılır.
 * Pay sayısı: Yahoo fast_info.shares; data/us_shares.json önbelleğinde, her turda en eski 120 hisse yenilenir (7 gün).
 * Sıklık: ABD seansında (13:30–20:15 UTC, hafta içi) 30 dakikada bir, diğer saatlerde günde bir (son seans gelmediyse).
-Bileşenler: config/sp500.csv ve config/ndx100.csv (sembol, ad, sektör); her satırda ix: hangi endekste.
+Bileşenler: config/sp500.csv, config/ndx100.csv (sembol, ad, sektör) ve config/dow30.csv; her satırda ix: sp, ndx, dji.
 Çıktı: site/data/us_map.json.
 """
 from __future__ import annotations
@@ -27,6 +27,7 @@ OUT = DATA / "us_map.json"
 SHARES = DATA / "us_shares.json"
 SP500 = ROOT / "config" / "sp500.csv"
 NDX = ROOT / "config" / "ndx100.csv"
+DJI = ROOT / "config" / "dow30.csv"
 SHARE_TTL = timedelta(days=7)
 SHARE_BATCH = 120
 DUAL = {"GOOG": "GOOGL", "FOX": "FOXA", "NWS": "NWSA"}
@@ -47,6 +48,12 @@ def members() -> list[dict]:
                 m = by.setdefault(s, {"code": s, "yf": s.replace(".", "-"), "name": (r.get("name") or "").strip(),
                                       "sector": (r.get("sector") or "").strip(), "ix": []})
                 m["ix"].append(ix)
+    if DJI.exists():                              # Dow 30'un tamamı S&P 500'de: yalnız etiket eklenir
+        with DJI.open(encoding="utf-8") as f:
+            for r in csv.DictReader(line for line in f if not line.startswith("#")):
+                s = (r.get("symbol") or "").strip()
+                if s in by:
+                    by[s]["ix"].append("dji")
     return list(by.values())
 
 
@@ -96,7 +103,8 @@ def refresh_shares(ms: list[dict], now: datetime, batch: int = SHARE_BATCH) -> d
 
 def prices(ms: list[dict]) -> pd.DataFrame:
     import yfinance as yf
-    df = yf.download(" ".join(m["yf"] for m in ms), period="1y", interval="1d", group_by="ticker",
+    start = (datetime.now(timezone.utc) - timedelta(days=400)).date().isoformat()   # 12-1 ay momentum için 13 ay
+    df = yf.download(" ".join(m["yf"] for m in ms), start=start, interval="1d", group_by="ticker",
                      auto_adjust=True, threads=True, progress=False)
     out = {}
     for m in ms:
@@ -122,6 +130,7 @@ def build(px: pd.DataFrame, ms: list[dict], shares: dict) -> dict:
     px = px.dropna(how="all")
     asof = px.index[-1]
     prev_year = px[px.index.year < asof.year]
+    m21, m12 = asof - pd.DateOffset(months=1), asof - pd.DateOffset(months=12)
     rows = []
     for m in ms:
         if m["code"] not in px:
@@ -136,11 +145,13 @@ def build(px: pd.DataFrame, ms: list[dict], shares: dict) -> dict:
         ye = prev_year[m["code"]].dropna() if m["code"] in prev_year else None
         y0 = float(ye.iloc[-1]) if ye is not None and len(ye) else None
         n = (shares.get(m["code"]) or {}).get("n")
+        a1, a12 = s[s.index <= m21], s[s.index <= m12]
+        mom = _r(float(a1.iloc[-1]) / float(a12.iloc[-1]) - 1) if len(a1) and len(a12) and s.index[0] <= m12 + pd.Timedelta(days=7) else None
         rows.append({"code": m["code"], "name": m["name"], "sector": m["sector"], "ix": m.get("ix") or ["sp"],
                      "mcap": _r(n * last, 0) if n else None,
                      "d1": _r(last / back(1) - 1) if back(1) else None, "w1": _r(last / back(5) - 1) if back(5) else None,
                      "r1a": _r(last / back(21) - 1) if back(21) else None, "ytd": _r(last / y0 - 1) if y0 else None,
-                     "stale": s.index[-1] < asof or None})
+                     "mom": mom, "stale": s.index[-1] < asof or None})
     # ikinci pay sınıfları ana sınıfa eklenir (GOOG → GOOGL): aynı şirket haritada iki kez görünmesin
     by = {r["code"]: r for r in rows}
     for sec, main in DUAL.items():
