@@ -41,7 +41,7 @@
     return { k: "fon", label: "TCMB fonlama", unit: "%", dec: 2, last: s.last, chg: s.change, chg_kind: "bp", m1, asof: iso, spark: h.slice(-44), src: "TCMB EVDS · ağırlıklı ortalama fonlama maliyeti" };
   }
   // Mantıksal gruplar: Türkiye (kur, faiz, borsa, altın) · Küresel piyasalar · Emtia ve kripto
-  const GROUPS = [["Türkiye", ["usdtry", "eurtry", "fon", "xu100", "xu100usd", "gram"]], ["Küresel", ["spx", "vix", "us10y", "dxy"]], ["Emtia ve kripto", ["brent", "gold", "btc"]]];
+  const GROUPS = [["Türkiye", ["usdtry", "eurtry", "fon", "xu100", "xu100usd", "gram"]], ["Küresel", ["spx", "ndx", "dji", "vix", "us10y", "dxy"]], ["Emtia ve kripto", ["brent", "gold", "btc"]]];
   function stripHTML(keys = null, { groups = false } = {}) {
     const d = M.strip;
     if (!d?.items?.length) return "";

@@ -42,11 +42,13 @@ ASSETS = {
     "us10y": ("^TNX", "ABD 10Y", "%", 2),
     "dxy": ("DX-Y.NYB", "DXY", "", 2),
     "spx": ("^GSPC", "S&P 500", "", 0),
+    "ndx": ("^IXIC", "Nasdaq", "", 0),
+    "dji": ("^DJI", "Dow Jones", "", 0),
     "vix": ("^VIX", "VIX", "", 1),
     "btc": ("BTC-USD", "Bitcoin", "$", 0),
 }
 RISK = {"spx": 1, "copper": 1, "btc": 1, "vix": -1, "dxy": -1, "us10y": -1}
-STRIP_ORDER = ["usdtry", "xu100", "xu100usd", "gram", "brent", "us10y", "dxy", "spx", "vix", "btc", "eurtry", "gold", "copper"]
+STRIP_ORDER = ["usdtry", "xu100", "xu100usd", "gram", "brent", "us10y", "dxy", "spx", "ndx", "dji", "vix", "btc", "eurtry", "gold", "copper"]
 LOOK = 20
 
 
