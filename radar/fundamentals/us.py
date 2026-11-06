@@ -34,7 +34,7 @@ INDEX_URL = "https://www.sec.gov/Archives/edgar/daily-index/{y}/QTR{q}/form.{d}.
 QUARTERS = 20                     # 5 yıl
 STALE_DAYS = 30                   # dosyalama görülmese de bu kadar günde bir yenilenir
 PAUSE = 0.2
-SER_VER = 2                       # seri şeması/eşleme değişince tüm şirketler yeniden indirilir
+SER_VER = 3                       # seri şeması/eşleme değişince tüm şirketler yeniden indirilir
 
 # BIST seri kalemi → (us-gaap etiketleri öncelik sırasıyla, işaret). İşaret −1: gider/ödeme, BIST şemasında eksi tutulur.
 DUR = {
@@ -195,12 +195,14 @@ def fiscal_keys(gaap: dict):
 
 def _pick(gaap: dict, tags: list[str], fn, key=None) -> dict[str, float]:
     """Etiketleri öncelik sırasıyla birleştirir: önceki etiketin boş bıraktığı dönemleri sonraki doldurur."""
-    out: dict[str, float] = {}
+    # Etiket değişen şirketler (ör. 2026'da PaymentsOfDividends → PaymentsOfOrdinaryDividends): olgular aynı (başlangıç,
+    # bitiş) için öncelikli etiketten alınıp birleştirilir; YTD farkı iki etiketin olgularından birlikte türetilebilir.
+    merged: dict[tuple, dict] = {}
     for t in tags:
         if t in gaap:
-            for pk, v in fn(_units(gaap[t]), key).items():
-                out.setdefault(pk, v)
-    return out
+            for k, f in _latest(_units(gaap[t])).items():
+                merged.setdefault(k, f)
+    return fn(list(merged.values()), key) if merged else {}
 
 
 def build_series(facts: dict, quarters: int = QUARTERS) -> dict | None:
@@ -398,6 +400,14 @@ def refresh(budget: int = 120, now: datetime | None = None) -> dict:
     return {"fetched": done, "queue": len(queue), "screened": n}
 
 
+def us_label(lbl: str) -> str:
+    """BIST etiketlerindeki enflasyona özgü ifadeler ABD'de (nominal USD) düşer."""
+    import re
+    out = lbl.replace("Parasal kazanç hariç vergi öncesi", "Vergi öncesi")
+    out = re.sub(r"\b[Rr]eel ", "", out)
+    return out[:1].upper() + out[1:]
+
+
 SKIP_SETS = {"Enflasyon Muhasebesi & Nakit Kalitesi"}   # TMS 29'a özgü
 
 
@@ -432,6 +442,8 @@ def build_screen(ms: list[dict] | None = None) -> int:
     for row in rows:
         for k in SKIP_SETS:
             row["m"]["criteria"].pop(k, None)
+        for c in row["m"]["criteria"].values():
+            c["items"] = [[us_label(lbl), v] for lbl, v in c["items"]]
     screen = []
     for row in rows:
         m = row["m"]

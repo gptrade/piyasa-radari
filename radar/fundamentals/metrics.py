@@ -389,7 +389,8 @@ def criteria(view: View, pk: str, r: dict, val: dict, z, f, m, dv: dict | None =
         ],
         "Piotroski F-Skor": [(name, v) for name, v in (f or {}).get("items", [])],
         "Benjamin Graham — Savunmacı Yatırımcı": [
-            ("Yeterli büyüklük: yıllık hasılat ≥ 20 milyar TL", chk(lambda: t("revenue") >= 20e9)),
+            (("Yeterli büyüklük: yıllık hasılat ≥ 20 milyar TL" if view.cur == "TRY" else "Yeterli büyüklük: yıllık hasılat ≥ 500 milyon USD"),
+             chk(lambda: t("revenue") >= (20e9 if view.cur == "TRY" else 0.5e9))),
             ("Güçlü finansal durum: cari oran ≥ 2", chk(lambda: r["current"] >= 2)),
             ("UV finansal borç ≤ net işletme sermayesi", chk(lambda: (b("lt_borrowings") or 0) <= nwc)),
             ("Kar istikrarı: tüm yıllık dönemlerde net kar pozitif",
