@@ -324,15 +324,18 @@ def criteria(view: View, pk: str, r: dict, val: dict, z, f, m, dv: dict | None =
     t = lambda k: view.v("ttm", k, pk)  # noqa: E731
     b = lambda k: view.v("bs", k, pk)   # noqa: E731
     annual = _annual_pks(view)
-    ann_net = [view.v("cum", "net_parent", p) for p in annual]
+    # Verisi olmayan (seri başı) yıllar atlanır; BIST'te yıllık dönemler tam, ABD'de ilk üç çeyrekte 12A oluşmaz
+    ann_net = [x for x in (view.v("cum", "net_parent", p) for p in annual) if x is not None]
     ann_div = [view.v("cum", "dividends_paid", p) for p in annual]
+    if view.cur != "TRY":
+        ann_div = [x for x, n in zip(ann_div, (view.v("cum", "net_parent", p) for p in annual)) if n is not None]
     pe, pb = val.get("pe"), val.get("pb")
     nwc = (b("current_assets") - b("current_liab")) if b("current_assets") is not None and b("current_liab") is not None else None
 
     def chk(cond):
         try:
             return bool(cond())
-        except (TypeError, ZeroDivisionError):
+        except (TypeError, ZeroDivisionError, IndexError):
             return None
 
     mcap = val.get("mcap")

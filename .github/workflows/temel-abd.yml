@@ -1,11 +1,11 @@
 name: temel-abd
 
-# ABD temel analiz: S&P 500 + Nasdaq-100 + Dow 30, SEC EDGAR XBRL (companyfacts). Günde bir, ABD kapanışından sonra.
+# ABD temel analiz: S&P 500 + Nasdaq-100 + Dow 30, SEC EDGAR XBRL (companyfacts). Her gün ABD kapanışından sonra (hafta sonu yalnız tarama özeti yenilenir).
 # İlk çalıştırma tüm evreni indirir (~520 şirket); sonra yalnız yeni 10-Q/10-K verenler ve 30 günü geçenler.
 # Veri ayrı `fin_us` dalında; radar iş akışı yalnız _screen.json'u yayımlar.
 on:
   schedule:
-    - cron: "17 23 * * 1-5"
+    - cron: "17 23 * * *"
   workflow_dispatch: {}
   push:
     branches: [onizleme-abd]
