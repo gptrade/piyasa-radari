@@ -570,8 +570,8 @@
         : pol < 0 ? ` data-tip="Bu kalemin artışı olumsuz sayılır (kırmızı)"` : pol === 0 ? ` data-tip="Fonlama kalemi: artış tek başına iyi ya da kötü değil"` : "";
       return `<span class="${cls(c >= 0, pol)}"${tip}>${pctS(c, 0)}</span>`;
     };
-    // Varlıklar, banka kredi ve mevduatı büyüdükçe yeşil; borçlar kırmızı; fonlama kalemleri (alınan kredi, ihraç, teknik karşılık) nötr
-    const POL = { fin_debt: -1, net_debt: -1, borrowings: 0, securities_issued: 0, tech_reserves: 0, monetary: 0 };
+    // Varlıklar ve bankanın kredi, mevduat, alınan kredi, ihraç kalemleri büyüdükçe yeşil; şirket borçları kırmızı; teknik karşılık nötr
+    const POL = { fin_debt: -1, net_debt: -1, tech_reserves: 0, monetary: 0 };
     // Kümülatif gelir tablosu: cari ve önceki yıl aynı dönem (raporun kendi karşılaştırmalı sütunu, aynı birim)
     const isRows = (FR?.is || IS_ROWS).map(([k, l]) => { const a = se.cum[k]?.[i], b = se.cum_prev[k]?.[i];
       return `<tr><th scope="row">${l}</th><td class="num">${bin(a == null ? null : a * fr(i))}</td><td class="num">${bin(b == null ? null : b * fr(i))}</td><td class="num">${chg(a, b, true, POL[k] ?? 1, k)}</td></tr>`; }).join("");
