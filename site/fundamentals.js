@@ -558,19 +558,26 @@
     const pq = i - 1;
     const fr = j => j >= 0 ? realF(se, j) : 1;
     // Değişim (a − b) / |b|: taban eksiyken a/b − 1 yön değiştirir (zarar küçülünce "−%12" görünürdü). İşaret değişiminde yüzde anlamsız.
-    const chg = (a, b, is = false) => {
+    // pol: kalemin artışı iyi mi (1), kötü mü (−1, ör. borç), nötr mü (0, ör. varlık büyüklüğü)? Renk buna göre.
+    // Giderler veride eksi işaretli tutulur; artmaları zaten kırmızı görünür.
+    const cls = (good, pol) => pol === 0 ? "flat" : (good === (pol > 0) ? "up" : "down");
+    const chg = (a, b, is = false, pol = 1, key = "") => {
       if (a == null || b == null || b === 0) return "—";
-      if (b < 0 && a >= 0) return `<span class="up" data-tip="Önceki dönem eksi, bu dönem artı: yüzde değişim anlamlı değil">${is ? "kâra geçti" : "artıya geçti"}</span>`;
-      if (b > 0 && a < 0) return `<span class="down" data-tip="Önceki dönem artı, bu dönem eksi: yüzde değişim anlamlı değil">${is ? "zarara geçti" : "eksiye geçti"}</span>`;
-      const c = (a - b) / Math.abs(b), tip = b < 0 ? ` data-tip="${is ? "Zarar" : "Eksi bakiye"} %${fmt.num(Math.abs(c) * 100, 0)} ${c >= 0 ? "azaldı" : "arttı"}"` : "";
-      return `<span class="${c >= 0 ? "up" : "down"}"${tip}>${pctS(c, 0)}</span>`;
+      const nd = key === "net_debt";
+      if (b < 0 && a >= 0) return `<span class="${cls(true, pol)}" data-tip="Önceki dönem eksi, bu dönem artı: yüzde değişim anlamlı değil">${is ? "kâra geçti" : nd ? "net borca geçti" : "artıya geçti"}</span>`;
+      if (b > 0 && a < 0) return `<span class="${cls(false, pol)}" data-tip="Önceki dönem artı, bu dönem eksi: yüzde değişim anlamlı değil">${is ? "zarara geçti" : nd ? "net nakde geçti" : "eksiye geçti"}</span>`;
+      const c = (a - b) / Math.abs(b), tip = b < 0 ? ` data-tip="${is ? "Zarar" : nd ? "Net nakit" : "Eksi bakiye"} %${fmt.num(Math.abs(c) * 100, 0)} ${c >= 0 ? "azaldı" : "arttı"}"`
+        : pol < 0 ? ` data-tip="Bu kalemin artışı olumsuz sayılır (kırmızı)"` : pol === 0 ? ` data-tip="Büyüklük kalemi: artış tek başına iyi ya da kötü değil"` : "";
+      return `<span class="${cls(c >= 0, pol)}"${tip}>${pctS(c, 0)}</span>`;
     };
+    const POL = { fin_debt: -1, net_debt: -1, current_assets: 0, noncurrent_assets: 0, total_assets: 0, loans: 0, deposits: 0, borrowings: 0,
+      securities_issued: 0, cash: 0, fin_assets: 0, tech_reserves: 0, monetary: 0 };
     // Kümülatif gelir tablosu: cari ve önceki yıl aynı dönem (raporun kendi karşılaştırmalı sütunu, aynı birim)
     const isRows = (FR?.is || IS_ROWS).map(([k, l]) => { const a = se.cum[k]?.[i], b = se.cum_prev[k]?.[i];
-      return `<tr><th scope="row">${l}</th><td class="num">${bin(a == null ? null : a * fr(i))}</td><td class="num">${bin(b == null ? null : b * fr(i))}</td><td class="num">${chg(a, b, true)}</td></tr>`; }).join("");
+      return `<tr><th scope="row">${l}</th><td class="num">${bin(a == null ? null : a * fr(i))}</td><td class="num">${bin(b == null ? null : b * fr(i))}</td><td class="num">${chg(a, b, true, POL[k] ?? 1, k)}</td></tr>`; }).join("");
     const bsRows = (FR?.bs || BS_ROWS).map(([k, l]) => { const a = se.bs[k]?.[i], b = pq >= 0 ? se.bs[k]?.[pq] : null, c = ya >= 0 ? se.bs[k]?.[ya] : null;
       const ar = a == null ? null : a * fr(i), br = b == null ? null : b * fr(pq), cr = c == null ? null : c * fr(ya);
-      return `<tr><th scope="row">${l}</th><td class="num">${bin(ar)}</td><td class="num">${bin(br)}</td><td class="num">${chg(ar, br)}</td><td class="num">${bin(cr)}</td><td class="num">${chg(ar, cr)}</td></tr>`; }).join("");
+      return `<tr><th scope="row">${l}</th><td class="num">${bin(ar)}</td><td class="num">${bin(br)}</td><td class="num">${chg(ar, br, false, POL[k] ?? 1, k)}</td><td class="num">${bin(cr)}</td><td class="num">${chg(ar, cr, false, POL[k] ?? 1, k)}</td></tr>`; }).join("");
     const v = m.valuation, sm = m.sector_median || {};
     const mult = tmpl === "sanayi"
       ? [["F/K", v.pe, sm.pe], ["FD/FAVÖK", v.ev_ebitda, sm.ev_ebitda], ["PD/DD", v.pb, sm.pb], ["FD/Satış", v.ev_sales, sm.ev_sales], ["PEG", v.peg, null], ["Net borç/FAVÖK", m.ratios.net_debt_ebitda, null]]
