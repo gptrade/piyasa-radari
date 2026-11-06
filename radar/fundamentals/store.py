@@ -434,7 +434,7 @@ def run(budget: float = 180.0, settings: dict | None = None) -> dict:
 
     rebuilt = rebuild_series(force=bool(cpi_new))
     prices_new = _due(state, "prices", 1) and update_prices(sorted(members))
-    if _due(state, "px_hist", 24 * 3):                   # tarihsel PD/DD için ay sonu fiyatları (3 günde bir)
+    if _due(state, "px_hist", 24 * 3) or "mom" not in _load(PX_HIST, {}):   # ay sonu fiyatları (3 günde bir; momentum alanı ilk kez dolsun)
         prices_new = update_price_history(sorted(members)) or prices_new
     if rebuilt or prices_new or not SCREEN.exists():
         try:
@@ -505,13 +505,34 @@ def raw_monthly(close, splits) -> list[list]:
     return out
 
 
+def adj_monthly(adj) -> list[list]:
+    """Ay sonu temettü + bölünme düzeltmeli kapanış (momentum için; yalnız oranlar kullanılır, fiyat yayımlanmaz)."""
+    if adj is None:
+        return []
+    a = adj.dropna()
+    me = a.groupby(a.index.to_period("M")).last()
+    return [[str(per), round(float(v), 4)] for per, v in me.items()]
+
+
+def momentum_12_1(adj: list[list]) -> float | None:
+    """12-1 ay momentum: son tamamlanan aydan 12 ay öncesine getiri (içinde bulunulan ay hariç). Yalnız oran saklanır."""
+    if not adj:
+        return None
+    a = dict(adj)
+    y, mo = (int(x) for x in max(a).split("-"))
+    key = lambda k: f"{y + (mo - 1 - k) // 12}-{(mo - 1 - k) % 12 + 1:02d}"  # noqa: E731
+    a1, a12 = a.get(key(1)), a.get(key(12))
+    return round(a1 / a12 - 1, 4) if a1 and a12 else None
+
+
 def update_price_history(codes: list[str]) -> bool:
     """Son ~4 yılın ay sonu gerçek kapanışları (Yahoo). Tarihsel PD/DD ve iskonto karşılaştırması için."""
     try:
         import yfinance as yf
     except ImportError:
         return False
-    out = _load(PX_HIST, {}).get("p", {})
+    prev = _load(PX_HIST, {})
+    out, mom = prev.get("p", {}), prev.get("mom", {})
     for i in range(0, len(codes), 50):
         part = codes[i:i + 50]
         try:
@@ -524,12 +545,15 @@ def update_price_history(codes: list[str]) -> bool:
             try:
                 sub = df[f"{c}.IS"] if len(part) > 1 else df
                 ser = raw_monthly(sub["Close"], sub.get("Stock Splits"))
+                mo = momentum_12_1(adj_monthly(sub.get("Adj Close")))
             except (KeyError, TypeError, ValueError):
                 continue
             if ser:
                 out[c] = ser
+            if mo is not None:
+                mom[c] = mo
     if out:
-        _save(PX_HIST, {"updated": _now().isoformat(timespec="seconds"), "p": out})
+        _save(PX_HIST, {"updated": _now().isoformat(timespec="seconds"), "p": out, "mom": mom})
     return bool(out)
 
 
@@ -559,12 +583,18 @@ def div_summary(evs: list[dict], price: float | None) -> dict | None:
             "yield": round(cur["gross"] / price, 4) if cur.get("gross") and price else None}
 
 
+def crit_labels(rows: list[dict], order: list[str]) -> dict:
+    lab = {k: [lbl for lbl, _ in c["items"]] for row in rows for k, c in row["m"]["criteria"].items()}
+    return {k: lab[k] for k in sorted(lab, key=lambda k: order.index(k) if k in order else len(order))}
+
+
 def build_metrics() -> int:
     """Tüm şirketlerin oranları/skorları → şirket dosyasına `metrics`, özet tablo → _screen.json."""
     from . import metrics as M
     uni = {m["code"]: m for m in _load(UNIVERSE, {}).get("members", [])}
     prices = _load(PRICES, {}).get("p", {})
-    hist = _load(PX_HIST, {}).get("p", {})
+    ph = _load(PX_HIST, {})
+    hist, mom = ph.get("p", {}), ph.get("mom", {})
     divs = _load(DIVS, {})
     rows, docs = [], {}
     for p in sorted(FIN.glob("[A-Z0-9]*.json")):
@@ -573,7 +603,7 @@ def build_metrics() -> int:
             continue
         code = doc.get("code") or p.stem
         try:
-            m = M.company(doc, (prices.get(code) or {}).get("price"), hist.get(code))
+            m = M.company(doc, (prices.get(code) or {}).get("price"), hist.get(code), mom.get(code), divs.get(code))
         except Exception:
             log.exception("Metrik hesaplanamadı: %s", code)
             m = None
@@ -621,5 +651,6 @@ def build_metrics() -> int:
         item = {"code": c, "title": u.get("title"), "sector": u.get("sector")}
         (out_of_scope if d and d.get("template") == "finansal" else pending).append(item)
     _save(SCREEN, {"updated": _now().isoformat(timespec="seconds"), "rows": screen, "out_of_scope": out_of_scope, "pending": pending,
-                   "criteria_labels": {k: [lbl for lbl, _ in c["items"]] for row in rows for k, c in row["m"]["criteria"].items()}})
+                   "criteria_labels": crit_labels(rows, M.CRIT_ORDER),
+                   "criteria_groups": [[g, ks] for g, ks in M.CRIT_GROUPS]})
     return len(screen)

@@ -109,6 +109,11 @@ def ratios(view: View, pk: str) -> dict:
                          view.avg_bs("total_assets", pk))
     # Verimlilik
     r["asset_turnover"] = _div(rev, view.avg_bs("total_assets", pk))
+    # Novy-Marx brüt kârlılığı ve AQR kalite girdileri
+    r["gpa"] = _div(t("gross"), view.avg_bs("total_assets", pk))
+    r["cfoa"] = _div(t("cfo"), view.avg_bs("total_assets", pk))
+    dp = t("dividends_paid")
+    r["payout"] = _div(-dp, ni) if dp is not None and (ni or 0) > 0 else None
     cogs = abs(t("cogs")) if t("cogs") else None
     r["inv_days"] = _div(b("inventories"), cogs) * 365 if _div(b("inventories"), cogs) is not None else None
     r["rec_days"] = _div(b("receivables"), rev) * 365 if _div(b("receivables"), rev) is not None else None
@@ -315,7 +320,7 @@ def _annual_pks(view: View) -> list[str]:
     return [p for p in view.p if p.endswith("/12")]
 
 
-def criteria(view: View, pk: str, r: dict, val: dict, z, f, m) -> dict:
+def criteria(view: View, pk: str, r: dict, val: dict, z, f, m, dv: dict | None = None) -> dict:
     t = lambda k: view.v("ttm", k, pk)  # noqa: E731
     b = lambda k: view.v("bs", k, pk)   # noqa: E731
     annual = _annual_pks(view)
@@ -329,6 +334,42 @@ def criteria(view: View, pk: str, r: dict, val: dict, z, f, m) -> dict:
             return bool(cond())
         except (TypeError, ZeroDivisionError):
             return None
+
+    mcap = val.get("mcap")
+
+    def pe_le(th):                                       # zarar eden şirket F/K eşiğini sağlamaz (veri yok sayılmaz)
+        if (val.get("eps") or 0) < 0 or (val.get("eps") == 0 and val.get("price")):
+            return False
+        return pe <= th
+    ni_old = view.ya("ttm", "net_parent", pk)
+
+    def grew():                                          # reel kâr arttı (geçen yıl zararlıysa da tanımlı)
+        if t("net_parent") is None or ni_old is None:
+            raise TypeError
+        return t("net_parent") > ni_old and t("net_parent") > 0
+
+    def div_every():
+        if dv and dv.get("years", 0) >= 3:
+            return dv["every"]
+        return bool(ann_div) and all(x is not None and x < 0 for x in ann_div)
+
+    def div_last():
+        if dv is not None:
+            return dv["last"]
+        return ann_div[-1] < 0
+    ncav = (b("current_assets") - b("total_liab")) if b("current_assets") is not None and b("total_liab") is not None else None
+    tangible = (b("equity_parent") - (b("intangibles") or 0)) if b("equity_parent") is not None else None
+    # Çok yıllı kalıcılık (Munger): son en çok 3 yıl sonu + bugünkü 12A
+    yrs = [p for p in annual if p < pk and view.v("ttm", "revenue", p) is not None][-3:] + [pk]
+    hist_r = [ratios(view, p) if p != pk else r for p in yrs]
+
+    def every(key, lo):
+        vs = [x.get(key) for x in hist_r]
+        if len(vs) < 3 or any(v is None for v in vs):
+            raise TypeError
+        return all(v >= lo for v in vs)
+
+    gm_ya = ratios(view, _year_ago(pk)).get("gross_margin") if _year_ago(pk) in view.pos and view.v("ttm", "revenue", _year_ago(pk)) is not None else None
 
     sets = {
         "Temel Sağlık Kontrolü": [
@@ -353,11 +394,31 @@ def criteria(view: View, pk: str, r: dict, val: dict, z, f, m) -> dict:
             ("UV finansal borç ≤ net işletme sermayesi", chk(lambda: (b("lt_borrowings") or 0) <= nwc)),
             ("Kar istikrarı: tüm yıllık dönemlerde net kar pozitif",
              chk(lambda: bool(ann_net) and all(x is not None and x > 0 for x in ann_net))),
-            ("Temettü sürekliliği: her yıl nakit temettü ödendi",
-             chk(lambda: bool(ann_div) and all(x is not None and x < 0 for x in ann_div))),
-            ("Kar büyümesi: reel net kar bir yıl öncesinden yüksek", chk(lambda: r["net_growth"] > 0)),
-            ("Makul F/K ≤ 15", chk(lambda: pe <= 15)),
+            ("Temettü sürekliliği: son 5 yılın her birinde nakit temettü", chk(div_every)),
+            ("Kar büyümesi: reel net kar bir yıl öncesinden yüksek", chk(grew)),
+            ("Makul F/K ≤ 15", chk(lambda: pe_le(15))),
             ("PD/DD ≤ 1,5 veya F/K × PD/DD ≤ 22,5", chk(lambda: pb <= 1.5 or (pe * pb) <= 22.5)),
+        ],
+        "Benjamin Graham — Girişimci Yatırımcı": [
+            ("Cari oran ≥ 1,5", chk(lambda: r["current"] >= 1.5)),
+            ("Finansal borç ≤ net işletme sermayesinin %110'u", chk(lambda: (b("fin_debt") or 0) <= 1.1 * nwc)),
+            ("Yıllık dönemlerin hiçbirinde zarar yok",
+             chk(lambda: bool(ann_net) and all(x is not None and x > 0 for x in ann_net))),
+            ("Son 12 ayda nakit temettü kararı var", chk(div_last)),
+            ("Reel net kâr bir yıl öncesinden yüksek", chk(grew)),
+            ("Fiyat ≤ maddi özkaynağın 1,2 katı", chk(lambda: tangible > 0 and mcap <= 1.2 * tangible)),
+        ],
+        "Benjamin Graham — Net-Net (NCAV)": [
+            ("Net dönen varlık (dönen varlık − tüm borçlar) pozitif", chk(lambda: ncav > 0)),
+            ("Piyasa değeri ≤ net dönen varlığın ⅔'ü", chk(lambda: ncav > 0 and mcap <= ncav * 2 / 3)),
+            ("Son 12 ay net kâr pozitif (değer tuzağı süzgeci)", chk(lambda: t("net_parent") > 0)),
+        ],
+        "Kenneth Fisher — Fiyat/Satış": [
+            ("F/S ≤ 0,75", chk(lambda: val.get("ps") <= 0.75)),
+            ("Finansal borç/özkaynak ≤ 0,4", chk(lambda: r["fin_debt_equity"] <= 0.4)),
+            ("Net kâr marjı ≥ %5", chk(lambda: r["net_margin"] >= 0.05)),
+            ("Reel satış büyümesi ≥ %10", chk(lambda: r["rev_growth"] >= 0.10)),
+            ("Serbest nakit akışı pozitif", chk(lambda: t("fcf") > 0)),
         ],
         "Warren Buffett — Kalıcı Rekabet Avantajı": [
             ("ROE ≥ %15", chk(lambda: r["roe"] >= 0.15)),
@@ -369,9 +430,17 @@ def criteria(view: View, pk: str, r: dict, val: dict, z, f, m) -> dict:
             ("Yatırım harcaması < net karın %50'si", chk(lambda: abs(t("capex")) < 0.5 * t("net_parent"))),
             ("Reel FAVÖK büyümesi pozitif", chk(lambda: r["ebitda_growth"] > 0)),
         ],
+        "Charlie Munger — Kalıcı Kalite": [
+            ("ROIC son 3 yıl ve bugün ≥ %15", chk(lambda: every("roic", 0.15))),
+            ("ROE son 3 yıl ve bugün ≥ %15", chk(lambda: every("roe", 0.15))),
+            ("Brüt marj bir yılda 3 puandan fazla düşmedi", chk(lambda: r["gross_margin"] >= gm_ya - 0.03)),
+            ("Net nakit ya da net borç/FAVÖK < 1", chk(lambda: b("net_debt") < 0 or r["net_debt_ebitda"] < 1)),
+            ("Serbest nakit akışı net kârın ≥ %70'i", chk(lambda: t("fcf") >= 0.7 * t("net_parent") and t("net_parent") > 0)),
+            ("Reel satış büyümesi pozitif", chk(lambda: r["rev_growth"] > 0)),
+        ],
         "Peter Lynch — Makul Fiyata Büyüme": [
             ("PEG ≤ 1", chk(lambda: val.get("peg") <= 1)),
-            ("F/K ≤ 20", chk(lambda: pe <= 20)),
+            ("F/K ≤ 20", chk(lambda: pe_le(20))),
             ("Borç/özkaynak < 0,8", chk(lambda: r["fin_debt_equity"] < 0.8)),
             ("Reel net kar büyümesi ≥ %10", chk(lambda: r["net_growth"] >= 0.10)),
             ("Net nakit ya da stok artışı satıştan yavaş", chk(lambda: b("net_debt") < 0 or _inv_slower(view, pk))),
@@ -459,7 +528,44 @@ def pb_history(view: View, hist: list | None, now_pb: float | None, years: int =
     return out
 
 
-def company(doc: dict, price: float | None, px_hist: list | None = None) -> dict | None:
+def div_info(evs: list | None, price: float | None, today: str | None = None) -> dict | None:
+    """KAP kâr payı kararlarından (nakit akış tablosu kalemi çoğu şirkette ayrışmıyor): son yıl ödendi mi,
+    son 5 takvim yılının her birinde ödendi mi, son 13 aydaki brüt temettü verimi, dağıtım oranı."""
+    if evs is None:
+        return None
+    from datetime import date, timedelta
+    t = date.fromisoformat(today) if today else date.today()
+    paid = [e for e in evs if (e.get("gross") or 0) > 0 and e.get("status") in ("kesin", "öneri") and e.get("decision")]
+    cut = (t - timedelta(days=400)).isoformat()
+    recent = [e for e in paid if e["decision"] >= cut]
+    yrs = {int(e["decision"][:4]) for e in paid}
+    first = min((int(e["decision"][:4]) for e in evs if e.get("decision")), default=t.year)
+    span = [y for y in range(t.year - 5, t.year) if y >= first]
+    out = {"last": bool(recent), "every": bool(span) and len(span) >= 3 and all(y in yrs for y in span), "years": len(span)}
+    if price and recent:
+        out["yield"] = sum(e["gross"] for e in recent[:1]) / price
+    pay = next((e.get("payout") for e in recent if e.get("payout")), None)
+    out["payout"] = pay / 100 if pay else None
+    return out
+
+
+def signals(view: View, mom: float | None) -> dict:
+    """Kesitsel kriterler için: momentum (12-1 ay, düzeltilmiş fiyattan) ve son çeyrek bilanço sürprizi."""
+    out: dict = {}
+    if mom is not None:
+        out["mom"] = mom
+    from ..earnings import sue_series
+    q = view.s.get("q", {}).get("net_parent")
+    cpi = view.s.get("cpi") or []
+    if q and len(q) == len(cpi):
+        su = next((x for x in reversed(sue_series(q, cpi)) if x), None)
+        if su and su.get("su") is not None:
+            out["su"] = round(su["su"], 3)
+    return out
+
+
+def company(doc: dict, price: float | None, px_hist: list | None = None, mom: float | None = None,
+            divs: list | None = None) -> dict | None:
     ser = doc.get("series")
     if doc.get("template") in ("banka", "sigorta"):
         out = company_fin(doc, price)
@@ -477,6 +583,12 @@ def company(doc: dict, price: float | None, px_hist: list | None = None) -> dict
     val = valuation(view, pk, price)
     if val.get("pe") and r.get("net_growth") and r["net_growth"] > 0:
         val["peg"] = val["pe"] / (r["net_growth"] * 100)
+    dv = div_info(divs, price)
+    if dv:                                               # nakit akışında temettü kalemi yoksa KAP kararları
+        if not val.get("div_yield") and dv.get("yield"):
+            val["div_yield"] = dv["yield"]
+        if r.get("payout") is None and dv.get("payout") is not None:
+            r["payout"] = dv["payout"]
     z, f, m = altman_z2(view, pk), piotroski(view, pk), beneish(view, pk)
     hist = {k: [] for k in HISTORY_KEYS}
     for p in view.p:
@@ -492,9 +604,12 @@ def company(doc: dict, price: float | None, px_hist: list | None = None) -> dict
         "piotroski": f["score"], "piotroski_items": [[n, v] for n, v in f["items"]],
         "beneish_m": round(m, 2) if m is not None else None,
         "categories": category_scores(r),
-        "criteria": criteria(view, pk, r, val, z, f, m),
+        "criteria": criteria(view, pk, r, val, z, f, m, dv),
         "history": {"periods": view.p, **hist},
         "pb_hist": pb_history(view, px_hist, val.get("pb")),
+        "signals": signals(view, mom),
+        "grew": (lambda a, b_: (a > b_ and a > 0) if a is not None and b_ is not None else None)(
+            view.v("ttm", "net_parent", pk), view.ya("ttm", "net_parent", pk)),
     }
     _pb_fields(out)
     return out
@@ -528,8 +643,158 @@ def sector_medians(rows: list[dict], min_peers: int = 3) -> dict:
     return out
 
 
+def _rank01(vals: dict) -> dict:
+    """{kod: değer} → {kod: 0..1 yüzdelik sıra} (eşitlerde ortalama sıra; büyük değer = yüksek sıra)."""
+    xs = sorted((v, k) for k, v in vals.items() if v is not None and math.isfinite(v))
+    n, out, i = len(xs), {}, 0
+    while i < n:
+        j = i
+        while j + 1 < n and xs[j + 1][0] == xs[i][0]:
+            j += 1
+        for k in range(i, j + 1):
+            out[xs[k][1]] = ((i + j) / 2) / (n - 1) if n > 1 else 0.5
+        i = j + 1
+    return out
+
+
+def _avg_rank(ranks: list[dict], code: str, need: int):
+    vs = [rk[code] for rk in ranks if code in rk]
+    return sum(vs) / len(vs) if len(vs) >= need else None
+
+
+def _hist_last(m: dict, key: str, back: int = 0):
+    arr = (m.get("history") or {}).get(key) or []
+    return arr[-1 - back] if len(arr) > back else None
+
+
+def _pack(items: list) -> dict:
+    known = [v for _, v in items if v is not None]
+    return {"items": [[label, v] for label, v in items], "pass": sum(1 for v in known if v), "total": len(items), "known": len(known)}
+
+
+def cross_criteria(rows: list[dict]) -> None:
+    """Evrene göre sıralama gerektiren kriter setleri (yalnız sanayi şablonu): Dreman, Novy-Marx, AQR QMJ, Lyra.
+
+    Sıralar sanayi şirketleri arasında hesaplanır; eşikler (ör. "en ucuz %20") bu evrenin yüzdelik dilimleridir."""
+    ind = [row for row in rows if row["m"].get("template", "sanayi") == "sanayi"]
+    if len(ind) < 10:
+        return
+    M = {row["code"]: row["m"] for row in ind}
+    r_ = lambda k: {c: m["ratios"].get(k) for c, m in M.items()}  # noqa: E731
+    v_ = lambda k: {c: m["valuation"].get(k) for c, m in M.items()}  # noqa: E731
+    inv = lambda d: {c: (1 / v if v and v > 0 else None) for c, v in d.items()}  # noqa: E731
+    neg = lambda d: {c: (-v if v is not None else None) for c, v in d.items()}  # noqa: E731
+    per_px = lambda k: {c: (m["valuation"][k] / m["valuation"]["price"]  # noqa: E731
+                            if m["valuation"].get(k) is not None and m["valuation"].get("price") else None) for c, m in M.items()}
+    ep, bp = _rank01(per_px("eps")), _rank01(per_px("bvps"))          # zarar eden / eksi özkaynaklı en alt sırada
+    ebev = _rank01(inv({c: (v if v and v > 0 else None) for c, v in v_("ev_ebitda").items()}))
+    size = _rank01(v_("mcap"))
+    roe, gpa = _rank01(r_("roe")), _rank01(r_("gpa"))
+    dy_all = [v for v in v_("div_yield").values() if v is not None]
+    dy_avg = sum(dy_all) / len(dy_all) if dy_all else None
+    secmed = sector_medians(rows)
+    # AQR QMJ (Asness–Frazzini–Pedersen) bileşenleri: kârlılık, büyüme, güvenlik, ödeme
+    prof = [gpa, roe, _rank01(r_("roa")), _rank01(r_("cfoa")), _rank01(r_("gross_margin")), _rank01(neg(r_("accruals")))]
+    d_roe = {c: (_hist_last(m, "roe") - _hist_last(m, "roe", 4)) if None not in (_hist_last(m, "roe"), _hist_last(m, "roe", 4)) else None
+             for c, m in M.items()}
+    grow = [_rank01(r_("rev_growth")), _rank01(r_("net_growth")), _rank01(d_roe)]
+
+    def roe_vol(m):
+        xs = [x for x in ((m.get("history") or {}).get("roe") or [])[-8:] if x is not None]
+        if len(xs) < 4:
+            return None
+        mu = sum(xs) / len(xs)
+        return math.sqrt(sum((x - mu) ** 2 for x in xs) / (len(xs) - 1))
+    safe = [_rank01(neg(r_("fin_debt_equity"))), _rank01(neg(r_("liab_assets"))),
+            _rank01({c: m.get("altman_z2") for c, m in M.items()}), _rank01(neg({c: roe_vol(m) for c, m in M.items()}))]
+    pay = [_rank01(r_("payout")), _rank01(v_("div_yield"))]
+    comp = {}
+    for c in M:
+        parts = [_avg_rank(prof, c, 3), _avg_rank(grow, c, 2), _avg_rank(safe, c, 2), _avg_rank(pay, c, 1)]
+        comp[c] = parts
+    qmj = _rank01({c: (sum(p) / 4 if None not in p else None) for c, p in comp.items()})
+    # Novy-Marx: brüt kârlılık + defter/piyasa birleşik sırası
+    # Lyra: hak edilen PD/DD (log PD/DD ~ ROE kesitsel regresyonu), değer+momentum, değer+kalite (Yöntem Karnesi'nin güçlü sinyalleri)
+    pts = [(c, math.log(m["valuation"]["pb"]), max(-0.5, min(1.0, m["ratios"]["roe"]))) for c, m in M.items()
+           if (m["valuation"].get("pb") or 0) > 0 and m["ratios"].get("roe") is not None]
+    resid = {}
+    if len(pts) >= 10:
+        mx, my = sum(p[2] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts)
+        sxx = sum((p[2] - mx) ** 2 for p in pts)
+        if sxx > 0:
+            beta = sum((p[2] - mx) * (p[1] - my) for p in pts) / sxx
+            resid = {c: -(y - (my + beta * (x - mx))) for c, y, x in pts}
+    value = {c: _avg_rank([ep, bp, ebev], c, 2) for c in M}
+    mom = _rank01({c: (m.get("signals") or {}).get("mom") for c, m in M.items()})
+    fq = _rank01({c: m.get("piotroski") for c, m in M.items()})
+    zq = _rank01({c: m.get("altman_z2") for c, m in M.items()})
+    vm = _rank01({c: ((value[c] + mom[c]) / 2 if value[c] is not None and c in mom else None) for c in M})
+    vq = _rank01({c: ((value[c] + (_avg_rank([fq, zq], c, 1))) / 2 if value[c] is not None and _avg_rank([fq, zq], c, 1) is not None else None)
+                  for c in M})
+
+    def top(rank, c, q):
+        return None if c not in rank else rank[c] >= 1 - q
+
+    def chk(cond):
+        try:
+            return bool(cond())
+        except (TypeError, ZeroDivisionError, KeyError):
+            return None
+    for row in ind:
+        c, m = row["code"], row["m"]
+        r, val = m["ratios"], m["valuation"]
+        sm = secmed.get(row.get("sector") or "Diğer", {})
+        p = comp[c]
+        su = (m.get("signals") or {}).get("su")
+        add = {
+            "David Dreman — Karşıt Yatırım": [
+                ("F/K evrenin en ucuz %20'sinde", top(ep, c, 0.20)),
+                ("Büyük şirket: piyasa değeri evrenin üst yarısında", top(size, c, 0.50)),
+                ("Cari oran ≥ 2 ya da sektör medyanının üstünde", chk(lambda: r["current"] >= 2 or (sm.get("current") is not None and r["current"] > sm["current"]))),
+                ("ROE evrenin en iyi üçte birinde", top(roe, c, 1 / 3)),
+                ("Parasal kazanç hariç vergi öncesi marj ≥ %8", chk(lambda: r["pbt_ex_mon_margin"] >= 0.08)),
+                ("Finansal borç/özkaynak < 0,5", chk(lambda: r["fin_debt_equity"] < 0.5)),
+                ("Temettü verimi evren ortalamasının üstünde", chk(lambda: val["div_yield"] > dy_avg)),
+                ("Reel net kâr bir yıl öncesinden yüksek", chk(lambda: m["grew"])),
+            ],
+            "Robert Novy-Marx — Brüt Kârlılık + Değer": [
+                ("Brüt kâr / toplam varlık evrenin en iyi %30'unda", top(gpa, c, 0.30)),
+                ("Defter/piyasa evrenin en ucuz %30'unda (düşük PD/DD)", top(bp, c, 0.30)),
+            ],
+            "AQR — Kalite (QMJ uyarlaması)": [
+                ("Kârlılık evrenin üst yarısında (brüt kâr/aktif, ROE, ROA, nakit akışı/aktif, brüt marj, düşük tahakkuk)", chk(lambda: p[0] >= 0.5)),
+                ("Büyüme evrenin üst yarısında (reel satış ve kâr büyümesi, ROE'deki yıllık artış)", chk(lambda: p[1] >= 0.5)),
+                ("Güvenlik evrenin üst yarısında (düşük borç, Altman Z'', istikrarlı ROE)", chk(lambda: p[2] >= 0.5)),
+                ("Ödeme evrenin üst yarısında (temettü dağıtım oranı ve verimi)", chk(lambda: p[3] >= 0.5)),
+                ("Toplam kalite puanı evrenin en iyi %30'unda", top(qmj, c, 0.30)),
+            ],
+            "Lyra — Kanıta Dayalı": [
+                ("Hak edilen PD/DD'ye göre iskontolu (ROE'ye göre beklenenden ucuz)", chk(lambda: resid[c] > 0)),
+                ("Değer + momentum birleşik sırası evrenin en iyi %30'unda", top(vm, c, 0.30)),
+                ("Değer + kalite birleşik sırası evrenin en iyi %30'unda", top(vq, c, 0.30)),
+                ("Son çeyrek bilanço sürprizi olumlu (SU > 0,2)", chk(lambda: su > 0.2)),
+            ],
+        }
+        m["criteria"].update({k: _pack(v) for k, v in add.items()})
+        m["criteria"] = {k: m["criteria"][k] for k in sorted(m["criteria"], key=lambda k: CRIT_ORDER.index(k) if k in CRIT_ORDER else 99)}
+
+
+CRIT_GROUPS = [
+    ("Sağlık & skorlar", ["Temel Sağlık Kontrolü", "Piotroski F-Skor", "Enflasyon Muhasebesi & Nakit Kalitesi",
+                          "Banka Sağlık Kontrolü", "Sigorta Sağlık Kontrolü"]),
+    ("Değer klasikleri", ["Benjamin Graham — Savunmacı Yatırımcı", "Benjamin Graham — Girişimci Yatırımcı",
+                          "Benjamin Graham — Net-Net (NCAV)", "David Dreman — Karşıt Yatırım", "Kenneth Fisher — Fiyat/Satış",
+                          "Peter Lynch — Makul Fiyata Büyüme"]),
+    ("Kalite", ["Warren Buffett — Kalıcı Rekabet Avantajı", "Charlie Munger — Kalıcı Kalite", "Joel Greenblatt — Sihirli Formül",
+                "Robert Novy-Marx — Brüt Kârlılık + Değer", "AQR — Kalite (QMJ uyarlaması)"]),
+    ("Kanıta dayalı", ["Lyra — Kanıta Dayalı"]),
+]
+CRIT_ORDER = [k for _, ks in CRIT_GROUPS for k in ks]
+
+
 def finalize(rows: list[dict]) -> None:
     """rows: [{'code','sector','m': company(...)}]; m'ye değerleme puanı, içsel değer, genel skor ekler."""
+    cross_criteria(rows)
     med = sector_medians(rows)
     allm = med.get("_tümü", {})
     for row in rows:

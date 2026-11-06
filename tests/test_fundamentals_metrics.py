@@ -117,3 +117,51 @@ def test_raw_monthly_undoes_splits():
     splits = pd.Series([0.0, 0.0, 2.0, 0.0], index=idx)             # Şubat sonu %100 bedelsiz
     out = store.raw_monthly(close, splits)
     assert out == [["2025-01", 20.0], ["2025-02", 11.0], ["2025-03", 12.0]]
+
+
+def test_new_absolute_sets(trgyo):
+    c = M.company(trgyo, 92.70)["criteria"]
+    for k in ("Benjamin Graham — Girişimci Yatırımcı", "Benjamin Graham — Net-Net (NCAV)",
+              "Kenneth Fisher — Fiyat/Satış", "Charlie Munger — Kalıcı Kalite"):
+        assert k in c and c[k]["total"] == len(c[k]["items"]) and c[k]["known"] >= 1
+    nn = dict(c["Benjamin Graham — Net-Net (NCAV)"]["items"])
+    assert nn["Son 12 ay net kâr pozitif (değer tuzağı süzgeci)"] is True
+
+
+def test_div_info_from_kap_decisions():
+    evs = [{"decision": f"{y}-04-01", "gross": 1.0, "status": "kesin", "payout": 40.0} for y in range(2021, 2027)]
+    d = M.div_info(evs, 20.0, today="2026-11-06")
+    assert d["last"] and d["every"] and abs(d["yield"] - 0.05) < 1e-9 and d["payout"] == 0.4
+    d = M.div_info(evs[:-2] + [{"decision": "2025-04-01", "status": "yok"}], 20.0, today="2026-11-06")
+    assert not d["last"] and not d["every"]
+    assert M.div_info(None, 20.0) is None
+
+
+def test_cross_sets_rank_universe(trgyo):
+    base = M.company(trgyo, 92.70)
+    rows = []
+    for i in range(12):
+        m = json.loads(json.dumps(base))
+        k = 0.5 + i * 0.1                                 # A en ucuz … L en pahalı
+        for key in ("price", "mcap", "pe", "pb", "ps"):
+            m["valuation"][key] *= k
+        m["signals"] = {"mom": 0.3 - i * 0.05, "su": 0.5}
+        rows.append({"code": chr(65 + i), "sector": "GYO", "m": m})
+    M.finalize(rows)
+    first, last = rows[0]["m"]["criteria"], rows[-1]["m"]["criteria"]
+    order = list(first)
+    assert order.index("Benjamin Graham — Savunmacı Yatırımcı") < order.index("David Dreman — Karşıt Yatırım") < order.index("Lyra — Kanıta Dayalı")
+    ly, ly_last = dict(first["Lyra — Kanıta Dayalı"]["items"]), dict(last["Lyra — Kanıta Dayalı"]["items"])
+    vm = "Değer + momentum birleşik sırası evrenin en iyi %30'unda"
+    assert ly[vm] is True and ly_last[vm] is False
+    assert dict(first["David Dreman — Karşıt Yatırım"]["items"])["F/K evrenin en ucuz %20'sinde"] is True
+    assert first["Robert Novy-Marx — Brüt Kârlılık + Değer"]["total"] == 2
+    assert set(M.CRIT_ORDER) >= set(first)
+
+
+def test_momentum_12_1_skips_current_month():
+    from radar.fundamentals import store
+    adj = [[f"2025-{m:02d}", 100.0] for m in range(10, 13)] + [[f"2026-{m:02d}", 100.0 + m] for m in range(1, 12)]
+    # son ay 2026-11 hariç: 2026-10 (110) / 2025-10 (100)
+    assert store.momentum_12_1(adj) == 0.1
+    assert store.momentum_12_1([]) is None

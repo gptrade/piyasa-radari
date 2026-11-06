@@ -717,6 +717,31 @@
   // ───────────── tarama
   const OPS = { ">=": (a, b) => a >= b, "<=": (a, b) => a <= b };
   const PCTK = k => MET[k] && (MET[k][1] === pct || MET[k][1] === pctS);
+  const SET_NOTE = {
+    "Temel Sağlık Kontrolü": "Lyra'nın temel sağlık listesi: kârlılık, nakit, borç ve muhasebe riski birlikte.",
+    "Piotroski F-Skor": "Piotroski (2000): ucuz hisseler içinde finansal gücü artanları ayıran 9 madde.",
+    "Enflasyon Muhasebesi & Nakit Kalitesi": "TMS 29'a özgü: parasal kazanç ve nakde dönüşmeyen kâr ayıklanır.",
+    "Benjamin Graham — Savunmacı Yatırımcı": "Graham, Akıllı Yatırımcı (1973), 14. bölüm; büyüklük eşiği TL'ye uyarlandı.",
+    "Benjamin Graham — Girişimci Yatırımcı": "Graham, Akıllı Yatırımcı (1973), 15. bölüm: daha küçük, ucuz ve sağlam şirketler.",
+    "Benjamin Graham — Net-Net (NCAV)": "Graham: piyasa değeri, borçlar düşüldükten sonra kalan dönen varlığın ⅔'ünden az.",
+    "David Dreman — Karşıt Yatırım": "Dreman, Contrarian Investment Strategies (1998): gözden düşmüş ama sağlam büyük şirketler.",
+    "Kenneth Fisher — Fiyat/Satış": "Fisher, Super Stocks (1984): kârı geçici düşen ama satışı güçlü şirketler için F/S.",
+    "Peter Lynch — Makul Fiyata Büyüme": "Lynch, One Up on Wall Street (1989): büyümeye göre ucuz (PEG).",
+    "Warren Buffett — Kalıcı Rekabet Avantajı": "Buffett'ın hissedar mektuplarından: yüksek getiri, düşük borç, nakit üreten iş.",
+    "Charlie Munger — Kalıcı Kalite": "Munger: yüksek sermaye getirisini yıllarca koruyan, borçsuz, nakit üreten iş.",
+    "Joel Greenblatt — Sihirli Formül": "Greenblatt, The Little Book That Beats the Market (2005): ucuz + yüksek getirili.",
+    "Robert Novy-Marx — Brüt Kârlılık + Değer": "Novy-Marx (2013): brüt kâr/aktif yüksek ve PD/DD düşük şirketler.",
+    "AQR — Kalite (QMJ uyarlaması)": "Asness, Frazzini, Pedersen — Quality Minus Junk (2019): kârlılık, büyüme, güvenlik, ödeme.",
+    "Lyra — Kanıta Dayalı": "Yöntem Karnesi'nde BIST'te anlamlı çıkan sinyallerin birleşimi; ayrıntı Metodoloji'de.",
+  };
+  function critChips(sets, labels, passN) {
+    const chip = s2 => { const n = passN(s2); return `<button type="button" class="chip" data-set="${esc(s2)}" aria-pressed="${s2 === S.crit}" data-tip="${esc(`${labels[s2].length} kriter · ${n} hisse hepsini sağlıyor (seçili kapsamda)`)}">${esc(s2)} <span class="n ${n ? "" : "z"}">${n}</span></button>`; };
+    const groups = (S.screen.criteria_groups || []).map(([g, ks]) => [g, ks.filter(k => sets.includes(k))]).filter(([, ks]) => ks.length);
+    const seen = new Set(groups.flatMap(([, ks]) => ks)), rest = sets.filter(k => !seen.has(k));
+    if (rest.length) groups.push(["Diğer", rest]);
+    if (groups.length < 2) return `<div class="chips">${sets.map(chip).join("")}</div>`;
+    return `<div class="cr-groups">${groups.map(([g, ks]) => `<div class="cr-grp"><span class="cr-gl">${esc(g)}</span><div class="chips">${ks.map(chip).join("")}</div></div>`).join("")}</div>`;
+  }
   function renderScreen() {
     const el = $("#view-tarama");
     if (notReady(el)) return;
@@ -739,10 +764,10 @@
       const lim = S.allPass ? xs.length : (S.critLimit || 25), shown = xs.slice(0, lim);
       const cell = v => `<td class="cr-c"><span class="cr-d ${v == null ? "na" : v ? "ok" : "no"}" aria-label="${v == null ? "veri yok" : v ? "sağlandı" : "sağlanmadı"}">${v == null ? "–" : v ? "✓" : "✗"}</span></td>`;
       body = `<section class="card"><div class="fa-two fa-crit-head"><div><h2 class="card-title">Kriter seti</h2>
-          <div class="chips">${sets.map(s2 => { const n = passN(s2); return `<button type="button" class="chip" data-set="${esc(s2)}" aria-pressed="${s2 === S.crit}" data-tip="${esc(`${labels[s2].length} kriter · ${n} hisse hepsini sağlıyor (seçili kapsamda)`)}">${esc(s2)} <span class="n ${n ? "" : "z"}">${n}</span></button>`; }).join("")}</div>
+          ${critChips(sets, labels, passN)}
           <p class="card-meta">Rozet: seçili kapsamda tüm kriterleri sağlayan hisse sayısı</p></div>
           <div><h2 class="card-title">Kapsam</h2><div class="fa-scope">${ixSeg()}${secSel}</div><p class="card-meta">${all.length} hisse taranır</p></div></div></section>
-        <section class="card card-flush"><div class="card-head cr-head"><h2 class="card-title">${esc(S.crit)}</h2>
+        <section class="card card-flush"><div class="card-head cr-head"><div><h2 class="card-title">${esc(S.crit)}</h2>${SET_NOTE[S.crit] ? `<p class="card-meta">${esc(SET_NOTE[S.crit])}</p>` : ""}</div>
             <label class="fa-check"><input type="checkbox" id="faAllPass" ${S.allPass ? "checked" : ""}> Yalnızca tüm kriterleri sağlayanlar <span class="t3">(${nAll})</span></label></div>
           <ol class="cr-legend">${lbl.map((l, i) => `<li><span class="cr-no">${i + 1}</span>${esc(l)}</li>`).join("")}</ol>
           <div class="tbl-scroll"><table class="tbl fa-tbl cr-tbl"><thead><tr><th>Hisse</th><th>Uyum</th>${lbl.map((l, i) => `<th class="cr-c" data-tip="${esc(l)}">${i + 1}</th>`).join("")}<th class="cr-sp"></th></tr></thead>
@@ -957,7 +982,8 @@
           <li><b>Piotroski F (0–9):</b> ROA > 0, işletme nakdi > 0, ROA arttı, nakit > net kar, UV borç/varlık azaldı, cari oran arttı, sermaye artırımı yok, brüt marj arttı, aktif devir hızı arttı (bir yıl öncesine göre).</li>
           <li><b>Altman Z'':</b> 6,56·(net işletme sermayesi/varlık) + 3,26·(birikmiş karlar/varlık) + 6,72·(esas faaliyet karı/varlık) + 1,05·(özkaynak/yükümlülük). > 2,6 güvenli, 1,1–2,6 gri, < 1,1 riskli.</li>
           <li><b>Beneish M:</b> 8 değişkenli model; −1,78 üstü kazanç manipülasyonu riski işaretidir.</li>
-          <li><b>Kriter setleri:</b> Graham, Buffett, Lynch, Greenblatt ve "Enflasyon muhasebesi & nakit kalitesi" kurallarının BIST'e ve enflasyon muhasebesine uyarlanmış hâlleri; eşikler her kriterin adında yazar. Uzun geçmiş gerektirenler mevcut yıllık dönemlerle sınanır.</li>
+          <li><b>Kriter setleri:</b> Graham (savunmacı, girişimci, net-net), Dreman, Fisher, Lynch, Buffett, Munger, Greenblatt, Novy-Marx, AQR kalite (QMJ) ve "Enflasyon muhasebesi & nakit kalitesi" kurallarının BIST'e ve enflasyon muhasebesine uyarlanmış hâlleri; eşikler her kriterin adında yazar. "Evrenin en ucuz %20'si" gibi göreli eşikler mali kuruluşlar hariç taranan şirketler arasındaki sıradır. Uzun geçmiş gerektirenler mevcut yıllık dönemlerle sınanır; temettü kriterleri KAP kâr payı kararlarından okunur.</li>
+          <li><b>Lyra — Kanıta Dayalı:</b> Yöntem Karnesi'nde BIST'te geçmişte anlamlı getiri farkı üreten sinyallerden kurulur: ROE'ye göre hak edilen PD/DD'den iskonto, değer + momentum (12-1 ay), değer + kalite (F-skor, Altman Z″) ve son çeyrek bilanço sürprizi.</li>
         </ul>
         <h2 class="card-title">Bankalar ve sigorta şirketleri</h2>
         <ul>
