@@ -88,6 +88,17 @@
         ["Veri", "KAP'taki pay geri alım bildirimleri; ayrı repodaki <a href=\"https://github.com/gptrade/kap-geri-alim-takibi\" target=\"_blank\" rel=\"noopener\">kap-geri-alim-takibi</a> uygulaması toplar (işlem tarihi, fiyat, adet, sermayeye oranı)."],
         ["Fiyat", "güncel kapanışlar saatte bir Yahoo Finance'ten toplu alınır; izleme listesindeki hisselerde panel fiyatı kullanılır."],
         ["Olay etkisi", "gerçekleşen geri alımların sonraki seanslardaki ortalama getirisi için Olay Karnesi'ne bak."],
+      ])) + card("Program kullanımı", ul([
+        ["Kullanım", "aktif programın başından beri alınan pay ÷ son program bildirimindeki azami pay. Çizgi: programın süresinin geçen kısmı; kullanım süreden hızlıysa çubuk turuncu."],
+        ["Kaynak", "azami pay ve süre son program bildiriminden okunur; süre metni okunamayan programlarda zaman çizgisi yoktur."],
+        ["%110 üstü", "azami payı aşıyor görünen programlarda büyük ihtimalle yeni program bildirimi eksik ya da azami pay okunamamıştır; uyarıyla listenin sonuna alınır."],
+      ])) + card("Geri alım sonrası performans", ul([
+        ["Dalga", "aynı hissede 30 günden uzun ara vermeden gelen geri alım bildirimleri tek dalga sayılır; olay dalganın ilk bildirimidir. Böylece her gün alım yapan şirketler sonucu domine etmez."],
+        ["Giriş", "yayın anına göre, ileriye bakmadan: bildirim 09:55'ten önce yayımlandıysa o günün kapanışı, sonra yayımlandıysa bir sonraki işlem gününün kapanışı."],
+        ["Getiri", "hissenin getirisi − BIST 100 getirisi (aynı pencere, temettü ve bölünmeye göre düzeltilmiş fiyat). Ufuklar 5, 20 ve 60 işlem günü (yaklaşık 1 hafta, 1 ay, 3 ay). \"Alımdan önceki 20 gün\" girişten önceki 20 işlem günüdür."],
+        ["Anlamlılık", "dalgalar takvimde kümelendiği (aynı haftalarda çok şirket alıyor) için standart hata giriş ayına göre kümelenir; |t| ≥ 2 \"anlamlı\" sayılır. Kutunun üzerine gelince ortalama, medyan, pozitif oran ve t görünür."],
+        ["Grafik", "her gün için o güne verisi olan dalgaların ortalaması; gölge basit %95 aralıktır (kümelenme hesaba katılmaz, gerçek belirsizlik daha geniştir)."],
+        ["Sınırlar", "örnek takipçinin başladığı Ağustos 2025'ten beri, kısa. İşlem maliyeti ve likidite yok sayılır. Geri alım şirketin kendi fiyatını desteklemesidir; sonuç geçmişin ortalamasıdır, tek hisse için öngörü değildir. Fiyat: Yahoo (yalnız yüzde getiriler yayımlanır)."],
       ]))],
     ["temel", "Temel Analiz", () => window.radarFundamentals?.methodHTML?.() || ""],
     ["banka-faiz", "Banka Faiz Duyarlılığı", () => card("Yöntem ve sınırlar", `<ul>

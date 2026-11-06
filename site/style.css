@@ -1906,3 +1906,13 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .est-v { font-family: var(--font-mono); white-space: nowrap; margin-left: auto; font-size: var(--fs-xs); }
 .est-v .t3 { font-family: var(--font-sans); }
 .est-v.long { white-space: normal; flex-basis: 100%; margin-left: 0; font-family: var(--font-sans); font-size: var(--fs-sm); color: var(--text); }
+.bs-head { margin: 0 0 var(--s-3); font-size: var(--fs-md); line-height: 1.5; }
+.bs-pre { fill: var(--surface-2); opacity: .55; } .bs-zero { stroke: var(--text-2); stroke-dasharray: 3 3; }
+.bs-kpis .sp-k .tag { font-size: var(--fs-2xs); }
+.bs-rec thead th { font-size: var(--fs-2xs); color: var(--text-3); font-weight: 500; text-transform: none; letter-spacing: 0; }
+.bb-vis > section { container-type: inline-size; }
+@container (max-width: 720px) { .bb-vis .sp-grid { grid-template-columns: 1fr; } .bb-vis .bs-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.bs-kpis .sp-k .tag { font-family: var(--font-sans); font-weight: 500; }
+.bs-rec th.num, .bs-rec td.num { padding-left: 12px; }
+.bs-split { margin-top: 0; }
+.bs-rec thead th.num { text-align: right; } .bs-rec { width: 100%; }

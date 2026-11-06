@@ -346,43 +346,50 @@
       <p class="t3 gc-foot"><span class="pu-key"><i class="pu-k1"></i>kullanım <i class="pu-k2"></i>süreden hızlı <i class="pu-k3"></i>geçen süre</span>
         ${act.length > 14 ? ` · <button type="button" class="link-btn" id="bbPuAll">${S.puAll ? "İlk 14" : `Tümü (${act.length})`}</button>` : ""}
         ${idle.length ? ` · işlemsiz: ${idle.slice(0, 12).map(r => esc(r.t)).join(", ")}${idle.length > 12 ? "…" : ""}` : ""}
-        · Azami pay ve süre son program bildiriminden; süre metni okunamayan programlarda zaman çizgisi yok.</p></section>`;
+        · ${window.radarMethod?.link("geri-alim", "Yöntem") || ""}</p></section>`;
   }
 
   // ─────────────────────────────── çizim: geri alım sonrası performans (data/guc/bb.json, olay çalışması)
   function studyCard() {
     const d = S.study; if (!d?.path) return "";
-    const p = d.path, W = 560, Hh = 220, P = { l: 38, r: 10, t: 14, b: 26 }, n = p.mean.length;
-    const lo = Math.min(...p.lo, -1), hi = Math.max(...p.hi, 1), ext = Math.ceil(Math.max(Math.abs(lo), Math.abs(hi)));
+    const p = d.path, W = 560, Hh = 230, P = { l: 40, r: 12, t: 14, b: 34 }, n = p.mean.length;
+    const ext = Math.max(4, Math.ceil(Math.max(...p.hi.map(Math.abs), ...p.lo.map(Math.abs)) / 2) * 2);
     const X = i => P.l + (W - P.l - P.r) * i / (n - 1), Y = v => P.t + (Hh - P.t - P.b) * (ext - v) / (2 * ext);
     const line = a => a.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join("");
-    const band = line(p.hi) + p.lo.map((v, i) => `L${X(n - 1 - i).toFixed(1)},${Y(p.lo[n - 1 - i]).toFixed(1)}`).join("") + "Z";
-    const i0 = -p.from, step = ext > 8 ? 4 : ext > 4 ? 2 : 1;
-    const yt = []; for (let v = -ext; v <= ext; v += step) yt.push(v);
-    const svg = `<svg class="sp-svg" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Geri alım dalgası etrafında ortalama fazla getiri">
-      ${yt.map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="${v ? "g" : "z"}"/><text x="${P.l - 5}" y="${Y(v) + 3.5}" text-anchor="end">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}</text>`).join("")}
-      <line x1="${X(i0)}" x2="${X(i0)}" y1="${P.t}" y2="${Hh - P.b}" class="z"/>
-      ${[-20, 0, 20, 40, 60].map(k => `<text x="${X(k - p.from)}" y="${Hh - 8}" text-anchor="middle">${k === 0 ? "giriş" : (k > 0 ? "+" : "−") + Math.abs(k)}</text>`).join("")}
+    const band = line(p.hi) + p.lo.map((_, i) => `L${X(n - 1 - i).toFixed(1)},${Y(p.lo[n - 1 - i]).toFixed(1)}`).join("") + "Z";
+    const i0 = -p.from, step = ext > 8 ? 4 : 2, yt = []; for (let v = -ext; v <= ext; v += step) yt.push(v);
+    const sg = v => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}`;
+    const R = d.res || {}, sig = r => r?.t != null && Math.abs(r.t) >= 2;
+    const svg = `<svg class="sp-svg" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Geri alım başladıktan önce ve sonra hissenin BIST 100'e göre ortalama seyri">
+      <rect x="${X(0)}" y="${P.t}" width="${X(i0) - X(0)}" height="${Hh - P.t - P.b}" class="bs-pre"/>
+      ${yt.map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="${v ? "g" : "z"}"/><text x="${P.l - 6}" y="${Y(v) + 3.5}" text-anchor="end">${sg(v)}%</text>`).join("")}
+      <line x1="${X(i0)}" x2="${X(i0)}" y1="${P.t}" y2="${Hh - P.b}" class="bs-zero"/>
+      <text x="${X(i0 / 2)}" y="${P.t + 12}" text-anchor="middle" class="ax">alım öncesi</text><text x="${X(i0) + 6}" y="${P.t + 12}" class="ax">ilk alım bildirimi</text>
+      ${[-20, 0, 20, 40, 60].map(k => `<text x="${X(k - p.from)}" y="${Hh - 16}" text-anchor="middle">${k === 0 ? "0" : sg(k)}</text>`).join("")}
+      <text x="${W - P.r}" y="${Hh - 2}" text-anchor="end" class="ax">işlem günü</text>
       <path d="${band}" class="bs-band"/><path d="${line(p.mean)}" class="bs-line"/>
-      ${[5, 20, 60].map(k => { const i = i0 + k; return i < n ? `<circle cx="${X(i)}" cy="${Y(p.mean[i])}" r="3.5" class="bs-dot"><title>+${k} gün: ortalama ${fmt.pct(p.mean[i], 1)}</title></circle>` : ""; }).join("")}
+      ${[5, 20, 60].map(k => { const i = i0 + k; return i < n ? `<circle cx="${X(i)}" cy="${Y(p.mean[i])}" r="3.5" class="bs-dot"><title>${k} işlem günü sonra: ortalama ${fmt.pct(p.mean[i], 1)}</title></circle>` : ""; }).join("")}
     </svg>`;
-    const R = d.res || {}, k = (lbl, r, sub) => r ? `<div class="sp-k"><span class="k-lbl">${lbl}</span><b class="${r.mean > 0 ? "up" : r.mean < 0 ? "down" : ""}">${fmt.pct(r.mean, 1)}</b><span class="t3">${sub || `medyan ${fmt.pct(r.med, 1)} · %${fmt.num(r.hit * 100, 0)}'i pozitif · t ${r.t == null ? "—" : fmt.num(r.t, 1)}`}</span></div>` : "";
+    const tile = (lbl, r, sub) => r ? `<div class="sp-k" data-tip="${esc(`Ortalama ${fmt.pct(r.mean, 1)} · medyan ${fmt.pct(r.med, 1)} · dalgaların %${fmt.num(r.hit * 100, 0)}'i pozitif · t ${r.t == null ? "—" : fmt.num(r.t, 1)} · ${r.n} dalga`)}">
+        <span class="k-lbl">${lbl}</span><b class="${r.mean > 0 ? "up" : r.mean < 0 ? "down" : ""}">${fmt.pct(r.mean, 1)}</b>
+        <span class="t3">${sub || (sig(r) ? `<span class="tag up">anlamlı</span>` : `<span class="tag na">anlamlı değil</span>`)}</span></div>` : "";
+    const head = R.pre && R.a20 ? (R.pre.mean < -2 ? `Şirketler genellikle hisse BIST 100'ün <b>%${fmt.num(-R.pre.mean, 0)}</b> gerisinde kaldıktan sonra alıma başlıyor. ` : "") +
+      (sig(R.a20) || sig(R.a60) ? `Alım sonrasında ${R.a20.mean > 0 ? "endeksi geçme" : "endeksin gerisinde kalma"} eğilimi istatistiksel olarak anlamlı.` : `Alımdan sonra endeksi sistematik olarak geçtiklerine dair bir kanıt yok.`) : "";
     const sp = d.split || {}, sd = sp.drop?.a20, sr = sp.rest?.a20;
-    const sig = r => r?.t != null && Math.abs(r.t) >= 2;
-    const verdict = R.a20 ? (sig(R.a20) ? `20 günlük fazla getiri istatistiksel olarak anlamlı (t ${fmt.num(R.a20.t, 1)}).` : `20 günlük fark istatistiksel olarak anlamlı değil (t ${R.a20.t == null ? "—" : fmt.num(R.a20.t, 1)}); örnek ${d.first ? fmt.date(d.first, { month: "long", year: "numeric" }) : ""}'dan beri, kısa.`) : "";
-    const rec = (d.recent || []).filter(r => r.since != null).slice(0, 10);
+    const rec = (d.recent || []).filter(r => r.since != null).slice(0, 8);
     return `<section class="card" aria-labelledby="bbStT"><div class="card-head"><h2 class="card-title" id="bbStT">Geri alım sonrası performans</h2>
-        <span class="card-meta">${fmt.int(d.n_events)} geri alım dalgası · BIST 100'e göre fazla getiri, %</span></div>
-      <div class="sp-kpis bs-kpis">${k("Girişten önceki 20 gün", R.pre, `şirketler çoğunlukla düşüşten sonra alıyor · n ${R.pre?.n ?? "—"}`)}${k("+5 gün", R.a5)}${k("+20 gün", R.a20)}${k("+60 gün", R.a60)}</div>
-      <div class="sp-grid"><div><p class="d-sub">Ortalama yol · gölge basit %95 aralık · ${p.n} dalga, +60. günde ${p.n_end}</p>${svg}</div>
-        <div><p class="d-sub">20 gün sonra · öncesine göre</p>
-          <table class="fa-kv bs-split"><tbody>
-            <tr><th>Önceki 20 günde endeksten ≥%${fmt.num(-d.drop * 100, 0)} geride</th><td class="num ${sd?.mean > 0 ? "up" : "down"}">${sd ? fmt.pct(sd.mean, 1) : "—"}</td><td class="num t3">n ${sp.n_drop ?? "—"}</td></tr>
-            <tr><th>Diğerleri</th><td class="num ${sr?.mean > 0 ? "up" : "down"}">${sr ? fmt.pct(sr.mean, 1) : "—"}</td><td class="num t3">n ${sp.n_rest ?? "—"}</td></tr></tbody></table>
-          ${rec.length ? `<p class="d-sub" style="margin-top:var(--s-3)">Son dalgalar · başlangıçtan bugüne</p><table class="fa-kv bs-rec"><tbody>${rec.map(r => `<tr><th><button type="button" class="tk-link mono" data-sym="${esc(r.t)}">${esc(r.t)}</button> <span class="t3">${fmt.date(r.entry, { day: "numeric", month: "short" })}</span></th><td class="num t3" data-tip="Girişten önceki 20 günde endekse göre">${r.pre == null ? "—" : fmt.pct(r.pre * 100, 0)}</td><td class="num ${r.since > 0 ? "up" : "down"}" data-tip="${r.days} işlem günü">${fmt.pct(r.since * 100, 1)}</td></tr>`).join("")}</tbody></table>` : ""}
+        <span class="card-meta">${fmt.int(d.n_events)} geri alım dalgası · ${d.first ? fmt.date(d.first, { month: "long", year: "numeric" }) + "'dan beri" : ""}</span></div>
+      ${head ? `<p class="bs-head">${head}</p>` : ""}
+      <p class="d-sub">Hissenin BIST 100'e göre getirisi (ortalama)</p>
+      <div class="sp-kpis bs-kpis">${tile("Alımdan önceki 20 gün", R.pre, "alım öncesindeki düşüş")}${tile("1 hafta sonra", R.a5)}${tile("1 ay sonra", R.a20)}${tile("3 ay sonra", R.a60)}</div>
+      <div class="sp-grid"><div><p class="d-sub">Ortalama seyir · gölge: belirsizlik aralığı</p>${svg}</div>
+        <div><p class="d-sub">Önceden sert düşenler farklı mı? · 1 ay sonra</p>
+          <ul class="est-l bs-split">
+            <li><span class="est-k">Alımdan önce endeksin %${fmt.num(-d.drop * 100, 0)}+ gerisinde kalanlar <span class="t3">· ${sp.n_drop ?? "—"} dalga</span></span><span class="est-v"><b class="${sd?.mean > 0 ? "up" : "down"}">${sd ? fmt.pct(sd.mean, 1) : "—"}</b></span></li>
+            <li><span class="est-k">Diğerleri <span class="t3">· ${sp.n_rest ?? "—"} dalga</span></span><span class="est-v"><b class="${sr?.mean > 0 ? "up" : "down"}">${sr ? fmt.pct(sr.mean, 1) : "—"}</b></span></li></ul>
+          ${rec.length ? `<p class="d-sub" style="margin-top:var(--s-4)">Son geri alım dalgaları</p><table class="fa-kv bs-rec"><thead><tr><th>Hisse · başlangıç</th><th class="num" data-tip="Alım başlamadan önceki 20 günde BIST 100'e göre">Öncesi</th><th class="num" data-tip="Alım başladığından bugüne BIST 100'e göre">Sonrası</th></tr></thead><tbody>${rec.map(r => `<tr><th><button type="button" class="tk-link mono" data-sym="${esc(r.t)}">${esc(r.t)}</button> <span class="t3">${fmt.date(r.entry, { day: "numeric", month: "short" })}</span></th><td class="num t3">${r.pre == null ? "—" : fmt.pct(r.pre * 100, 0)}</td><td class="num ${r.since > 0 ? "up" : r.since < 0 ? "down" : ""}" data-tip="${r.days} işlem günü">${fmt.pct(r.since * 100, 1)}</td></tr>`).join("")}</tbody></table>` : ""}
         </div></div>
-      <p class="t3 gc-foot">Dalga: aynı hissede 30 günden uzun ara vermeden gelen geri alım bildirimleri; olay ilk bildirim. Giriş yayın anına göre: 09:55'ten önce yayımlandıysa o günün, sonra yayımlandıysa ertesi işlem gününün kapanışı (ileriye bakmadan).
-        ${esc(verdict)} t: dalgalar takvimde kümelendiği için giriş ayına göre ortalanıp aylar üzerinden. Geri alım şirketin kendi fiyatını desteklemesidir; bu sonuç geçmişin ortalamasıdır, tek hisse için öngörü değildir. Fiyat: Yahoo (yalnız yüzde getiriler).</p></section>`;
+      <p class="t3 gc-foot">Geçmişin ortalaması; tek hisse için öngörü değildir · ${window.radarMethod?.link("geri-alim", "Yöntem ve sınırlamalar") || ""}</p></section>`;
   }
 
   // ─────────────────────────────── çizim: tablo
