@@ -408,6 +408,7 @@ def us_label(lbl: str) -> str:
     return out[:1].upper() + out[1:]
 
 
+PRIVATE = ("shares", "price", "eps", "bvps", "intrinsic")    # pay başı fiyat türevleri yayımlanmaz
 SKIP_SETS = {"Enflasyon Muhasebesi & Nakit Kalitesi"}   # TMS 29'a özgü
 
 
@@ -440,6 +441,8 @@ def build_screen(ms: list[dict] | None = None) -> int:
         rows.append({"code": m["code"], "sector": m.get("sector"), "m": met, "name": m.get("name"), "ix": m.get("ix") or []})
     M.finalize(rows)
     for row in rows:
+        row["m"]["ratios"]["mon_share"] = None              # ABD'de parasal kazanç kalemi yok: 0 yerine "yok"
+        (row["m"].get("history") or {}).pop("mon_share", None)
         for k in SKIP_SETS:
             row["m"]["criteria"].pop(k, None)
         for c in row["m"]["criteria"].values():
@@ -447,7 +450,7 @@ def build_screen(ms: list[dict] | None = None) -> int:
     screen = []
     for row in rows:
         m = row["m"]
-        v = {k: x for k, x in m["valuation"].items() if k not in ("shares", "price", "eps", "bvps", "intrinsic")}
+        v = {k: x for k, x in m["valuation"].items() if k not in PRIVATE}
         screen.append({
             "code": row["code"], "title": row["name"], "sector": row["sector"], "period": m["period"], "mkt": "us",
             "mcap": m["valuation"].get("mcap"), "t": "sanayi", "idx": row["ix"],
@@ -456,6 +459,21 @@ def build_screen(ms: list[dict] | None = None) -> int:
             "f": m["piotroski"], "mscore": m["beneish_m"], "potential": m.get("potential"),
             "crit": {k: [c["pass"], c["total"], c["known"], [x for _, x in c["items"]]] for k, c in m["criteria"].items()},
         })
+    # Karşılaştır sayfası için şirket başına metrik belgesi (SEC verisinden türetilmiş oranlar; fiyat alanları yok)
+    pub = OUT / "c"
+    pub.mkdir(exist_ok=True)
+    keep = set()
+    for row in rows:
+        m = dict(row["m"])
+        m["valuation"] = {k: x for k, x in m["valuation"].items() if k not in PRIVATE}
+        for k in ("intrinsic", "pb_hist"):
+            m.pop(k, None)
+        _save(pub / f"{row['code']}.json", {"code": row["code"], "title": row["name"], "sector": row["sector"], "currency": "USD",
+                                            "template": "sanayi", "mkt": "us", "idx": row["ix"], "metrics": m})
+        keep.add(f"{row['code']}.json")
+    for f in pub.glob("*.json"):
+        if f.name not in keep:
+            f.unlink()
     from .store import crit_labels
     _save(SCREEN, {"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "currency": "USD", "rows": screen,
                    "criteria_labels": crit_labels(rows, M.CRIT_ORDER), "criteria_groups": [[g, ks] for g, ks in M.CRIT_GROUPS],

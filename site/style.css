@@ -1944,3 +1944,4 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .fa-scr-top { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; justify-content: space-between; margin-bottom: var(--s-4); }
 .fa-scr-top .fa-tabs { margin-bottom: 0; }
 .fa-mkt { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.fa-us { font-size: 10px; font-weight: var(--fw-semibold); color: var(--accent); border: 1px solid currentColor; border-radius: 4px; padding: 0 3px; margin-left: 2px; vertical-align: 1px; letter-spacing: .03em; }

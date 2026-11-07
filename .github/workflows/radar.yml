@@ -77,13 +77,13 @@ jobs:
             git archive FETCH_HEAD fin | tar -x -C site/data || true
           fi
 
-      # ABD temel analiz (temel-abd.yml, günlük) fin_us dalında; sitede yalnız tarama özeti yayımlanır
+      # ABD temel analiz (temel-abd.yml, günlük) fin_us dalında; sitede tarama özeti ve şirket metrikleri (c/) yayımlanır, ham seriler değil
       - name: ABD temel analiz özetini geri yükle
         run: |
           rm -rf site/data/fin_us && mkdir -p site/data/fin_us
           if git ls-remote --exit-code --heads origin fin_us >/dev/null 2>&1; then
             git fetch --depth 1 origin fin_us
-            git archive FETCH_HEAD _screen.json | tar -x -C site/data/fin_us || true
+            git archive FETCH_HEAD _screen.json c | tar -x -C site/data/fin_us || git archive FETCH_HEAD _screen.json | tar -x -C site/data/fin_us || true
           fi
 
       # Enerji kurulu güç verisi ayrı iş akışında (enerji.yml, haftalık) üretilir, enerji dalından okunur

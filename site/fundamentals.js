@@ -109,11 +109,15 @@
   }
   async function doc(code) {
     if (S.docs[code]) return S.docs[code];
-    S.docs[code] = getJSON(`data/fin/${code}.json`).catch(e => { delete S.docs[code]; throw e; });
+    const url = !rowOf(code) && usRow(code) ? `data/fin_us/c/${code}.json` : `data/fin/${code}.json`;
+    S.docs[code] = getJSON(url).catch(e => { delete S.docs[code]; throw e; });
     return S.docs[code];
   }
   const rows = () => S.screen?.rows || [];
   const rowOf = c => rows().find(r => r.code === c);
+  const usRow = c => (S.us?.rows || []).find(r => r.code === c);
+  const anyRow = c => rowOf(c) || usRow(c);
+  const isUSCode = c => !rowOf(c) && !!usRow(c);
   function rerender() {
     const r = sh.route;
     if (r === "temel") renderOverview();
@@ -235,10 +239,11 @@
   function bindIx(el, cb) { $$("[data-ix]", el).forEach(b => b.onclick = () => {
     if (isUS()) { S.usIx = b.dataset.ix; store.set("radar.finUsIx", S.usIx); } else { S.ix = b.dataset.ix; store.set("radar.finIx", S.ix); }
     cb(); }); }
-  async function loadUS() {
-    if (S.us || S.usErr) return;
-    try { S.us = await getJSON("data/fin_us/_screen.json"); } catch (e) { S.usErr = e; }
-    if (sh.route === "tarama") renderScreen();
+  let usP = null;
+  function loadUS() {
+    if (S.us || S.usErr) return Promise.resolve();
+    return usP ||= getJSON("data/fin_us/_screen.json").then(d => { S.us = d; }, e => { S.usErr = e; })
+      .then(() => { if (sh.route === "tarama") renderScreen(); });
   }
   function bindRows(el) {
     $$("tr.row[data-sec]", el).forEach(tr => { const f = () => { S.sector = tr.dataset.sec; renderOverview(); $("#view-temel").scrollIntoView?.({ block: "start" }); };
@@ -845,10 +850,12 @@
     if (notReady(el)) return;
     const fromHash = (sh.param || "").split(",").map(s => s.trim().toUpperCase()).filter(Boolean);
     if (fromHash.length) { S.cmp = fromHash.slice(0, 5); store.set("radar.finCmp", S.cmp); }
-    const codes = S.cmp.filter(c => rowOf(c));
-    const pick = `<section class="card"><div class="toolbar"><span class="chip-label">Karşılaştırılan</span><div class="chips">${codes.map(c => `<button type="button" class="chip" data-rm="${c}" aria-pressed="true">${c} <span aria-hidden="true">×</span></button>`).join("")}</div>
+    if (!S.us && !S.usErr) { await loadUS(); if (sh.route !== "karsilastir") return; }
+    const codes = S.cmp.filter(c => anyRow(c));
+    const tag = c => isUSCode(c) ? ` <small class="fa-us">ABD</small>` : "";
+    const pick = `<section class="card"><div class="toolbar"><span class="chip-label">Karşılaştırılan</span><div class="chips">${codes.map(c => `<button type="button" class="chip" data-rm="${c}" aria-pressed="true">${c}${tag(c)} <span aria-hidden="true">×</span></button>`).join("")}</div>
       ${codes.length < 5 ? `<div class="fa-pick"><label class="search"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m13.5 13.5 3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-        <input type="search" id="faCmpQ" placeholder="Şirket ekle: kod ya da ad (ör. THYAO, PGSUS)" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="faCmpList" aria-label="Karşılaştırmaya şirket ekle"></label>
+        <input type="search" id="faCmpQ" placeholder="Şirket ekle: kod ya da ad (ör. THYAO, AAPL)" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="faCmpList" aria-label="Karşılaştırmaya şirket ekle"></label>
         <ul id="faCmpList" class="fa-sug" role="listbox" hidden></ul></div>` : `<span class="card-meta">En fazla 5 şirket</span>`}</div></section>`;
     if (codes.length < 2) {
       el.innerHTML = pick + `<div class="card">${sh.stateHTML({ title: "En az iki şirket seç", msg: "Şirket sayfasındaki “Karşılaştırmaya ekle” düğmesini ya da yukarıdaki listeyi kullan (en fazla 5)." })}</div>`;
@@ -858,7 +865,9 @@
     bindCmp(el);
     const docs = await Promise.all(codes.map(c => doc(c).catch(() => null)));
     if (sh.route !== "karsilastir") return;
-    const ok = codes.map((c, i) => ({ c, d: docs[i], r: rowOf(c) })).filter(o => o.d?.metrics);
+    const ok = codes.map((c, i) => ({ c, d: docs[i], r: anyRow(c) })).filter(o => o.d?.metrics);
+    const nUS = ok.filter(o => o.d.mkt === "us").length, mixMkt = nUS > 0 && nUS < ok.length;
+    const growL = nUS === 0 ? "Reel büyüme" : nUS === ok.length ? "Satış büyümesi" : "Satış büyümesi (BIST reel, ABD nominal)";
     const tpls = [...new Set(ok.map(o => tplOf(o.d)))], mixed = tpls.length > 1;
     const radarSet = ok.filter(o => tplOf(o.d) === tplOf(ok[0].d));
     const cats = Object.keys(ok[0].d.metrics.categories);
@@ -871,14 +880,17 @@
       ["Birleşik oran", o => R(o).combined, -1, pct], ["Hasar oranı", o => R(o).loss_ratio, -1, pct], ["Reel prim büyümesi", o => R(o).premium_growth, 1, pctS],
       ["Özsermaye / aktif", o => R(o).equity_assets, 1, pct], ["Ucuzluk (F/K)", o => o.d.metrics.valuation.pe, -1, x], ["Ucuzluk (PD/DD)", o => o.d.metrics.valuation.pb, -1, x]]
     : [["Bilanço kalitesi", o => o.d.metrics.quality, 1, v => `${v}/100`], ["Karlılık (ROE)", o => o.d.metrics.ratios.roe, 1, pct],
-      ["Reel büyüme", o => o.d.metrics.ratios.rev_growth, 1, pctS], ["Borçluluk (net borç / FAVÖK)", o => o.d.metrics.ratios.net_debt_ebitda, -1, x],
+      [growL, o => o.d.metrics.ratios.rev_growth, 1, pctS], ["Borçluluk (net borç / FAVÖK)", o => o.d.metrics.ratios.net_debt_ebitda, -1, x],
       ["Kar kalitesi (işletme nakdi / kar)", o => o.d.metrics.ratios.cfo_ni, 1, x], ["Likidite (cari oran)", o => o.d.metrics.ratios.current, 1, x],
       ["Ucuzluk (F/K)", o => o.d.metrics.valuation.pe, -1, x], ["Ucuzluk (FD/FAVÖK)", o => o.d.metrics.valuation.ev_ebitda, -1, x]];
     const assess = KEYS.map(([l, f, dir, fm]) => { const vs = ok.map(o => [o.c, f(o)]).filter(([, v]) => v != null);
       if (vs.length < 2) return ""; vs.sort((a, b) => (b[1] - a[1]) * dir);
       return `<li><b>${l}:</b> en iyi ${vs[0][0]} (${fm(vs[0][1])}), en zayıf ${vs[vs.length - 1][0]} (${fm(vs[vs.length - 1][1])}).</li>`; }).join("");
     const rank = [...ok].sort((a, b) => (b.d.metrics.overall ?? 0) - (a.d.metrics.overall ?? 0)).map(o => `${o.c} (${o.d.metrics.overall ?? "—"} · ${o.d.metrics.grade || "—"})`).join(" › ");
-    const allP = [...new Set(ok.flatMap(o => o.d.metrics.history.periods))].sort();
+    // Eğilim ekseni: en az iki şirketin verisi olan ilk dönemden başlar (ABD serileri 5 yıl, BIST 10 yıl)
+    const allP0 = [...new Set(ok.flatMap(o => o.d.metrics.history.periods))].sort();
+    const p0 = allP0.findIndex(p => ok.filter(o => o.d.metrics.history.periods.includes(p)).length >= Math.min(2, ok.length));
+    const allP = allP0.slice(Math.max(0, p0));
     const metKeys = [...new Set(tpls.flatMap(t => MET_T[t] || []))];
     const tbl = metKeys.map(k => [k, MET[k]]).map(([k, [l, f, dir, g]]) => {
       const vs = ok.map(o => mOf(o.d.metrics, k));
@@ -890,6 +902,7 @@
     el.innerHTML = pick + `
       <div class="fa-two">
         <section class="card"><div class="card-head"><h2 class="card-title">Kategori puanları</h2><span class="card-meta">${TPL[tplOf(ok[0].d)]} modeli kategorileri (0–100)</span></div>
+          ${mixMkt ? `<p class="tp-warn">BIST ve ABD şirketleri birlikte: oranlar karşılaştırılabilir; tutarlar farklı para birimlerinde, BIST büyümeleri enflasyondan arındırılmış (reel), ABD büyümeleri nominal. Kalite ve genel skorlar her şirketin kendi piyasasındaki sektör ortalamalarına göre hesaplanır.</p>` : ""}
           ${mixed ? `<p class="tp-warn">Farklı modeller karşılaştırılıyor (${tpls.map(t => TPL[t]).join(", ")}); kategori grafiği yalnız ${TPL[tplOf(ok[0].d)].toLocaleLowerCase("tr")} şirketlerini gösterir, oran tablosunda boş hücreler o modelde olmayan oranlardır.</p>` : ""}
           ${radarChart(cats, radarSet.map(o => ({ name: o.c, vals: cats.map(c => o.d.metrics.categories[c]) })))}
           <details class="fa-crit"><summary>Tablo görünümü</summary><table class="tx fa-tx"><thead><tr><th>Kategori</th>${radarSet.map(o => `<th class="num">${o.c}</th>`).join("")}</tr></thead>
@@ -901,13 +914,16 @@
         <select id="faCmpM" class="fa-select" aria-label="Metrik">${[...new Set(ok.flatMap(o => trendKeys(o.d)))].map(k => `<option value="${k}" ${S.cmpMetric === k ? "selected" : ""}>${MET[k][0]}</option>`).join("")}</select></div>
         <div id="faCmpChart"></div></section>
       <section class="card card-flush"><div class="card-head"><h2 class="card-title">Tüm oranlar</h2><span class="card-meta">${metKeys.length} oran · ● satırdaki en iyi değer</span></div>
-        <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Oran</th>${ok.map(o => `<th class="num"><button type="button" class="tk-cmp link-btn" data-code="${o.c}">${o.c}</button></th>`).join("")}</tr></thead>
+        <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Oran</th>${ok.map(o => `<th class="num">${o.d.mkt === "us" ? `${o.c}${tag(o.c)}` : `<button type="button" class="tk-cmp link-btn" data-code="${o.c}">${o.c}</button>`}</th>`).join("")}</tr></thead>
         <tbody>${tbl.map(([g, h]) => { const head = g !== lastG ? `<tr class="fa-grp"><td colspan="${ok.length + 1}">${g}</td></tr>` : ""; lastG = g; return head + h; }).join("")}</tbody></table></div></section>`;
     bindCmp(el);
     const cmpKeys = [...new Set(ok.flatMap(o => trendKeys(o.d)))];
     if (!cmpKeys.includes(S.cmpMetric)) { S.cmpMetric = cmpKeys[0]; $("#faCmpM").value = S.cmpMetric; }
     const draw = () => { const k = S.cmpMetric, f = MET[k][1];
-      $("#faCmpChart").innerHTML = lineChart(allP.map(qlabel), ok.map(o => ({ name: o.c, vals: allP.map(p => { const j = o.d.metrics.history.periods.indexOf(p); return j >= 0 ? o.d.metrics.history[k]?.[j] : null; }) })), { kind: f === pct || f === pctS ? "pct" : "x", tipFmt: f, w: cw($("#faCmpChart")) }); };
+      const ser = ok.map(o => ({ name: o.c, vals: allP.map(p => { const j = o.d.metrics.history.periods.indexOf(p); return j >= 0 ? o.d.metrics.history[k]?.[j] ?? null : null; }) }));
+      const need = Math.min(2, ser.filter(x => x.vals.some(v => v != null)).length);
+      const i0 = Math.max(0, allP.findIndex((_, i) => ser.filter(x => x.vals[i] != null).length >= need));
+      $("#faCmpChart").innerHTML = lineChart(allP.slice(i0).map(qlabel), ser.map(x => ({ ...x, vals: x.vals.slice(i0) })), { kind: f === pct || f === pctS ? "pct" : "x", tipFmt: f, w: cw($("#faCmpChart")) }); };
     $("#faCmpM").onchange = e => { S.cmpMetric = e.target.value; draw(); };
     draw();
     $$(".tk-cmp", el).forEach(b => b.onclick = () => sh.go("hisse", { param: b.dataset.code }));
@@ -917,9 +933,9 @@
     const inp = $("#faCmpQ"), list = $("#faCmpList");
     if (!inp) return;
     const add = codes => {
-      const ok = codes.filter(c => rowOf(c) && !S.cmp.includes(c));
+      const ok = codes.filter(c => anyRow(c) && !S.cmp.includes(c));
       if (!ok.length) return;
-      S.cmp = [...S.cmp.filter(c => rowOf(c)), ...ok].slice(0, 5); store.set("radar.finCmp", S.cmp);
+      S.cmp = [...S.cmp.filter(c => anyRow(c)), ...ok].slice(0, 5); store.set("radar.finCmp", S.cmp);
       sh.go("karsilastir", { param: S.cmp.join(","), push: false }); renderCompare();
       setTimeout(() => $("#faCmpQ")?.focus(), 0);
     };
@@ -928,11 +944,11 @@
     let hits = [], cur = 0;
     const show = () => {
       const q = low(inp.value.split(",").pop().trim());
-      hits = !q ? [] : rows().filter(r => !S.cmp.includes(r.code))
+      hits = !q ? [] : [...rows(), ...(S.us?.rows || []).filter(r => !rowOf(r.code))].filter(r => !S.cmp.includes(r.code))
         .map(r => ({ r, k: low(r.code).startsWith(q) ? 0 : low(r.code).includes(q) ? 1 : low(r.title).includes(q) ? 2 : sh.compact(r.title).includes(sh.compact(q)) ? 3 : 9 }))
         .filter(o => o.k < 9).sort((a, b) => a.k - b.k || a.r.code.localeCompare(b.r.code)).slice(0, 8).map(o => o.r);
       cur = 0;
-      list.innerHTML = hits.map((r, i) => `<li role="option" id="faSug${i}" aria-selected="${i === cur}" data-code="${r.code}"><b class="mono">${r.code}</b> <span class="muted">${esc(trTitle(r.title))}</span> <small class="muted">${esc(r.sector || "")}</small></li>`).join("")
+      list.innerHTML = hits.map((r, i) => `<li role="option" id="faSug${i}" aria-selected="${i === cur}" data-code="${r.code}"><b class="mono">${r.code}</b>${r.mkt === "us" ? ` <small class="fa-us">ABD</small>` : ""} <span class="muted">${esc(r.mkt === "us" ? r.title || "" : trTitle(r.title))}</span> <small class="muted">${esc(r.sector || "")}</small></li>`).join("")
         || (q ? `<li class="na">Eşleşen şirket yok</li>` : "");
       list.hidden = !q; inp.setAttribute("aria-expanded", String(!list.hidden));
       inp.setAttribute("aria-activedescendant", hits.length ? "faSug0" : "");
