@@ -408,6 +408,18 @@ def us_label(lbl: str) -> str:
     return out[:1].upper() + out[1:]
 
 
+def pub_series(ser: dict) -> dict:
+    """Şirket sayfası için seri: gelir tablosu karşılaştırması son 12 ay / önceki 12 ay (ABD'de yılbaşından değil);
+    pay sayısı çıkarılır (piyasa değeriyle birlikte pay başı fiyatı verirdi)."""
+    n = len(ser["periods"])
+    rnd = lambda arr: [round(v) if isinstance(v, float) else v for v in arr]  # noqa: E731
+    ttm = {k: rnd(v) for k, v in ser["ttm"].items()}
+    return {"periods": ser["periods"], "cpi": ser["cpi"], "template": "sanayi",
+            "q": {k: rnd(v) for k, v in ser["q"].items()}, "ttm": ttm, "cum": ttm,
+            "cum_prev": {k: [v[i - 4] if i >= 4 else None for i in range(n)] for k, v in ttm.items()},
+            "bs": {k: rnd(v) for k, v in ser["bs"].items() if k != "paid_capital"}}
+
+
 PRIVATE = ("shares", "price", "eps", "bvps", "intrinsic")    # pay başı fiyat türevleri yayımlanmaz
 SKIP_SETS = {"Enflasyon Muhasebesi & Nakit Kalitesi"}   # TMS 29'a özgü
 
@@ -438,7 +450,8 @@ def build_screen(ms: list[dict] | None = None) -> int:
             continue
         for k in SKIP_SETS:
             met["criteria"].pop(k, None)
-        rows.append({"code": m["code"], "sector": m.get("sector"), "m": met, "name": m.get("name"), "ix": m.get("ix") or []})
+        rows.append({"code": m["code"], "sector": m.get("sector"), "m": met, "name": m.get("name"), "ix": m.get("ix") or [],
+                     "ser": ser, "entity": doc.get("title")})
     M.finalize(rows)
     for row in rows:
         row["m"]["ratios"]["mon_share"] = None              # ABD'de parasal kazanç kalemi yok: 0 yerine "yok"
@@ -466,10 +479,11 @@ def build_screen(ms: list[dict] | None = None) -> int:
     for row in rows:
         m = dict(row["m"])
         m["valuation"] = {k: x for k, x in m["valuation"].items() if k not in PRIVATE}
-        for k in ("intrinsic", "pb_hist"):
+        for k in ("intrinsic", "potential", "pb_hist"):
             m.pop(k, None)
         _save(pub / f"{row['code']}.json", {"code": row["code"], "title": row["name"], "sector": row["sector"], "currency": "USD",
-                                            "template": "sanayi", "mkt": "us", "idx": row["ix"], "metrics": m})
+                                            "template": "sanayi", "mkt": "us", "idx": row["ix"], "metrics": m,
+                                            "series": pub_series(row["ser"]), "entity": row.get("entity")})
         keep.add(f"{row['code']}.json")
     for f in pub.glob("*.json"):
         if f.name not in keep:

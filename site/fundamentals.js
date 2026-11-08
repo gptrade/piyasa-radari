@@ -337,21 +337,30 @@
     const base = se.cpi[se.cpi.length - 1], c = se.cpi[i];
     return base && c ? base / c : 1;
   }
-  function amountsLabel(se) { return S.real ? `Reel (${se.periods[se.periods.length - 1]} TL)` : "Nominal"; }
+  function amountsLabel(se) { return S.cur === "$" ? "USD · nominal" : S.real ? `Reel (${se.periods[se.periods.length - 1]} TL)` : "Nominal"; }
+  // ABD şirketleri: enflasyon düzeltmesi yok, "reel" ifadeleri düşer (BIST etiketleri ortak)
+  const usTxt = h => h.replace(/\b[Rr]eel (\p{L})/gu, (m0, c, i, all) => (m0[0] === "R" ? c.toLocaleUpperCase("tr") : c)).replace(/\(reel /g, "(").replace(/\breel(, | · )/g, "").replace(/ · reel\b/g, "").replace("büyüme oranları reeldir", "tutarlar USD, büyüme oranları nominaldir");
   async function renderCompany() {
     const el = $("#view-hisse");
     const code = (sh.param || "").toUpperCase();
     if (!code) { sh.go("temel", { push: false }); return; }
     if (notReady(el)) return;
-    const row = rowOf(code);
-    $("#pageTitle").textContent = code; $("#pageSub").textContent = row ? trTitle(row.title) : "";
+    if (!rowOf(code) && !S.us && !S.usErr) { await loadUS(); if (sh.route !== "hisse") return; }
+    const row = anyRow(code), US = isUSCode(code);
+    $("#pageTitle").textContent = code; $("#pageSub").textContent = row ? (US ? row.title : trTitle(row.title)) : "";
     document.title = `${code} · Temel Analiz · Lyra Radar`;
     if (!el.dataset.code || el.dataset.code !== code) { loading(el); el.dataset.code = code; }
     let d;
     try { d = await doc(code); } catch (e) {
-      el.innerHTML = `<div class="card">${sh.stateHTML({ kind: "info", title: `${code} için temel analiz verisi yok`, msg: "Şirket BIST Tüm kapsamında değil ya da tabloları henüz yüklenmedi." })}</div>`; return;
+      el.innerHTML = `<div class="card">${sh.stateHTML({ kind: "info", title: `${code} için temel analiz verisi yok`, msg: "Şirket BIST Tüm ya da S&P 500 / Nasdaq-100 / Dow 30 kapsamında değil veya tabloları henüz yüklenmedi." })}</div>`; return;
     }
     if (sh.route !== "hisse" || (sh.param || "").toUpperCase() !== code) return;
+    S.cur = US ? "$" : "₺";
+    const realW = S.real;
+    if (US) S.real = false;
+    try { companyBody(el, code, d, row, US); } finally { S.cur = "₺"; S.real = realW; }
+  }
+  function companyBody(el, code, d, row, US) {
     const m = d.metrics, se = d.series;
     if (!m || !se) {
       el.innerHTML = `<div class="card">${sh.stateHTML({ kind: "info", title: `${code}: ${d.template === "finansal" ? "finansal kuruluş şablonu (kapsam dışı)" : "hesaplama için yeterli dönem yok"}`, msg: d.template === "finansal" ? "Banka ve sigorta tabloları ayrı modelle eklenecek." : "Son 12 ay hesabı için bir önceki yıl sonu raporu gerekiyor; yükleme sürüyor." })}</div>`; return;
@@ -363,25 +372,28 @@
       <button type="button" class="fa-back" id="faBack">‹ Geri</button>
       <div class="fa-head card">
         <span class="fa-badge">${code}</span>
-        <div class="fa-h-main"><h2 class="fa-h-title">${esc(trTitle(d.title))}</h2>
-          <p class="fa-h-tags"><span class="tag na">${esc(row?.sector || "—")}</span><span class="tag na">Son dönem ${esc(m.period)}</span><span class="tag na">${d.reports?.[m.period]?.consolidated ? "Konsolide" : "Solo"}</span>${nRep < 8 ? `<span class="tag warn" data-tip="KAP'tan ${nRep} dönem raporu indirildi; geçmiş çeyrekler sırayla iniyor. Çeyreklik grafikler ve büyüme oranları tamamlandıkça dolar.">geçmiş dönemler yükleniyor · ${nRep} dönem</span>` : ""}${(S.screen.rows.find(r => r.code === code)) ? "" : ""}</p></div>
-        <div class="fa-h-px"><b class="mono">${fmt.num(v.price, 2)} ₺</b><span class="muted">${tl(v.mcap)} piyasa değeri</span></div>
-        <div class="fa-h-acts">${realToggle()}
+        <div class="fa-h-main"><h2 class="fa-h-title">${esc(US ? d.title : trTitle(d.title))}</h2>
+          <p class="fa-h-tags"><span class="tag na">${esc(row?.sector || "—")}</span><span class="tag na">Son dönem ${esc(m.period)}</span>${US
+            ? `<span class="tag na">SEC 10-Q / 10-K</span>${(d.idx || []).map(k => `<span class="tag na">${{ sp: "S&P 500", ndx: "Nasdaq-100", dji: "Dow 30" }[k] || k}</span>`).join("")}`
+            : `<span class="tag na">${d.reports?.[m.period]?.consolidated ? "Konsolide" : "Solo"}</span>`}${!US && nRep < 8 ? `<span class="tag warn" data-tip="KAP'tan ${nRep} dönem raporu indirildi; geçmiş çeyrekler sırayla iniyor. Çeyreklik grafikler ve büyüme oranları tamamlandıkça dolar.">geçmiş dönemler yükleniyor · ${nRep} dönem</span>` : ""}${(S.screen.rows.find(r => r.code === code)) ? "" : ""}</p></div>
+        <div class="fa-h-px">${US ? `<b class="mono">${tl(v.mcap)}</b><span class="muted">piyasa değeri</span>` : `<b class="mono">${fmt.num(v.price, 2)} ₺</b><span class="muted">${tl(v.mcap)} piyasa değeri</span>`}</div>
+        <div class="fa-h-acts">${US ? "" : realToggle()}
           <button type="button" class="btn" id="faCmpAdd">${S.cmp.includes(code) ? "Karşılaştırmada ✓" : "Karşılaştırmaya ekle"}</button>
           ${window.radar?.openTicker ? `<button type="button" class="btn" id="faSig">Sinyaller</button>` : ""}</div>
       </div>
       <div class="seg fa-tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" data-tab="${k}" aria-checked="${S.tab === k}" aria-selected="${S.tab === k}">${l}</button>`).join("")}</div>
       <div id="faBody"></div>`;
     $$("[data-tab]", el).forEach(b => b.onclick = () => { S.tab = b.dataset.tab; renderCompany(); });
+    const T = h => US ? usTxt(h) : h;
     $("#faBack").onclick = () => history.state?.r ? history.back() : sh.go("temel");
     bindReal(el, renderCompany);
     $("#faCmpAdd").onclick = () => { if (!S.cmp.includes(code)) S.cmp = [...S.cmp, code].slice(-5); store.set("radar.finCmp", S.cmp); sh.go("karsilastir", { param: S.cmp.join(",") }); };
     $("#faSig") && ($("#faSig").onclick = e => { sh.go("sinyal"); setTimeout(() => window.radar?.openTicker?.(code, e.target), 60); });
     const body = $("#faBody");
-    if (S.tab === "ozet") body.innerHTML = tabSummary(d, row);
-    else if (S.tab === "fin") { body.innerHTML = tabFin(d); bindFin(body, d); }
-    else if (S.tab === "graf") { body.innerHTML = tabCharts(d); bindCharts(body, d); }
-    else { body.innerHTML = tabDetail(d); divHistory(code); }
+    if (S.tab === "ozet") body.innerHTML = T(tabSummary(d, row));
+    else if (S.tab === "fin") { body.innerHTML = T(tabFin(d)); bindFin(body, d); }
+    else if (S.tab === "graf") { body.innerHTML = T(tabCharts(d)); bindCharts(body, d); }
+    else { body.innerHTML = T(tabDetail(d)); if (!US) divHistory(code); }
     $$(".tk-cmp", body).forEach(b => b.onclick = () => sh.go("hisse", { param: b.dataset.code }));
   }
 
@@ -497,7 +509,7 @@
       <div class="fa-rings">
         ${ring(m.overall, "Genel skor", m.grade, "Kalite %60 + değerleme %40")}
         ${ring(m.quality, "Bilanço (kalite) puanı", m.quality_grade, tmpl === "sanayi" ? "6 kategori ortalaması" : `${TPL[tmpl]} modeli · ${Object.keys(m.categories).length} kategori`)}
-        ${ring(m.valuation_score, "Değerleme puanı", m.valuation_grade, m.intrinsic ? `İçsel değer ${fmt.num(m.intrinsic, 2)} ₺ · potansiyel ${pctS(m.potential, 0)}` : "Sektör çarpanlarına göre")}
+        ${ring(m.valuation_score, "Değerleme puanı", m.valuation_grade, m.intrinsic ? `İçsel değer ${fmt.num(m.intrinsic, 2)} ${S.cur} · potansiyel ${pctS(m.potential, 0)}` : "Sektör çarpanlarına göre")}
       </div>
       <div class="card-head fa-sec"><h2 class="card-title">Kısaca</h2><span class="card-meta">${m.period} · ${tmpl === "sanayi" ? "reel" : "nominal tablolar, büyümeler reel"} · akışlar son 12 ay</span></div>
       <div class="fa-minis">
@@ -516,15 +528,15 @@
         mini("Büyüme", "reel, yıllık", [["Hasılat", pctS(r.rev_growth)], ["FAVÖK", pctS(r.ebitda_growth)], ["Net kar", pctS(r.net_growth)]]),
         mini("Borçluluk", "", [["Net borç / FAVÖK", (se.bs.net_debt?.[i] ?? 0) < 0 ? "Net nakit" : x(r.net_debt_ebitda)], ["Borç / özkaynak", x(r.debt_equity)], ["Cari oran", x(r.current)]]),
         mini("Nakit akışı", "son 12 ay", [["Serbest nakit akışı", tl(ttm("fcf"))], ["İşletme nakdi / kar", x(r.cfo_ni)], ["SNA / FAVÖK", pct(r.fcf_conv)]]),
-        mini("Enflasyon muhasebesi", "TMS 29 · son 12 ay", [["Net parasal pozisyon", tl(ttm("monetary")), ttm("monetary") ? `<span class="muted">${ttm("monetary") > 0 ? "kazanç" : "kayıp"}</span>` : ""],
+        d.mkt === "us" ? "" : mini("Enflasyon muhasebesi", "TMS 29 · son 12 ay", [["Net parasal pozisyon", tl(ttm("monetary")), ttm("monetary") ? `<span class="muted">${ttm("monetary") > 0 ? "kazanç" : "kayıp"}</span>` : ""],
           ["Vergi öncesi kardaki payı", MET.mon_share[1](r.mon_share)], ["Parasal kalem hariç VÖK", ttm("pretax") != null && ttm("monetary") != null ? tl(ttm("pretax") - ttm("monetary")) : "—"]])].join("")}
         ${mini("Değerleme", "", [["F/K · PD/DD", `${x(v.pe)} · ${x(v.pb)}`], tmpl === "sanayi" ? ["FD/FAVÖK", x(v.ev_ebitda)] : ["Kazanç getirisi", pct(v.earnings_yield)], ["İçsel değer", m.intrinsic ? fmt.num(m.intrinsic, 2) + " ₺" : "—", m.potential != null ? q(pctS(m.potential, 1), m.potential) : ""]])}
         ${(() => { const dv = row?.div;
           if (dv && dv.status !== "yok") return mini("Temettü", dv.status === "kesin" ? "KAP · kesin" : "KAP · öneri", [["Brüt / net (pay başı)", `${fmt.num(dv.gross, 2)} · ${fmt.num(dv.net, 2)} ₺`], ["Verim (brüt)", pct(dv.yield)], [dv.next_ex ? "Hak kullanım" : "Son hak kullanım", dv.next_ex || dv.ex?.[dv.ex.length - 1] || "genel kurul bekleniyor"]]);
           if (dv?.status === "yok") return mini("Temettü", "KAP", [["Son karar", "Dağıtım yok"], ["Karar tarihi", dv.decision || "—"], ["Ödenen (12A)", tl(Math.abs(ttm("dividends_paid") || 0))]]);
           return mini("Temettü", "nakit akışından", [["Ödenen (12A)", tl(Math.abs(ttm("dividends_paid") || 0))], ["Verim (12A)", pct(v.div_yield)], ["Dağıtım oranı", ttm("net_parent") > 0 ? pct(Math.abs(ttm("dividends_paid") || 0) / ttm("net_parent")) : "—"]]); })()}
-        ${mini("Beklentiler", "aracı kurumlar", res ? [["Medyan hedef", res.median_tp ? fmt.num(res.median_tp, 2) + " ₺" : "—", res.median_tp && v.price ? q(pctS(res.median_tp / v.price - 1, 1), res.median_tp / v.price - 1) : ""], ["Hedef veren kurum", fmt.int(res.n || 0)], ["Dağılım", `${res.dist?.AL || 0} AL · ${res.dist?.TUT || 0} TUT · ${res.dist?.SAT || 0} SAT`]] : [["Kurum notu", "Yok"], ["Kapsam", "İzleme listesi"]])}
-        ${mini("Şirket", "", [["Ödenmiş sermaye", tl(se.bs.paid_capital?.[i])], ["Özkaynak (ana ort.)", tl(se.bs.equity_parent?.[i])], ["Toplam varlık", tl(se.bs.total_assets?.[i])]])}
+        ${mini("Beklentiler", "aracı kurumlar", res ? [["Medyan hedef", res.median_tp ? fmt.num(res.median_tp, 2) + " " + S.cur : "—", res.median_tp && v.price ? q(pctS(res.median_tp / v.price - 1, 1), res.median_tp / v.price - 1) : ""], ["Hedef veren kurum", fmt.int(res.n || 0)], ["Dağılım", `${res.dist?.AL || 0} AL · ${res.dist?.TUT || 0} TUT · ${res.dist?.SAT || 0} SAT`]] : [["Kurum notu", "Yok"], ["Kapsam", "İzleme listesi"]])}
+        ${mini("Şirket", "", [S.cur === "$" ? ["Piyasa değeri", tl(v.mcap)] : ["Ödenmiş sermaye", tl(se.bs.paid_capital?.[i])], ["Özkaynak (ana ort.)", tl(se.bs.equity_parent?.[i])], ["Toplam varlık", tl(se.bs.total_assets?.[i])]])}
       </div>
       ${pbCard(m, row)}
       <div class="fa-two">
@@ -569,7 +581,7 @@
     },
   };
   function tabFin(d) {
-    const tmpl = tplOf(d), FR = FIN_ROWS[tmpl];
+    const tmpl = tplOf(d), FR = FIN_ROWS[tmpl], US = d.mkt === "us";
     const se = d.series, m = d.metrics, n = se.periods.length, i = n - 1;
     const ya = se.periods.indexOf(`${+se.periods[i].slice(0, 4) - 1}/${se.periods[i].slice(5)}`);
     const pq = i - 1;
@@ -590,7 +602,7 @@
     // Tüm kalemler artışta yeşil; yalnız şirketlerin finansal borcu ve net borcu artışta kırmızı
     const POL = { fin_debt: -1, net_debt: -1 };
     // Kümülatif gelir tablosu: cari ve önceki yıl aynı dönem (raporun kendi karşılaştırmalı sütunu, aynı birim)
-    const isRows = (FR?.is || IS_ROWS).map(([k, l]) => { const a = se.cum[k]?.[i], b = se.cum_prev[k]?.[i];
+    const isRows = (FR?.is || IS_ROWS).filter(([k]) => !(US && k === "monetary")).map(([k, l]) => { const a = se.cum[k]?.[i], b = se.cum_prev[k]?.[i];
       return `<tr><th scope="row">${l}</th><td class="num">${bin(a == null ? null : a * fr(i))}</td><td class="num">${bin(b == null ? null : b * fr(i))}</td><td class="num">${chg(a, b, true, POL[k] ?? 1, k)}</td></tr>`; }).join("");
     const bsRows = (FR?.bs || BS_ROWS).map(([k, l]) => { const a = se.bs[k]?.[i], b = pq >= 0 ? se.bs[k]?.[pq] : null, c = ya >= 0 ? se.bs[k]?.[ya] : null;
       const ar = a == null ? null : a * fr(i), br = b == null ? null : b * fr(pq), cr = c == null ? null : c * fr(ya);
@@ -601,10 +613,10 @@
       : [["F/K", v.pe, sm.pe], ["PD/DD", v.pb, sm.pb], ["PEG", v.peg, null], ["Kazanç getirisi", v.earnings_yield, null, pct], ["Temettü verimi (12A)", v.div_yield, null, pct]];
     return `
       <div class="toolbar fa-sec"><div class="seg" role="radiogroup" aria-label="Çeyrek sayısı">${[4, 5, 8, 12, 20, 40].filter((k, j, a) => j < 4 || a[j - 1] < se.periods.length).map(k => `<button type="button" role="radio" data-nq="${k}" aria-checked="${S.nq === k}">${k === 40 ? "Tümü" : `${k} çeyrek`}</button>`).join("")}</div>
-        <span class="grow"></span><span class="card-meta">bin ₺ · ${amountsLabel(se)}</span></div>
+        <span class="grow"></span><span class="card-meta">bin ${S.cur} · ${amountsLabel(se)}</span></div>
       <div class="fa-two">
-        <section class="card"><div class="card-head"><h2 class="card-title">Özet gelir tablosu</h2><span class="card-meta">dönemsel (yılbaşından)</span></div>
-          <div class="tbl-scroll"><table class="tx fa-tx"><thead><tr><th>Kalem</th><th class="num">${se.periods[i]}</th><th class="num">${+se.periods[i].slice(0, 4) - 1}/${se.periods[i].slice(5)}</th><th class="num">% Y/Y</th></tr></thead><tbody>${isRows}</tbody></table></div></section>
+        <section class="card"><div class="card-head"><h2 class="card-title">Özet gelir tablosu</h2><span class="card-meta">${US ? "son 12 ay" : "dönemsel (yılbaşından)"}</span></div>
+          <div class="tbl-scroll"><table class="tx fa-tx"><thead><tr><th>Kalem</th><th class="num">${US ? "12A " : ""}${se.periods[i]}</th><th class="num">${US ? "12A " : ""}${+se.periods[i].slice(0, 4) - 1}/${se.periods[i].slice(5)}</th><th class="num">% Y/Y</th></tr></thead><tbody>${isRows}</tbody></table></div></section>
         <section class="card"><div class="card-head"><h2 class="card-title">Özet bilanço</h2></div>
           <div class="tbl-scroll"><table class="tx fa-tx"><thead><tr><th>Kalem</th><th class="num">${se.periods[i]}</th><th class="num">${pq >= 0 ? se.periods[pq] : "—"}</th><th class="num">%</th><th class="num">${ya >= 0 ? se.periods[ya] : "—"}</th><th class="num">% Y/Y</th></tr></thead><tbody>${bsRows}</tbody></table></div></section>
       </div>
@@ -614,11 +626,11 @@
           <div class="fa-q" data-k="${k}"></div></section>`).join("")}
       </div>
       <div class="fa-two">
-        <section class="card"><div class="card-head"><h2 class="card-title">Çarpanlar</h2><span class="card-meta">sektör medyanı: ${esc(rowOf(d.code)?.sector || "—")}</span></div>
+        <section class="card"><div class="card-head"><h2 class="card-title">Çarpanlar</h2><span class="card-meta">sektör medyanı: ${esc(anyRow(d.code)?.sector || "—")}</span></div>
           <table class="tx fa-tx"><thead><tr><th>Çarpan</th><th class="num">${d.code}</th><th class="num">Sektör med.</th></tr></thead>
           <tbody>${mult.map(([l, a, b, f = x]) => `<tr><th scope="row">${l}</th><td class="num"><b>${f(a)}</b></td><td class="num muted">${b == null ? "—" : f(b)}</td></tr>`).join("")}</tbody></table></section>
         <section class="card"><div class="card-head"><h2 class="card-title">Kaynak dağılımı</h2><span class="card-meta">${se.periods[i]}</span></div>${sourceBar(se, i, FR?.src)}
-          <p class="card-foot">Kaynak: KAP finansal rapor bildirimleri (${d.reports?.[m.period]?.consolidated ? "konsolide" : "solo"}). ${tmpl === "sanayi" ? "Son 4. çeyrek = yıllık − 9 aylık (TÜFE ile aynı birime taşınarak)." : "Banka ve sigorta tabloları TMS 29 uygulanmadan, nominal yayımlanır; 4. çeyrek = yıllık − 9 aylık."}</p></section>
+          <p class="card-foot">${US ? `Kaynak: SEC EDGAR XBRL (10-Q / 10-K). Nakit akışı çeyrekleri yılbaşından bugüne değerlerin farkından, 4. çeyrek yıllık − 9 aylık olarak türetilir; dönemler en yakın takvim çeyreğine eşlenir. Tutarlar USD, nominal.` : `Kaynak: KAP finansal rapor bildirimleri (${d.reports?.[m.period]?.consolidated ? "konsolide" : "solo"}). ${tmpl === "sanayi" ? "Son 4. çeyrek = yıllık − 9 aylık (TÜFE ile aynı birime taşınarak)." : "Banka ve sigorta tabloları TMS 29 uygulanmadan, nominal yayımlanır; 4. çeyrek = yıllık − 9 aylık."}`}</p></section>
       </div>`;
   }
   function sourceBar(se, i, spec) {
@@ -657,7 +669,8 @@
   function bindCharts(body, d) {
     const h = d.metrics.history, se = d.series;
     const draw = () => { const k = S.trend, f = MET[k][1];
-      $("#faTrendC").innerHTML = lineChart(h.periods.map(qlabel), [{ name: MET[k][0], vals: h[k] }], { kind: f === pct || f === pctS ? "pct" : "x", tipFmt: f, w: cw($("#faTrendC")) }); };
+      const i0 = Math.max(0, (h[k] || []).findIndex(v => v != null));   // seri başındaki boş dönemler atlanır
+      $("#faTrendC").innerHTML = lineChart(h.periods.slice(i0).map(qlabel), [{ name: MET[k][0], vals: (h[k] || []).slice(i0) }], { kind: f === pct || f === pctS ? "pct" : "x", tipFmt: f, w: cw($("#faTrendC")) }); };
     $("#faTrend").onchange = e => { S.trend = e.target.value; draw(); };
     draw();
     $$(".fa-g", body).forEach(b => { const src = se[b.dataset.g][b.dataset.k] || [];
@@ -822,7 +835,6 @@
             ${keys.map(k => `<td class="num">${MET[k][1](mval(r, k))}</td>`).join("")}<td class="num">${r.overall ?? "—"} ${gradeTag(r.grade)}</td></tr>`).join("") || `<tr><td colspan="${keys.length + 2}">${sh.stateHTML({ title: "Eşleşen hisse yok", compact: true })}</td></tr>`}</tbody></table></div></section>`;
     }
     el.innerHTML = `<div class="fa-scr-top">${tabsH}${mktH}</div>` + body;
-    if (us) $$("tr.row[data-code]", el).forEach(tr => { tr.classList.remove("row"); tr.removeAttribute("tabindex"); });   // ABD şirket sayfası yok
     $$("[data-mkt]", el).forEach(b => b.onclick = () => { S.mkt = b.dataset.mkt; store.set("radar.finMkt", S.mkt); S.scrSector = ""; renderScreen(); });
     $$("[data-st]", el).forEach(b => b.onclick = () => { S.scrTab = b.dataset.st; renderScreen(); });
     $$("[data-set]", el).forEach(b => b.onclick = () => { S.crit = b.dataset.set; S.critLimit = 25; renderScreen(); });
@@ -831,7 +843,7 @@
     $("#faAllPass") && ($("#faAllPass").onchange = e => { S.allPass = e.target.checked; S.critLimit = 25; renderScreen(); });
     $("#faScrSec").onchange = e => { S.scrSector = e.target.value; renderScreen(); };
     bindIx(el, renderScreen);
-    if (!us) $$(".vm-pt", el).forEach(c => c.onclick = () => sh.go("hisse", { param: c.dataset.code, focus: true }));
+    $$(".vm-pt", el).forEach(c => c.onclick = () => sh.go("hisse", { param: c.dataset.code, focus: true }));
     const saveF = () => { store.set("radar.finFilters", S.filters); renderScreen(); };
     $$(".fa-f", el).forEach(f => {
       const i = +f.dataset.i;
@@ -914,7 +926,7 @@
         <select id="faCmpM" class="fa-select" aria-label="Metrik">${[...new Set(ok.flatMap(o => trendKeys(o.d)))].map(k => `<option value="${k}" ${S.cmpMetric === k ? "selected" : ""}>${MET[k][0]}</option>`).join("")}</select></div>
         <div id="faCmpChart"></div></section>
       <section class="card card-flush"><div class="card-head"><h2 class="card-title">Tüm oranlar</h2><span class="card-meta">${metKeys.length} oran · ● satırdaki en iyi değer</span></div>
-        <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Oran</th>${ok.map(o => `<th class="num">${o.d.mkt === "us" ? `${o.c}${tag(o.c)}` : `<button type="button" class="tk-cmp link-btn" data-code="${o.c}">${o.c}</button>`}</th>`).join("")}</tr></thead>
+        <div class="tbl-scroll"><table class="tbl fa-tbl"><thead><tr><th>Oran</th>${ok.map(o => `<th class="num"><button type="button" class="tk-cmp link-btn" data-code="${o.c}">${o.c}</button>${tag(o.c)}</th>`).join("")}</tr></thead>
         <tbody>${tbl.map(([g, h]) => { const head = g !== lastG ? `<tr class="fa-grp"><td colspan="${ok.length + 1}">${g}</td></tr>` : ""; lastG = g; return head + h; }).join("")}</tbody></table></div></section>`;
     bindCmp(el);
     const cmpKeys = [...new Set(ok.flatMap(o => trendKeys(o.d)))];
