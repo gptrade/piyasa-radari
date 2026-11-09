@@ -1,0 +1,32 @@
+== robots
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+
+Sitemap: https://tspb.org.tr/wp-sitemap.xml
+== veriler linkleri
+https://tspb.org.tr/wp-content/uploads/2026/02/BTVY-PYS-Aylik-Kurum-Bazinda-Veriler-AMC-Monthly-Comparative-Data-201701-202512.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/02/BTVY-PYS-Aylik-Veri-AMC-Monthly-Data-201701-202512.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/02/BTVY_Krediler_2002-202512.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/05/BTVY_Veriler_ak_karsilastirmali_202512.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/05/BTVY_Veriler_ak_mali_202512.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/05/BTVY_Veriler_pys_karsilastirmali_202512.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/05/BTVY_Veriler_pys_mali_202512.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/06/BTVY_Veriler_pys_faaliyet_202512_2.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/10/BTVY_Girisim_Sermayesi_Yatirimlari_Ozet_Veriler_202606_3.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/AIM_veri_Spozet_2026_10_.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/BTVY-PYS-Aylik-Kurum-Bazinda-Veriler-AMC-Monthly-Comparative-Data_20261109_142821.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/BTVY-PYS-Aylik-Veri-AMC-Monthly-Data_20261109_142835.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/BTVY_Araci_Kurumlarin_Kredili_Islemleri_20261104_140043.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/BTVY_Veriler_ak_faaliyet_20261102_080236.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/BTVY_Veriler_ak_karsilastirmali_20261102_080547.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/BTVY_Veriler_ak_mali_20261102_080212.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/BTVY_Veriler_pys_faaliyet_20261102_080058.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/BTVY_Veriler_pys_karsilastirmali_20261102_080507.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/BTVY_Veriler_pys_mali_20261102_080041.xlsx
+https://tspb.org.tr/wp-content/uploads/2026/11/UYE_Factsheet_2026_10.xlsx
+total 68
+drwxr-xr-x 2 runner runner  4096 Nov  9 22:10 .
+drwxr-xr-x 5 runner runner  4096 Nov  9 22:10 ..
+-rw-r--r-- 1 runner runner 43797 Nov  9 22:10 arsiv.xlsx
+-rw-r--r-- 1 runner runner 13300 Nov  9 22:10 aylik.xlsx
