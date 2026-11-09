@@ -1,5 +1,5 @@
 /* Lyra Radar — hisse ve sayfa paleti (Ctrl/⌘ K ya da /).
-   Hangi sekmede olursan ol: hisse ara → hisse paneli, temel analiz kartı, sinyal akışında süz, sektör emsalleriyle karşılaştır,
+   Hangi sekmede olursan ol: hisse ara → Enter şirket sayfası (BIST ve ABD temel analiz evreni; değilse hisse paneli), temel analiz kartı, sinyal akışında süz, sektör emsalleriyle karşılaştır,
    portföye ekle; ya da sayfa adına göre sekmeye git. Hisse evreni: temel analiz evreni (BIST Tüm) + izleme listesi (ABD dahil).
    Sayfa içindeki .tk-open[data-sym] öğeleri de evrensel hisse panelini açar. */
 (() => {
@@ -14,7 +14,8 @@
 
   function universe() {
     const out = new Map();
-    for (const r of window.radarFundamentals?.all || []) out.set(r.code, { sym: r.code, name: r.title, sector: r.sector, market: "BIST", price: r.price, grade: r.grade });
+    for (const r of window.radarFundamentals?.all || []) out.set(r.code, { sym: r.code, name: r.title, sector: r.sector, market: "BIST", price: r.price, grade: r.grade, fin: true });
+    for (const r of window.radarFundamentals?.usAll || []) if (!out.has(r.code)) out.set(r.code, { sym: r.code, name: r.title, sector: r.sector, market: "US", grade: r.grade, fin: true });
     for (const w of window.radar?.state?.feed?.watchlist || []) {
       const o = out.get(w.symbol) || { sym: w.symbol, market: w.market };
       o.name = o.name || w.name; o.watch = true; out.set(w.symbol, o);
@@ -27,8 +28,8 @@
     const fin = window.radarFundamentals?.row(t.sym);
     const peers = fin ? window.radarFundamentals.peers(t.sym, 2) : [];
     return [
+      fin && { k: "fa", l: "Şirket sayfası", d: `temel analiz · not ${fin.grade || "—"} · ${esc(fin.sector || "")}`, run: () => sh.go("hisse", { param: t.sym }) },
       { k: "panel", l: "Hisse paneli", d: "haberler, teknik, değerleme, aracı kurum hedefleri, geri alım", run: () => window.radar?.openTicker(t.sym, P.from) },
-      fin && { k: "fa", l: "Temel analiz kartı", d: `not ${fin.grade || "—"} · ${esc(fin.sector || "")}`, run: () => sh.go("hisse", { param: t.sym }) },
       { k: "sig", l: "Sinyal akışında süz", d: "bu hissenin tüm haber ve bildirimleri", run: () => { sh.go("sinyal"); setTimeout(() => window.radar?.focusTicker?.(t.sym), 60); } },
       peers.length && { k: "cmp", l: `Emsalleriyle karşılaştır (${peers.join(", ")})`, d: "aynı sektör, piyasa değeri en yakın", run: () => sh.go("karsilastir", { param: [t.sym, ...peers].join(",") }) },
       { k: "pf", l: t.held ? "Portföyde · pozisyonu aç" : "Portföye ekle", d: "yalnız bu tarayıcıda", run: () => { sh.go("portfoy"); setTimeout(() => window.radarPortfolio?.startAdd?.(t.sym, t.market), 60); } },
@@ -74,6 +75,7 @@
     close(false);
     if (x.type === "pg") { const [r, p] = x.r.split("/"); sh.go(r, { param: p || "" }); }
     else if (x.type === "act") x.a.run();
+    else if (x.t.fin) sh.go("hisse", { param: x.t.sym });     // Enter: şirket sayfası (temel analiz evrenindeyse)
     else window.radar?.openTicker(x.t.sym, P.from);
   }
   function build() {
@@ -85,7 +87,7 @@
           <input id="cmdQ" type="text" placeholder="Hisse kodu ya da şirket adı (THYAO, aselsan…) · sayfa adı" autocomplete="off" spellcheck="false"
             role="combobox" aria-expanded="true" aria-controls="cmdList" aria-autocomplete="list"><kbd>Esc</kbd></div>
         <ul id="cmdList" class="cmd-list" role="listbox" aria-label="Sonuçlar"></ul>
-        <div class="cmd-foot"><span><kbd>↑</kbd><kbd>↓</kbd> seç</span><span><kbd>Enter</kbd> aç</span><span><kbd>Tab</kbd> eylemler</span><span>ilk hissenin eylemleri altında</span></div>
+        <div class="cmd-foot"><span><kbd>↑</kbd><kbd>↓</kbd> seç</span><span><kbd>Enter</kbd> şirket sayfası</span><span><kbd>Tab</kbd> eylemler</span><span>ilk hissenin eylemleri altında</span></div>
       </div>`;
     document.body.append(el);
     el.addEventListener("click", e => { if (e.target.closest("[data-close]")) close(); const li = e.target.closest(".cmd-i"); if (li) pick(+li.dataset.i); });
@@ -105,6 +107,7 @@
     P.el.hidden = false; document.documentElement.classList.add("cmd-open");
     const q = $("#cmdQ"); q.value = ""; draw(); q.focus();
     if (!(window.radarFundamentals?.all || []).length) { await window.radarFundamentals?.ready?.(); if (P.open) draw(); }
+    if (!(window.radarFundamentals?.usAll || []).length && window.radarFundamentals?.loadUS) { await window.radarFundamentals.loadUS(); if (P.open) draw(); }
   }
   function close(restore = true) {
     if (!P.el || P.el.hidden) return;

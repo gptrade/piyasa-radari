@@ -44,6 +44,8 @@ Kurallar:
 - 10-Q/10-K yönetim değerlendirmesinde (MD&A) gelir/marj eğilimi, rehberlik ve yeni ya da büyüyen riskleri öne çıkar.
 - Basın bültenleri şirketin kendi ağzından yazılır; pazarlama dilini ayıkla, rakamlara bak.
 - Yatırım tavsiyesi verme; olasılıksal değerlendirme yap.
+- Yayın zamanına bak: metindeki olay aylar ya da yıllar önce olmuşsa (ör. 2026'da "lansman 2023'e ertelendi") bu yeniden
+  yayımlanmış eski bir haberdir; stale_news=true yaz, sentiment neutral, materiality low.
 - Yanıt dili: {language}. Metin İngilizce olsa bile özeti {language} yaz."""
 
 TOOL = {
@@ -75,6 +77,9 @@ TOOL = {
             "affected_tickers": {"type": "array", "items": {"type": "string"}},
             "figures": {"type": "object", "additionalProperties": {"type": "string"},
                         "description": "Metinde geçen önemli rakamlar: ör. {'hedef fiyat': '45 TL'}"},
+            "stale_news": {"type": "boolean",
+                           "description": "Metin, yayın zamanından aylar/yıllar önce olmuş bir olayı yeni gibi anlatıyorsa "
+                                          "(yeniden yayımlanmış eski haber) true; aksi hâlde false"},
         },
         "required": ["sentiment", "confidence", "materiality", "horizon", "category",
                      "headline_tr", "event_label", "what", "why", "risk", "summary", "key_points",
@@ -133,6 +138,7 @@ def normalize(raw: dict) -> dict | None:
         "why": _words(raw.get("why"), 10, 90),
         "risk": _words(raw.get("risk"), 10, 90),
         "key_points": lst(raw.get("key_points"), 4),
+        "stale": raw.get("stale_news") is True or str(raw.get("stale_news")).lower() == "true",
         "risks": lst(raw.get("risks"), 3),
         "affected_tickers": [t.upper() for t in lst(raw.get("affected_tickers"), 8)],
     }
@@ -203,7 +209,7 @@ Yanıtını SADECE aşağıdaki alanlara sahip tek bir JSON nesnesi olarak ver (
  "event_label": "en fazla 3 kelime, ör. Analist AL", "what": "ne oldu (≤8 kelime)",
  "why": "neden önemli (≤8 kelime)", "risk": "ana risk (≤8 kelime)", "summary": "2-3 cümle",
  "key_points": ["en fazla 4 madde"], "risks": ["en fazla 3 madde"],
- "affected_tickers": ["HİSSE KODLARI"], "figures": {"etiket": "değer"}}"""
+ "affected_tickers": ["HİSSE KODLARI"], "figures": {"etiket": "değer"}, "stale_news": false}"""
 
 
 def parse_json_text(text: str) -> dict | None:

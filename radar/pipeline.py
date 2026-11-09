@@ -13,6 +13,7 @@ from .enrich import enrich
 from .analyze import Analyzer
 from .config import DATA, TickerMatcher, load_settings, load_watchlist
 from .models import UTC, Item, iso, now_utc, parse_iso
+from . import newsclean
 from . import anomaly, bb_quotes, deals, documents, private_reports, research, bist_data, calendar_events, scorecard
 from .sources import Context, alphavantage, feeds, finnhub, global_macro, kap, marketaux, reports, social, spk, tcmb, tr_official, vendors
 
@@ -370,10 +371,15 @@ def run() -> dict:
     new: list[Item] = []
     dup_hits: dict[str, list[str]] = {}          # tekrar eden haber → hangi kaynaklarda
     second: dict[str, dict] = {}                 # kopyalardan gelen dış duygu skorları
+    n_stale = 0
     for it in sorted(collected, key=lambda i: (PRIORITY.get(i.source_type, 9), i.published)):
         k = title_key(it)
         it.extra["k"] = k
         if it.id in seen_ids:
+            continue
+        if it.source_type in ("news", "social") and newsclean.is_stale(it.title, it.published):
+            seen_ids[it.id] = None                  # yeniden yayımlanmış eski haber (ör. "lansman 2023'e ertelendi")
+            n_stale += 1
             continue
         if it.source_type in ("news", "social") and k in seen_keys:
             dup_hits.setdefault(k, []).append(it.source.split(" · ")[0])
@@ -385,7 +391,7 @@ def run() -> dict:
         seen_ids[it.id] = None
         seen_keys[k] = None
         new.append(it)
-    log.info("Yeni kayıt: %d / toplanan %d", len(new), len(collected))
+    log.info("Yeni kayıt: %d / toplanan %d (eski haber elendi: %d)", len(new), len(collected), n_stale)
 
     # 3) Fiyatlar ve makro seriler
     acfg = (settings.get("sources") or {}).get("analyst") or {}
@@ -559,6 +565,7 @@ def run() -> dict:
         deals.adjust(it)
 
     # 5) Birleştir, fiyat tepkisini güncelle, kaydet
+    new = [i for i in new if not (i.analysis or {}).get("stale")]     # AI'nin eski haber dediği kayıtlar akışa girmez
     items = [i.to_dict() for i in new] + feed
     horizon = now_utc() - timedelta(days=3)
     for d in items:
@@ -576,6 +583,10 @@ def run() -> dict:
             if p:
                 idx = px.get(prices.INDEXES[d.get("market", "BIST")].symbol) if d.get("market") in prices.INDEXES else None
                 d["reaction"] = prices.reaction(d["published"], p, idx)
+    items = [d for d in items if not ((d.get("analysis") or {}).get("stale")
+                                      or (d.get("source_type") in ("news", "social")
+                                          and newsclean.is_stale(d.get("title"), d.get("published"), (d.get("analysis") or {}).get("headline_tr"))))]
+    items = newsclean.cluster(items)                         # aynı olayın farklı kaynaklardaki kopyaları tek kayıtta
     fcfg = settings.get("feed") or {}
     items = retain(items, {s.symbol for s in stocks}, total=int(fcfg.get("keep_items", 800)),
                    max_per_ticker=int(fcfg.get("max_per_ticker", 90)), min_per_ticker=int(fcfg.get("min_per_ticker", 25)),

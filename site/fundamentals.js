@@ -506,6 +506,11 @@
       <table class="fa-kv"><tbody>${items.map(([k, val, extra]) => `<tr><th scope="row">${k}</th><td class="num">${val}${extra ? ` <small>${extra}</small>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
     const crit = Object.entries(m.criteria);
     return `
+      <section class="card fa-exec"><div class="card-head"><h2 class="card-title">Yönetici özeti</h2><span class="fa-outlook ${s.viewCls}">Temel görünüm: ${s.view}</span></div>
+          <p class="d-sum">${s.text}</p>
+          <div class="res-cols"><div><p class="d-sub">Güçlü yönler</p><ul class="fa-list ok">${s.strong.map(t => `<li>${esc(t)}</li>`).join("") || "<li class='na'>Öne çıkan yok</li>"}</ul></div>
+          <div><p class="d-sub">Zayıf yönler</p><ul class="fa-list no">${s.weak.map(t => `<li>${esc(t)}</li>`).join("") || "<li class='na'>Öne çıkan yok</li>"}</ul></div></div>
+          <p class="card-foot">Kural tabanlı özet; oranlardan otomatik üretilir, yatırım tavsiyesi değildir.</p></section>
       <div class="fa-rings">
         ${ring(m.overall, "Genel skor", m.grade, "Kalite %60 + değerleme %40")}
         ${ring(m.quality, "Bilanço (kalite) puanı", m.quality_grade, tmpl === "sanayi" ? "6 kategori ortalaması" : `${TPL[tmpl]} modeli · ${Object.keys(m.categories).length} kategori`)}
@@ -540,11 +545,6 @@
       </div>
       ${pbCard(m, row)}
       <div class="fa-two">
-        <section class="card"><div class="card-head"><h2 class="card-title">Yönetici özeti</h2><span class="fa-outlook ${s.viewCls}">Temel görünüm: ${s.view}</span></div>
-          <p class="d-sum">${s.text}</p>
-          <div class="res-cols"><div><p class="d-sub">Güçlü yönler</p><ul class="fa-list ok">${s.strong.map(t => `<li>${esc(t)}</li>`).join("") || "<li class='na'>Öne çıkan yok</li>"}</ul></div>
-          <div><p class="d-sub">Zayıf yönler</p><ul class="fa-list no">${s.weak.map(t => `<li>${esc(t)}</li>`).join("") || "<li class='na'>Öne çıkan yok</li>"}</ul></div></div>
-          <p class="card-foot">Kural tabanlı özet; oranlardan otomatik üretilir, yatırım tavsiyesi değildir.</p></section>
         <section class="card"><div class="card-head"><h2 class="card-title">Puan dağılımı</h2></div>
           ${Object.entries(m.categories).map(([c, sc]) => `<div class="fa-bar"><span>${esc(c)}</span><span class="fa-track"><i style="width:${sc ?? 0}%;background:${sc == null ? "var(--surface-3)" : sc >= 65 ? "var(--up)" : sc >= 50 ? "var(--warn-line)" : "var(--down)"}"></i></span><b class="mono">${sc ?? "—"}</b></div>`).join("")}
           ${tmpl !== "sanayi" ? `<p class="card-foot">Piotroski, Altman Z'' ve Beneish M sanayi şirketleri için tasarlandı; ${TPL[tmpl].toLocaleLowerCase("tr")} modelinde kullanılmaz.</p>` : ""}
@@ -553,7 +553,8 @@
             <div><span class="kpi-label">Altman Z''</span><b class="mono">${fmt.num(m.altman_z2, 2)}</b><small>${m.altman_z2 == null ? "" : (m.altman_z2 > 2.6 ? "✓ " : m.altman_z2 > 1.1 ? "● " : "✗ ") + zZone(m.altman_z2)}</small></div>
             <div><span class="kpi-label">Beneish M</span><b class="mono">${fmt.num(m.beneish_m, 2)}</b><small>${m.beneish_m == null ? "" : m.beneish_m < -1.78 ? "✓ Düşük risk" : "! Dikkat"}</small></div>
           </div>
-          <div class="card-head fa-sec"><h3 class="card-title">Kriter uyumu</h3><a class="link-btn" href="#tarama">Listeler</a></div>
+        </section>
+        <section class="card"><div class="card-head"><h2 class="card-title">Kriter uyumu</h2><a class="link-btn" href="#tarama">Listeler</a></div>
           <table class="fa-kv"><tbody>${crit.map(([k, c]) => { const r0 = c.total ? c.pass / c.total : 0;
             if (!c.known || !c.total) return `<tr><th scope="row">${esc(k)}</th><td class="num muted" data-tip="Bir yıl önceki dönem yüklenince hesaplanır">veri bekleniyor</td></tr>`;
             return `<tr><th scope="row">${esc(k)}</th><td class="num"><b>${c.pass}/${c.total}</b>${c.known < c.total ? ` <small class="muted" data-tip="${c.total - c.known} kriter için veri yok">(${c.total - c.known} —)</small>` : ""} <span class="tag ${r0 >= 0.75 ? "fa-ok" : r0 >= 0.5 ? "fa-mid" : "fa-no"}">${r0 >= 0.75 ? "✓" : r0 >= 0.5 ? "!" : "✗"} %${Math.round(r0 * 100)}</span></td></tr>`; }).join("")}</tbody></table>
@@ -1072,10 +1073,12 @@
   addEventListener("themechange", () => { if (["hisse", "karsilastir"].includes(sh.route)) rerender(); });
   window.radarFundamentals = { methodHTML, open: code => sh.go("hisse", { param: code }), has: code => !!rowOf(code), get rows() { return rows(); },
     // hisse paleti ve evrensel hisse paneli için: süzgeçsiz evren satırı ve aynı sektörden piyasa değerine göre en yakın emsaller
-    row: code => (S.screen?.rows || []).find(r => r.code === code) || null,
+    row: code => anyRow(code) || null,
     get all() { return S.screen?.rows || []; },
+    get usAll() { return S.us?.rows || []; },
+    loadUS,
     peers(code, n = 2) {
-      const all = S.screen?.rows || [], me = all.find(r => r.code === code);
+      const all = isUSCode(code) ? S.us.rows : S.screen?.rows || [], me = all.find(r => r.code === code);
       if (!me) return [];
       return all.filter(r => r.code !== code && r.sector === me.sector && r.mcap).sort((a, b) => Math.abs(Math.log(a.mcap / (me.mcap || 1))) - Math.abs(Math.log(b.mcap / (me.mcap || 1)))).slice(0, n).map(r => r.code);
     },

@@ -1121,7 +1121,7 @@
     const sec = document.createElement("div");
     sec.className = "tp-sec";
     const fin = window.radarFundamentals?.row(sym);
-    const cur = p?.currency === "TRY" || (!p && fin) ? "₺" : p?.currency === "USD" ? "$" : "";
+    const cur = p?.currency === "TRY" || (!p && fin && fin.mkt !== "us") ? "₺" : p?.currency === "USD" || fin?.mkt === "us" ? "$" : "";
     const last = p?.last || fin?.price || null;
     const up = c?.median_tp && last ? (c.median_tp / last - 1) * 100 : null;
     const allNotes = (R?.notes || []).filter(n => n.t === sym && n.src !== "Yahoo");
