@@ -1968,3 +1968,5 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .kk-full { margin-bottom: 0; }
 @media (max-width: 640px) { .kk-comps li { grid-template-columns: 1fr 34px; } .kk-bar { grid-column: 1 / -1; grid-row: 2; } .kk-cz { display: none; } }
 .kk-zt td, .kk-zt th { white-space: nowrap; }
+.kk-mg { margin: var(--s-3) 0 0; font-size: var(--fs-sm); padding-top: var(--s-2); border-top: 1px solid var(--border); }
+.kk-mg span { white-space: nowrap; }

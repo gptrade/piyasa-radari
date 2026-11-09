@@ -8,7 +8,7 @@ on:
     - cron: "35 18 * * 1-5"    # 21:35 (Yahoo geç güncellerse)
   push:
     branches: [onizleme-korku]          # elle yeniden çalıştırma: main bu dala itilir (yol değişikliği gerekir)
-    paths: ["radar/guc.py", "radar/korku.py", ".github/workflows/guc.yml"]
+    paths: ["radar/guc.py", "radar/korku.py", "radar/kredili.py", ".github/workflows/guc.yml"]
   workflow_dispatch:
     inputs:
       full:

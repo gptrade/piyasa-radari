@@ -10,6 +10,8 @@ bileşenlerin eşit ağırlıklı ortalamasıdır):
   5. Güvenli liman      XU100'ün 20 günlük getirisi − TL gram altının 20 günlük getirisi
   6. Banka risk iştahı  XBANK'ın XU100'e göre 20 günlük göreli getirisi (yüksek betalı, yabancı akışına duyarlı)
   7. Kur baskısı        USD/TRY 20 günlük değişimi (ters: hızlı değer kaybı = korku)
+  8. Kaldıraç           aracı kurumların kredili işlem bakiyesinin 3 aylık büyümesi − XU100 getirisi (TSPB; aylık,
+                        yayım tarihinden itibaren)
 
 Nominal TL eğilimi (enflasyon) yüzdelik sıra ile büyük ölçüde nötrlenir: her gösterge kendi son 3 yılıyla kıyaslanır.
 Geçmiş: aynı kurallarla geriye doğru hesaplanır; bölge bazında ileri getiriler (USD bazlı XU100) şeffaflık için verilir.
@@ -32,6 +34,7 @@ COMP = [
     ("safe", "Güvenli liman", "XU100 − gram altın, 20 günlük getiri farkı"),
     ("bank", "Banka risk iştahı", "XBANK'ın XU100'e göre 20 günlük göreli getirisi"),
     ("fx", "Kur baskısı", "USD/TRY 20 günlük değişimi (ters)"),
+    ("lev", "Kaldıraç", "Kredili işlem bakiyesinin son 3 aydaki büyümesi − XU100 getirisi (TSPB, aylık)"),
 ]
 
 
@@ -75,6 +78,9 @@ def raw_components(b: pd.DataFrame, bench: pd.Series, extra: dict[str, pd.Series
     if u is not None and u.notna().sum() > MIN_HIST:
         u = u.reindex(ix).ffill()
         out["fx"] = -(u / u.shift(20) - 1)
+    lv = extra.get("MARGIN")
+    if lv is not None and lv.notna().sum() > MIN_HIST:
+        out["lev"] = lv.reindex(ix).ffill()
     return out
 
 
@@ -112,7 +118,8 @@ def _r(v, k=4):
         return None
 
 
-def build(b: pd.DataFrame, bench: pd.Series, extra: dict[str, pd.Series], hist_days: int = 3 * 252) -> dict | None:
+def build(b: pd.DataFrame, bench: pd.Series, extra: dict[str, pd.Series], hist_days: int = 3 * 252,
+          margin: dict | None = None) -> dict | None:
     idx, sc = compute(b, bench, extra)
     ok = idx.dropna()
     if ok.empty:
@@ -144,5 +151,5 @@ def build(b: pd.DataFrame, bench: pd.Series, extra: dict[str, pd.Series], hist_d
         "components": comps,
         "hist": [[d.date().isoformat(), _r(x, 1)] for d, x in h.items()],
         "zones": forward_by_zone(idx, bench, extra.get("USDTRY")),
-        "since": ok.index[0].date().isoformat(), "window": WINDOW,
+        "since": ok.index[0].date().isoformat(), "window": WINDOW, "margin": margin,
     }

@@ -125,6 +125,8 @@
         <p class="t3 gc-foot">Son 1 yılda en düşük ${fmt.num(k.year.min, 0)} (${dlab(k.year.min_d)}), en yüksek ${fmt.num(k.year.max, 0)} (${dlab(k.year.max_d)}).</p></section>
       <section class="card" aria-labelledby="kkC"><div class="card-head"><h2 class="card-title" id="kkC">Bileşenler</h2><span class="card-meta">her biri son 3 yılına göre 0–100</span></div>
         <ul class="kk-comps">${comps}</ul>
+        ${k.margin ? (() => { const g = k.margin, ay = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"], ml = ym => `${ay[+ym.slice(5) - 1]} ${ym.slice(0, 4)}`;
+          return `<p class="kk-mg"><b>Kredili işlemler · ${ml(g.ym)}</b> ${fmt.num(g.kredi / 1e9, 1)} mr TL · ${fmt.int(g.users)} yatırımcı${g.m1 != null ? ` · aylık <span class="${g.m1 >= 0 ? "up" : "down"}">${g.m1 >= 0 ? "+" : "−"}%${fmt.num(Math.abs(g.m1) * 100, 1)}</span>` : ""}${g.peak_ym !== g.ym ? ` · ${ml(g.peak_ym)} zirvesinden <span class="down">−%${fmt.num((1 - g.kredi / g.peak) * 100, 0)}</span>` : ""} <span class="t3">· kaynak: TSPB</span></p>`; })() : ""}
         <p class="t3 gc-foot">Endeks bileşenlerin eşit ağırlıklı ortalamasıdır. Her gösterge kendi son 3 yıllık dağılımındaki yüzdelik sırasıyla puanlanır; böylece enflasyonun nominal TL eğilimi büyük ölçüde nötrlenir.</p></section>
     </div>
     <section class="card" aria-labelledby="kkH"><div class="card-head"><h2 class="card-title" id="kkH">Endeksin seyri</h2><span class="card-meta">son 3 yıl</span></div>
@@ -359,7 +361,7 @@
     $("#gcBody").innerHTML = `<div class="toolbar">${seg("gcTab", TABS, S.tab, "Bölüm")}<span class="grow"></span><span class="card-meta">${dlab(d.asof)} kapanışı · ${fmt.int(d.universe)} hisse</span></div>
       ${S.tab === "korku" ? korkuCard(false) : S.tab === "sektor" ? tabSector() : S.tab === "hisse" ? tabStocks() : S.tab === "harita" ? tabMap() : S.tab === "deger" ? tabValue() : S.tab === "kuresel" ? tabGlobal() : tabBreadth()}
       <p class="m-foot">${window.radarMethod?.link("piyasa-gucu") || ""}</p>
-      <p class="src-line">Kaynak: Yahoo Finance günlük kapanış ve hacim (kişisel kullanım; ham fiyat yayımlanmaz), KAP sektör sınıflaması · ${fmt.date(d.generated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>`;
+      <p class="src-line">Kaynak: Yahoo Finance günlük kapanış ve hacim (kişisel kullanım; ham fiyat yayımlanmaz), KAP sektör sınıflaması${S.tab === "korku" ? ", TSPB aracı kurum kredili işlem verileri" : ""} · ${fmt.date(d.generated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>`;
     bind();
   }
   function bind() {

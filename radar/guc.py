@@ -478,7 +478,8 @@ def view_out(b: pd.DataFrame) -> dict:
     return {"universe": int(b["n"].iloc[-1]), "regime": reg, "regime_hist": regime_history(b, events), "events": ev_out, "series": series_out(b)}
 
 
-def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, docs: dict | None = None) -> dict:
+def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, docs: dict | None = None,
+          kredi: dict | None = None) -> dict:
     codes = {m["code"] for m in members}
     idx_of = {m["code"]: set(m.get("idx") or []) for m in members}
     adj = wide(px, "adj")
@@ -512,8 +513,11 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, doc
     clean, ret, tlv = clean.loc[b.index[0]:], ret.loc[b.index[0]:], tlv.loc[b.index[0]:]
     events, reg, ev_out = _events(b)
     try:
-        from . import korku
-        fear = korku.build(b, bench, extra)
+        from . import korku, kredili
+        lv = kredili.leverage(kredi, bench) if bench is not None else None
+        if lv is not None:
+            extra["MARGIN"] = lv
+        fear = korku.build(b, bench, extra, margin=kredili.latest(kredi))
     except Exception:  # noqa: BLE001
         log.exception("Korku endeksi hesaplanamadı")
         fear = None
@@ -651,7 +655,14 @@ def run(full: bool = False, offline: bool = False) -> dict:
             continue
         docs[d.get("code") or p.stem] = {"series": {"ttm": {k: (d.get("series") or {}).get("ttm", {}).get(k) for k in ("net_parent", "net")},
                                                     "bs": {"equity_parent": (d.get("series") or {}).get("bs", {}).get("equity_parent")}}}
-    doc = build(px, members, screen, docs)
+    from . import kredili
+    kpath = OUT / "kredili.json"
+    try:
+        kdoc = kredili.update(kpath) if not offline else (json.loads(kpath.read_text(encoding="utf-8")) if kpath.exists() else None)
+    except Exception:  # noqa: BLE001
+        log.exception("TSPB kredili işlem verisi alınamadı")
+        kdoc = None
+    doc = build(px, members, screen, docs, kredi=kdoc)
     (OUT / "guc.json").write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("Piyasa gücü: %s · rejim %s · %d sektör · %d hisse", doc["asof"], doc["regime"]["state"], len(doc["sectors"]), len(doc["stocks"]))
     return doc
