@@ -14,31 +14,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: SEC örnekleri
-        env:
-          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+      - name: TSPB kredili işlemler
         run: |
-          mkdir -p probe/sec
-          python3 - > probe/log43.txt <<'PY'
-          import json, os, time, urllib.request, gzip
-          ua = os.environ.get("SEC_USER_AGENT") or "piyasa-radari research bot"
-          ciks = {"XOM": 34088, "AZO": 866787, "DTE": 936340, "V": 1403161, "UPS": 1090727, "GOOGL": 1652044}
-          for code, cik in ciks.items():
-              req = urllib.request.Request(f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json", headers={"User-Agent": ua, "Accept-Encoding": "gzip"})
-              raw = urllib.request.urlopen(req, timeout=60).read()
-              try: raw = gzip.decompress(raw)
-              except OSError: pass
-              d = json.loads(raw)
-              keep = {"entityName": d.get("entityName"), "facts": {}}
-              for tax, tags in d["facts"].items():
-                  for t, v in tags.items():
-                      if tax == "dei" or any(k in t for k in ("Revenue", "Sales", "NetIncome", "ProfitLoss", "Assets", "Shares", "Equity", "Dividend", "OperatingIncome", "CostOf", "GrossProfit", "Depreciation", "NetCashProvided", "PaymentsToAcquire", "Liabilities", "Debt", "Cash", "Interest", "IncomeTax")):
-                          if not t.startswith(("Deferred", "Defined")):
-                              keep["facts"].setdefault(tax, {})[t] = {"units": {u: [{k: f.get(k) for k in ("start", "end", "val", "filed", "form", "fp", "fy", "accn", "frame")} for f in fs if (f.get("end") or "") >= "2021-01-01"] for u, fs in v["units"].items()}}
-              json.dump(keep, gzip.open(f"probe/sec/{code}.json.gz", "wt"), separators=(",", ":"))
-              print(code, len(raw), len(keep["facts"].get("us-gaap", {})))
-              time.sleep(0.3)
-          PY
+          mkdir -p probe/tspb
+          {
+            echo "== robots"; curl -sS -A "Mozilla/5.0 (compatible; LyraRadar/1.0)" https://tspb.org.tr/robots.txt | head -40
+            echo "== veriler linkleri"; curl -sS -A "Mozilla/5.0 (compatible; LyraRadar/1.0)" https://tspb.org.tr/veriler/ | grep -oE 'https://tspb.org.tr/wp-content/uploads/[^"]+\.xlsx' | sort -u
+          } > probe/log44.txt 2>&1
+          curl -sS -A "Mozilla/5.0 (compatible; LyraRadar/1.0)" -o probe/tspb/aylik.xlsx https://tspb.org.tr/wp-content/uploads/2026/11/BTVY_Araci_Kurumlarin_Kredili_Islemleri_20261104_140043.xlsx || true
+          curl -sS -A "Mozilla/5.0 (compatible; LyraRadar/1.0)" -o probe/tspb/arsiv.xlsx https://tspb.org.tr/wp-content/uploads/2026/02/BTVY_Krediler_2002-202512.xlsx || true
+          ls -la probe/tspb >> probe/log44.txt
 
       - name: kaydet
         if: always()
