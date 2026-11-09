@@ -176,7 +176,7 @@
       : `En büyük 150 şirket · kutu = ${(S.tmSize || "mcap") === "tv" ? "günlük işlem hacmi" : "piyasa değeri"}, renk = getiri · ${sectorLine(MK?.data.guc)}`;
     const lower = [signalCard(), calCard(), researchCard(), bbCard(), pfCard()].filter(Boolean);
     body.innerHTML = `<div class="view" style="gap:var(--s-4)">${MK?.stripHTML(keys, { groups: true }) || ""}
-      <div class="td-regimes">${window.radarGuc?.card() || ""}${MK?.crossCard(true) || ""}</div>
+      <div class="td-regimes">${window.radarGuc?.korku?.() || ""}${window.radarGuc?.card() || ""}${MK?.crossCard(true) || ""}</div>
       ${MK?.data.guc || MK?.data.us ? `<section class="card" aria-labelledby="tdTmT"><div class="card-head td-tm-head"><h2 class="card-title" id="tdTmT">Isı haritası</h2>
         <div class="seg seg-sm" role="radiogroup" aria-label="Piyasa" id="tdTmS">${[["bist", "BIST"], ["sp", "S&P 500"], ["ndx", "Nasdaq-100"]].map(([k, l]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${src === k}">${l}</button>`).join("")}</div>
         ${us ? "" : `<div class="seg seg-sm" role="radiogroup" aria-label="Kutu boyutu" id="tdTmZ">${[["mcap", "Piyasa değeri"], ["tv", "İşlem hacmi"]].map(([k, l]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${(S.tmSize || "mcap") === k}">${l}</button>`).join("")}</div>`}

@@ -8,7 +8,7 @@
   const SRC = "data/guc/guc.json";
   const S = { doc: null, loaded: false, loading: false, error: null, missing: false, tab: "genislik", per: "1A", range: 252, univ: "tum",
     sort: "rank", sdir: 1, tmPer: "d1", tmSec: "", tmSize: "mcap", vKind: "endeks", vSort: "mcap", hs: { quad: true, rs: 80, tt: 6, vol: false, liq: true, sec: "", q: "", sort: "rs", sdir: 1, limit: 60 }, selSec: null };
-  const TABS = { genislik: "Genişlik ve rejim", harita: "Isı haritası", sektor: "Sektör rotasyonu", hisse: "Güçlü hisseler", deger: "Değerleme", kuresel: "Küresel" };
+  const TABS = { genislik: "Genişlik ve rejim", korku: "Korku endeksi", harita: "Isı haritası", sektor: "Sektör rotasyonu", hisse: "Güçlü hisseler", deger: "Değerleme", kuresel: "Küresel" };
   const REG = {
     boga: ["Boğa", "up", "Endeks ve genişlik birlikte güçlü"],
     duzeltme: ["Düzeltme / kararsız", "warn-t", "Endeks ile genişlik ayrışıyor"],
@@ -93,6 +93,46 @@
   const sma = (xs, n) => xs.map((_, i) => { if (i < n - 1) return null; let s = 0, c = 0; for (let j = i - n + 1; j <= i; j++) if (xs[j] != null) { s += xs[j]; c++; } return c ? s / c : null; });
 
   // ─────────────────────────────── rejim kartı (Bugün sayfası da kullanır)
+  // ─────────────────────────────── korku–açgözlülük endeksi (radar/korku.py)
+  const KZ = [[25, "Aşırı korku", "var(--down)"], [45, "Korku", "var(--warn-line, #d08a2b)"], [55, "Nötr", "var(--text-3)"], [75, "Açgözlülük", "color-mix(in srgb, var(--up) 65%, var(--surface))"], [101, "Aşırı açgözlülük", "var(--up)"]];
+  const kz = v => KZ.find(z => v < z[0]) || KZ[2];
+  function gauge(v, size = 220) {
+    const W = size, H = size * 0.58, cx = W / 2, cy = H - 8, R = W / 2 - 14, w = 16;
+    const pt = (t, r) => [cx - r * Math.cos(Math.PI * t / 100), cy - r * Math.sin(Math.PI * t / 100)];
+    let prev = 0, arcs = "";
+    for (const [hi, , col] of KZ) { const a = prev, b = Math.min(hi, 100); const [x0, y0] = pt(a, R), [x1, y1] = pt(b, R);
+      arcs += `<path d="M${x0},${y0} A${R},${R} 0 0 1 ${x1},${y1}" stroke="${col}" stroke-width="${w}" fill="none" opacity="${v != null && v >= a && v < hi ? 1 : 0.35}"/>`; prev = b; }
+    const [nx, ny] = pt(v ?? 50, R - w - 6);
+    return `<svg class="kk-g" viewBox="0 0 ${W} ${H}" role="img" aria-label="Korku–açgözlülük ${fmt.num(v, 0)} / 100">${arcs}
+      <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="6" fill="var(--text)"/>
+      <text x="14" y="${H}" class="kk-t">0</text><text x="${W - 14}" y="${H}" text-anchor="end" class="kk-t">100</text></svg>`;
+  }
+  function korkuCard(compact = false) {
+    const k = S.doc?.korku;
+    if (!k) return "";
+    const z = kz(k.value), pv = k.prev || {};
+    const chip = (l, v) => v == null ? "" : `<span class="kk-p"><span class="t3">${l}</span> <b class="mono" style="color:${kz(v)[2]}">${fmt.num(v, 0)}</b></span>`;
+    const head = `<div class="kk-top">${gauge(k.value, compact ? 200 : 260)}<div class="kk-v"><b class="mono" style="color:${z[2]}">${fmt.num(k.value, 0)}</b><span style="color:${z[2]}">${z[1]}</span></div></div>
+      <div class="kk-prev">${chip("Dün", pv["1G"])}${chip("1 hafta önce", pv["1H"])}${chip("1 ay önce", pv["1A"])}${chip("1 yıl önce", pv["1Y"])}</div>`;
+    if (compact) return `<section class="card kk" aria-labelledby="kkT"><div class="card-head"><h2 class="card-title" id="kkT">BIST korku–açgözlülük</h2><span class="card-meta">${dlab(k.asof)} · <a href="#piyasa-gucu/korku">ayrıntı →</a></span></div>${head}</section>`;
+    const comps = k.components.map(c => { const cz = kz(c.score);
+      return `<li><span class="kk-cl" data-tip="${esc(c.desc)}">${esc(c.label)}</span><span class="kk-bar"><i style="width:${c.score}%;background:${cz[2]}"></i></span><b class="mono">${fmt.num(c.score, 0)}</b><span class="kk-cz" style="color:${cz[2]}">${cz[1]}</span></li>`; }).join("");
+    const h = k.hist, D = h.map(x => x[0]), V = h.map(x => x[1]);
+    const zr = k.zones.map(r => `<tr><th scope="row"><span style="color:${kz(KZ.find(z => z[1] === r.zone)[0] - 1)[2]}">●</span> ${r.zone}</th><td class="num">%${fmt.num(r.share * 100, 0)}</td><td class="num ${r.f21 >= 0 ? "up" : "down"}">${r.f21 == null ? "—" : pp(r.f21, 1)}</td><td class="num ${r.f63 >= 0 ? "up" : "down"}">${r.f63 == null ? "—" : pp(r.f63, 1)}</td><td class="num">${r.hit63 == null ? "—" : pp(r.hit63)}</td></tr>`).join("");
+    return `<div class="fa-two kk-full">
+      <section class="card kk" aria-labelledby="kkT"><div class="card-head"><h2 class="card-title" id="kkT">BIST korku–açgözlülük endeksi</h2><span class="card-meta">${dlab(k.asof)} kapanışı</span></div>
+        ${head}
+        <p class="t3 gc-foot">Son 1 yılda en düşük ${fmt.num(k.year.min, 0)} (${dlab(k.year.min_d)}), en yüksek ${fmt.num(k.year.max, 0)} (${dlab(k.year.max_d)}).</p></section>
+      <section class="card" aria-labelledby="kkC"><div class="card-head"><h2 class="card-title" id="kkC">Bileşenler</h2><span class="card-meta">her biri son 3 yılına göre 0–100</span></div>
+        <ul class="kk-comps">${comps}</ul>
+        <p class="t3 gc-foot">Endeks bileşenlerin eşit ağırlıklı ortalamasıdır. Her gösterge kendi son 3 yıllık dağılımındaki yüzdelik sırasıyla puanlanır; böylece enflasyonun nominal TL eğilimi büyük ölçüde nötrlenir.</p></section>
+    </div>
+    <section class="card" aria-labelledby="kkH"><div class="card-head"><h2 class="card-title" id="kkH">Endeksin seyri</h2><span class="card-meta">son 3 yıl</span></div>
+      ${chart(D, [{ v: V, color: "var(--series-1)", label: "Korku–açgözlülük" }], { h: 220, bands: [{ v: 25, l: "aşırı korku" }, { v: 75, l: "aşırı açgözlülük" }], fmtY: v => fmt.num(v, 0), title: "korku açgözlülük" })}</section>
+    <section class="card" aria-labelledby="kkZ"><div class="card-head"><h2 class="card-title" id="kkZ">Bölgelere göre sonraki XU100 getirisi</h2><span class="card-meta">${k.since.slice(0, 4) < "2013" ? "2013" : k.since.slice(0, 4)}'ten bugüne · USD bazında, medyan</span></div>
+      <div class="tbl-scroll"><table class="tx kk-zt"><thead><tr><th>Bölge</th><th class="num">Günlerin payı</th><th class="num">1 ay sonra</th><th class="num">3 ay sonra</th><th class="num">3 ayda artı getiri oranı</th></tr></thead><tbody>${zr}</tbody></table></div>
+      <p class="t3 gc-foot">Geçmişte korku bölgelerinden sonraki 3 aylık getiriler açgözlülük bölgelerinden daha iyi olmuş (karşıt sinyal), ama fark küçük ve gözlemler örtüşen pencerelerden geliyor: istatistiksel kesinlik iddiası yok. Endeks bir alım-satım sinyali değil, piyasa duygusunun özetidir.</p></section>`;
+  }
   function regimeCard(compact = false, g = S.doc?.regime) {
     if (!S.loaded) return "";
     const c = g.c, f = g.flags, r = REG[g.state] || REG.duzeltme;
@@ -317,7 +357,7 @@
   function render() {
     const d = S.doc;
     $("#gcBody").innerHTML = `<div class="toolbar">${seg("gcTab", TABS, S.tab, "Bölüm")}<span class="grow"></span><span class="card-meta">${dlab(d.asof)} kapanışı · ${fmt.int(d.universe)} hisse</span></div>
-      ${S.tab === "sektor" ? tabSector() : S.tab === "hisse" ? tabStocks() : S.tab === "harita" ? tabMap() : S.tab === "deger" ? tabValue() : S.tab === "kuresel" ? tabGlobal() : tabBreadth()}
+      ${S.tab === "korku" ? korkuCard(false) : S.tab === "sektor" ? tabSector() : S.tab === "hisse" ? tabStocks() : S.tab === "harita" ? tabMap() : S.tab === "deger" ? tabValue() : S.tab === "kuresel" ? tabGlobal() : tabBreadth()}
       <p class="m-foot">${window.radarMethod?.link("piyasa-gucu") || ""}</p>
       <p class="src-line">Kaynak: Yahoo Finance günlük kapanış ve hacim (kişisel kullanım; ham fiyat yayımlanmaz), KAP sektör sınıflaması · ${fmt.date(d.generated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>`;
     bind();
@@ -363,7 +403,7 @@
 
   addEventListener("radar:market", () => { if (sh.route === "piyasa-gucu" && S.loaded && ["harita", "deger", "kuresel"].includes(S.tab)) render(); });
   let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (sh.route === "piyasa-gucu" && S.tab === "harita") render(); }, 250); });
-  window.radarGuc = { card: () => S.loaded ? regimeCard(true) : (load(), "") };
+  window.radarGuc = { card: () => S.loaded ? regimeCard(true) : (load(), ""), korku: () => S.loaded ? korkuCard(true) : "" };
   sh.register("piyasa-gucu", {
     onShow() { if (TABS[sh.param]) S.tab = sh.param; S.loaded ? render() : S.error ? renderError() : load(); },
     async refresh() { await load(true); },

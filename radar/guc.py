@@ -42,7 +42,7 @@ START = "2010-01-01"
 JUMP = 0.25
 BENCH = "XU100"
 XU100_MIN = 60          # BIST 100 genişlik görünümü için en az bu kadar bileşenin fiyatı olmalı
-YF = {"XU100": "XU100.IS", "USDTRY": "USDTRY=X"}
+YF = {"XU100": "XU100.IS", "USDTRY": "USDTRY=X", "XBANK": "XBANK.IS", "GOLD": "GC=F"}   # son ikisi korku endeksi için
 HIST_DAYS = 3 * 252          # grafiklerde gösterilen geçmiş
 MIN_SECTOR = 3
 RRG_N = 10                   # hafta: göreli güç oranının ortalaması
@@ -486,6 +486,13 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, doc
     wide_close = close
     vol = wide(px, "volume")
     bench = clean_index(adj[BENCH]) if BENCH in adj else None
+    extra = {}                                          # korku endeksi: altın (TL), XBANK, USD/TRY
+    if "USDTRY" in adj:
+        extra["USDTRY"] = adj["USDTRY"].dropna()
+        if "GOLD" in adj:
+            extra["GOLDTRY"] = (adj["GOLD"] * adj["USDTRY"].ffill()).dropna()
+    if "XBANK" in adj:
+        extra["XBANK"] = clean_index(adj["XBANK"])
     stocks = [c for c in adj.columns if c in codes]
     adj, close, vol = adj[stocks], close[stocks], vol[stocks]
     # tatil artığı satırlar (yalnız birkaç hissede kayıt): getirileri bozmasın diye at
@@ -504,6 +511,12 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, doc
         views["xu100"] = view_out(b2)
     clean, ret, tlv = clean.loc[b.index[0]:], ret.loc[b.index[0]:], tlv.loc[b.index[0]:]
     events, reg, ev_out = _events(b)
+    try:
+        from . import korku
+        fear = korku.build(b, bench, extra)
+    except Exception:  # noqa: BLE001
+        log.exception("Korku endeksi hesaplanamadı")
+        fear = None
 
     # ── sektörler
     sec_of = {m["code"]: m.get("sector") or "DİĞER" for m in members}
@@ -612,7 +625,7 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, doc
         "asof": b.index[-1].date().isoformat(), "start": b.index[0].date().isoformat(),
         "universe": int(b["n"].iloc[-1]), "liq_tl": LIQ_TL,
         "regime": reg, "regime_hist": regime_history(b, events), "events": ev_out,
-        "series": series_out(b), "views": views, "sectors": sectors, "stocks": rows,
+        "series": series_out(b), "views": views, "sectors": sectors, "stocks": rows, "korku": fear,
     }
 
 
@@ -623,7 +636,7 @@ def run(full: bool = False, offline: bool = False) -> dict:
     OUT.mkdir(parents=True, exist_ok=True)
     old = pd.read_parquet(PX) if PX.exists() else None
     if not offline:
-        px = update_px([BENCH, "USDTRY"] + sorted(m["code"] for m in members), old, full)
+        px = update_px([BENCH, "USDTRY", "XBANK", "GOLD"] + sorted(m["code"] for m in members), old, full)
         if px is None:
             raise SystemExit("Fiyat alınamadı")
         px.to_parquet(PX, compression="zstd", index=False)
