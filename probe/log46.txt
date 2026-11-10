@@ -1,0 +1,94 @@
+cat örnek: [{"CATEGORY_ID": 10.0, "TOPIC_TITLE_ENG": "EXPECTATION AND TENDENCY SURVEYS", "TOPIC_TITLE_TR": "BEKLENTİ VE EĞİLİM ANKETLERİ", "SEVIYE": 1, "UST_CATEGORY_ID": -1}, {"CATEGORY_ID": 1001.0, "TOPIC_TITLE_ENG": "BANK LOANS TENDENCY SURVEY (CBRT)", "TOPIC_TITLE_TR": "BANKA KREDİLERİ EĞİLİM ANKETİ (TCMB)\t", "SEVIYE": 2, "UST_CATEGORY_ID": 10}, {"CATEGORY_ID": 1002.0, "TOPIC_TITLE_ENG": "FINANCIAL SERVICES SURVEY (CBRT)", "TOPIC_TITLE_TR": "FİNANSAL HİZMETLER ANKETİ (TCMB)\t", "SEVIYE": 2, "UST_CATEGORY_ID": 10}]
+grup örnek: ["NONE"]
+mode0: 680
+  {"DATAGROUP_CODE": "bie_imfmbm", "DATAGROUP_NAME": "IMF - Geniş Para Arzı (M3) (Ulusal Para Birimi)", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2010", "END_DATE": "01-08-2026"}
+  {"DATAGROUP_CODE": "bie_iyabgs3s", "DATAGROUP_NAME": "Çalışan Sayısı 250 İle 499 Arasında Olan Firmalar", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_oderoll", "DATAGROUP_NAME": "Dış Borç Çevirme Oranları", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-06-2006", "END_DATE": "01-08-2026"}
+  {"DATAGROUP_CODE": "bie_uypucay", "DATAGROUP_NAME": "Uluslararası Yatırım Pozisyonu", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-1996", "END_DATE": "01-04-2026"}
+  {"DATAGROUP_CODE": "bie_yiosbapiydeg", "DATAGROUP_NAME": "Genel Yönetim Dışı Sektörlerin Borçlanma Senetleri, Piyasa Değeri", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_iyabgs2s", "DATAGROUP_NAME": "Çalışan Sayısı 250'den Az Olan Firmalar", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_bisttlref", "DATAGROUP_NAME": "Türk Lirası Gecelik Referans Faiz Oranı (BIST-TLREF)", "FREQUENCY_STR": "İŞ GÜNÜ", "START_DATE": "28-12-2018", "END_DATE": "06-11-2026"}
+  {"DATAGROUP_CODE": "bie_fobe2", "DATAGROUP_NAME": "Gıda ve İçecekler", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_rkgey2", "DATAGROUP_NAME": "Reel Kesim Güven Endeksi", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_dibsyazdeg", "DATAGROUP_NAME": "DİBS, Yazılı Değer", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_ebondyazdeg", "DATAGROUP_NAME": "Genel Yönetim Eurobondları, Yazılı Değer", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_ydosbayazdeg", "DATAGROUP_NAME": "Genel Yönetim Dışı Sektörlerin Eurobondları, Yazılı Değer", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_cons2", "DATAGROUP_NAME": "Tüketim Malları", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_cdur2", "DATAGROUP_NAME": "Dayanıklı Tüketim Malları", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_yiesgyazdeg", "DATAGROUP_NAME": "ÇSY, Yurt İçi İhraçlar", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "01-09-2023", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_finhestnks123", "DATAGROUP_NAME": "S.123 Para Piyasası Fonları (Konsolide Olmayan, Stok)", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-2010", "END_DATE": "01-04-2026"}
+  {"DATAGROUP_CODE": "bie_itotefe", "DATAGROUP_NAME": "Toptan Eşya Fiyat Endeksi", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-1968", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_fdvy", "DATAGROUP_NAME": "Finansal Kesim Dışındaki Firmaların Döviz Varlık ve Yükümlülükleri", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-12-2002", "END_DATE": "01-08-2026"}
+  {"DATAGROUP_CODE": "bie_cndu2", "DATAGROUP_NAME": "Dayanıksız Tüketim Malları", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_yisgucu2", "DATAGROUP_NAME": "Temel İşgücü Göstergeleri", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2005", "END_DATE": "01-09-2026"}
+  {"DATAGROUP_CODE": "bie_ebondvade", "DATAGROUP_NAME": "Genel Yönetim Eurobondları, Vade ve Para Dağılımı", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_finhestnks12t", "DATAGROUP_NAME": "S.121 + S.122 + S.123 Parasal ve Finansal Kuruluşlar (Konsolide Olmayan, Stok)", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-2010", "END_DATE": "01-04-2026"}
+  {"DATAGROUP_CODE": "bie_iyabgs4s", "DATAGROUP_NAME": "Çalışan Sayısı 500 ve Üzeri Olan Firmalar", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_pydibs", "DATAGROUP_NAME": "Devlet İç Borçlanma Senetlerinin Gösterge Niteliğindeki Değerleri", "FREQUENCY_STR": "GÜNLÜK", "START_DATE": "26-09-2012", "END_DATE": "10-11-2026"}
+  {"DATAGROUP_CODE": "bie_mt100h", "DATAGROUP_NAME": "Mevduat Faiz Oranları (Akım)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "04-01-2002", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_odeydiebs", "DATAGROUP_NAME": "Yurt Dışında İhraç Edilen Borçlanma Senetleri", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2010", "END_DATE": "01-08-2026"}
+  {"DATAGROUP_CODE": "bie_biskredigsyih", "DATAGROUP_NAME": "Finans Dışı Özel Sektörün Toplam Kredi Kullanımı (Kredi/GSYH Oranı)", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-1947", "END_DATE": "01-01-2026"}
+  {"DATAGROUP_CODE": "bie_ydosbavade", "DATAGROUP_NAME": "Genel Yönetim Dışı Sektörlerin Eurobondları, Vade ve Para Dağılımı", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_rkgema", "DATAGROUP_NAME": "Reel Kesim Güven Endeksi Mevsimsellikten Arındırılmış", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_yiosbayazdeg", "DATAGROUP_NAME": "Genel Yönetim Dışı Sektörlerin Borçlanma Senetleri, Yazılı Değer", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_fhany", "DATAGROUP_NAME": "Finansal Hizmetler İstatistikleri", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-05-2012", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_bkea", "DATAGROUP_NAME": "Banka Kredileri Eğilim Anketi", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-2005", "END_DATE": "01-07-2026"}
+  {"DATAGROUP_CODE": "bie_brentpetrol", "DATAGROUP_NAME": "Avrupa Brent Petrol Fiyatı", "FREQUENCY_STR": "İŞ GÜNÜ", "START_DATE": "20-05-1987", "END_DATE": "05-11-2026"}
+  {"DATAGROUP_CODE": "bie_ebondpiydeg", "DATAGROUP_NAME": "Genel Yönetim Eurobondları, Piyasa Değeri", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_yiosbavade", "DATAGROUP_NAME": "Genel Yönetim Dışı Sektörlerin Borçlanma Senetleri, Vade Dağılımı", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_dibspiydeg", "DATAGROUP_NAME": "DİBS, Piyasa Değeri", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_mkaltytl", "DATAGROUP_NAME": "Altın Fiyatları (Ankara Kuyumcular ve Saatçiler Odası)", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-12-1926", "END_DATE": "01-05-2026"}
+  {"DATAGROUP_CODE": "bie_ydosbapiydeg", "DATAGROUP_NAME": "Genel Yönetim Dışı Sektörlerin Eurobondları, Piyasa Değeri", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_tisguc", "DATAGROUP_NAME": "Temel İşgücü Göstergeleri (Mevsimsellikten Arındırılmış)", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2005", "END_DATE": "01-09-2026"}
+  {"DATAGROUP_CODE": "bie_kt100h", "DATAGROUP_NAME": "Kredi Faiz Oranları (Akım)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "04-01-2002", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_intm2", "DATAGROUP_NAME": "Ara Malları", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_dkefkytl", "DATAGROUP_NAME": "Efektif Kurlar", "FREQUENCY_STR": "GÜNLÜK", "START_DATE": "02-01-1990", "END_DATE": "10-11-2026"}
+  {"DATAGROUP_CODE": "bie_kmbscz", "DATAGROUP_NAME": "Menkul Değerler - Bankacılık Sektörü", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-1986", "END_DATE": "01-09-2026"}
+  {"DATAGROUP_CODE": "bie_iyaw2", "DATAGROUP_NAME": "İktisadi Yönelim İstatistikleri", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_dibsvade", "DATAGROUP_NAME": "DİBS, Vade Dağılımı", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_ydesgyazdeg", "DATAGROUP_NAME": "ÇSY, Yurt Dışı İhraçlar", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "01-09-2023", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_oecdoncu", "DATAGROUP_NAME": "OECD - Kompozit Öncü Göstergeler Endeksi (CLI)", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-1966", "END_DATE": "01-09-2026"}
+  {"DATAGROUP_CODE": "bie_feoktg", "DATAGROUP_NAME": "Özel Kapsamlı TÜFE Göstergeleri (2003=100) (Arşiv)", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2003", "END_DATE": "01-12-2025"}
+  {"DATAGROUP_CODE": "bie_kbicborc", "DATAGROUP_NAME": "İç Borç Stoku", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-12-1979", "END_DATE": "01-09-2026"}
+  {"DATAGROUP_CODE": "bie_kmmbkcz", "DATAGROUP_NAME": "Menkul Değerler (Kurumsal Sektörlere Göre) - Mevduat Bankaları", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-1986", "END_DATE": "01-09-2026"}
+  {"DATAGROUP_CODE": "bie_dkdovytl", "DATAGROUP_NAME": "Döviz Kurları", "FREQUENCY_STR": "GÜNLÜK", "START_DATE": "02-01-1950", "END_DATE": "10-11-2026"}
+  {"DATAGROUP_CODE": "bie_cli2", "DATAGROUP_NAME": "Bileşik Öncü Göstergeler Endeksi", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-12-1987", "END_DATE": "01-09-2026"}
+  {"DATAGROUP_CODE": "bie_mknethar", "DATAGROUP_NAME": "Yurt Dışı Yerleşikler Menkul Kıymet Portföyü", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "11-09-2020", "END_DATE": "30-10-2026"}
+  {"DATAGROUP_CODE": "bie_inve2", "DATAGROUP_NAME": "Yatırım Malları", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2007", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_bistopkredi", "DATAGROUP_NAME": "Finans Dışı Sektörün Toplam Kredi Kullanımı", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-1947", "END_DATE": "01-01-2026"}
+  {"DATAGROUP_CODE": "bie_yydibsn", "DATAGROUP_NAME": "Devlet İç Borçlanma Senetleri (TL, Nominal, Stok) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "01-06-2012", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yydvusd", "DATAGROUP_NAME": "Devlet İç Borçlanma Senetleri Vade Dağılımı (ABD doları, Piyasa Değeri, Kalan Vade) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "01-06-2012", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yydibsnu", "DATAGROUP_NAME": "Devlet İç Borçlanma Senetleri (ABD doları, Nominal, Stok) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "01-06-2012", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yydibsc", "DATAGROUP_NAME": "Devlet İç Borçlanma Senetleri (TL, Piyasa Değeri) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "01-06-2012", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_kbkborc", "DATAGROUP_NAME": "Kamu Kesimi Borçlanma Gereği (Arşiv)", "FREQUENCY_STR": "YILLIK", "START_DATE": "01-01-1975", "END_DATE": "01-01-2015"}
+  {"DATAGROUP_CODE": "bie_yydv", "DATAGROUP_NAME": "Devlet İç Borçlanma Senetleri Vade Dağılımı (TL, Piyasa Değeri, Kalan Vade) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "01-06-2012", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yyoibsnu", "DATAGROUP_NAME": "Özel Sektör Tarafından Yurt İçinde İhraç Edilen Borçlanma Senetleri (Nominal Değer, Stok) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "02-01-2015", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yyoibsnt", "DATAGROUP_NAME": "Özel Sektör Tarafından Yurt İçinde İhraç Edilen Borçlanma Senetleri (TL, Nominal Değer, Stok) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "02-01-2015", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_toktg", "DATAGROUP_NAME": "Fiyat Endeksi-Özel Kapsamlı TÜFE Göstergeleri (2003=100) (Arşiv)", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2003", "END_DATE": "01-12-2016"}
+  {"DATAGROUP_CODE": "bie_yydvyusd", "DATAGROUP_NAME": "Devlet İç Borçlanma Senetleri Vade Dağılımı (Piyasa Değeri, Orjinal Vade USD) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "01-06-2012", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yyebc", "DATAGROUP_NAME": "Eurobond (Piyasa Değeri, Stok) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "30-12-2011", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yymkeyuk", "DATAGROUP_NAME": "Yurt Dışında Yerleşik Kişilerin Mülkiyetindeki Yurt Dışında İhraç Edilen Borçlanma Senetleri (ABD doları) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "07-01-2005", "END_DATE": "21-12-2012"}
+  {"DATAGROUP_CODE": "bie_yyebn", "DATAGROUP_NAME": "Eurobond (Nominal Değer, Stok) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "30-12-2011", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yydibscu", "DATAGROUP_NAME": "Devlet İç Borçlanma Senetleri (ABD doları, Piyasa Değeri, Stok) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "01-06-2012", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_pydibsarsiv", "DATAGROUP_NAME": "Devlet İç Borçlanma Senetlerinin Gösterge Niteliğindeki Günlük Değerleri (Arşiv)", "FREQUENCY_STR": "GÜNLÜK", "START_DATE": "22-09-1990", "END_DATE": "26-04-2022"}
+  {"DATAGROUP_CODE": "bie_dibsh", "DATAGROUP_NAME": "Banka Dışı Yurt İçi ve Yurt Dışı Yerleşik Kesimlerle Tüm Yurt Dışı Yerleşik Kesimlerin Mülkiyetindeki Devlet İç Borçlanma Senetleri (Arşiv) ", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "05-12-2003", "END_DATE": "25-01-2013"}
+  {"DATAGROUP_CODE": "bie_yyoibsvu", "DATAGROUP_NAME": "Özel Sektör Tarafından Yurt İçinde İhraç Edilen Borçlanma Senetleri Vade Dağılımı (ABD doları, Piyasa Değeri, Orjinal ve Kalan Vade) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "02-01-2015", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yyoibsvt", "DATAGROUP_NAME": "Özel Sektör Tarafından Yurt İçinde İhraç Edilen Borçlanma Senetleri Vade Dağılımı (TL, Piyasa Değeri, Orjinal ve Kalan Vade) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "02-01-2015", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_hdbsn", "DATAGROUP_NAME": "Şirketlerce Yurt Dışında İhraç Edilen Borçlanma Senetleri (ABD doları, Nominal Değer, Stok (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "30-12-2016", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yyoibsct", "DATAGROUP_NAME": "Özel Sektör Tarafından Yurt İçinde İhraç Edilen Borçlanma Senetleri (TL, Piyasa Değeri, Stok) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "02-01-2015", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_yyoibscu", "DATAGROUP_NAME": "Özel Sektör Tarafından Yurt İçinde İhraç Edilen Borçlanma Senetleri (ABD doları, Piyasa Değeri, Stok) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "02-01-2015", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_cli", "DATAGROUP_NAME": "Bileşik Öncü Göstergeler Endeksi (MBÖNCÜ) (Arşiv)", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-12-1987", "END_DATE": "01-01-2014"}
+  {"DATAGROUP_CODE": "bie_hdbsc", "DATAGROUP_NAME": "Şirketlerce Yurt Dışında İhraç Edilen Borçlanma Senetleri (ABD doları, Piyasa Değeri, Stok (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "30-12-2016", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_kamuborcy", "DATAGROUP_NAME": "Kamu Kesimi Borçlanma Gereği (SBB) (Arşiv)", "FREQUENCY_STR": "YILLIK", "START_DATE": "01-01-1975", "END_DATE": "01-01-2021"}
+  {"DATAGROUP_CODE": "bie_yydvy", "DATAGROUP_NAME": "Devlet İç Borçlanma Senetleri Vade Dağılımı (Piyasa Değeri, Orjinal Vade TL) (Arşiv)", "FREQUENCY_STR": "HAFTALIK(CUMA)", "START_DATE": "01-06-2012", "END_DATE": "06-08-2021"}
+  {"DATAGROUP_CODE": "bie_oktug2025", "DATAGROUP_NAME": "Özel Kapsamlı TÜFE Göstergeleri (2025=100)", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2005", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_hanebek", "DATAGROUP_NAME": "Hanehalkı Beklenti İstatistikleri", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2026", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_hanebekdemog", "DATAGROUP_NAME": "Demografik Kırılımda Sonuçlar", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2026", "END_DATE": "01-10-2026"}
+  {"DATAGROUP_CODE": "bie_brutdborcozel", "DATAGROUP_NAME": "Özel Sektörün Yurt Dışından Sağladığı Kredi ve Borç Senetleri Yükümlülükleri - Borçlu Dağılımı", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-01-2002", "END_DATE": "01-04-2026"}
+  {"DATAGROUP_CODE": "bie_finhestnks61012t", "DATAGROUP_NAME": "S.121 + S.122 + S.123 Parasal ve Finansal Kuruluşlar (Konsolide Akım)", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-2010", "END_DATE": "01-04-2026"}
+  {"DATAGROUP_CODE": "bie_finhestnks610123", "DATAGROUP_NAME": "S.123 Para Piyasası Fonları (Konsolide Akım)", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-2010", "END_DATE": "01-04-2026"}
+  {"DATAGROUP_CODE": "bie_finhestnks71012t", "DATAGROUP_NAME": "S.121 + S.122 + S.123 Parasal ve Finansal Kuruluşlar (Konsolide Stok)", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-2010", "END_DATE": "01-04-2026"}
+  {"DATAGROUP_CODE": "bie_finhestnks710123", "DATAGROUP_NAME": "S.123 Para Piyasası Fonları (Konsolide Stok)", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-2010", "END_DATE": "01-04-2026"}
+  {"DATAGROUP_CODE": "bie_finhestnks620123", "DATAGROUP_NAME": "S.123 Para Piyasası Fonları (Konsolide Olmayan, Akım)", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-2010", "END_DATE": "01-04-2026"}
+  {"DATAGROUP_CODE": "bie_finhestnks62012t", "DATAGROUP_NAME": "S.121 + S.122 + S.123 Parasal ve Finansal Kuruluşlar (Konsolide Olmayan, Akım)", "FREQUENCY_STR": "ÜÇ AYLIK", "START_DATE": "01-10-2010", "END_DATE": "01-04-2026"}
+  {"DATAGROUP_CODE": "bie_tukfiyarnd", "DATAGROUP_NAME": "Tüketici Fiyat Endeksi - Mevsim Etkisinden Arındırılmış (2025=100)", "FREQUENCY_STR": "AYLIK", "START_DATE": "01-01-2005", "END_DATE": "01-10-2026"}
