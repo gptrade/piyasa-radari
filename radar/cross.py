@@ -45,10 +45,11 @@ ASSETS = {
     "ndx": ("^IXIC", "Nasdaq", "", 0),
     "dji": ("^DJI", "Dow Jones", "", 0),
     "vix": ("^VIX", "VIX", "", 1),
+    "move": ("^MOVE", "MOVE", "", 1),             # ABD tahvil oynaklığı (ICE BofA, 1 aylık ima edilen, baz puan)
     "btc": ("BTC-USD", "Bitcoin", "$", 0),
 }
 RISK = {"spx": 1, "copper": 1, "btc": 1, "vix": -1, "dxy": -1, "us10y": -1}
-STRIP_ORDER = ["usdtry", "xu100", "xu100usd", "gram", "brent", "us10y", "dxy", "spx", "ndx", "dji", "vix", "btc", "eurtry", "gold", "copper"]
+STRIP_ORDER = ["usdtry", "xu100", "xu100usd", "gram", "brent", "us10y", "dxy", "spx", "ndx", "dji", "vix", "move", "btc", "eurtry", "gold", "copper"]
 LOOK = 20
 
 
