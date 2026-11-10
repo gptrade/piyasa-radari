@@ -21,10 +21,10 @@ jobs:
           git fetch -q --depth 1 origin main guc fin
           mkdir -p main guc fin
           git archive origin/main | tar -x -C main
-          git archive origin/guc px.parquet kredili.json | tar -x -C guc
+          true
           git archive origin/fin _universe.json | tar -x -C fin
           pip install -q -r main/requirements.txt
-          python probe/scripts/brent_evds.py || true
+          python probe/scripts/evds2.py || true
           rm -rf main guc fin
 
       - name: kaydet
