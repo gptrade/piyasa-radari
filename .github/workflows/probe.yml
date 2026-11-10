@@ -9,21 +9,23 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: TSPB kredili işlemler
+      - name: Brent / MOVE ilişkisi ve EVDS tahvil serileri
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: |
-          mkdir -p probe/tspb
-          {
-            echo "== robots"; curl -sS -A "Mozilla/5.0 (compatible; LyraRadar/1.0)" https://tspb.org.tr/robots.txt | head -40
-            echo "== veriler linkleri"; curl -sS -A "Mozilla/5.0 (compatible; LyraRadar/1.0)" https://tspb.org.tr/veriler/ | grep -oE 'https://tspb.org.tr/wp-content/uploads/[^"]+\.xlsx' | sort -u
-          } > probe/log44.txt 2>&1
-          curl -sS -A "Mozilla/5.0 (compatible; LyraRadar/1.0)" -o probe/tspb/aylik.xlsx https://tspb.org.tr/wp-content/uploads/2026/11/BTVY_Araci_Kurumlarin_Kredili_Islemleri_20261104_140043.xlsx || true
-          curl -sS -A "Mozilla/5.0 (compatible; LyraRadar/1.0)" -o probe/tspb/arsiv.xlsx https://tspb.org.tr/wp-content/uploads/2026/02/BTVY_Krediler_2002-202512.xlsx || true
-          ls -la probe/tspb >> probe/log44.txt
+          git fetch -q --depth 1 origin main guc fin
+          mkdir -p main guc fin
+          git archive origin/main | tar -x -C main
+          git archive origin/guc px.parquet kredili.json | tar -x -C guc
+          git archive origin/fin _universe.json | tar -x -C fin
+          pip install -q -r main/requirements.txt
+          python probe/scripts/brent_evds.py || true
+          rm -rf main guc fin
 
       - name: kaydet
         if: always()
