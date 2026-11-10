@@ -95,9 +95,17 @@
 
   // ───────────── veri
   async function getJSON(u) {
-    const r = await fetch(`${u}?t=${Math.floor(Date.now() / 300000)}`);
-    if (!r.ok) throw new Error(`${u} okunamadı (HTTP ${r.status})`);
-    return r.json();
+    // Dağıtım anında ya da oturum yenilenirken tek istek düşebilir: bir kez, kısa beklemeyle yeniden denenir
+    for (let i = 0; ; i++) {
+      try {
+        const r = await fetch(`${u}?t=${Math.floor(Date.now() / 300000)}${i ? `-${i}` : ""}`, i ? { cache: "no-store" } : undefined);
+        if (!r.ok) throw Object.assign(new Error(`${u} okunamadı (HTTP ${r.status})`), { status: r.status });
+        return await r.json();
+      } catch (e) {
+        if (i >= 1 || e.status === 404) throw e;
+        await new Promise(res => setTimeout(res, 1200));
+      }
+    }
   }
   async function load() {
     try { S.screen = await getJSON("data/fin/_screen.json"); S.err = null; }
@@ -352,7 +360,14 @@
     if (!el.dataset.code || el.dataset.code !== code) { loading(el); el.dataset.code = code; }
     let d;
     try { d = await doc(code); } catch (e) {
-      el.innerHTML = `<div class="card">${sh.stateHTML({ kind: "info", title: `${code} için temel analiz verisi yok`, msg: "Şirket BIST Tüm ya da S&P 500 / Nasdaq-100 / Dow 30 kapsamında değil veya tabloları henüz yüklenmedi." })}</div>`; return;
+      // Taramada olan bir şirketin dosyası okunamadıysa sorun bağlantıdadır: "veri yok" demek yanıltıcı olur
+      const known = !!row, net = known && e.status !== 404;
+      el.innerHTML = `<div class="card">${sh.stateHTML(net
+        ? { kind: "error", title: `${code} verisi şu an yüklenemedi`, msg: "Şirket kapsamda; bağlantı ya da oturum yenilenmesi sırasında istek düştü. Tekrar deneyin; sürerse sayfayı yenileyin.", action: "Tekrar dene", actionId: "faDocRetry" }
+        : { kind: "info", title: `${code} için temel analiz verisi yok`, msg: "Şirket BIST Tüm ya da S&P 500 / Nasdaq-100 / Dow 30 kapsamında değil veya tabloları henüz yüklenmedi." })}</div>`;
+      const rb = el.querySelector("#faDocRetry");
+      if (net && rb) rb.onclick = () => { delete S.docs[code]; el.dataset.code = ""; renderCompany(); };
+      return;
     }
     if (sh.route !== "hisse" || (sh.param || "").toUpperCase() !== code) return;
     S.cur = US ? "$" : "₺";
