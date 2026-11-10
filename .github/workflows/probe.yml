@@ -24,7 +24,7 @@ jobs:
           true
           git archive origin/fin _universe.json | tar -x -C fin
           pip install -q -r main/requirements.txt
-          python probe/scripts/evds2.py || true
+          python probe/scripts/evds3.py || true
           rm -rf main guc fin
 
       - name: kaydet
