@@ -1970,3 +1970,12 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .kk-zt td, .kk-zt th { white-space: nowrap; }
 .kk-mg { margin: var(--s-3) 0 0; font-size: var(--fs-sm); padding-top: var(--s-2); border-top: 1px solid var(--border); }
 .kk-mg span { white-space: nowrap; }
+/* sistem sağlığı (yönetici) */
+.hc-sum { margin: 0 0 var(--s-3); }
+.hc-sum.hc-ok b { color: var(--up); } .hc-sum.hc-warn b { color: var(--warn-line, #d08a2b); } .hc-sum.hc-fail b { color: var(--down); }
+.hc-g { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); margin: var(--s-3) 0 var(--s-1); }
+.hc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.hc-list li { display: grid; grid-template-columns: 20px minmax(140px, 220px) 1fr; gap: var(--s-2); font-size: var(--fs-sm); align-items: baseline; }
+.hc-i { font-weight: 700; text-align: center; }
+.hc-ok .hc-i { color: var(--up); } .hc-warn .hc-i { color: var(--warn-line, #d08a2b); } .hc-fail .hc-i { color: var(--down); }
+@media (max-width: 640px) { .hc-list li { grid-template-columns: 20px 1fr; } .hc-d { grid-column: 2; } }
