@@ -40,8 +40,7 @@ FILES = [
     ("regulasyon", "regwatch.json", "generated", 30, 80, "Regülasyon", None),
 ]
 # Zamanlanmış akışlar: son çalışmadan bu yana en fazla kaç saat geçebilir (hafta sonu boşlukları dahil)
-SCHEDULED = {"radar": 2, "temel": 2, "olay": 3, "temel-abd": 30, "enerji": 30, "regulasyon": 30, "guc": 76, "yontem": 24 * 8,
-             "saglik": 30}
+SCHEDULED = {"radar": 2, "temel": 2, "olay": 3, "temel-abd": 30, "enerji": 30, "regulasyon": 30, "guc": 76, "yontem": 24 * 8}
 RANK = {"ok": 0, "warn": 1, "fail": 2}
 ICON = {"ok": "✅", "warn": "⚠️", "fail": "❌"}
 
