@@ -39,7 +39,9 @@ FILES = [
     ("enerji", "kurulu_guc.json", "generated", 24 * 4, 24 * 8, "Enerji", None),
     ("regulasyon", "regwatch.json", "generated", 30, 80, "Regülasyon", None),
 ]
-SCHEDULED = {"radar", "temel", "temel-abd", "guc", "olay", "yontem", "enerji", "regulasyon"}   # 24 saatte en az bir kez beklenir
+# Zamanlanmış akışlar: son çalışmadan bu yana en fazla kaç saat geçebilir (hafta sonu boşlukları dahil)
+SCHEDULED = {"radar": 2, "temel": 2, "olay": 3, "temel-abd": 30, "enerji": 30, "regulasyon": 30, "guc": 76, "yontem": 24 * 8,
+             "saglik": 30}
 RANK = {"ok": 0, "warn": 1, "fail": 2}
 ICON = {"ok": "✅", "warn": "⚠️", "fail": "❌"}
 
@@ -115,14 +117,26 @@ def check_runs(now: datetime, repo: str | None, token: str | None) -> list[dict]
             continue                                   # önizleme dallarındaki elle denemeler sayılmaz
         name = (x.get("path") or "").rsplit("/", 1)[-1].removesuffix(".yml") or x.get("name")
         by.setdefault(name, []).append(x)
+    def last_run_age(name):                            # 24 saat dışındaki son çalışma (haftalık akışlar)
+        r = http.get(f"https://api.github.com/repos/{repo}/actions/workflows/{name}.yml/runs?per_page=1&branch=main",
+                     headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}, timeout=30)
+        try:
+            x = (r.json().get("workflow_runs") or [None])[0] if r is not None and r.status_code == 200 else None
+            return (now - parse_iso(x["created_at"])).total_seconds() / 3600 if x else None
+        except (KeyError, TypeError, ValueError):
+            return None
     out = []
-    for name in sorted(set(by) | SCHEDULED):
+    for name in sorted(set(by) | set(SCHEDULED)):
         xs = by.get(name, [])
         done = [x for x in xs if x.get("status") == "completed"]
         fails = [x for x in done if x.get("conclusion") in ("failure", "timed_out", "startup_failure")]
         last = max(done, key=lambda x: x.get("created_at") or "", default=None)
         if not xs and name in SCHEDULED:
-            st, detail = "warn", "24 saatte hiç çalışmadı"
+            age = last_run_age(name)
+            if age is not None and age <= SCHEDULED[name]:
+                st, detail = "ok", f"son çalışma {_age(age)} önce"
+            else:
+                st, detail = "warn", ("hiç çalışmamış" if age is None else f"son çalışma {_age(age)} önce (beklenen ≤ {_age(SCHEDULED[name])})")
         elif not done:
             st, detail = "ok", f"{len(xs)} çalışma sürüyor"
         else:
