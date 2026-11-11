@@ -188,6 +188,13 @@
     return S.rows.filter(r => r.date >= cut && (!(S.watch || sh.mine) || w.has(r.t))
       && (!q || sh.match(`${r.t} ${r.name}`, q)));
   }
+  // Arama hiç kayıtla eşleşmiyorsa (dönemden bağımsız) bunu açıkça söyle: şirketin geri alım bildirimi yoktur
+  function noHitNote() {
+    const q = S.q.toLocaleLowerCase("tr");
+    if (!q || S.rows.some(r => sh.match(`${r.t} ${r.name}`, q))) return "";
+    const first = S.rows.reduce((m, r) => Math.min(m, r.date), Infinity);
+    return `“${esc(S.q)}” için hiç pay geri alım bildirimi yok${Number.isFinite(first) ? ` (kayıtlar ${fmt.date(first, { day: "numeric", month: "long", year: "numeric" })} tarihinden)` : ""}. Bu sayfa yalnız şirketin kendi paylarını geri almasını izler; ana ortak ya da yönetici alımları burada görünmez.`;
+  }
   function aggregate(rows) {
     const m = new Map();
     for (const r of rows) {
@@ -269,7 +276,7 @@
       o.amount += r.amount; o.n++;
     }
     const days = [...byDay.entries()];
-    if (!days.some(([, o]) => o.amount)) return `<section class="card bb-chart"><div class="card-head"><h2 class="card-title">Günlük geri alım tutarı</h2></div>${sh.stateHTML({ kind: "empty", compact: true, title: "Bu dönemde tutarı hesaplanabilen işlem yok" })}</section>`;
+    if (!days.some(([, o]) => o.amount)) return `<section class="card bb-chart"><div class="card-head"><h2 class="card-title">Günlük geri alım tutarı</h2></div>${sh.stateHTML({ kind: "empty", compact: true, title: noHitNote() ? "Bu şirketin geri alım bildirimi yok" : "Bu dönemde tutarı hesaplanabilen işlem yok", msg: noHitNote() })}</section>`;
     const max = Math.max(...days.map(([, o]) => o.amount));
     const nice = (v => { const p = 10 ** Math.floor(Math.log10(v)); return [1, 2, 2.5, 5, 10].map(m => m * p).find(x => x >= v); })(max);
     const bw = (W - padL) / days.length, gap = Math.max(1, Math.min(4, bw * 0.25));
@@ -438,7 +445,7 @@
       <div class="tbl-scroll bb-scroll"><table class="tbl bb-tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
       ${total > shown.length || S.limit > PAGE ? `<div class="tbl-foot"><span>${fmt.int(shown.length)} / ${fmt.int(total)} şirket gösteriliyor</span>
         <span>${total > shown.length ? `<button type="button" class="link-btn" id="bbMore">${Math.min(PAGE, total - shown.length)} şirket daha göster</button> · <button type="button" class="link-btn" id="bbShowAll">Tümünü göster</button>` : `<button type="button" class="link-btn" id="bbLess">İlk ${PAGE} şirkete dön</button>`}</span></div>` : ""}
-      ${agg.length ? "" : sh.stateHTML({ kind: "empty", title: S.suspectOnly ? "Bu dönemde şüpheli işlem yok" : "Bu dönemde geri alım işlemi yok", msg: S.q || S.watch ? "Arama ya da “Sadece izleme listem” filtresi açık." : "Dönemi uzatmayı dene." })}</div></section>`;
+      ${agg.length ? "" : sh.stateHTML({ kind: "empty", title: S.suspectOnly ? "Bu dönemde şüpheli işlem yok" : "Bu dönemde geri alım işlemi yok", msg: noHitNote() || (S.q || S.watch ? "Arama ya da “Sadece izleme listem” filtresi açık." : "Dönemi uzatmayı dene.") })}</div></section>`;
   }
   function progLine(o) {
     const pg = o.pg;

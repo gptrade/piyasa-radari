@@ -350,7 +350,7 @@
   }
   function tabGlobal() {
     const x = MK().data.cross;
-    return `${MK().stripHTML() || ""}${MK().crossCard(false) || `<p class="t3">Küresel rejim henüz hesaplanmadı (hafta içi akşam çalışır).</p>`}
+    return `${MK().crossCard(false) || `<p class="t3">Küresel rejim henüz hesaplanmadı (hafta içi akşam çalışır).</p>`}
       ${x?.score_hist?.length ? `<section class="card" aria-labelledby="gcXH"><div class="card-head"><h2 class="card-title" id="gcXH">Risk iştahı puanı · son 3 yıl</h2><span class="card-meta">haftalık · ±0,5 eşikleri</span></div>
         ${chart(x.score_hist.map(p => p[0]), [{ v: x.score_hist.map(p => p[1]), kind: "bar" }], { zero: true, h: 200, bands: [{ v: 0.5, l: "yüksek" }, { v: -0.5, l: "düşük" }], fmtY: v => fmt.num(v, 1), title: "risk iştahı" })}</section>` : ""}`;
   }
