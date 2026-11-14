@@ -1,0 +1,58 @@
+{
+ "generated": "2026-11-14T20:04:28+00:00",
+ "events": 132956,
+ "events_90d": 27092,
+ "ids_90d": 24477,
+ "by_type_90d": {
+  "borsa_tedbir": 7121,
+  "idari": 4742,
+  "haber": 2948,
+  "finansal": 2204,
+  "geri_alim": 2071,
+  "kap_ozel": 2018,
+  "iceriden": 1255,
+  "yatirim": 831,
+  "endeks": 659,
+  "broker_not": 609,
+  "kap_diger": 447,
+  "makro": 404,
+  "sermaye": 285,
+  "is_iliskisi": 284,
+  "derecelendirme": 251,
+  "genel_kurul": 191,
+  "hedef_degisim": 188,
+  "temettu": 142,
+  "teknik": 127,
+  "borclanma": 90,
+  "birlesme": 82,
+  "sosyal": 50,
+  "hukuki": 45,
+  "beklenti": 33,
+  "regulasyon": 15
+ },
+ "by_src_90d": {
+  "kap": 22106,
+  "feed": 3689,
+  "broker": 714,
+  "takvim": 583
+ },
+ "syms_90d": 1086,
+ "overlap_in_batch": 1126,
+ "near_dup": 425,
+ "near_dup_rate": 0.037,
+ "px": {
+  "symbols": 1051,
+  "rows": 519407,
+  "last": "2026-11-13",
+  "gap_ratio_1y": 0.0,
+  "worst": []
+ },
+ "returns": {
+  "rows": 128052,
+  "with_r20": 116131,
+  "jump_excluded": 416
+ },
+ "median_lag_min": 56.0,
+ "lag_n": 2,
+ "kap_to": "2026-11-14"
+}
