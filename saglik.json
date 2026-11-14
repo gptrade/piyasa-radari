@@ -1,0 +1,189 @@
+{
+ "generated": "2026-11-14T12:20:13+00:00",
+ "overall": "ok",
+ "counts": {
+  "ok": 25,
+  "warn": 0,
+  "fail": 0
+ },
+ "checks": [
+  {
+   "group": "veri",
+   "label": "Sinyal akışı (15 dk)",
+   "where": "data/feed.json",
+   "status": "ok",
+   "detail": "2 dk önce · 1713 kayıt",
+   "age_h": 0.0
+  },
+  {
+   "group": "veri",
+   "label": "Piyasa şeridi",
+   "where": "data/piyasa.json",
+   "status": "ok",
+   "detail": "2 dk önce",
+   "age_h": 0.0
+  },
+  {
+   "group": "veri",
+   "label": "Makro / TCMB",
+   "where": "data/macro.json",
+   "status": "ok",
+   "detail": "3 dk önce",
+   "age_h": 0.0
+  },
+  {
+   "group": "veri",
+   "label": "Takvim",
+   "where": "data/calendar.json",
+   "status": "ok",
+   "detail": "3 dk önce",
+   "age_h": 0.0
+  },
+  {
+   "group": "veri",
+   "label": "Araştırma",
+   "where": "data/research.json",
+   "status": "ok",
+   "detail": "2 dk önce",
+   "age_h": 0.0
+  },
+  {
+   "group": "veri",
+   "label": "ABD ısı haritası",
+   "where": "data/us_map.json",
+   "status": "ok",
+   "detail": "17 sa önce · 514 hisse",
+   "age_h": 16.6
+  },
+  {
+   "group": "veri",
+   "label": "BIST temel analiz",
+   "where": "fin/_screen.json",
+   "status": "ok",
+   "detail": "29 dk önce · 570 şirket",
+   "age_h": 0.5
+  },
+  {
+   "group": "veri",
+   "label": "ABD temel analiz",
+   "where": "fin_us/_screen.json",
+   "status": "ok",
+   "detail": "9 sa önce · 496 şirket",
+   "age_h": 8.9
+  },
+  {
+   "group": "veri",
+   "label": "Piyasa Gücü",
+   "where": "guc/guc.json",
+   "status": "ok",
+   "detail": "13 sa önce · korku 35.9 · 8 bileşen",
+   "age_h": 12.5
+  },
+  {
+   "group": "veri",
+   "label": "TSPB kredili işlem",
+   "where": "guc/kredili.json",
+   "status": "ok",
+   "detail": "36 sa önce",
+   "age_h": 36.5
+  },
+  {
+   "group": "veri",
+   "label": "Olay Karnesi",
+   "where": "olay/summary.json",
+   "status": "ok",
+   "detail": "13 dk önce",
+   "age_h": 0.2
+  },
+  {
+   "group": "veri",
+   "label": "Yöntem Karnesi",
+   "where": "yontem/yontem.json",
+   "status": "ok",
+   "detail": "6 gün önce",
+   "age_h": 145.9
+  },
+  {
+   "group": "veri",
+   "label": "Enerji",
+   "where": "enerji/kurulu_guc.json",
+   "status": "ok",
+   "detail": "52 dk önce",
+   "age_h": 0.9
+  },
+  {
+   "group": "veri",
+   "label": "Regülasyon",
+   "where": "regulasyon/regwatch.json",
+   "status": "ok",
+   "detail": "23 sa önce",
+   "age_h": 22.9
+  },
+  {
+   "group": "kaynak",
+   "label": "Haber / duyuru kaynakları",
+   "status": "ok",
+   "detail": "42/42 aktif"
+  },
+  {
+   "group": "kaynak",
+   "label": "Telegram bildirimi",
+   "status": "ok",
+   "detail": "çalışıyor"
+  },
+  {
+   "group": "iş akışı",
+   "label": "enerji",
+   "status": "ok",
+   "detail": "1 çalışma, 0 hata"
+  },
+  {
+   "group": "iş akışı",
+   "label": "guc",
+   "status": "ok",
+   "detail": "4 çalışma, 0 hata"
+  },
+  {
+   "group": "iş akışı",
+   "label": "olay",
+   "status": "ok",
+   "detail": "28 çalışma, 0 hata"
+  },
+  {
+   "group": "iş akışı",
+   "label": "radar",
+   "status": "ok",
+   "detail": "100 çalışma, 0 hata"
+  },
+  {
+   "group": "iş akışı",
+   "label": "regulasyon",
+   "status": "ok",
+   "detail": "1 çalışma, 0 hata"
+  },
+  {
+   "group": "iş akışı",
+   "label": "saglik",
+   "status": "ok",
+   "detail": "1 çalışma, 0 hata"
+  },
+  {
+   "group": "iş akışı",
+   "label": "temel",
+   "status": "ok",
+   "detail": "97 çalışma, 0 hata"
+  },
+  {
+   "group": "iş akışı",
+   "label": "temel-abd",
+   "status": "ok",
+   "detail": "1 çalışma, 0 hata"
+  },
+  {
+   "group": "iş akışı",
+   "label": "yontem",
+   "status": "ok",
+   "detail": "son çalışma 6 gün önce"
+  }
+ ]
+}
