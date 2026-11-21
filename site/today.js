@@ -149,8 +149,8 @@
     const rat = r => r ? `<span class="tag ${RAT[r] || "na"}">${esc(r)}</span>` : "";
     const pot = n => { const p = n.t && window.radar?.state?.prices?.[n.t]?.last || n.px; return n.tp && p ? n.tp / p - 1 : null; };
     const li = r => r.grp
-      ? `<li class="tn-row"><span class="tn-b">${esc(r.n.broker)}</span>${rat(r.n.rating)}<span class="tn-chips">${r.xs.slice(0, 8).map(n => `<button type="button" class="tn-chip" data-tk="${esc(n.t || "")}">${esc(n.t || n.name)}</button>`).join("")}${r.xs.length > 8 ? `<span class="t3">+${r.xs.length - 8}</span>` : ""}</span><span class="td-age">${fmt.ago(r.n.ts)}</span></li>`
-      : `<li class="tn-row"><a class="tn-a" href="${esc(r.n.url)}" target="_blank" rel="noopener"><span class="td-tk">${esc(r.n.t || r.n.name)}</span><span class="tn-b">${esc(r.n.broker)}</span>${rat(r.n.rating)}
+      ? `<li class="tn-row"><span class="td-tk tn-n">${r.xs.length} hisse</span><span class="tn-b">${esc(r.n.broker)}</span>${rat(r.n.rating)}${act[r.n.action] ? `<span class="tn-x">${esc(act[r.n.action])}</span>` : ""}<span class="tn-chips">${r.xs.slice(0, 8).map(n => `<button type="button" class="tn-chip" data-tk="${esc(n.t || "")}">${esc(n.t || n.name)}</button>`).join("")}${r.xs.length > 8 ? `<span class="t3">+${r.xs.length - 8}</span>` : ""}</span><span class="td-age">${fmt.ago(r.n.ts)}</span></li>`
+      : `<li class="tn-row"><a class="tn-a" href="${esc(r.n.url)}" target="_blank" rel="noopener"><span class="td-tk${r.n.t ? "" : " tn-nm"}"${r.n.t ? "" : ` title="${esc(r.n.title || "")}"`}>${esc(r.n.t || r.n.name)}</span><span class="tn-b">${esc(r.n.broker)}</span>${rat(r.n.rating)}
           <span class="tn-x">${act[r.n.action] ? esc(act[r.n.action]) : ""}${r.n.tp ? ` · hedef ${fmt.num(r.n.tp, 2)}${r.n.cur === "USD" ? " $" : ""}` : ""}${pot(r.n) != null ? ` <b class="${pot(r.n) > 0 ? "up" : "down"}">${fmt.pct(pot(r.n) * 100, 0)}</b>` : ""}</span>
           <span class="td-age">${fmt.ago(r.n.ts)}</span></a></li>`;
     return card("tdRs", "Aracı kurum notları", "arastirma", `<p class="t3 tb-sub">son 48 saat · ${all.length} not</p><ul class="tn-list">${rows.slice(0, 8).map(li).join("")}</ul>`);

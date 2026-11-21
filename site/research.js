@@ -13,7 +13,7 @@
   const TABS = { ozet: "Özet", strateji: "Kurum raporları", notlar: "Hisse notları", gorunum: "Küresel görünümler" };
   if (!TABS[S.tab]) S.tab = "ozet";
   const RAT = { AL: "up", SAT: "down", TUT: "flat" };
-  const ACT = { up: "▲ yükseltti", down: "▼ düşürdü", init: "kapsama başladı", keep: "korudu", set: "belirledi", add: "model portföye ekledi", remove: "model portföyden çıkardı" };
+  const ACT = { up: "▲ yükseltti", down: "▼ düşürdü", upgrade: "▲ tavsiye yükseltti", downgrade: "▼ tavsiye düşürdü", init: "kapsama başladı", keep: "korudu", set: "belirledi", add: "model portföye ekledi", remove: "model portföyden çıkardı" };
   const STANCE = { olumlu: "up", olumsuz: "down", "nötr": "flat", "karışık": "" };
 
   async function load() {

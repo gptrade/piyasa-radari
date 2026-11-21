@@ -196,7 +196,7 @@ def from_research(notes: list[dict]) -> list[dict]:
             continue
         mag = round(n["tp"] / n["prev"] - 1, 4) if n.get("tp") and n.get("prev") else None
         act = n.get("action")
-        dir_ = 1 if act == "up" or (act == "init" and n.get("dir") == 1) else -1 if act == "down" else n.get("dir")
+        dir_ = 1 if act in ("up", "upgrade") or (act == "init" and n.get("dir") == 1) else -1 if act in ("down", "downgrade") else n.get("dir")
         out.append(_row(id=f"res:{n['id']}", sym=n["t"], market=n.get("m") or "BIST", ts=ts,
                         type="hedef_degisim" if act in ("up", "down") else "broker_not", subtype=act, dir=dir_, mag=mag,
                         src=f"broker:{n.get('broker') or ''}"[:80], title=(n.get("title") or "")[:300], url=n.get("url"),

@@ -1979,3 +1979,8 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .hc-i { font-weight: 700; text-align: center; }
 .hc-ok .hc-i { color: var(--up); } .hc-warn .hc-i { color: var(--warn-line, #d08a2b); } .hc-fail .hc-i { color: var(--down); }
 @media (max-width: 640px) { .hc-list li { grid-template-columns: 20px 1fr; } .hc-d { grid-column: 2; } }
+/* Aracı kurum notları: hisse sütunu sabit genişlik (kurum adları hizalı); sembolü bulunamayan şirket adı mono değil */
+.tn-row .td-tk { width: 72px; min-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tn-row .td-tk.tn-nm { font: var(--fw-medium) var(--fs-xs) var(--font-sans); color: var(--text); }
+.tn-row .td-tk.tn-n { font: var(--fw-regular) var(--fs-xs) var(--font-sans); color: var(--text-3); }
+.tn-row .tn-chips { flex: 0 1 auto; }

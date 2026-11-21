@@ -55,7 +55,10 @@ RATING = [  # (desen, etiket, yön)
     (r"endekse paralel|endeks paralel|nötr|neutral|equal[- ]weight|market perform|\bhold\b|\btut\b|\bTUT\b", "TUT", 0),
 ]
 ACTION = [
-    (r"yükseltti|artırdı|yukarı yönlü revize|raises|raised|lifts|boosts|ups\b|upgrade", "up"),
+    # tavsiye değişimi hedef değişiminden önce: "tavsiyesini Al'a yükseltti" bir not artırımıdır, hedef artışı değil
+    (r"tavsiye\w*\s+(?:[\w'’]+\s+){0,3}?(?:yükseltti|artırdı)|\bupgrade", "upgrade"),
+    (r"tavsiye\w*\s+(?:[\w'’]+\s+){0,3}?(?:düşürdü|indirdi)|\bdowngrade", "downgrade"),
+    (r"yükseltti|çıkardı|artırdı|yukarı yönlü revize|raises|raised|lifts|boosts|ups\b|upgrade", "up"),
     (r"düşürdü|indirdi|aşağı yönlü revize|lowers|lowered|cuts|cut\b|trims|downgrade", "down"),
     (r"kapsama(?:ya)? (?:al|başla)|kapsamına aldı|initiat", "init"),
     (r"korudu|sürdürdü|teyit|yineledi|maintain|reiterat|keeps", "keep"),
@@ -121,8 +124,10 @@ def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict
     if lead_code and lead_code.group(1) not in NOT_CODE:
         broker = lead_code.group(2)
         subj_src = lead_code.group(1)
-    elif ":" in rest[:70]:                                            # "Model Portföyünü Güncelledi: Aselsan İçin…"
-        subj_src = rest.split(":", 1)[1].strip()
+    elif ":" in rest[:70] and not [c for c in CODE.findall(rest.split(":", 1)[0]) if c not in NOT_CODE]:
+        subj_src = rest.split(":", 1)[1].strip()                      # "Model Portföyünü Güncelledi: Aselsan İçin…"
+    elif ":" in rest[:70]:                                            # "Gedik Yatırım OTKAR Hedef Fiyatını …: Tavsiyesini Korudu"
+        subj_src = rest.split(":", 1)[0]
     sm = SUBJ.search(subj_src)
     subj = sm.group("s") if sm else subj_src[:40]
     runs = re.findall(r"[A-ZÇĞİÖŞÜ][\w.&\-]*(?:\s+[A-ZÇĞİÖŞÜ0-9][\w.&\-]*)*", subj)
@@ -548,6 +553,65 @@ def legacy_type(r: dict) -> str:
     return "bulten" if local or BULLETIN_HINT.search(t) else "strateji"
 
 
+def resolve(n: dict) -> dict:
+    """Notta yalnız şirket adı varsa sembole çevirir (BIST unvanı / takma ad, ABD S&P 500 + Nasdaq-100 adları)."""
+    if not n.get("t") and n.get("name"):
+        tb = bist_ticker(n["name"]) if n.get("m") != "US" else None
+        tu = None if tb else (n["name"] if n.get("m") == "US" and re.fullmatch(r"[A-Z]{2,5}", n["name"] or "") else us_ticker(n["name"]))
+        if tb:
+            n["t"], n["m"] = tb, "BIST"
+        elif tu:
+            n["t"], n["m"] = tu, "US"
+    return n
+
+
+def note_key(n: dict) -> tuple:
+    return ((n.get("broker") or "").lower()[:10], n.get("t") or (n.get("name") or "").lower()[:12], (n.get("ts") or "")[:10])
+
+
+MERGE = ("tp", "prev", "rating", "dir", "action", "cur", "m")
+
+
+def merge_into(old: dict, n: dict) -> None:
+    for f in MERGE:
+        if old.get(f) in (None, "", "set", "keep") and n.get(f) not in (None, "", "set", "keep"):
+            old[f] = n[f]
+        elif old.get(f) in (None, "") and n.get(f) not in (None, ""):
+            old[f] = n[f]
+
+
+def dedup(notes: list[dict]) -> list[dict]:
+    """Aynı kurum + hisse + gün = tek not (farklı sitelerin aynı haberi). İlk yayımlanan kalır, eksik alanları tamamlanır."""
+    by: dict = {}
+    for n in sorted(notes, key=lambda x: x.get("ts") or ""):
+        if str(n.get("id", "")).startswith("rapor-"):              # rapor kutusu kayıtları ayrı kalır
+            by[("rapor", n["id"])] = n
+            continue
+        k = note_key(n)
+        if k in by:
+            merge_into(by[k], n)
+        else:
+            by[k] = n
+    return sorted(by.values(), key=lambda x: x.get("ts") or "", reverse=True)
+
+
+def reparse(n: dict) -> None:
+    """Başlıktan ayrıştırılmış eski notları güncel kurallarla düzeltir (hisse adı, tavsiye artırımı/indirimi).
+    Rapor kutusu ve Yahoo kayıtlarına dokunmaz."""
+    if str(n.get("id", "")).startswith("rapor-") or not n.get("title") or n.get("src") in ("Bülten", "Yahoo Finance"):
+        return
+    try:
+        p = parse_note(n["title"])
+    except Exception:  # noqa: BLE001
+        return
+    if not p:
+        return
+    if not n.get("t") and (p.get("t") or p.get("name")):
+        n["t"], n["name"] = p.get("t"), p.get("name")
+    if p.get("action") in ("upgrade", "downgrade") and n.get("action") in (None, "up", "down", "keep", "set"):
+        n["action"] = p["action"]
+
+
 def tidy(store: dict) -> None:
     known = {n for n, _, _ in brokers.BROKERS}
     for r in store.get("reports", []):
@@ -563,13 +627,9 @@ def tidy(store: dict) -> None:
     for n in store.get("notes", []):
         if n.get("broker"):
             n["broker"] = brokers.canon(n["broker"])
-        if not n.get("t") and n.get("name"):
-            tb = bist_ticker(n["name"]) if n.get("m") != "US" else None
-            tu = None if tb else (n["name"] if n.get("m") == "US" and re.fullmatch(r"[A-Z]{2,5}", n["name"] or "") else us_ticker(n["name"]))
-            if tb:
-                n["t"], n["m"] = tb, "BIST"
-            elif tu:
-                n["t"], n["m"] = tu, "US"
+        reparse(n)
+        resolve(n)
+    store["notes"] = dedup(store.get("notes", []))
 
 
 def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dict:
@@ -577,7 +637,7 @@ def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dic
     store = load()
     # Aynı not aynı gün birden çok kaynaktan gelebilir (biri hedefli, biri hedefsiz): kurum + hisse + gün aynıysa
     # yeni kayıt açılmaz, eksik alanlar (hedef, tavsiye, önceki hedef) mevcut kayda tamamlanır.
-    key = lambda n: (n["broker"].lower()[:10], n.get("t") or (n.get("name") or "").lower()[:12], n["ts"][:10])
+    key = lambda n: note_key(resolve(n))
     seen = {n["id"] for n in store["notes"]}
     by_key = {key(n): n for n in store["notes"]}
     added = 0
@@ -588,9 +648,7 @@ def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dic
         seen.add(n["id"])
         old = by_key.get(key(n))
         if old is not None:
-            for f in ("tp", "prev", "rating", "dir", "action", "cur", "m"):
-                if old.get(f) in (None, "", "set", "keep") and n.get(f) not in (None, ""):
-                    old[f] = n[f]
+            merge_into(old, n)
             continue
         store["notes"].append(n)
         by_key[key(n)] = n

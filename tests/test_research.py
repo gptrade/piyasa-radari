@@ -120,3 +120,26 @@ def test_legacy_bulletin_vs_strategy():
                       {"broker": "Ak Yatırım", "type": "strateji", "src": "AI", "tickers": ["THYAO"], "thesis": "Aylık model portföy"}], "notes": []}
     R.tidy(st)
     assert [r["type"] for r in st["reports"]] == ["bulten", "strateji", "strateji"]
+
+
+def test_upgrade_vs_target_and_colon_subject():
+    from radar import research as r
+    n = r.parse_note("Gedik Yatırım OTKAR Hedef Fiyatını 573 TL’ye Çıkardı: Tavsiyesini Korudu - Para Ajansı")
+    assert n["t"] == "OTKAR" and n["tp"] == 573.0 and n["action"] == "up"
+    n = r.parse_note("Ak Yatırım, OTKAR için tavsiyesini yükseltti, yeni hedef fiyat açıkladı - Borsatek")
+    assert n["t"] == "OTKAR" and n["action"] == "upgrade"
+    n = r.parse_note("Guggenheim, Oklo hissesi için tavsiyesini Al’a yükseltti - Investing.com Türkiye")
+    assert n["action"] == "upgrade" and n["rating"] == "AL"
+    n = r.parse_note("Gedik Yatırım, Otokar için hedef fiyatı 573 TL’ye yükseltti, tavsiyesini korudu - Borsatek")
+    assert n["action"] == "up"
+
+
+def test_dedup_same_broker_stock_day():
+    from radar import research as r
+    a = {"id": "1", "broker": "Gedik Yatırım", "t": None, "name": "Otokar", "m": "BIST", "ts": "2026-11-20T09:14:08Z", "tp": 573.0, "action": "up"}
+    b = {"id": "2", "broker": "Gedik Yatırım", "t": "OTKAR", "m": "BIST", "ts": "2026-11-20T05:48:00Z", "rating": "AL", "action": "keep"}
+    c = {"id": "3", "broker": "Ak Yatırım", "t": "OTKAR", "m": "BIST", "ts": "2026-11-20T09:19:19Z", "action": "upgrade"}
+    out = r.dedup([r.resolve(a), b, c])
+    assert len(out) == 2
+    g = next(x for x in out if x["broker"] == "Gedik Yatırım")
+    assert g["id"] == "2" and g["tp"] == 573.0 and g["rating"] == "AL" and g["action"] == "up"

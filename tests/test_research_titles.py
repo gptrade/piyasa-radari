@@ -17,7 +17,7 @@ CASES = [
     ("Ak Yatırım Model Portföyünü Güncelledi: Aselsan İçin Hedef 520 TL - Paranın Yönü", dict(broker="Ak Yatırım", name="Aselsan", tp=520)),
     ("AKSEN İş Yatırım’ın Model Portföyüne Girdi: Hedef Fiyat Kaç TL? - Para Ajansı", dict(broker="İş Yatırım", t="AKSEN", action="add")),
     ("Needham, Meta rekabeti risklerini gerekçe göstererek Apple hissesi için Tut tavsiyesini korudu", dict(name="Apple", rating="TUT")),
-    ("HİSSE DEĞERLENDİRMESİ- Gedik Yatırım, yatırım tavsiyesini DOAS için yükseltti, TOASO ve FROTO için sürdürdü", dict(t="DOAS", action="up", m="BIST")),
+    ("HİSSE DEĞERLENDİRMESİ- Gedik Yatırım, yatırım tavsiyesini DOAS için yükseltti, TOASO ve FROTO için sürdürdü", dict(t="DOAS", action="upgrade", m="BIST")),
     ("HİSSE DEĞERLENDİRMESİ-Yapı Kredi Yatırım, OTKAR-Otokar için hedef fiyatını 780 TL, tavsiyesini \"al\" olarak korudu", dict(t="OTKAR", tp=780, rating="AL", action="keep")),
 ]
 NONE = ["Gülermak için hedef fiyat revizyonu: Tavsiye “endeks üstü getiri” - Paratic Haber",
