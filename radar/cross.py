@@ -2,7 +2,7 @@
 
 İki çıktı:
   * `strip()`  → site/data/piyasa.json  (radar turunda, 15 dk): USD/TRY, EUR/TRY, XU100 (TL ve USD), gram altın, ons altın,
-    Brent, bakır, ABD 10Y, DXY, S&P 500, VIX, BTC — son değer, günlük değişim, son 3 ayın eğilim çizgisi.
+    Brent, gümüş, bakır, ABD 10Y, DXY, S&P 500, VIX, BTC — son değer, günlük değişim, son 3 ayın eğilim çizgisi.
   * `regime()` → site/data/guc/cross.json (guc.yml, hafta içi akşam): 2010'dan bugüne günlük seriden kurallı rejim
     ve BIST'teki geçmiş karşılığı (rejim günlerinden sonraki 1 aylık XU100 getirisi, USD ve TL).
 
@@ -39,6 +39,7 @@ ASSETS = {
     "gold": ("GC=F", "Ons altın", "$", 0),
     "brent": ("BZ=F", "Brent", "$", 2),
     "copper": ("HG=F", "Bakır", "$", 2),
+    "silver": ("SI=F", "Gümüş", "$", 2),
     "us10y": ("^TNX", "ABD 10Y", "%", 2),
     "dxy": ("DX-Y.NYB", "DXY", "", 2),
     "spx": ("^GSPC", "S&P 500", "", 0),
@@ -49,7 +50,7 @@ ASSETS = {
     "btc": ("BTC-USD", "Bitcoin", "$", 0),
 }
 RISK = {"spx": 1, "copper": 1, "btc": 1, "vix": -1, "dxy": -1, "us10y": -1}
-STRIP_ORDER = ["usdtry", "xu100", "xu100usd", "gram", "brent", "us10y", "dxy", "spx", "ndx", "dji", "vix", "move", "btc", "eurtry", "gold", "copper"]
+STRIP_ORDER = ["usdtry", "xu100", "xu100usd", "gram", "brent", "us10y", "dxy", "spx", "ndx", "dji", "vix", "move", "btc", "eurtry", "gold", "silver", "copper"]
 LOOK = 20
 
 
@@ -197,9 +198,32 @@ def regime_doc(df: pd.DataFrame) -> dict:
     }
 
 
+def patch_xu100(raw: pd.DataFrame, guc_path=None) -> pd.DataFrame:
+    """Yahoo'nun çoklu varlık sorgusu bazen BIST 100'ün son kapanışını vermiyor (20 Kas 2026: şerit 19 Kas'ta kaldı,
+    aynı akşam guc.json'daki tekil sorgu 20 Kas'ı içeriyordu). guc.json'daki XU100 kapanışları (series.d/bench)
+    şeritte olmayan daha yeni günler için eklenir; olan günlere dokunulmaz."""
+    p = guc_path or DATA / "guc" / "guc.json"
+    try:
+        ser = json.loads(p.read_text(encoding="utf-8")).get("series") or {}
+        g = pd.Series(ser.get("bench") or [], index=pd.to_datetime(ser.get("d") or []), dtype=float).dropna()
+    except (OSError, ValueError, TypeError):
+        return raw
+    if g.empty or "xu100" not in raw:
+        return raw
+    have = raw["xu100"].dropna()
+    last = have.index.max() if len(have) else pd.Timestamp.min
+    add = g[g.index > last]
+    if add.empty:
+        return raw
+    out = raw.reindex(raw.index.union(add.index)).sort_index()
+    out.loc[add.index, "xu100"] = add.values
+    log.info("BIST 100 son kapanış guc.json'dan tamamlandı: %s", ", ".join(d.date().isoformat() for d in add.index))
+    return out
+
+
 def strip(path=None) -> dict | None:
     try:
-        df = derive(_download(period="6mo"))
+        df = derive(patch_xu100(_download(period="6mo")))
     except Exception as e:  # noqa: BLE001
         log.warning("Piyasa şeridi alınamadı: %s", e)
         return None

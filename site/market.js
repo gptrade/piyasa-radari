@@ -41,7 +41,7 @@
     return { k: "fon", label: "TCMB fonlama", unit: "%", dec: 2, last: s.last, chg: s.change, chg_kind: "bp", m1, asof: iso, spark: h.slice(-44), src: "TCMB EVDS · ağırlıklı ortalama fonlama maliyeti" };
   }
   // Mantıksal gruplar: Türkiye (kur, faiz, borsa, altın) · Küresel piyasalar · Emtia ve kripto
-  const GROUPS = [["Türkiye", ["usdtry", "eurtry", "fon", "xu100", "xu100usd", "gram"]], ["Küresel", ["spx", "ndx", "dji", "vix", "move", "us10y", "dxy"]], ["Emtia ve kripto", ["brent", "gold", "copper", "btc"]]];
+  const GROUPS = [["Türkiye", ["usdtry", "eurtry", "fon", "xu100", "xu100usd", "gram"]], ["Küresel", ["spx", "ndx", "dji", "vix", "move", "us10y", "dxy"]], ["Emtia ve kripto", ["brent", "gold", "silver", "copper", "btc"]]];
   function stripHTML(keys = null, { groups = false } = {}) {
     const d = M.strip;
     if (!d?.items?.length) return "";
@@ -54,7 +54,7 @@
     const tile = i => {
       const m1 = i.m1 == null ? "" : i.chg_kind === "bp" ? `1 ay ${bp(i.m1)}` : `1 ay ${pc(i.m1, 1)}`;
       const trend = i.spark?.length > 1 ? (i.spark.at(-1) >= i.spark[0] ? "up" : "down") : "";
-      const fut = ["brent", "gold", "copper", "gram"].includes(i.k) ? " · vadeli işlem fiyatı (yakın kontrat): ay sonu kontrat devrinde tek günlük sıçrama olabilir" : "";
+      const fut = ["brent", "gold", "silver", "copper", "gram"].includes(i.k) ? " · vadeli işlem fiyatı (yakın kontrat): ay sonu kontrat devrinde tek günlük sıçrama olabilir" : "";
       const cc = sgn(i.chg);
       return `<div class="mk-tile" data-tip="${esc(`${i.label} · ${dlab(i.asof)} · ${m1} · çizgi: son 3 ay${fut}${i.src ? ` · ${i.src}` : ""}`)}">
         <span class="mk-l">${esc(i.label)}</span><span class="mk-v">${val(i)}</span>
@@ -68,7 +68,7 @@
     return `<section class="mk-strip" aria-label="Piyasalar">${items.map(i => {
       const m1 = i.m1 == null ? "" : i.chg_kind === "bp" ? `1 ay ${i.m1 > 0 ? "+" : ""}${fmt.num(i.m1 * 100, 0)} bp` : `1 ay ${pc(i.m1, 1)}`;
       const trend = i.spark?.length > 1 ? (i.spark.at(-1) >= i.spark[0] ? "up" : "down") : "";
-      const fut = ["brent", "gold", "copper", "gram"].includes(i.k) ? " · vadeli işlem fiyatı (yakın kontrat): ay sonu kontrat devrinde tek günlük sıçrama olabilir" : "";
+      const fut = ["brent", "gold", "silver", "copper", "gram"].includes(i.k) ? " · vadeli işlem fiyatı (yakın kontrat): ay sonu kontrat devrinde tek günlük sıçrama olabilir" : "";
       return `<div class="mk-tile" data-tip="${esc(`${i.label} · ${dlab(i.asof)} · ${m1} · çizgi: son 3 ay${fut}`)}">
         <span class="mk-l">${esc(i.label)}</span><span class="mk-v">${val(i)}</span>
         <span class="mk-c ${sgn(i.chg)}">${chg(i)}</span>${spark(i.spark, trend)}</div>`;

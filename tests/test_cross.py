@@ -39,3 +39,26 @@ def test_regime_risk_on_when_equities_up_and_dollar_vix_down():
     d = C.regime_doc(df)
     assert d["state"] == "on" and d["score"] > 0.5
     assert set(d["backtest"]) == {"on", "mixed", "off"} and d["hist"]
+
+
+def test_patch_xu100_adds_newer_guc_close(tmp_path):
+    import json
+    import pandas as pd
+    from radar import cross
+    idx = pd.to_datetime(["2026-11-18", "2026-11-19", "2026-11-20"])
+    raw = pd.DataFrame({"xu100": [11477.4, 11400.1, float("nan")], "usdtry": [50.44, 50.46, 50.50]}, index=idx)
+    p = tmp_path / "guc.json"
+    p.write_text(json.dumps({"series": {"d": ["2026-11-19", "2026-11-20"], "bench": [11999.0, 11131.32]}}))
+    out = cross.patch_xu100(raw, p)
+    assert out.loc["2026-11-20", "xu100"] == 11131.32
+    assert out.loc["2026-11-19", "xu100"] == 11400.1          # var olan güne dokunulmaz
+    doc = cross.strip_doc(cross.derive(out))
+    x = next(i for i in doc["items"] if i["k"] == "xu100")
+    assert x["asof"] == "2026-11-20" and round(x["chg"], 4) == round(11131.32 / 11400.1 - 1, 4)
+
+
+def test_patch_xu100_missing_file(tmp_path):
+    import pandas as pd
+    from radar import cross
+    raw = pd.DataFrame({"xu100": [1.0, 2.0]}, index=pd.to_datetime(["2026-11-18", "2026-11-19"]))
+    assert cross.patch_xu100(raw, tmp_path / "yok.json") is raw
