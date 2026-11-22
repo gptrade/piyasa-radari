@@ -1,149 +1,22 @@
-===== /quote/ist/THYAO/forecast/ 200 10035 application/json
---- node 0 ['session', 'user', 'userIsFresh', 'mfaPending', 'mfaSession', 'loc', 'theme', 'hideNewsSources', 'bf', 'ab', 'tp']
---- node 1 ['info']
---- node 2 ['estimates', 'estimatesCharts', 'estimatesSource', 'trust', 'recommendations', 'targets', 'ratings', 'meta', 'title', 'priceTargets', 'currentRatings', 'forecastDivider']
-estimates: {stats,table,epsBasis}
-  stats: {annual,quarterly}
-    annual: {"epsNext": {"last": 1.624223668886705, "this": 1.5862912617825815, "growth": -2.3354177032848846}, "epsThis": {"last": 2.109999954507406, "this": 1.62422366888
-    quarterly: {"epsNext": {"last": null, "this": null, "growth": null}, "epsThis": {"last": null, "this": null, "growth": null}, "revenueNext": {"last": null, "this": null, "
-  table: {annual,quarterly}
-    annual: {"dps": [null, null, null, 0.194636, null, 0.09744513593187028, "[PRO]", "[PRO]"], "eps": [0.69, 1.97, 4.359999, 2.48, 2.108788, 1.6892011955453654, "[PRO]", "[
-    quarterly: {"dps": [null, null, null, null, null], "eps": [0.998594, 0.639159, 0.159999, 0.14, 0.93], "ffo": [null, null, null, null, null], "pFFO": [null, null, null, nul
-  epsBasis: "normalized"
-estimatesCharts: {eps,revenue,epsGrowth,revenueGrowth}
-  eps: {2026-12-31,2027-12-31,2028-12-31}
-    2026-12-31: {"no": 6, "avg": 1.624223668886705, "low": 1.2993367179823123, "high": 2.0391145321541653}
-    2027-12-31: "[PRO]"
-    2028-12-31: "[PRO]"
-  revenue: {2026-12-31,2027-12-31,2028-12-31}
-    2026-12-31: {"no": 8, "avg": 31290264442.76122, "low": 29212682425.30116, "high": 32634887928.99516}
-    2027-12-31: "[PRO]"
-    2028-12-31: "[PRO]"
-  epsGrowth: {2026-12-31,2027-12-31,2028-12-31}
-    2026-12-31: {"avg": -23.022573274609805, "low": -38.4200594314396, "high": -3.359498762159433}
-    2027-12-31: "[PRO]"
-    2028-12-31: "[PRO]"
-  revenueGrowth: {2026-12-31,2027-12-31,2028-12-31}
-    2026-12-31: {"avg": 29.85667514426137, "low": 21.2345718181489, "high": 35.43695189656025}
-    2027-12-31: "[PRO]"
-    2028-12-31: "[PRO]"
-estimatesSource: "spg"
-trust: {sources,freshnessLag,lastUpdated,lastChecked,topic,ticker,summary}
-  sources: [1] [{"name": "S&P Global Market Intelligence", "short": "S&P Global", "url": "https://www.spglobal.com/market-intelligence/en"}]
-  freshnessLag: "hours"
-  lastUpdated: null
-  lastChecked: "1795371589583"
-  topic: "forecast"
-  ticker: "IST-THYAO"
-  summary: {text}
-    text: "Price targets, consensus ratings and financial forecasts are provided by S&P Global Market Intelligence. Price targets and consensus ratings update every hour 
-recommendations: [12] [{"buy": 3, "date": "2025-12-26", "hold": 1, "sell": 0, "month": "Dec '25", "score": 8.076923076923077, "total": 13, "updated": "2025-12-26", "consensus": "Stro
-targets: {low,high,average,median,count,updated,currency,chart}
-  low: null
-  high: null
-  average: null
-  median: null
-  count: 0
-  updated: ""
-  currency: "TRY"
-  chart: [14] [{"c": 272.75, "t": "2025-11-01"}, {"c": 268.5, "t": "2025-12-01"}]
-ratings: [0] []
-meta: {exchangeRate,adrPriceDivisor}
-  exchangeRate: 0.019786775726097994
-  adrPriceDivisor: null
-title: "Türk Hava Yollari Anonim Ortakligi (IST-THYAO) Stock Forecast & Price Targets"
-priceTargets: {source,currency,avg,median,low,high,numPriceTargets}
-  source: "spg"
-  currency: "TRY"
-  avg: 454.31
-  median: 460.5
-  low: 315
-  high: 580
-  numPriceTargets: 14
-currentRatings: {source,consensus,score,count,strongBuy,buy,hold,sell,strongSell}
-  source: "spg"
-  consensus: "Buy"
-  score: 7.5
-  count: 14
-  strongBuy: 9
-  buy: 3
-  hold: 2
-  sell: 0
-  strongSell: 0
-forecastDivider: null
-===== /stocks/aapl/statistics/ 200 15645 application/json
---- node 0 ['session', 'user', 'userIsFresh', 'mfaPending', 'mfaSession', 'loc', 'theme', 'hideNewsSources', 'bf', 'ab', 'tp']
---- node 1 ['info']
---- node 2 ['trust', 'valuation', 'dates', 'shares', 'ratios', 'evRatios', 'financialPosition', 'financialEfficiency', 'taxes', 'stockPrice', 'shortSelling', 'incomeStatement', 'balanceSheet', 'cashFlow', 'margins', 'dividends', 'analystForecasts', 'stockSplits', 'scores', 'fairValue']
-trust: {sources,freshnessLag,updateFrequency,lastUpdated,lastChecked,topic,ticker,summary,extraSummaryLinks}
-  sources: [1] [{"name": "S&P Global Market Intelligence", "short": "S&P Global", "url": "https://www.spglobal.com/market-intelligence/en"}]
-  freshnessLag: "hours"
-  updateFrequency: "daily"
-  lastUpdated: 1795366259542
-  lastChecked: 1795366259542
-  topic: "statistics"
-  ticker: "AAPL"
-  summary: {pre,post}
-    pre: "Financial statistics are provided by "
-    post: ". Financial numbers update within hours after each earnings release, while price-based statistics and ratios update throughout each trading day."
-  extraSummaryLinks: null
-valuation: {text,data}
-  text: "Apple has a market cap or net worth of $4.98 trillion. The enterprise value is $4.94 trillion."
-  data: [2] [{"id": "marketcap", "title": "Market Cap", "value": "4.98T", "hover": "4,978,144,265,920", "url": "market-cap"}, {"id": "enterpriseValue", "title": "Enterprise
-dates: {text,data}
-  text: "The last earnings date was Monday, November 2, 2026, after market close."
-  data: [2] [{"id": "earningsdate", "title": "Earnings Date", "value": "Nov 2, 2026", "hover": "Nov 2, 2026"}, {"id": "exdivdate", "title": "Ex-Dividend Date", "value": "No
-shares: {text,data}
-  text: "Apple has 14.53 billion shares outstanding. The number of shares has decreased by -1.90% in one year."
-  data: [7] [{"id": "sharesOutClass", "title": "Current Share Class", "value": "14.53B", "hover": "14,532,182,000"}, {"id": "sharesout", "title": "Shares Outstanding", "val
-ratios: {text,data}
-  text: "The trailing PE ratio is 38.15 and the forward PE ratio is 36.37. Apple's PEG ratio is 4.23."
-  data: [9] [{"id": "pe", "title": "PE Ratio", "value": "38.15", "hover": "38.147"}, {"id": "peForward", "title": "Forward PE", "value": "36.37", "hover": "36.367"}]
-evRatios: {text,data}
-  text: "The stock's EV/EBITDA ratio is 28.78, with an EV/FCF ratio of 36.28."
-  data: [5] [{"id": "evEarnings", "title": "EV / Earnings", "value": "37.34", "hover": "37.34"}, {"id": "evSales", "title": "EV / Sales", "value": "10.31", "hover": "10.31"
-financialPosition: {text,data}
-  text: "The company has a current ratio of 1.02, with a Debt / Equity ratio of 0.84."
-  data: [6] [{"id": "currentRatio", "title": "Current Ratio", "value": "1.02", "hover": "1.023"}, {"id": "quickRatio", "title": "Quick Ratio", "value": "0.83", "hover": "0.
-financialEfficiency: {text,data}
-  text: "Return on equity (ROE) is 142.26% and return on invested capital (ROIC) is 93.94%."
-  data: [10] [{"id": "roe", "title": "Return on Equity (ROE)", "value": "142.26%", "hover": "142.257%"}, {"id": "roa", "title": "Return on Assets (ROA)", "value": "34.61%", 
-taxes: {text,data}
-  text: "In the past 12 months, Apple has paid $27.06 billion in taxes."
-  data: [2] [{"id": "taxexp", "title": "Income Tax", "value": "27.06B", "hover": "27.06B"}, {"id": "taxrate", "title": "Effective Tax Rate", "value": "16.99%", "hover": "16
-stockPrice: {text,data}
-  text: "The stock price has increased by +27.55% in the last 52 weeks. The beta is 1.09, so Apple's price volatility has been similar to the market average."
-  data: [6] [{"id": "beta", "title": "Beta (5Y)", "value": "1.09", "hover": "1.090"}, {"id": "ch1y", "title": "52-Week Price Change", "value": "+27.55%", "hover": "27.55%"}
-shortSelling: {text,data}
-  text: "The latest short interest is 144.79 million, so 1.00% of the outstanding shares have been sold short."
-  data: [5] [{"id": "shortInterest", "title": "Short Interest", "value": "144.79M", "hover": "144,791,472"}, {"id": "shortPriorMonth", "title": "Short Previous Month", "val
-incomeStatement: {text,data}
-  text: "In the last 12 months, Apple had revenue of $478.83 billion and earned $132.18 billion in profits. Earnings per share was $8.98."
-  data: [8] [{"id": "revenue", "title": "Revenue", "value": "478.83B", "hover": "478,834,000,000", "url": "revenue"}, {"id": "gp", "title": "Gross Profit", "value": "233.60
-balanceSheet: {text,data}
-  text: "Apple has $136.94 billion in cash and marketable securities with $94.48 billion in debt, giving a net cash position of $42.46 billion or $2.92 per share."
-  data: [7] [{"id": "totalcash", "title": "Cash & Marketable Securities", "value": "136.94B", "hover": "136,935,000,000"}, {"id": "debt", "title": "Total Debt", "value": "9
-cashFlow: {text,data}
-  text: "In the last 12 months, operating cash flow was $145.10 billion and capital expenditures -$9.04 billion, giving a free cash flow of $136.06 billion."
-  data: [6] [{"id": "ncfo", "title": "Operating Cash Flow", "value": "145.10B", "hover": "145,097,000,000"}, {"id": "capex", "title": "Capital Expenditures", "value": "-9.0
-margins: {text,data}
-  text: "Gross margin is 48.79%, with operating and profit margins of 33.01% and 27.60%."
-  data: [7] [{"id": "grossMargin", "title": "Gross Margin", "value": "48.79%", "hover": "48.786%"}, {"id": "operatingMargin", "title": "Operating Margin", "value": "33.01%"
-dividends: {text,data}
-  text: "This stock pays an annual dividend of $1.08, which amounts to a dividend yield of 0.32%."
-  data: [10] [{"id": "dps", "title": "Dividend Per Share", "value": "$1.08", "hover": "$1.080"}, {"id": "dividendYield", "title": "Dividend Yield", "value": "0.32%", "hover"
-analystForecasts: {text,data}
-  text: "The average price target for Apple is $345.63, which is 0.90% higher than the current price. The consensus rating is \"Buy\"."
-  data: [6] [{"id": "priceTarget", "title": "Price Target", "value": "$345.63", "hover": "$345.63"}, {"id": "priceTargetChange", "title": "Price Target Difference", "value"
-stockSplits: {text,data}
-  text: "The last stock split was on August 31, 2020. It was a forward split with a ratio of 4:1."
-  data: [3] [{"id": "lastSplitDate", "title": "Last Split Date", "value": "Aug 31, 2020", "hover": "August 31, 2020"}, {"id": "lastSplitType", "title": "Split Type", "value
-scores: {text,data}
-  text: "Apple has an Altman Z-Score of 11.08 and a Piotroski F-Score of 8."
-  data: [2] [{"id": "zScore", "title": "Altman Z-Score", "value": "11.08", "hover": "11.08"}, {"id": "fScore", "title": "Piotroski F-Score", "value": "8", "hover": "8"}]
-fairValue: {text,data}
-  text: "There are several formulas that can be used to estimate the intrinsic value of a stock."
-  data: [6] [{"id": "lynchFairValue", "title": "Lynch Fair Value", "value": null, "hover": null, "proOnly": true}, {"id": "lynchUpside", "title": "Lynch Upside", "value": n
-===== /quote/ist/ADESE/forecast/ 200 1755 application/json
---- node 0 ['session', 'user', 'userIsFresh', 'mfaPending', 'mfaSession', 'loc', 'theme', 'hideNewsSources', 'bf', 'ab', 'tp']
---- node 1 ['info']
+===== /quote/ist/ASELS/forecast/
+info keys: ['type', 'subtype', 'state', 'symbol', 'db_symbol', 'bu', 'list_slug', 'country_list_slug', 'exchange', 'exchange_code', 'nameFull', 'name', 'titleName', 'exchange_full', 'exchange_symbol', 'country', 'country_short', 'quote', 'archived', 'market_time', 'apiext', 'curr', 'uid', 'template', 'liveChart', 'interval', 'ble', 'features', 'meta', 'filingsLinkSymbol']
+{'exchange': 'Istanbul Stock Exchange', 'symbol': 'ASELS'}
+  info. curr {"main": "TRY", "price": "TRY", "dividend": "TRY", "financial": "TRY"}
+stats.annual {"epsNext": {"last": 12.33806, "this": 20.86674, "growth": 69.12496778261736}, "epsThis": {"last": 6.5679, "this": 12.33806, "growth": 87.85395636352564}, "revenueNext": {"last": 284550457120, "this": 463749364820, "growth": 62.976144727973015}, "revenueThis": {"last": 180444938000, "this": 284550457120, "growth": 57.69378751982502}}
+stats.quarterly {"epsNext": {"last": null, "this": null, "growth": null}, "epsThis": {"last": null, "this": 7.56699, "growth": null}, "revenueNext": {"last": null, "this": null, "growth": null}, "revenueThis": {"last": 89572068000, "this": 141634993270, "growth": 58.12406303938411}}
+table.quarterly keys ['dps', 'eps', 'ffo', 'pFFO', 'dates', 'revenue', 'analysts', 'ffoShare', 'lastDate', 'dpsGrowth', 'epsGrowth', 'netIncome', 'peForward', 'fiscalYear', 'adjustedEps', 'grossMargin', 'grossProfit', 'freeCashFlow', 'fiscalQuarter', 'revenueGrowth', 'operatingIncome', 'adjustedEpsGrowth']
+table.quarterly dates {"dates": ["2025-09-30", "2025-12-31", "2026-03-31", "2026-06-30", "2026-09-30", "2026-12-31"], "fiscalQuarter": ["Q3", "Q4", "Q1", "Q2", "Q3", "Q4"], "fiscalYear": ["2025", "2025", "2026", "2026", "2026", "2026"], "period": null, "date": null}
+table.annual dates {"dates": ["2021-12-31", "2022-12-31", "2023-12-31", "2024-12-31", "2025-12-31", "2026-12-31", "2027-12-31", "2028-12-31"], "fiscalYear": ["2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028"], "date": null}
+eps chart {"2026-12-31": {"no": 3, "avg": 12.33806, "low": 11.3, "high": 13.11069}, "2027-12-31": "[PRO]", "2028-12-31": "[PRO]"}
+meta {'exchangeRate': None, 'adrPriceDivisor': None} rec [{"buy": 0, "date": "2026-10-30", "hold": 4, "sell": 0, "month": "Oct '26", "score": 6.666666666666667, "total": 12, "updated": "2026-10-30", "consensus": "Buy", "strongBuy": 8, "strongSell": 0}, {"buy": 0, "date": "2026-11-20", "hold": 4, "sell": 0, "month": "Nov '26", "score": 6.363636363636363, "total": 11, "updated": "2026-11-20", "consensus": "Buy", "strongBuy": 7, "strongSell": 0}]
+===== /stocks/aapl/forecast/
+info keys: ['type', 'subtype', 'symbol', 'ticker', 'name', 'nameFull', 'common_name', 'titleName', 'exchange', 'bu', 'quote', 'state', 'archived', 'notice', 'ipoInfo', 'ipoDate', 'cik', 'curr', 'stream', 'uid', 'template', 'interval', 'ble', 'features', 'transcriptsLinkSymbol', 'filingsLinkSymbol']
+{'exchange': 'NASDAQ', 'symbol': 'aapl', 'ticker': 'AAPL'}
+  info. curr {"main": "USD", "price": "USD", "dividend": "USD", "financial": "USD"}
+stats.annual {"epsNext": {"last": 9.41941, "this": 10.57273, "growth": 12.244078981592276}, "epsThis": {"last": 8.98, "this": 9.41941, "growth": 4.89320712694876}, "revenueNext": {"last": 528236958590.00006, "this": 571120334580, "growth": 8.118208181507532}, "revenueThis": {"last": 478834000000, "this": 528236958590.00006, "growth": 10.3173455915829}}
+stats.quarterly {"epsNext": {"last": 2.01, "this": 2.15041, "growth": 6.985572139303491}, "epsThis": {"last": 2.84, "this": 2.91057, "growth": 2.484859154929578}, "revenueNext": {"last": 111184000000, "this": 124000418700, "growth": 11.527214976975104}, "revenueThis": {"last": 143756000000, "this": 156429989490, "growth": 8.816320355324299}}
+table.quarterly keys ['dps', 'eps', 'ffo', 'pFFO', 'dates', 'revenue', 'analysts', 'ffoShare', 'lastDate', 'dpsGrowth', 'epsGrowth', 'netIncome', 'peForward', 'fiscalYear', 'adjustedEps', 'grossMargin', 'grossProfit', 'freeCashFlow', 'fiscalQuarter', 'revenueGrowth', 'operatingIncome', 'adjustedEpsGrowth']
+table.quarterly dates {"dates": ["2025-09-27", "2025-12-27", "2026-03-28", "2026-06-27", "2026-09-26", "2026-12-31", "2027-03-31", "2027-06-30", "2027-09-30", "2027-12-31", "2028-03-31", "2028-06-30", "2028-09-30"], "fiscalQuarter": ["Q4", "Q1", "Q2", "Q3", "Q4", "Q1", "Q2", "Q3", "Q4", "Q1", "Q2", "Q3", "Q4"], "fiscalYear": ["2025", "2026", "2026", "2026", "2026", "2027", "2027", "2027", "2027", "2028", "2028", "2028", "2028"], "period": null, "date": null}
+table.annual dates {"dates": ["2022-09-24", "2023-09-30", "2024-09-28", "2025-09-27", "2026-09-26", "2027-09-30", "2028-09-30", "2029-09-30"], "fiscalYear": ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029"], "date": null}
+eps chart {"2027-09-30": {"no": 38, "avg": 9.41941, "low": 8.16, "high": 10.05989}, "2028-09-30": "[PRO]", "2029-09-30": "[PRO]"}
+meta {'exchangeRate': None, 'adrPriceDivisor': None} rec [{"buy": 6, "date": "2026-10-30", "hold": 13, "sell": 3, "month": "Oct '26", "score": 3.8372093023255816, "total": 43, "updated": "2026-10-30", "consensus": "Buy", "strongBuy": 18, "strongSell": 3}, {"buy": 6, "date": "2026-11-19", "hold": 13, "sell": 3, "month": "Nov '26", "score": 4.111111111111111, "total": 45, "updated": "2026-11-19", "consensus": "Buy", "strongBuy": 20, "strongSell": 3}]
