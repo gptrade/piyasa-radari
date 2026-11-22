@@ -7,9 +7,9 @@
   const { $, $$, esc, fmt } = sh;
   const SRC = "data/guc/guc.json";
   const S = { doc: null, loaded: false, loading: false, error: null, missing: false, tab: "genislik", per: "1A",
-    sp: { mkt: "BIST", per: "1A", mode: "abs", us: null }, range: 252, univ: "tum",
+    sp: { mkt: "BIST", per: "1A", mode: "abs", us: null }, vp: null, vpErr: null, vpLoading: false, range: 252, univ: "tum",
     sort: "rank", sdir: 1, tmPer: "d1", tmSec: "", tmSize: "mcap", vKind: "endeks", vSort: "mcap", hs: { quad: true, rs: 80, tt: 6, vol: false, liq: true, sec: "", q: "", sort: "rs", sdir: 1, limit: 60 }, selSec: null };
-  const TABS = { genislik: "Genişlik ve rejim", korku: "Korku endeksi", harita: "Isı haritası", sektor: "Sektör rotasyonu", hisse: "Güçlü hisseler", deger: "Değerleme", kuresel: "Küresel" };
+  const TABS = { genislik: "Genişlik ve rejim", korku: "Korku endeksi", harita: "Isı haritası", sektor: "Sektör rotasyonu", hisse: "Güçlü hisseler", deger: "Değerleme", viop: "VİOP", kuresel: "Küresel" };
   const REG = {
     boga: ["Boğa", "up", "Endeks ve genişlik birlikte güçlü"],
     duzeltme: ["Düzeltme / kararsız", "warn-t", "Endeks ile genişlik ayrışıyor"],
@@ -424,11 +424,65 @@
         ${chart(x.score_hist.map(p => p[0]), [{ v: x.score_hist.map(p => p[1]), kind: "bar" }], { zero: true, h: 200, bands: [{ v: 0.5, l: "yüksek" }, { v: -0.5, l: "düşük" }], fmtY: v => fmt.num(v, 1), title: "risk iştahı" })}</section>` : ""}`;
   }
 
+  // ─────────────────────────────── VİOP (radar/viop.py · Borsa İstanbul gün sonu bülteni)
+  const MON = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+  const vade = code => { const m = /(\d{2})(\d{2})$/.exec(code || ""); return m ? `${MON[+m[1] - 1]} ${m[2]}` : code; };
+  const VST = { lb: ["Yeni long", "var(--up)"], sb: ["Yeni short", "var(--down)"], sc: ["Short kapama", "color-mix(in srgb, var(--up) 45%, var(--surface))"], lu: ["Long kapama", "color-mix(in srgb, var(--down) 45%, var(--surface))"] };
+  async function loadViop() {
+    if (S.vp || S.vpLoading) return;
+    S.vpLoading = true;
+    try { const r = await fetch(`data/guc/viop.json?t=${Date.now()}`, { cache: "no-store" }); if (!r.ok) throw new Error(r.status === 404 ? "VİOP verisi henüz hesaplanmadı (hafta içi akşam çalışır)" : `HTTP ${r.status}`); S.vp = await r.json(); }
+    catch (e) { S.vpErr = e.message || "okunamadı"; }
+    finally { S.vpLoading = false; if (S.tab === "viop" && sh.route === "piyasa-gucu") render(); }
+  }
+  function tabViop() {
+    if (!S.vp) { loadViop(); return S.vpErr ? sh.stateHTML({ kind: "info", title: "VİOP panosu", msg: esc(S.vpErr) }) : `<div class="skeleton sk-block" style="height:360px"></div>`; }
+    const v = S.vp, L = v.last, near = L.c, cs = v.cost[near] || [], cost = cs.at(-1)?.[1];
+    const n20 = Object.values(v.counts20).reduce((a, b) => a + b, 0) || 1;
+    const st = L.st ? VST[L.st] : null;
+    const kp = [
+      kpi(`XU030 ${vade(near)} vadeli`, fmt.num(L.f, 0), `<span class="${sgn(L.chg)}">${pc(L.chg, 2)}</span> · vadeye ${L.dte} gün`, "Günlük uzlaşma fiyatı ve önceki uzlaşmaya göre değişim"),
+      kpi("Açık pozisyon (tüm vadeler)", fmt.int(L.oi_all), `${vade(near)}: ${fmt.int(L.oi)} · <span class="${sgn(L.doi)}">${L.doi > 0 ? "+" : L.doi < 0 ? "−" : ""}${fmt.int(Math.abs(L.doi))}</span> bugün`, "Sözleşme adedi; bir sözleşme = 10 × endeks"),
+      kpi("Bugünkü okuma", st ? `<span style="color:${st[1]}">${st[0]}</span>` : "—", `son 20 gün: ${Object.entries(v.counts20).filter(([, c]) => c).map(([k, c]) => `${VST[k][0].toLowerCase()} ${c}`).join(" · ")}`, "Fiyat ve açık pozisyon birlikte: ↑↑ yeni long · ↓↑ yeni short · ↑↓ short kapama · ↓↓ long kapama"),
+      kpi("Tahmini ort. maliyet", cost ? fmt.num(cost, 0) : "—", cost ? `fiyat maliyetin <b class="${sgn(L.f - cost)}">${L.f >= cost ? "üstünde" : "altında"}</b> (${pc(L.f / cost - 1, 1)})` : "", "Yakın vadedeki açık pozisyonun piyasa geneli tahmini giriş fiyatı (kurum bazında değil)"),
+      kpi("Baz", L.basis != null ? `${L.basis > 0 ? "+" : L.basis < 0 ? "−" : ""}${fmt.num(Math.abs(L.basis), 0)} puan` : "—", L.ann != null ? `yıllık taşıma ${pp(L.ann, 1)}${v.carry.tl_same != null ? ` · TL faizi ${pp(v.carry.tl_same, 1)}` : ""}` : "", "Vadeli − spot BIST 30. Yıllık taşıma, dolar/TL vadelilerinden ima edilen aynı vadeli TL faiziyle karşılaştırılır; fark temettü beklentisi ve risk iştahını yansıtır"),
+    ].join("");
+    const cd = cs.slice(-120);
+    const pxChart = cd.length > 2 ? chart(cd.map(p => p[0]), [{ v: cd.map(p => p[3]), color: "var(--text)", label: `${vade(near)} uzlaşma` }, { v: cd.map(p => p[1]), color: "var(--series-1)", label: "tahmini ortalama maliyet" }], { h: 240, title: "fiyat ve maliyet" }) : "";
+    const sr = v.series.slice(-120);
+    const oiChart = chart(sr.map(x => x.d), [{ v: sr.map(x => x.oi_all), color: "var(--series-1)", label: "toplam açık pozisyon (tüm vadeler)" }], { h: 180, title: "açık pozisyon", fmtY: x => fmt.num(x / 1000, 0) + " bin" });
+    const strip = `<div class="vp-strip" aria-label="Son 60 gün fiyat × açık pozisyon okuması">${v.series.slice(-60).map(x => `<i style="background:${x.st ? VST[x.st][1] : "var(--border)"}" data-tip="${dlab(x.d)} · ${x.st ? VST[x.st][0] : "değişim yok"} · ${pc(x.chg, 2)} · açık poz. ${x.doi > 0 ? "+" : ""}${fmt.int(x.doi)}"></i>`).join("")}</div>
+      <div class="chart-legend">${Object.values(VST).map(([l, c]) => `<span><i style="background:${c}"></i>${l}</span>`).join("")}</div>`;
+    const ct = `<div class="tbl-scroll"><table class="tx"><thead><tr><th>Vade</th><th class="num">Uzlaşma</th><th class="num">Değişim</th><th class="num">Açık poz.</th><th class="num">Günlük</th><th class="num">Hacim (adet)</th></tr></thead><tbody>
+      ${v.contracts.map(c => `<tr><th scope="row">${vade(c.code)} <span class="t3 mono">${esc(c.code)}</span></th><td class="num">${fmt.num(c.f, 0)}</td><td class="num ${sgn(c.chg)}">${pc(c.chg, 2)}</td><td class="num">${fmt.int(c.oi)}</td><td class="num ${sgn(c.doi)}">${c.doi > 0 ? "+" : c.doi < 0 ? "−" : ""}${fmt.int(Math.abs(c.doi))}</td><td class="num">${fmt.int(c.qty)}</td></tr>`).join("")}</tbody></table></div>`;
+    const R = v.roll;
+    const roll = R ? `<section class="card" aria-labelledby="vpR"><div class="card-head"><h2 class="card-title" id="vpR">Vade geçişi · ${vade(R.code)} → ${vade(R.next)}</h2><span class="card-meta">vade sonuna ${R.bd_left} iş günü</span></div>
+        <p>Açık pozisyonun <b>${pp(R.share, 0)}</b>'i ${vade(R.next)} vadesinde.${R.prev_same != null ? ` Önceki vadede (${vade(R.prev_code)}) aynı noktada bu oran ${pp(R.prev_same, 0)} idi${R.share < R.prev_same - 0.05 ? " — taşıma yavaş, pozisyonların bir kısmı kapatılıyor olabilir" : R.share > R.prev_same + 0.05 ? " — taşıma önceki vadeden hızlı" : ""}.` : ""}</p>
+        ${R.series.length > 2 ? chart(R.series.map(x => x.d), [{ v: R.series.map(x => x.share * 100), color: "var(--series-1)" }], { h: 160, fmtY: x => `%${fmt.num(x, 0)}`, title: "vade geçişi" }) : ""}</section>` : "";
+    const F = v.fx, fh = F.hist.slice(-260);
+    const fx = F.curve.length ? `<section class="card" aria-labelledby="vpF"><div class="card-head"><h2 class="card-title" id="vpF">Dolar/TL vadelilerinden ima edilen TL faizi</h2><span class="card-meta">${dlab(F.asof)}</span></div>
+      <div class="fa-two"><div class="tbl-scroll"><table class="tx"><thead><tr><th>Vade</th><th class="num">Gün</th><th class="num">Uzlaşma</th><th class="num">Açık poz.</th><th class="num">İma edilen TL faizi</th></tr></thead><tbody>
+        ${F.curve.map(c => `<tr><th scope="row">${vade(c.code)}</th><td class="num">${c.d}</td><td class="num">${fmt.num(c.f, 4)}</td><td class="num">${fmt.int(c.oi)}</td><td class="num"><b>${pp(c.r, 1)}</b></td></tr>`).join("")}</tbody></table></div>
+        <div>${fh.length > 5 ? chart(fh.map(x => x.d), [{ v: fh.map(x => x.m1 == null ? null : x.m1 * 100), color: "var(--series-2, #c98a1b)", label: "1 ay" }, { v: fh.map(x => x.m3 == null ? null : x.m3 * 100), color: "var(--series-1)", label: "3 ay" }, { v: fh.map(x => x.m6 == null ? null : x.m6 * 100), color: "var(--text-3)", label: "6 ay" }], { h: 200, fmtY: x => `%${fmt.num(x, 0)}`, title: "ima edilen TL faizi" }) : ""}</div></div>
+      <p class="t3 gc-foot">Faiz paritesi: ((vadeli / spot) × (1 + ABD faizi × gün/360) − 1) × 365 / gün; ABD faizi 3 aylık hazine bonosu, spot Yahoo kapanışı. Spot ile vadeli kapanış saatleri tam örtüşmediği için 1 aydan kısa vadeler gösterilmez. TCMB politika faiziyle karşılaştırınca piyasanın faiz beklentisini verir.</p></section>` : "";
+    return `<div class="kpi-grid">${kp}</div>
+      <section class="card" aria-labelledby="vpP"><div class="card-head"><h2 class="card-title" id="vpP">BIST 30 vadeli · fiyat ve açık pozisyonun tahmini maliyeti</h2><span class="card-meta">${vade(near)} vadesi · son ${cd.length} gün</span></div>
+        ${pxChart}
+        <p class="t3 gc-foot">Maliyet piyasa genelidir: açık pozisyon artınca yeni pozisyonlar o günün ağırlıklı ortalama fiyatından eklenir, azalınca kalanların maliyeti değişmez varsayılır. Fiyat bu çizginin altındaysa açık pozisyonun çoğu zararda demektir (long taraf için). Kurum bazında pozisyon ve maliyet Borsa İstanbul'un ücretli VAKD lisansıyla dağıtılır ve burada yoktur.</p></section>
+      <div class="fa-two"><section class="card" aria-labelledby="vpO"><div class="card-head"><h2 class="card-title" id="vpO">Açık pozisyon</h2><span class="card-meta">sözleşme adedi</span></div>${oiChart}</section>
+        <section class="card" aria-labelledby="vpS"><div class="card-head"><h2 class="card-title" id="vpS">Fiyat × açık pozisyon · son 60 gün</h2></div>${strip}
+          <p class="t3 gc-foot">Yakın vadede fiyat ve açık pozisyon aynı yönde artıyorsa yeni pozisyon açılıyor; açık pozisyon düşerken fiyat hareketi çoğunlukla pozisyon kapamadan gelir ve daha az kalıcıdır.</p></section></div>
+      ${roll}
+      <section class="card card-flush" aria-labelledby="vpC"><div class="card-head"><h2 class="card-title" id="vpC">XU030 vadeli kontratlar</h2><span class="card-meta">${dlab(v.asof)}</span></div>${ct}</section>
+      ${fx}
+      <p class="t3 gc-foot">Kaynak: ${esc(v.source)}; spot BIST 30, USD/TRY ve ABD 3 aylık faiz Yahoo Finance. Ham bülten yeniden yayımlanmaz.</p>`;
+  }
+
   // ─────────────────────────────── görünüm
   function render() {
     const d = S.doc;
     $("#gcBody").innerHTML = `<div class="toolbar">${seg("gcTab", TABS, S.tab, "Bölüm")}<span class="grow"></span><span class="card-meta">${dlab(d.asof)} kapanışı · ${fmt.int(d.universe)} hisse</span></div>
-      ${S.tab === "korku" ? korkuCard(false) : S.tab === "sektor" ? tabSector() : S.tab === "hisse" ? tabStocks() : S.tab === "harita" ? tabMap() : S.tab === "deger" ? tabValue() : S.tab === "kuresel" ? tabGlobal() : tabBreadth()}
+      ${S.tab === "korku" ? korkuCard(false) : S.tab === "sektor" ? tabSector() : S.tab === "hisse" ? tabStocks() : S.tab === "harita" ? tabMap() : S.tab === "deger" ? tabValue() : S.tab === "kuresel" ? tabGlobal() : S.tab === "viop" ? tabViop() : tabBreadth()}
       <p class="m-foot">${window.radarMethod?.link("piyasa-gucu") || ""}</p>
       <p class="src-line">Kaynak: Yahoo Finance günlük kapanış ve hacim (kişisel kullanım; ham fiyat yayımlanmaz), KAP sektör sınıflaması${S.tab === "korku" ? ", TSPB aracı kurum kredili işlem verileri" : ""} · ${fmt.date(d.generated, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>`;
     bind();

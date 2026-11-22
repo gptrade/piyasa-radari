@@ -2020,3 +2020,6 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
   .sp-bench { left: calc(96px + var(--s-2) + 44px + (100% - 96px - var(--s-2) - 88px) * var(--bx, .5)); }
   .sp-heat th[scope=row] { position: sticky; left: 0; background: var(--surface); z-index: 1; max-width: 110px; }
 }
+/* VİOP: fiyat × açık pozisyon şeridi */
+.vp-strip { display: grid; grid-template-columns: repeat(60, minmax(0, 1fr)); gap: 2px; margin: var(--s-3) 0 var(--s-2); }
+.vp-strip i { display: block; height: 28px; border-radius: 2px; }

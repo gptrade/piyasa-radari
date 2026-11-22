@@ -33,6 +33,7 @@ FILES = [
     ("fin_us", "_screen.json", "updated", 30, 80, "ABD temel analiz", lambda d: (len(d.get("rows") or []) >= 450, f"{len(d.get('rows') or [])} şirket")),
     ("guc", "guc.json", "generated", 30, 80, "Piyasa Gücü", lambda d: ((d.get("korku") or {}).get("value") is not None,
                                                                       f"korku {(d.get('korku') or {}).get('value')} · {len((d.get('korku') or {}).get('components') or [])} bileşen")),
+    ("guc", "viop.json", "generated", 30, 80, "VİOP panosu", lambda d: (bool((d.get("last") or {}).get("oi")), f"{(d.get('last') or {}).get('c')} · {d.get('asof')}")),
     ("guc", "kredili.json", "updated", 24 * 5, 24 * 10, "TSPB kredili işlem", None),
     ("olay", "summary.json", "generated", 30, 80, "Olay Karnesi", None),
     ("yontem", "yontem.json", "generated", 24 * 8, 24 * 15, "Yöntem Karnesi", None),

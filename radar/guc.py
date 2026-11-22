@@ -42,7 +42,8 @@ START = "2010-01-01"
 JUMP = 0.25
 BENCH = "XU100"
 XU100_MIN = 60          # BIST 100 genişlik görünümü için en az bu kadar bileşenin fiyatı olmalı
-YF = {"XU100": "XU100.IS", "USDTRY": "USDTRY=X", "XBANK": "XBANK.IS", "GOLD": "GC=F"}   # son ikisi korku endeksi için
+YF = {"XU100": "XU100.IS", "USDTRY": "USDTRY=X", "XBANK": "XBANK.IS", "GOLD": "GC=F",   # son ikisi korku endeksi için
+      "XU030": "XU030.IS", "IRX": "^IRX"}                                                   # VİOP: spot BIST 30, ABD 3 ay bono
 HIST_DAYS = 3 * 252          # grafiklerde gösterilen geçmiş
 MIN_SECTOR = 3
 RRG_N = 10                   # hafta: göreli güç oranının ortalaması
@@ -646,7 +647,7 @@ def run(full: bool = False, offline: bool = False) -> dict:
     OUT.mkdir(parents=True, exist_ok=True)
     old = pd.read_parquet(PX) if PX.exists() else None
     if not offline:
-        px = update_px([BENCH, "USDTRY", "XBANK", "GOLD"] + sorted(m["code"] for m in members), old, full)
+        px = update_px([BENCH, "USDTRY", "XBANK", "GOLD", "XU030", "IRX"] + sorted(m["code"] for m in members), old, full)
         if px is None:
             raise SystemExit("Fiyat alınamadı")
         px.to_parquet(PX, compression="zstd", index=False)

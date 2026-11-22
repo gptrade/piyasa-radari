@@ -298,7 +298,8 @@ def collect(cfg: dict, f: Fetcher | None = None) -> tuple[list[dict], dict]:
                 it["reg"] = reg["id"]
                 items.append(tidy(reg["id"], it))
             n += len(got)
-            time.sleep(max(getattr(f, "gap", 1.0), float(src.get("delay") or 0)))   # robots.txt Crawl-delay
+            gap = getattr(f, "gap", 1.0)
+            time.sleep(max(gap, float(src.get("delay") or 0)) if gap else 0)   # robots.txt Crawl-delay (testlerde gap=0)
         status[reg["id"]] = {"ok": n > 0, "n": n, "why": ("okunamayan: " + ", ".join(errs)) if errs else None,
                              **({"via": "Google News"} if any(s["type"] == "gnews" for s in reg.get("sources") or []) else {})}
         log.info("%s: %d bağlantı%s", reg["name"], n, f" (hata: {errs})" if errs else "")
