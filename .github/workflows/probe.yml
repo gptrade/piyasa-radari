@@ -22,7 +22,7 @@ jobs:
           mkdir -p main guc fin
           git archive origin/main | tar -x -C main
           true
-          git archive origin/fin _universe.json | tar -x -C fin
+          git archive origin/fin _universe.json _screen.json | tar -x -C fin
           pip install -q -r main/requirements.txt
           cd main && python ../probe/scripts/viop.py > ../probe/viop.txt 2>&1; cd ..; true
           rm -rf main guc fin
@@ -42,3 +42,4 @@ jobs:
 # 1795380767
 # 1795380860
 # 1795381350
+# 1795381412
