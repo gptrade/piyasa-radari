@@ -1,12 +1,7 @@
 _screen.json
-Traceback (most recent call last):
-  File "/home/runner/work/piyasa-radari/piyasa-radari/main/../probe/scripts/viop.py", line 10, in <module>
-    doc = sa.run(Path("/tmp/o"), budget_s=120, max_pages=6)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/piyasa-radari/piyasa-radari/main/radar/sa.py", line 300, in run
-    snapshot(hist, key, fc, today.isoformat())
-  File "/home/runner/work/piyasa-radari/piyasa-radari/main/radar/sa.py", line 211, in snapshot
-    if last and d <= last:
-                ^^^^^^^^^
-TypeError: '<=' not supported between instances of 'str' and 'int'
+radar.sa INFO stockanalysis: 10 sayfa okundu, 4 hisse kayıtlı, kuyrukta 560 · tamam
 evren 570 izleme ['AAPL', 'AMD', 'GLRMK', 'GOZDE', 'GRSEL']
+BIST:THYAO {"pt": {"avg": 454.31, "med": 460.5, "low": 315.0, "high": 580.0, "n": 14}, "rt": {"c": "Buy", "s": 7.5, "n": 14, "strongBuy": 9, "buy": 3, "hold": 2, "sell": 0, "strongSell": 0}, "fy": {"end": "2026-12-31", "eps": {"n": 6, "avg": 1.624224, "low": 1.299337, "high": 2.039115}, "rev": {"n": 8, "avg": 31290264442.76122, "low": 29212682425.30116, "high": 32634887928.99516}}, "an": {"epsThis": {"last": 2.11, "this": 1.624224, "growth": -23.022573}, "epsNext": {"last": 1.624224, "this": 1.586291, "growth": -2.335418}, "revenueThis": {"last": 24096000000.0, "this": 31290264442.76122, "growth": 29.856675}, "revenueNext": {"last": 31290264442.76122, "this": 33816518886.932705, "growth": 8.073612}}, "
+BIST:VAKBN {"pt": {"avg": 40.53, "med": 41.8, "low": 31.6, "high": 47.28, "n": 9}, "rt": {"c": "Buy", "s": 5.5, "n": 10, "strongBuy": 6, "buy": 0, "hold": 3, "sell": 1, "strongSell": 0}, "fy": {"end": "2026-12-31", "eps": {"n": 4, "avg": 8.55353, "low": 7.62958, "high": 9.34455}, "rev": {"n": 1, "avg": 326215500000.0, "low": 326215500000.0, "high": 326215500000.0}}, "an": {"epsThis": {"last": 8.1443, "this": 8.55353, "growth": 5.024741}, "epsNext": {"last": 8.55353, "this": 12.98797, "growth": 51.843391}, "revenueThis": {"last": 309924885000.0, "this": 326215500000.0, "growth": 5.256311}, "revenueNext": {"last": 326215500000.0, "this": 435542100000.0, "growth": 33.513613}}, "qt": {"epsThis": {"last": n
+BIST:TTKOM {"pt": {"avg": 80.18, "med": 85.0, "low": 50.0, "high": 97.9, "n": 11}, "rt": {"c": "Buy", "s": 6.82, "n": 11, "strongBuy": 7, "buy": 2, "hold": 1, "sell": 1, "strongSell": 0}, "fy": {"end": "2026-12-31", "eps": {"n": 1, "avg": 8.21, "low": 8.21, "high": 8.21}, "rev": {"n": 8, "avg": 326837511320.0, "low": 311562250000.0, "high": 347908216050.0}}, "an": {"epsThis": {"last": 6.6772, "this": 8.21, "growth": 22.95573}, "epsNext": {"last": 8.21, "this": 10.105, "growth": 23.081608}, "revenueThis": {"last": 242228623000.0, "this": 326837511320.0, "growth": 34.929352}, "revenueNext": {"last": 326837511320.0, "this": 401272806660.0, "growth": 22.774404}}, "qt": null, "st": null, "t": "2026-11-22"}
+stopped None
