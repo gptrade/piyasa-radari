@@ -1,15 +1,87 @@
-viop_20261120.csv https://www.borsaistanbul.com/data/viopdata/2026/11/ 404 8558 text/html
-viop_20261120.csv https://www.borsaistanbul.com/data/viopdata/2026/ 404 8558 text/html
-viop_20261120.csv https://www.borsaistanbul.com/data/viop/ 404 8558 text/html
-viopgs_20261120.csv https://www.borsaistanbul.com/data/viopdata/2026/11/ 404 8558 text/html
-viopgs_20261120.csv https://www.borsaistanbul.com/data/viopdata/2026/ 404 8558 text/html
-viopgs_20261120.csv https://www.borsaistanbul.com/data/viop/ 404 8558 text/html
-viopishac_20261120.zip https://www.borsaistanbul.com/data/viopdata/2026/11/ 404 8558 text/html
-viopishac_20261120.zip https://www.borsaistanbul.com/data/viopdata/2026/ 404 8558 text/html
-viopishac_20261120.zip https://www.borsaistanbul.com/data/viop/ 404 8558 text/html
-viopms_20261120.csv https://www.borsaistanbul.com/data/viopdata/2026/11/ 404 8558 text/html
-viopms_20261120.csv https://www.borsaistanbul.com/data/viopdata/2026/ 404 8558 text/html
-viopms_20261120.csv https://www.borsaistanbul.com/data/viop/ 404 8558 text/html
-viopyyishac202610.zip https://www.borsaistanbul.com/data/viopdata/2026/10/ 404 8558 text/html
-viopyyishac202610.zip https://www.borsaistanbul.com/data/viopdata/2026/ 404 8558 text/html
-viopyyishac202610.zip https://www.borsaistanbul.com/data/viop/ 404 8558 text/html
+== https://www.borsaistanbul.com/veriler/vadeli-islem-ve-opsiyon-piyasasi-verileri/bulten-ve-piyasa-verileri 200 85414
+   /data/vadeli/tviop_{GG}{AA}{YYYY}.xls
+   /data/vadeli/tviop_{GG}{AA}{YYYY}ozet.pdf
+   /data/vadeli/viop_as_bul_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viop_gecici_tmp_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viop_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viop_{YYYY}{AA}{GG}aksamozet.zip
+   /data/vadeli/viop_{YYYY}{AA}{GG}ozet.zip
+   /data/vadeli/viopaylikishac{YYYY}{AA}.zip
+   /data/vadeli/viopbs_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viopgs_{GG}{AA}{YYYY}.xls
+   /data/vadeli/viopgs_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viopishac_{YYYY}{AA}{GG}.zip
+   /data/vadeli/viopms_{GG}{AA}{YYYY}.xls
+   /data/vadeli/viopms_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viopoz_{GG}{AA}{YYYY}.zip
+   /data/vadeli/viopoz_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viopsz_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viopvadesonuuzlasmafiyatlari{YYYY}{AA}.zip
+   /data/vadeli/viopvadesonuuzlasmafiyatlari{YYYY}{AA}{GG}.zip
+   /data/vadeli/viopyillikishac{YYYY}.zip
+   /data/vadeli/viopyyishac{YYYY}{AA}.zip
+   /data/vadeli/vuhf_as_{YYYY}{AA}{GG}.csv
+   /en/data/derivatives-market-data/bulletin-and-market-data
+   /files/datafilepaths_viop.zip
+   /piyasalar/viop
+   /piyasalar/viop/egitim
+   /piyasalar/viop/opsiyon-sozlesmeleri
+   /piyasalar/viop/piyasa-isleyisi
+   /piyasalar/viop/sozlesme-ozellikleri
+   /piyasalar/viop/takas-ve-risk-yonetimi
+   /piyasalar/viop/vadeli-islem-sozlesmeleri
+   http://www.borsaistanbul.com/en/data/derivatives-market-data/bulletin-and-market-data
+  CTX date=""> </button></td></tr><tr class="table-item"><td scope="row" class=""><p><strong>Vadeli İşlem ve Opsiyon Piyasası Günlük Bülteni</strong></p></td><td class="d-flex border-0"> <input type="text" class="datepicker inputSession" max-date=""></td><td><button class="btnDownload" type="button" dosya-yolu="/data/vadeli/viop_{YYYY}{AA}{GG}.csv" kosullu_file_url="/data/vadeli/tviop_{GG}{AA}{YYYY}.xls" kosullu_date="2017-03-06"> </but
+  CTX zip" kosullu_file_url="" kosullu_date=""> </button></td></tr><tr class="table-item"><td scope="row" class=""><p><strong>Üye Bazında İşlem Hacimleri</strong></p></td><td class="d-flex border-0"> <input type="text" class="datepicker inputSession" max-date=""></td><td><button class="btnDownload" type="button" dosya-yolu="/data/vadeli/viopishac_{YYYY}{AA}{GG}.zip" kosullu_file_url="" kosullu_date=""> </button></td></tr><tr class="t
+  CTX osullu_file_url="" kosullu_date=""> </button></td></tr><tr class="table-item"><td scope="row" class=""><p><strong>Aylık Üye Bazında İşlem Hacimleri</strong></p></td><td class="d-flex border-0"> <select class="inputSession year-month"><option value="01">Ocak</option><option value="02">Şubat</option><option value="03">Mart</option><option value="04">Nisan</option><option value="05">Mayıs</option><option value="06">Haziran</option
+  CTX sullu_file_url="" kosullu_date=""> </button></td></tr><tr class="table-item"><td scope="row" class=""><p><strong>Yıllık Üye Bazında İşlem Hacimleri</strong></p></td><td class="d-flex border-0"> <select class="inputSession year-item"><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</o
+== https://www.borsaistanbul.com/veriler/viop 200 86542
+   /data/vadeli/tviop_{GG}{AA}{YYYY}.xls
+   /data/vadeli/tviop_{GG}{AA}{YYYY}ozet.pdf
+   /data/vadeli/viop_as_bul_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viop_gecici_tmp_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viop_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viop_{YYYY}{AA}{GG}aksamozet.zip
+   /data/vadeli/viop_{YYYY}{AA}{GG}ozet.zip
+   /data/vadeli/viopaylikishac{YYYY}{AA}.zip
+   /data/vadeli/viopbs_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viopgs_{GG}{AA}{YYYY}.xls
+   /data/vadeli/viopgs_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viopishac_{YYYY}{AA}{GG}.zip
+   /data/vadeli/viopms_{GG}{AA}{YYYY}.xls
+   /data/vadeli/viopms_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viopoz_{GG}{AA}{YYYY}.zip
+   /data/vadeli/viopoz_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viopsz_{YYYY}{AA}{GG}.csv
+   /data/vadeli/viopvadesonuuzlasmafiyatlari{YYYY}{AA}.zip
+   /data/vadeli/viopvadesonuuzlasmafiyatlari{YYYY}{AA}{GG}.zip
+   /data/vadeli/viopyillikishac{YYYY}.zip
+   /data/vadeli/viopyyishac{YYYY}{AA}.zip
+   /data/vadeli/vuhf_as_{YYYY}{AA}{GG}.csv
+   /en/data/derivatives-market-data
+   /files/datafilepaths_viop.zip
+   /piyasalar/viop
+   /piyasalar/viop/egitim
+   /piyasalar/viop/opsiyon-sozlesmeleri
+   /piyasalar/viop/piyasa-isleyisi
+   /piyasalar/viop/sozlesme-ozellikleri
+   /piyasalar/viop/takas-ve-risk-yonetimi
+   /piyasalar/viop/vadeli-islem-sozlesmeleri
+   http://www.borsaistanbul.com/en/data/derivatives-market-data
+  CTX date=""> </button></td></tr><tr class="table-item"><td scope="row" class=""><p><strong>Vadeli İşlem ve Opsiyon Piyasası Günlük Bülteni</strong></p></td><td class="d-flex border-0"> <input type="text" class="datepicker inputSession" max-date=""></td><td><button class="btnDownload" type="button" dosya-yolu="/data/vadeli/viop_{YYYY}{AA}{GG}.csv" kosullu_file_url="/data/vadeli/tviop_{GG}{AA}{YYYY}.xls" kosullu_date="2017-03-06"> </but
+  CTX zip" kosullu_file_url="" kosullu_date=""> </button></td></tr><tr class="table-item"><td scope="row" class=""><p><strong>Üye Bazında İşlem Hacimleri</strong></p></td><td class="d-flex border-0"> <input type="text" class="datepicker inputSession" max-date=""></td><td><button class="btnDownload" type="button" dosya-yolu="/data/vadeli/viopishac_{YYYY}{AA}{GG}.zip" kosullu_file_url="" kosullu_date=""> </button></td></tr><tr class="t
+  CTX osullu_file_url="" kosullu_date=""> </button></td></tr><tr class="table-item"><td scope="row" class=""><p><strong>Aylık Üye Bazında İşlem Hacimleri</strong></p></td><td class="d-flex border-0"> <select class="inputSession year-month"><option value="01">Ocak</option><option value="02">Şubat</option><option value="03">Mart</option><option value="04">Nisan</option><option value="05">Mayıs</option><option value="06">Haziran</option
+  CTX sullu_file_url="" kosullu_date=""> </button></td></tr><tr class="table-item"><td scope="row" class=""><p><strong>Yıllık Üye Bazında İşlem Hacimleri</strong></p></td><td class="d-flex border-0"> <select class="inputSession year-item"><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</o
+== https://www.borsaistanbul.com/veriler/pay-piyasasi-verileri/bulten-verileri 200 71676
+   /data/tgk/{YYYY}/{AA}//tgk{YYYY}{AA}{GG}{S}.zip
+   /data/thb/{YYYY}/{AA}/thb{YYYY}{AA}{GG}{S}.zip
+   /data/thm/{YYYY}/{AA}/thm{YYYY}{AA}{GG}{S}.zip
+   /data/tla/{YYYY}/{AA}/tla{YYYY}{AA}{GG}.zip
+   /files/DataFilePaths.zip
+   /piyasalar/viop
+   /piyasalar/viop/egitim
+   /piyasalar/viop/opsiyon-sozlesmeleri
+   /piyasalar/viop/piyasa-isleyisi
+   /piyasalar/viop/sozlesme-ozellikleri
+   /piyasalar/viop/takas-ve-risk-yonetimi
+   /piyasalar/viop/vadeli-islem-sozlesmeleri
