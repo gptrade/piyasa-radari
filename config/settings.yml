@@ -149,6 +149,9 @@ sources:
       - {name: Ekonomim · Piyasa, url: "https://www.ekonomim.net/rss/piyasa-10", market: BIST}
       # MarketWatch (Dow Jones resmi RSS); ABD hisseleri şirket adıyla eşleşir
       - {name: MarketWatch, url: "https://feeds.content.dowjones.io/public/rss/mw_topstories", market: US, lang: en}
+      # Semafor'un resmi RSS'i yok; site kazınmaz. Google News'in indekslediği başlık + bağlantı alınır (diğer site: aramaları gibi),
+      # izleme listesindeki şirket adı/sembolüyle eşleşenler akışa girer.
+      - {name: Semafor, url: "https://news.google.com/rss/search?q=site:semafor.com+when:2d&hl=en-US&gl=US&ceid=US:en", market: ALL, lang: en}
   reddit:
     enabled: true
     subreddits: ["stocks", "wallstreetbets", "investing"]

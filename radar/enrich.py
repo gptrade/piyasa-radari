@@ -45,7 +45,7 @@ TIER2_OUTLETS = ("reuters", "bloomberg", "financial times", "ft.com", "wall stre
                  "cnbc", "yahoo finance", "marketwatch", "barron", "seeking alpha", "investing.com",
                  "associated press", "ap news", "anadolu", "aa ", "aa ekonomi", "dünya", "ekonomim",
                  "para analiz", "bloomberght", "bloomberg ht", "forbes", "the economist", "nikkei",
-                 "morningstar", "zacks", "benzinga", "motley fool", "tipranks", "barchart", "investing",
+                 "morningstar", "semafor", "zacks", "benzinga", "motley fool", "tipranks", "barchart", "investing",
                  "tradingview", "fintables")
 
 
