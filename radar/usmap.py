@@ -60,6 +60,8 @@ def members() -> list[dict]:
 def due(prev: dict | None, now: datetime) -> bool:
     if not prev or not prev.get("generated"):
         return True
+    if prev.get("stocks") and "r1y" not in prev["stocks"][0]:     # alan eklendi (3A/6A/1Y): eski dosya hemen yenilenir
+        return True
     age = now - datetime.fromisoformat(prev["generated"])
     m = now.hour * 60 + now.minute
     if now.weekday() < 5 and SESSION[0] <= m <= SESSION[1]:
