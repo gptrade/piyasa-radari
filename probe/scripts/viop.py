@@ -2,7 +2,8 @@ import io, zipfile, requests
 UA = {"User-Agent": "Mozilla/5.0 piyasa-radari/1.0 (+https://github.com/gptrade/piyasa-radari)"}
 D = "20261120"
 def get(name):
-    for base in ("https://www.borsaistanbul.com/data/viopdata/", "https://borsaistanbul.com/data/viopdata/"):
+    y, m = (name[name.index("2026"):][:4], name[name.index("2026"):][4:6])
+    for base in (f"https://www.borsaistanbul.com/data/viopdata/{y}/{m}/", f"https://www.borsaistanbul.com/data/viopdata/{y}/", "https://www.borsaistanbul.com/data/viop/"):
         r = requests.get(base + name, headers=UA, timeout=40)
         print(name, base, r.status_code, len(r.content), r.headers.get("content-type"))
         if r.status_code == 200 and len(r.content) > 100:
