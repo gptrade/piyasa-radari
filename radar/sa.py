@@ -203,7 +203,11 @@ def snapshot(hist: dict, key: str, fc: dict, today: str) -> None:
     if not tq:
         return
     h = hist.setdefault(key, {})
-    last = tq.get("last") or ""
+    last = tq.get("last")
+    if isinstance(last, (int, float)) and not isinstance(last, bool):      # sayfa bazen son gerçekleşen çeyreğin sırasını verir
+        last = tq["dates"][int(last)] if 0 <= int(last) < len(tq["dates"]) else (
+            datetime.fromtimestamp(last / 1000, timezone.utc).date().isoformat() if last > 1e11 else "")
+    last = str(last or "")
     for i, d in enumerate(tq["dates"]):
         eps = tq["eps"][i] if i < len(tq["eps"]) else None
         rev = tq["rev"][i] if i < len(tq["rev"]) else None

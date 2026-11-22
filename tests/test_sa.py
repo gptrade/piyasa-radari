@@ -97,3 +97,9 @@ def test_run_writes_rows_and_respects_robots(tmp_path, monkeypatch):
     s2 = Sess(pages, robots="User-agent: *\nDisallow: /\n")
     sa.run(tmp_path / "b", session=s2, today=date(2026, 11, 23), sleep=lambda x: None)
     assert s2.calls == [sa.BASE + "/robots.txt"]
+
+
+def test_snapshot_last_as_index():
+    h = {}
+    sa.snapshot(h, "K", {"tq": {"dates": ["2026-06-30", "2026-09-30", "2026-12-31"], "eps": [0.5, 0.9, 1.0], "rev": [1, 2, 3], "last": 1}}, "2026-11-10")
+    assert "act" in h["K"]["2026-09-30"] and "est" in h["K"]["2026-12-31"]
