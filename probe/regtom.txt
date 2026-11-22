@@ -1,0 +1,46 @@
+robots 200
+
+# START YOAST BLOCK
+# ---------------------------
+# OpenAI bots — throttle but allow
+User-agent: GPTBot
+Crawl-delay: 60
+Disallow:
+
+User-agent: OAI-SearchBot
+Crawl-delay: 60
+Disallow:
+
+User-agent: ChatGPT-User
+Crawl-delay: 60
+Disallow:
+
+User-agent: *
+Crawl-delay: 30
+Disallow:
+
+Sitemap: https://www.regulationtomorrow.com/sitemap_index.xml
+# ---------------------------
+# END YOAST BLOCK
+https://www.regulationtomorrow.com/feed/ 200 application/rss+xml; charset=UTF-8 10
+  Fri, 20 Nov 2026 | BaFin consults on a streamlined MaComp | ['Financial Services & Policy', 'financial services & policy']
+  Fri, 20 Nov 2026 | The Financial Services and Markets Act 2000 (Cryptoassets) (Miscellaneous Amendments) Regulations 2026 | ['Digital Finance, DLT and Fintech', 'Digital finance', 'DLT and fintech']
+  Fri, 20 Nov 2026 | CRD third-country branches in Germany: Bafin sets out how re-authorisation will work under CRD VI | ['Capital & Liquidity', 'capital & liquidity']
+  Fri, 20 Nov 2026 | Co-legislators reach agreement on SFDR 2.0 | ['Capital & Liquidity', 'capital & liquidity']
+  Fri, 20 Nov 2026 | FCA Policy Statement 26/23: Client categorisation and conflicts of interest | ['Regulatory Updates', 'regulatory updates']
+  Fri, 20 Nov 2026 | BaFin published a supervisory notice on the re-licensing requirements of CRD third-country branches | ['Banking']
+  Fri, 20 Nov 2026 | Treasury to quell uncertainty over limitation periods for unfair relationship claims under the CCA in the Financial Serv | ['Consumer & Retail Finance', 'Spotlight']
+  Fri, 20 Nov 2026 | FCA launches world-first platform giving firms new insight into AI innovation | ['Artificial intelligence']
+  Fri, 20 Nov 2026 | IOSCO Final Report on the Implications of Quantum Computing on Financial Markets | ['Artificial intelligence']
+  Thu, 19 Nov 2026 | The Financial Services and Markets Act 2023 (Addition of Relevant Enactments) Regulations 2026 | ['Regulatory Updates', 'regulatory updates']
+https://www.regulationtomorrow.com/feed/?paged=2 200 application/rss+xml; charset=UTF-8 10
+  Thu, 19 Nov 2026 | ECB issues results for SREP 2026 and supervisory priorities for 2027-29 | ['Capital & Liquidity']
+  Thu, 19 Nov 2026 | FCA and PRA issue papers on cyber risk | ['Artificial intelligence', 'Cybersecurity', 'Regulatory Updates']
+  Thu, 19 Nov 2026 | DRCF letter on personal AI agents | ['Artificial intelligence']
+  Thu, 19 Nov 2026 | IOSCO Final Report on the Tokenisation of Financial Assets 2026 | ['Digital Finance, DLT and Fintech', 'FinTech']
+  Wed, 18 Nov 2026 | FCA publishes Call for Input on a review of the IFPR | ['Capital & Liquidity']
+  Wed, 18 Nov 2026 | PRA CP16/26: Clarifying the Prudential Regulation Authority’s approach to the implementation of the O-SII buffer | ['Capital & Liquidity', 'capital & liquidity']
+  Wed, 18 Nov 2026 | FCA Evaluation Paper 26/1: An evaluation of credit card persistent debt remedies introduced in 2018 | ['Consumer & Retail Finance', 'consumer and retail finance']
+  Wed, 18 Nov 2026 | HMT technical note – Clarifying limitation periods in the CCA 1974 | ['Consumer & Retail Finance', 'consumer credit insurance']
+  Tue, 17 Nov 2026 | Regulatory Initiatives Grid (11th Edition) | ['Financial Services & Policy']
+  Tue, 17 Nov 2026 | BoE issues near-final CCP rulebook and policy material | ['Clearing and settlement']
