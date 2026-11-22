@@ -1,3 +1,12 @@
-radar.sa INFO stockanalysis: 0 sayfa okundu, 0 hisse kayıtlı, kuyrukta 0 · tamam
-evren 0 izleme ['AAPL', 'AMD', 'GLRMK', 'GOZDE', 'GRSEL']
-stopped None
+_screen.json
+Traceback (most recent call last):
+  File "/home/runner/work/piyasa-radari/piyasa-radari/main/../probe/scripts/viop.py", line 10, in <module>
+    doc = sa.run(Path("/tmp/o"), budget_s=120, max_pages=6)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/piyasa-radari/piyasa-radari/main/radar/sa.py", line 300, in run
+    snapshot(hist, key, fc, today.isoformat())
+  File "/home/runner/work/piyasa-radari/piyasa-radari/main/radar/sa.py", line 211, in snapshot
+    if last and d <= last:
+                ^^^^^^^^^
+TypeError: '<=' not supported between instances of 'str' and 'int'
+evren 570 izleme ['AAPL', 'AMD', 'GLRMK', 'GOZDE', 'GRSEL']
