@@ -27,6 +27,7 @@ def test_build_returns_and_mcap():
     ye = px.loc[px.index.year == 2025, "AAA"].iloc[-1]
     assert abs(a["AAA"]["ytd"] - (200 / ye - 1)) < 1e-4 and a["AAA"]["d1"] > 0 and a["BBB"]["w1"] < 0
     assert a["AAA"]["mom"] > 0.5 and a["BBB"]["mom"] < 0                    # 12-1 ay momentum
+    assert abs(a["AAA"]["r3a"] - (200 / px["AAA"].iloc[-64] - 1)) < 1e-4 and a["BBB"]["r6a"] < 0 and a["AAA"]["r1y"] > 0.5
 
 
 def test_due_session_and_after_close():

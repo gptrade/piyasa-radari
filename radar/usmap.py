@@ -151,6 +151,8 @@ def build(px: pd.DataFrame, ms: list[dict], shares: dict) -> dict:
                      "mcap": _r(n * last, 0) if n else None,
                      "d1": _r(last / back(1) - 1) if back(1) else None, "w1": _r(last / back(5) - 1) if back(5) else None,
                      "r1a": _r(last / back(21) - 1) if back(21) else None, "ytd": _r(last / y0 - 1) if y0 else None,
+                     "r3a": _r(last / back(63) - 1) if back(63) else None, "r6a": _r(last / back(126) - 1) if back(126) else None,
+                     "r1y": _r(last / back(252) - 1) if back(252) else None,
                      "mom": mom, "stale": s.index[-1] < asof or None})
     # ikinci pay sınıfları ana sınıfa eklenir (GOOG → GOOGL): aynı şirket haritada iki kez görünmesin
     by = {r["code"]: r for r in rows}

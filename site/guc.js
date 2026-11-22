@@ -6,7 +6,8 @@
   const sh = window.shell;
   const { $, $$, esc, fmt } = sh;
   const SRC = "data/guc/guc.json";
-  const S = { doc: null, loaded: false, loading: false, error: null, missing: false, tab: "genislik", per: "1A", range: 252, univ: "tum",
+  const S = { doc: null, loaded: false, loading: false, error: null, missing: false, tab: "genislik", per: "1A",
+    sp: { mkt: "BIST", per: "1A", mode: "abs", us: null }, range: 252, univ: "tum",
     sort: "rank", sdir: 1, tmPer: "d1", tmSec: "", tmSize: "mcap", vKind: "endeks", vSort: "mcap", hs: { quad: true, rs: 80, tt: 6, vol: false, liq: true, sec: "", q: "", sort: "rs", sdir: 1, limit: 60 }, selSec: null };
   const TABS = { genislik: "Genişlik ve rejim", korku: "Korku endeksi", harita: "Isı haritası", sektor: "Sektör rotasyonu", hisse: "Güçlü hisseler", deger: "Değerleme", kuresel: "Küresel" };
   const REG = {
@@ -255,6 +256,74 @@
   const short = n => { if (SHORT[n]) return SHORT[n]; let w = n.split(/\s+/); if (n.length > 18) { w = w.slice(0, 2); if (["VE", "İLE", ","].includes(w.at(-1))) w = w.slice(0, 1); }
     return w.join(" ").replace(/,$/, "").toLocaleLowerCase("tr").replace(/(^|\s)\S/g, c => c.toLocaleUpperCase("tr")); };
 
+  // ─────────────────────────────── 2a. sektör performansı ve rotasyon haritası (BIST / ABD)
+  const US_F = { "1G": "d1", "1H": "w1", "1A": "r1a", "3A": "r3a", "6A": "r6a", "YBB": "ytd", "1Y": "r1y" };
+  const med = xs => { const v = xs.filter(x => x != null && isFinite(x)).sort((a, b) => a - b); if (!v.length) return null; const m = v.length >> 1; return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2; };
+  function benchBist(per) {
+    const d = S.doc, b1 = d.series.bench, bi = { "1G": 1, "1H": 5, "1A": 21, "3A": 63, "6A": 126, "1Y": 252 }[per];
+    if (per === "YBB") { const y = d.asof.slice(0, 4), j = d.series.d.findLastIndex(x => x.slice(0, 4) < y); return j >= 0 ? b1.at(-1) / b1[j] - 1 : null; }
+    return b1.length > bi ? b1.at(-1) / b1.at(-1 - bi) - 1 : null;
+  }
+  // Ortak biçim: { name, label, n, med{per}, pos{per} } + endeks getirisi { per }
+  function spData(mkt) {
+    if (mkt === "BIST") {
+      return { rows: S.doc.sectors.map(s => ({ name: s.name, label: short(s.name), n: s.n, med: s.med, pos: s.pos || {} })),
+        bench: Object.fromEntries(PERS.map(p => [p, benchBist(p)])), bl: "XU100", asof: S.doc.asof };
+    }
+    const u = MK()?.data?.us;
+    if (!u?.stocks?.length) return null;
+    const xs = u.stocks.filter(r => (r.ix || []).includes("sp") && !r.stale);
+    const by = {};
+    xs.forEach(r => (by[r.sector] ||= []).push(r));
+    const rows = Object.entries(by).map(([name, g]) => ({ name, label: MK().short(name), n: g.length,
+      med: Object.fromEntries(PERS.map(p => [p, med(g.map(r => r[US_F[p]]))])),
+      pos: Object.fromEntries(PERS.map(p => { const v = g.map(r => r[US_F[p]]).filter(x => x != null); return [p, v.length ? v.filter(x => x > 0).length / v.length : null]; })) }));
+    // S&P 500 karşılığı: bileşenlerin piyasa değeri ağırlıklı ortalaması (endeksin kendisi ham fiyat olarak yayımlanmıyor)
+    const bench = Object.fromEntries(PERS.map(p => { let w = 0, t = 0; xs.forEach(r => { const v = r[US_F[p]]; if (v != null && r.mcap) { w += r.mcap; t += r.mcap * v; } }); return [p, w ? t / w : null]; }));
+    return { rows, bench, bl: "S&P 500", asof: u.asof || (u.generated || "").slice(0, 10) };
+  }
+  function secPerf() {
+    const P = S.sp, D = spData(P.mkt);
+    const head = `<div class="card-head"><h2 class="card-title" id="gcSpT">Sektör performansı</h2>
+        <div class="toolbar ok-tb">${seg("gcSpM", { BIST: "BIST", US: "ABD (S&P 500)" }, P.mkt, "Piyasa")}${seg("gcSpV", { abs: "Getiri", rel: "Endekse göre" }, P.mode, "Görünüm")}${seg("gcSpP", Object.fromEntries(PERS.map(p => [p, p])), P.per, "Dönem")}</div></div>`;
+    if (!D) return `<section class="card" aria-labelledby="gcSpT">${head}<p class="t3 gc-foot">ABD verisi yükleniyor…</p></section>`;
+    const rel = P.mode === "rel", bx = D.bench;
+    const val = (r, p) => { const v = r.med[p]; return v == null ? null : rel ? (bx[p] == null ? null : v - bx[p]) : v; };
+    const rows = D.rows.filter(r => val(r, P.per) != null).sort((a, b) => val(b, P.per) - val(a, P.per));
+    const nil = D.rows.filter(r => val(r, P.per) == null);
+    const bp = rel ? 0 : bx[P.per];
+    const vs = rows.map(r => val(r, P.per)).concat(bp ?? 0);
+    const lo = Math.min(0, ...vs), hi = Math.max(0, ...vs), span = Math.max(1e-6, hi - lo);
+    const X = v => (v - lo) / span * 100;                               // 0–100 %; sıfırın yeri veriye göre
+    const tip = (r, p) => `${r.label} · ${p}: medyan ${pc(r.med[p])} · ${D.bl} ${pc(bx[p])} · fark ${pc(r.med[p] == null || bx[p] == null ? null : r.med[p] - bx[p])} · ${r.n} hisse, yükselen ${pp(r.pos[p])}`;
+    const thin = r => r.n < 3;
+    const sel = r => P.mkt === "BIST" ? S.selSec === r.name : P.us === r.name;
+    const bar = r => { const v = val(r, P.per), a = Math.min(X(0), X(v)), w = Math.abs(X(v) - X(0));
+      return `<div class="sp-row ${sel(r) ? "is-sel" : ""} ${thin(r) ? "dim" : ""}" data-spsec="${esc(r.name)}" data-tip="${esc(tip(r, P.per))}" role="button" tabindex="0">
+        <span class="sp-l">${esc(r.label)}<small class="t3"> ${r.n}</small></span>
+        <span class="sp-t" style="--z:${X(0).toFixed(2)}%"><span class="sp-b ${v >= 0 ? "up" : "down"}" style="left:${a.toFixed(2)}%;width:${Math.max(w, 0.4).toFixed(2)}%"></span>
+          <span class="sp-v ${sgn(v)}" style="${v >= 0 ? `left:calc(${(a + w).toFixed(2)}% + 4px)` : `right:calc(${(100 - a).toFixed(2)}% + 4px)`}">${pc(v)}</span></span></div>`; };
+    const bline = !rel && bp != null ? `<span class="sp-bench" style="--bx:${(X(bp) / 100).toFixed(4)}"><em>${D.bl} ${pc(bp)}</em></span>` : "";
+    // ısı tablosu: renk her sütunun en uç değerine göre (dönemler arası ölçek farkı büyük)
+    const cmax = Object.fromEntries(PERS.map(p => [p, Math.max(1e-6, ...D.rows.map(r => Math.abs(val(r, p) ?? 0)))]));
+    const cell = (r, p) => { const v = val(r, p); const a = v == null ? 0 : Math.min(1, Math.abs(v) / cmax[p]);
+      return `<td class="num sp-c ${p === P.per ? "is-per" : ""}" style="--a:${(a * 0.85).toFixed(2)};--c:var(--${v >= 0 ? "up" : "down"})" data-tip="${esc(tip(r, p))}">${pc(v, Math.abs(v ?? 0) >= 0.1 ? 0 : 1)}</td>`; };
+    const usDet = P.mkt === "US" && P.us ? (() => {
+      const f = US_F[P.per], g = (MK().data.us.stocks || []).filter(r => r.sector === P.us && (r.ix || []).includes("sp") && !r.stale && r[f] != null).sort((a, b) => b[f] - a[f]);
+      const li = r => `<li><a class="mono" href="#hisse/${esc(r.code)}">${esc(r.code)}</a> <span class="t3">${esc(r.name)}</span> <b class="${sgn(r[f])}">${pc(r[f])}</b></li>`;
+      return `<div class="sp-det"><p class="d-sub">${esc(MK().short(P.us))} · ${P.per} · ${g.length} hisse</p><div class="sp-det-c"><div><p class="t3">En iyi</p><ol>${g.slice(0, 5).map(li).join("")}</ol></div><div><p class="t3">En zayıf</p><ol>${g.slice(-5).reverse().map(li).join("")}</ol></div></div></div>`; })() : "";
+    return `<section class="card" aria-labelledby="gcSpT">${head}
+      <div class="sp-grid">
+        <div><p class="t3 gc-foot sp-cap">${rel ? `Sektör medyanı − ${D.bl}, ${P.per}` : `Sektör medyan getirisi, ${P.per} · kesikli çizgi ${D.bl}`}</p>
+          <div class="sp-bars">${bline}${rows.map(bar).join("")}</div>${nil.length ? `<p class="t3 gc-foot">Bu dönem için veri yok: ${nil.map(r => esc(r.label)).join(", ")}</p>` : ""}${usDet}</div>
+        <div class="tbl-scroll"><table class="tx sp-heat"><caption class="t3 sp-cap">Rotasyon haritası · sektör × dönem${rel ? ` · ${D.bl}'e göre` : ""}</caption>
+          <thead><tr><th scope="col">Sektör</th>${PERS.map(p => `<th scope="col" class="num ${p === P.per ? "is-per" : ""}"><button type="button" class="th-sort" data-spp="${p}">${p}</button></th>`).join("")}</tr></thead>
+          <tbody>${rows.concat(nil).map(r => `<tr class="${sel(r) ? "is-sel" : ""} ${thin(r) ? "dim" : ""}" data-spsec="${esc(r.name)}"><th scope="row">${esc(r.label)}</th>${PERS.map(p => cell(r, p)).join("")}</tr>`).join("")}
+          ${rel ? "" : `<tr class="sp-bx"><th scope="row">${D.bl}</th>${PERS.map(p => `<td class="num ${sgn(bx[p])}">${pc(bx[p], Math.abs(bx[p] ?? 0) >= 0.1 ? 0 : 1)}</td>`).join("")}</tr>`}</tbody></table></div>
+      </div>
+      <p class="t3 gc-foot">Her sektörde hisselerin medyan getirisi (tek bir büyük hissenin sonucu sürüklememesi için); sıralama seçili döneme göre. Isı tablosunda renk her sütunun kendi en uç değerine göre ölçeklenir. Üzerine gelince hisse sayısı ve yükselen hisse oranı görünür; 3'ten az hisseli sektörler soluk. ${P.mkt === "BIST" ? "BIST: KAP sektörleri, XU100 endeksin kendisi. Bir sektöre tıklayınca rotasyon grafiği ve skor tablosunda seçilir." : "ABD: S&P 500 bileşenleri, GICS sektörleri; S&P 500 satırı bileşenlerin piyasa değeri ağırlıklı ortalaması (endeksin yaklaşığı). Bir sektöre tıklayınca en iyi ve en zayıf 5 hisse açılır."} ${D.asof ? dlab(D.asof) + " kapanışı." : ""}</p></section>`;
+  }
+
   function tabSector() {
     const d = S.doc, secs = [...d.sectors];
     const key = { rank: s => s.rank, name: s => s.name, ret: s => -(s.med[S.per] ?? -9), br: s => -(s.br50 ?? -1), vs: s => -(s.vshare ?? 0) }[S.sort] || (s => s.rank);
@@ -272,7 +341,7 @@
       <td class="num">${pp(s.br50)}${s.br50_prev != null ? `<span class="t3 ok-sub">1 hafta önce ${pp(s.br50_prev)}</span>` : ""}</td>
       <td class="num ${s.vshare > 1.1 ? "up" : s.vshare < 0.9 ? "down" : ""}">${s.vshare == null ? "—" : `×${fmt.num(s.vshare, 2)}`}<span class="t3 ok-sub">pay ${pp(s.share, 1)}</span></td>
       <td class="gc-lead">${s.leaders.slice(0, 3).map(c => `<button type="button" class="link-btn mono" data-tk="${c}">${c}</button>`).join(" ")}</td></tr>`;
-    return `<div class="fa-two gc-sec-top">
+    return `${secPerf()}<div class="fa-two gc-sec-top">
       <section class="card" aria-labelledby="gcRrgT"><div class="card-head"><h2 class="card-title" id="gcRrgT">Rotasyon grafiği</h2><span class="card-meta">haftalık · ${S.selSec ? esc(short(S.selSec)) : "ilk 6, lider ve bölge değiştirenler"} · ${d.sectors[0]?.tail.length || 8} hafta izi</span></div>
         ${rrgChart(d.sectors)}
         <p class="t3 gc-foot">Yatay: sektörün eşit ağırlıklı endeksinin XU100'e oranı, kendi 10 haftalık ortalamasına göre (100 üstü = endeksten güçlü). Dikey: bu oranın 4 haftalık değişimi (100 üstü = güçleniyor). Sektörler genelde saat yönünde döner: İyileşen → Lider → Zayıflayan → Geride. İyileşen'den Lider'e geçiş en erken rotasyon işaretidir. RRG benzeri, kendi formülümüz.</p></section>
@@ -376,6 +445,15 @@
     segB("gcRange", v => { S.range = +v; });
     segB("gcUniv", v => { S.univ = v; });
     segB("gcPer", v => { S.per = v; });
+    segB("gcSpM", v => { S.sp.mkt = v; S.sp.us = null; });
+    segB("gcSpV", v => { S.sp.mode = v; });
+    segB("gcSpP", v => { S.sp.per = v; });
+    if (S.tab === "sektor") {
+      if (S.sp.mkt === "US" && !MK()?.data?.us) MK()?.load();
+      $$("[data-spp]").forEach(b => b.onclick = () => { S.sp.per = b.dataset.spp; render(); });
+      $$("[data-spsec]").forEach(el => { const go = () => { const n = el.dataset.spsec; if (S.sp.mkt === "BIST") S.selSec = S.selSec === n ? null : n; else S.sp.us = S.sp.us === n ? null : n; render(); };
+        el.onclick = e => { if (e.target.closest("a,button")) return; go(); }; el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }; });
+    }
     segB("gcHR", v => { S.hs.rs = +v; S.hs.limit = 60; });
     segB("gcHT", v => { S.hs.tt = +v; S.hs.limit = 60; });
     const body = $("#gcBody");
@@ -403,7 +481,7 @@
     else { const s = d.series; ex.download(`bist_genislik_${ex.stamp()}.csv`, ex.toCSV(s.d.map((dd, i) => ({ tarih: dd, xu100: s.bench[i], ust20: s.p20[i], ust50: s.p50[i], ust200: s.p200[i], yeni_zirve: s.nh[i], yeni_dip: s.nl[i], yukselen: s.adv[i], dusen: s.dec[i], mcclellan: s.mco[i], yukselen_hacim: s.upv[i] }))), "text/csv;charset=utf-8"); }
   }
 
-  addEventListener("radar:market", () => { if (sh.route === "piyasa-gucu" && S.loaded && ["harita", "deger", "kuresel"].includes(S.tab)) render(); });
+  addEventListener("radar:market", () => { if (sh.route === "piyasa-gucu" && S.loaded && ["harita", "deger", "kuresel", "sektor"].includes(S.tab)) render(); });
   let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (sh.route === "piyasa-gucu" && S.tab === "harita") render(); }, 250); });
   window.radarGuc = { card: () => S.loaded ? regimeCard(true) : (load(), ""), korku: () => S.loaded ? korkuCard(true) : "" };
   sh.register("piyasa-gucu", {

@@ -548,6 +548,12 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, doc
         med = {k: _r(float((ff[live].iloc[-1] / ff[live].iloc[-1 - n] - 1).median())) if len(ff) > n else None for k, n in PERIODS.items()}
         yb = ff[live][ff.index.year < ff.index[-1].year]
         med["YBB"] = _r(float((ff[live].iloc[-1] / yb.iloc[-1] - 1).median())) if len(yb) else None
+        # yükselen hisse oranı (dönem başına): medyanın kaç hisseye dayandığını gösterir
+        pos = {k: _r(float((ff[live].iloc[-1] / ff[live].iloc[-1 - n] - 1 > 0)[ff[live].iloc[-1 - n].notna()].mean()), 3)
+               if len(ff) > n and ff[live].iloc[-1 - n].notna().any() else None for k, n in PERIODS.items()}
+        if len(yb):
+            y_ok = yb.iloc[-1].notna()
+            pos["YBB"] = _r(float((ff[live].iloc[-1] / yb.iloc[-1] - 1 > 0)[y_ok].mean()), 3) if y_ok.any() else None
         ma_ok = ma50[live].iloc[-1].notna()
         br50 = float((ff[live].iloc[-1] > ma50[live].iloc[-1])[ma_ok].mean()) if ma_ok.any() else None
         br50_prev = None
@@ -561,7 +567,7 @@ def build(px: pd.DataFrame, members: list[dict], screen: dict | None = None, doc
         vshare = share / share60 if share and share60 else None      # piyasa hacmindeki payın 20g / 60g oranı (göreli para akışı)
         lead = sorted(((float(rsr[c]), c) for c in live if c in rsr.index), reverse=True)
         r_last = rr.iloc[-1]
-        sectors.append({"name": name, "n": len(live), "ret": rets, "med": med,
+        sectors.append({"name": name, "n": len(live), "ret": rets, "med": med, "pos": pos,
                         "ratio": _r(r_last["ratio"], 2), "mom": _r(r_last["mom"], 2), "quad": quad(r_last["ratio"], r_last["mom"]),
                         "tail": [[_r(a, 2), _r(m, 2)] for a, m in rr[["ratio", "mom"]].iloc[-TAIL:].values],
                         "quad_prev": quad(*rr[["ratio", "mom"]].iloc[-2].values),

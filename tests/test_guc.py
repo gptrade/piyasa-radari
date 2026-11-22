@@ -46,6 +46,7 @@ def test_build_end_to_end_and_holiday_rows(monkeypatch):
     assert 0 <= s["p50"][-1] <= 1 and d["regime"]["state"] in G_STATES
     assert len(d["sectors"]) == 4 and all(x["quad"] in ("lider", "zayif", "geride", "iyilesen") for x in d["sectors"])
     assert sorted(x["rank"] for x in d["sectors"])[0] == 1
+    assert all(0 <= v <= 1 for x in d["sectors"] for v in x["pos"].values() if v is not None) and "1A" in d["sectors"][0]["pos"]
     assert d["stocks"][0]["rs"] >= d["stocks"][-1]["rs"] and 1 <= d["stocks"][-1]["rs"] <= 99
     # tatil artığı: yalnız birkaç hissede kayıt olan gün atılır, ertesi gün getirileri bozulmaz
     last = pd.Timestamp(px.date.max())

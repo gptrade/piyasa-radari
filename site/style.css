@@ -1984,3 +1984,39 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .tn-row .td-tk.tn-nm { font: var(--fw-medium) var(--fs-xs) var(--font-sans); color: var(--text); }
 .tn-row .td-tk.tn-n { font: var(--fw-regular) var(--fs-xs) var(--font-sans); color: var(--text-3); }
 .tn-row .tn-chips { flex: 0 1 auto; }
+/* Piyasa Gücü · Sektör performansı (çubuk) + rotasyon haritası (sektör × dönem ısı tablosu) */
+.sp-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: var(--s-5); align-items: start; }
+@media (max-width: 1100px) { .sp-grid { grid-template-columns: minmax(0, 1fr); } }
+.sp-cap { text-align: left; margin: 0 0 var(--s-2); caption-side: top; }
+.sp-bars { position: relative; }
+.sp-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: var(--s-2); height: 24px; cursor: pointer; border-radius: 4px; }
+.sp-row:hover, .sp-row.is-sel { background: var(--surface-2, rgba(127,127,127,.08)); }
+.sp-row.is-sel .sp-l { font-weight: var(--fw-semibold, 600); }
+.sp-row.dim { opacity: .55; }
+.sp-l { font-size: var(--fs-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-t { position: relative; height: 14px; margin: 0 52px; }
+.sp-t::before { content: ""; position: absolute; left: var(--z, 50%); top: -5px; bottom: -5px; border-left: 1px solid var(--border); }
+.sp-b { position: absolute; top: 0; height: 100%; border-radius: 2px; }
+.sp-b.up { background: var(--up); } .sp-b.down { background: var(--down); }
+.sp-v { position: absolute; top: -1px; font: var(--fs-xs) var(--font-mono); white-space: nowrap; }
+.sp-bars { margin-top: 22px; }
+.sp-bench { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed var(--text-2, #888); pointer-events: none; z-index: 1;
+  left: calc(150px + var(--s-2) + 52px + (100% - 150px - var(--s-2) - 104px) * var(--bx, .5)); }
+.sp-bench em { position: absolute; top: -18px; left: 4px; font: normal var(--fs-xs) var(--font-mono); white-space: nowrap; color: var(--text-2, #888); }
+.sp-heat { width: 100%; font-size: var(--fs-xs); border-collapse: separate; border-spacing: 2px; }
+.sp-heat th[scope=row] { text-align: left; font-weight: var(--fw-regular, 400); white-space: nowrap; max-width: 170px; overflow: hidden; text-overflow: ellipsis; padding-right: var(--s-2); }
+.sp-heat thead th.is-per .th-sort { font-weight: var(--fw-semibold, 600); text-decoration: underline; }
+.sp-c { background: color-mix(in srgb, var(--c) calc(var(--a) * 55%), transparent); border-radius: 3px; padding: 3px 6px; font-family: var(--font-mono); white-space: nowrap; }
+.sp-c.is-per { outline: 1px solid var(--border-strong, var(--border)); }
+.sp-heat tr[data-spsec] { cursor: pointer; } .sp-heat tr.is-sel th { font-weight: var(--fw-semibold, 600); } .sp-heat tr.dim { opacity: .55; }
+.sp-heat tr.sp-bx th, .sp-heat tr.sp-bx td { border-top: 1px solid var(--border); font-family: var(--font-mono); padding-top: 6px; }
+.sp-heat tr.sp-bx th { font-family: inherit; font-weight: var(--fw-semibold, 600); }
+.sp-det { margin-top: var(--s-3); padding: var(--s-3); border: 1px solid var(--border); border-radius: 8px; }
+.sp-det-c { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); font-size: var(--fs-xs); }
+.sp-det ol { margin: 4px 0 0; padding-left: 18px; } .sp-det li { margin: 2px 0; } .sp-det li b { float: right; font-family: var(--font-mono); font-weight: 500; }
+@media (max-width: 600px) {
+  .sp-row { grid-template-columns: 96px minmax(0, 1fr); }
+  .sp-t { margin: 0 44px; }
+  .sp-bench { left: calc(96px + var(--s-2) + 44px + (100% - 96px - var(--s-2) - 88px) * var(--bx, .5)); }
+  .sp-heat th[scope=row] { position: sticky; left: 0; background: var(--surface); z-index: 1; max-width: 110px; }
+}
