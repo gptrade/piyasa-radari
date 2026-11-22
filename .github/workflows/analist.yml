@@ -4,7 +4,8 @@ name: analist
 # robots.txt'e uyan yavaş okuma: istekler arası 4 sn, günlük bütçe ~25 dk (~230 sayfa); tüm BIST + ABD evreni haftada bir yenilenir.
 # Çıktı herkese açık dallara YAZILMAZ: gizli rapor reposunun analist/ klasörüne gider; radar iş akışı yalnız
 # giriş korumalı Cloudflare kopyasına ekler (GitHub Pages kopyasında yok).
-# Gerekli secret: RAPOR_YAZMA_TOKEN (gptrade/piyasa-radari-raporlar için Contents: Read and write).
+# Sert revizyonlar (hedef fiyat, konsensüs, bu/gelecek yıl HBK ve gelir tahmini) Telegram'a gider: izleme listesi hisse başına,
+# diğerleri günün en sert 8 revizyonu tek mesajda. Gerekli secret: RAPOR_YAZMA_TOKEN (gptrade/piyasa-radari-raporlar için Contents: Read and write).
 on:
   schedule:
     - cron: "43 3 * * *"      # her gün 06:43 İstanbul
@@ -49,6 +50,10 @@ jobs:
 
       - name: Analist beklentileri
         timeout-minutes: 28
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SITE_URL: ${{ vars.SITE_URL }}
         run: python -m radar.sa --out _raporlar/analist --budget 1500 --max 400
 
       - name: Gizli repoya kaydet

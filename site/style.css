@@ -2051,3 +2051,4 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .sa-kv { margin-top: var(--s-2); } .sa-sur { margin-top: var(--s-3); max-width: 760px; }
 .sa-kv { max-width: 760px; } .sa-sh { margin: var(--s-4) 0 var(--s-2); font-weight: var(--fw-medium, 500); font-size: var(--fs-sm); }
 @media (max-width: 600px) { .sa-mid { display: none; } }
+.sa-rev { margin: 0; padding-left: 0; list-style: none; font-size: var(--fs-sm); } .sa-rev li { margin: 3px 0; }

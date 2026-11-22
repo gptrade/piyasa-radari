@@ -103,3 +103,30 @@ def test_snapshot_last_as_index():
     h = {}
     sa.snapshot(h, "K", {"tq": {"dates": ["2026-06-30", "2026-09-30", "2026-12-31"], "eps": [0.5, 0.9, 1.0], "rev": [1, 2, 3], "last": 1}}, "2026-11-10")
     assert "act" in h["K"]["2026-09-30"] and "est" in h["K"]["2026-12-31"]
+
+
+def test_revisions_thresholds_and_fiscal_year():
+    old = {"pt": {"avg": 100, "n": 10}, "rt": {"c": "Buy", "n": 10}, "fy": {"end": "2026-12-31", "eps": {"avg": 2.0}, "rev": {"avg": 1e9}},
+           "an": {"epsNext": {"this": 3.0}}}
+    new = {"pt": {"avg": 112, "n": 11}, "rt": {"c": "Hold", "n": 11}, "fy": {"end": "2026-12-31", "eps": {"avg": 1.8}, "rev": {"avg": 1.02e9}},
+           "an": {"epsNext": {"this": 3.1}}}
+    ks = {e["k"]: e for e in sa.revisions(old, new, watched=True)}
+    assert set(ks) == {"pt", "rt", "eps"} and ks["rt"]["c"] == -1 and round(ks["eps"]["c"], 2) == -0.10
+    assert {e["k"] for e in sa.revisions(old, new, watched=False)} == {"rt"}           # izleme dışı: eşikler daha sert
+    new2 = dict(new, fy={"end": "2027-12-31", "eps": {"avg": 1.0}})                     # mali yıl değişti → HBK karşılaştırılmaz
+    assert "eps" not in {e["k"] for e in sa.revisions(old, new2, watched=True)}
+    assert sa.revisions(None, new, True) == []
+    assert "100,00 → 112,00 (+%12" in sa.describe(ks["pt"]) and "Al → Tut" in sa.describe(ks["rt"])
+
+
+def test_run_records_revisions_and_sends(tmp_path, monkeypatch):
+    monkeypatch.setattr(sa, "universe", lambda: [("BIST", "THYAO", 1e10)])
+    monkeypatch.setattr(sa, "watch_codes", lambda: {"THYAO"})
+    sent = []
+    monkeypatch.setattr(sa, "telegram", lambda ev, site: sent.append(ev) or 1)
+    pages = {"/quote/ist/THYAO/forecast/__data.json": page({"curr": {"price": "TRY"}}, FC)}
+    sa.run(tmp_path, session=Sess(pages), today=date(2026, 11, 16), sleep=lambda x: None)
+    fc2 = json.loads(json.dumps(FC)); fc2["priceTargets"]["avg"] = 520.0
+    pages2 = {"/quote/ist/THYAO/forecast/__data.json": page({"curr": {"price": "TRY"}}, fc2)}
+    doc = sa.run(tmp_path, session=Sess(pages2), today=date(2026, 11, 23), sleep=lambda x: None)
+    assert doc["revs"][0]["code"] == "THYAO" and doc["revs"][0]["ev"][0]["k"] == "pt" and len(sent) == 1

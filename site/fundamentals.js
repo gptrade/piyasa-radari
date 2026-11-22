@@ -480,6 +480,11 @@
       const sur = (a.sur || []).filter(x => x.eps_s != null || x.rev_s != null);
       const surT = sur.length ? `<p class="sa-sh">Bilanço sürprizi · hisse başı kâr</p><div class="tbl-scroll"><table class="tx sa-sur"><thead><tr><th>Çeyrek</th><th class="num">Beklenti</th><th class="num">Gerçekleşen</th><th class="num">Sürpriz</th><th class="num" data-tip="Gelirde gerçekleşenin beklentiden farkı">Gelir</th></tr></thead><tbody>
         ${sur.map(x => `<tr><th scope="row">${x.d.slice(0, 7)}</th><td class="num">${fmt.num(x.eps_e, 2)}</td><td class="num">${fmt.num(x.eps_a, 2)}</td><td class="num ${x.eps_s >= 0 ? "up" : "down"}">${x.eps_s == null ? "—" : `${x.eps_s >= 0 ? "+" : "−"}%${fmt.num(Math.abs(x.eps_s) * 100, 1)}`}</td><td class="num ${x.rev_s >= 0 ? "up" : "down"}">${x.rev_s == null ? "—" : `${x.rev_s >= 0 ? "+" : "−"}%${fmt.num(Math.abs(x.rev_s) * 100, 1)}`}</td></tr>`).join("")}</tbody></table></div>` : "";
+      const DESC = e => { const p = c => `${c >= 0 ? "+" : "−"}%${fmt.num(Math.abs(c) * 100, 0)}`;
+        return e.k === "pt" ? `Ortalama hedef ${money(e.a)} → ${money(e.b)} (${p(e.c)})` : e.k === "rt" ? `Konsensüs ${REC[e.a] || e.a} → ${REC[e.b] || e.b}`
+          : `${e.k === "eps2" ? "Gelecek yıl HBK" : `${e.fy || ""} ${e.k === "eps" ? "HBK" : "gelir"}`} tahmini ${e.k === "rev" ? big(e.a) : fmt.num(e.a, 2)} → ${e.k === "rev" ? big(e.b) : fmt.num(e.b, 2)} (${p(e.c)})`; };
+      const revs = (doc.revs || []).filter(r => r.code === code && r.m === (US ? "US" : "BIST")).slice(0, 3);
+      const revH = revs.length ? `<p class="sa-sh">Son sert revizyonlar</p><ul class="sa-rev">${revs.map(r => r.ev.map(e => `<li><span class="t3 mono">${fmt.date(r.d, { day: "numeric", month: "short" })}</span> <span class="${e.c > 0 ? "up" : e.c < 0 ? "down" : ""}">${e.c > 0 ? "▲" : e.c < 0 ? "▼" : "•"}</span> ${DESC(e)}</li>`).join("")).join("")}</ul>` : "";
       if (!rt && !pt && !kv.length) return;
       host.insertAdjacentHTML("afterend", `<section class="card sa-card" aria-labelledby="saT"><div class="card-head"><h2 class="card-title" id="saT">Analist beklentisi</h2>
           <span class="card-meta">${rt ? `${rt.n} analist` : ""}${a.t ? ` · ${fmt.date(a.t, { day: "numeric", month: "short" })}` : ""}</span></div>
@@ -490,7 +495,7 @@
         </div>
         ${range}
         ${kv.length ? `<table class="fa-kv sa-kv"><tbody>${kv.map(([k, val, ex]) => `<tr><th scope="row">${k}</th><td class="num">${val}${ex ? ` <small class="t3">${ex}</small>` : ""}</td></tr>`).join("")}</tbody></table>` : ""}
-        ${surT}
+        ${surT}${revH}
         <p class="t3 gc-foot">stockanalysis.com · tahminler S&amp;P Global Market Intelligence. ${fc !== cur && fc ? `Tahminler şirketin raporlama para biriminde (${esc(a.fcur)}).` : ""}</p></section>`);
     });
   }

@@ -232,6 +232,90 @@ def surprises(h: dict) -> list[dict]:
     return out[-4:]
 
 
+# ───────────────────────────── revizyon uyarıları
+
+TH = {"pt": 0.10, "eps": 0.07, "eps2": 0.10, "rev": 0.07}      # izleme listesi eşikleri (göreli değişim)
+TH_ALL = {"pt": 0.20, "eps": 0.15, "eps2": 0.20, "rev": 0.15}  # diğer hisseler: daha sert değişim
+REC_TR = {"Strong Buy": "Güçlü al", "Buy": "Al", "Hold": "Tut", "Sell": "Sat", "Strong Sell": "Güçlü sat"}
+REC_ORD = {"Strong Sell": 0, "Sell": 1, "Hold": 2, "Buy": 3, "Strong Buy": 4}
+
+
+def _chg(a, b):
+    return (b - a) / abs(a) if isinstance(a, (int, float)) and isinstance(b, (int, float)) and a else None
+
+
+def revisions(old: dict | None, new: dict, watched: bool) -> list[dict]:
+    """Önceki okumaya göre sert değişimler: hedef fiyat, konsensüs, bu/gelecek yıl HBK ve gelir tahmini."""
+    if not old:
+        return []
+    th, out = (TH if watched else TH_ALL), []
+    po, pn = old.get("pt") or {}, new.get("pt") or {}
+    c = _chg(po.get("avg"), pn.get("avg"))
+    if c is not None and abs(c) >= th["pt"] and min(po.get("n") or 0, pn.get("n") or 0) >= 2:
+        out.append({"k": "pt", "c": c, "a": po["avg"], "b": pn["avg"], "n": pn.get("n")})
+    ro, rn = (old.get("rt") or {}).get("c"), (new.get("rt") or {}).get("c")
+    if ro and rn and ro != rn and ro in REC_ORD and rn in REC_ORD:
+        out.append({"k": "rt", "c": REC_ORD[rn] - REC_ORD[ro], "a": ro, "b": rn, "n": (new.get("rt") or {}).get("n")})
+    fo, fn = old.get("fy") or {}, new.get("fy") or {}
+    if fo.get("end") and fo.get("end") == fn.get("end"):        # mali yıl değişince karşılaştırma yapılmaz
+        for k, nm in (("eps", "eps"), ("rev", "rev")):
+            c = _chg((fo.get(k) or {}).get("avg"), (fn.get(k) or {}).get("avg"))
+            if c is not None and abs(c) >= th[nm]:
+                out.append({"k": nm, "c": c, "a": fo[k]["avg"], "b": fn[k]["avg"], "fy": fn["end"][:4], "n": (fn.get(k) or {}).get("n")})
+        c = _chg(((old.get("an") or {}).get("epsNext") or {}).get("this"), ((new.get("an") or {}).get("epsNext") or {}).get("this"))
+        if c is not None and abs(c) >= th["eps2"]:
+            out.append({"k": "eps2", "c": c, "a": old["an"]["epsNext"]["this"], "b": new["an"]["epsNext"]["this"]})
+    return out
+
+
+def _fmt(v):
+    if not isinstance(v, (int, float)):
+        return str(v)
+    a = abs(v)
+    s = f"{v / 1e9:,.1f} mr" if a >= 1e9 else f"{v / 1e6:,.0f} mn" if a >= 1e6 else f"{v:,.2f}"
+    return s.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def describe(e: dict) -> str:
+    pc = lambda c: f"{'+' if c >= 0 else '−'}%{abs(c) * 100:.0f}".replace(".", ",")
+    if e["k"] == "pt":
+        return f"ortalama hedef {_fmt(e['a'])} → {_fmt(e['b'])} ({pc(e['c'])}, {e.get('n')} hedef)"
+    if e["k"] == "rt":
+        return f"konsensüs {REC_TR.get(e['a'], e['a'])} → {REC_TR.get(e['b'], e['b'])} ({e.get('n')} analist)"
+    lab = {"eps": f"{e.get('fy', '')} HBK tahmini", "rev": f"{e.get('fy', '')} gelir tahmini", "eps2": "gelecek yıl HBK tahmini"}[e["k"]]
+    return f"{lab} {_fmt(e['a'])} → {_fmt(e['b'])} ({pc(e['c'])})"
+
+
+def score(e: dict) -> float:
+    return abs(e["c"]) if e["k"] != "rt" else 0.15 * abs(e["c"])
+
+
+def telegram(events: list[dict], site: str | None) -> int:
+    """İzleme listesi: hisse başına bir mesaj. Diğerleri: günün en sert 8 revizyonu tek özet mesajda."""
+    import os
+    from . import http
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat = os.environ.get("TELEGRAM_CHAT_ID")
+    if not token or not chat or not events:
+        return 0
+    up = lambda ev: sum(1 if (x["c"] > 0) else -1 for x in ev["ev"])
+    link = lambda ev: f' · <a href="{site.rstrip("/")}/#hisse/{ev["code"]}">şirket</a>' if site else ""
+    msgs = []
+    for ev in [e for e in events if e["w"]]:
+        arrow = "🟢" if up(ev) > 0 else "🔴" if up(ev) < 0 else "🟡"
+        msgs.append(f"{arrow} <b>{ev['code']}</b> · analist revizyonu{link(ev)}\n" + "\n".join(f"• {describe(x)}" for x in ev["ev"]))
+    rest = sorted([e for e in events if not e["w"]], key=lambda e: -max(score(x) for x in e["ev"]))[:8]
+    if rest:
+        msgs.append("📊 <b>Sert analist revizyonları</b> (izleme listesi dışı)\n" + "\n".join(
+            f"{'▲' if up(e) > 0 else '▼' if up(e) < 0 else '•'} <b>{e['code']}</b> ({'ABD' if e['m'] == 'US' else 'BIST'}): {describe(max(e['ev'], key=score))}" for e in rest))
+    sent = 0
+    for t in msgs:
+        r = http.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                      json={"chat_id": chat, "text": t, "parse_mode": "HTML", "disable_web_page_preview": True}, retries=1)
+        sent += bool(r is not None and getattr(r, "ok", False))
+    return sent
+
+
 # ───────────────────────────── çalıştırma
 
 def fetch(session, path: str):
@@ -262,7 +346,8 @@ def robots_ok(session) -> bool:
     return not bad
 
 
-def run(out: Path, budget_s: int = 1500, max_pages: int = 400, session=None, today: date | None = None, sleep=time.sleep) -> dict:
+def run(out: Path, budget_s: int = 1500, max_pages: int = 400, session=None, today: date | None = None, sleep=time.sleep,
+        notify: bool = True) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     today = today or date.today()
     sp, ap, hp = out / "sa_state.json", out / "analist.json", out / "analist_hist.json"
@@ -275,7 +360,8 @@ def run(out: Path, budget_s: int = 1500, max_pages: int = 400, session=None, tod
     if not robots_ok(session):
         return {"rows": rows}
     t0, n, errs, stop = time.monotonic(), 0, 0, None
-    for m, c in order(universe(), st, today, watch_codes()):
+    watch, events = watch_codes(), []
+    for m, c in order(universe(), st, today, watch):
         if time.monotonic() - t0 > budget_s or n >= max_pages or stop:
             break
         key, row, empty = f"{m}:{c}", {"m": m}, True
@@ -317,11 +403,23 @@ def run(out: Path, budget_s: int = 1500, max_pages: int = 400, session=None, tod
                 if sv:
                     row["sur"] = sv
             row.pop("tq", None)
+            ev = revisions(rows.get(key), row, c in watch)
+            if ev:
+                events.append({"m": m, "code": c, "w": c in watch, "ev": ev, "d": today.isoformat()})
             rows[key] = row
         st[key] = {"t": today.isoformat(), **({"empty": True} if empty else {})}
+    old_doc = json.loads(ap.read_text(encoding="utf-8")) if ap.exists() else {}
+    revs = (events + (old_doc.get("revs") or []))[:200]          # son revizyonlar (şirket kartı ve sayfa için)
     doc = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
            "source": "stockanalysis.com (tahminler: S&P Global Market Intelligence)", "rows": rows,
-           "n": len(rows), "stopped": stop}
+           "n": len(rows), "stopped": stop, "revs": revs}
+    if notify and events:
+        import os
+        try:
+            k = telegram(events, os.environ.get("SITE_URL") or "https://radar.lyracube.com")
+            log.info("Analist revizyonu: %d hisse, %d Telegram mesajı", len(events), k)
+        except Exception:  # noqa: BLE001
+            log.exception("Telegram gönderilemedi")
     ap.write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     sp.write_text(json.dumps(st, separators=(",", ":")), encoding="utf-8")
     hp.write_text(json.dumps(hist, separators=(",", ":")), encoding="utf-8")
