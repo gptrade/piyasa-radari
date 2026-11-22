@@ -46,7 +46,7 @@
   }
 
   const pc = (v, d = 1) => v == null || !isFinite(v) ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${fmt.num(Math.abs(v) * 100, d)}%`;
-  const pp = (v, d = 0) => v == null ? "—" : `%${fmt.num(v * 100, d)}`;
+  const pp = (v, d = 0) => v == null ? "—" : `${v < 0 ? "−" : ""}%${fmt.num(Math.abs(v) * 100, d)}`;
   const sgn = v => v == null ? "" : v > 0 ? "up" : v < 0 ? "down" : "";
   const dlab = iso => { const [y, m, d] = iso.split("-"); return `${+d} ${["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"][+m - 1]} ${y.slice(2)}`; };
   const seg = (id, opts, cur, lbl) => `<div class="seg" role="radiogroup" aria-label="${lbl}" id="${id}">${Object.entries(opts).map(([v, l]) =>
@@ -119,7 +119,7 @@
     const comps = k.components.map(c => { const cz = kz(c.score);
       return `<li><span class="kk-cl" data-tip="${esc(c.desc)}">${esc(c.label)}</span><span class="kk-bar"><i style="width:${c.score}%;background:${cz[2]}"></i></span><b class="mono">${fmt.num(c.score, 0)}</b><span class="kk-cz" style="color:${cz[2]}">${cz[1]}</span></li>`; }).join("");
     const h = k.hist, D = h.map(x => x[0]), V = h.map(x => x[1]);
-    const zr = k.zones.map(r => `<tr><th scope="row"><span style="color:${kz(KZ.find(z => z[1] === r.zone)[0] - 1)[2]}">●</span> ${r.zone}</th><td class="num">%${fmt.num(r.share * 100, 0)}</td><td class="num ${r.f21 >= 0 ? "up" : "down"}">${r.f21 == null ? "—" : pp(r.f21, 1)}</td><td class="num ${r.f63 >= 0 ? "up" : "down"}">${r.f63 == null ? "—" : pp(r.f63, 1)}</td><td class="num">${r.hit63 == null ? "—" : pp(r.hit63)}</td></tr>`).join("");
+    const zr = k.zones.map(r => `<tr><th scope="row"><span style="color:${kz(KZ.find(z => z[1] === r.zone)[0] - 1)[2]}">●</span> ${r.zone}</th><td class="num">%${fmt.num(r.share * 100, 0)}</td><td class="num ${sgn(r.f21)}">${pc(r.f21, 1)}</td><td class="num ${sgn(r.f63)}">${pc(r.f63, 1)}</td><td class="num">${r.hit63 == null ? "—" : pp(r.hit63)}</td></tr>`).join("");
     return `<div class="fa-two kk-full">
       <section class="card kk" aria-labelledby="kkT"><div class="card-head"><h2 class="card-title" id="kkT">BIST korku–açgözlülük endeksi</h2><span class="card-meta">${dlab(k.asof)} kapanışı</span></div>
         ${head}
@@ -453,8 +453,8 @@
     const oiChart = chart(sr.map(x => x.d), [{ v: sr.map(x => x.oi_all), color: "var(--series-1)", label: "toplam açık pozisyon (tüm vadeler)" }], { h: 180, title: "açık pozisyon", fmtY: x => fmt.num(x / 1000, 0) + " bin" });
     const strip = `<div class="vp-strip" aria-label="Son 60 gün fiyat × açık pozisyon okuması">${v.series.slice(-60).map(x => `<i style="background:${x.st ? VST[x.st][1] : "var(--border)"}" data-tip="${dlab(x.d)} · ${x.st ? VST[x.st][0] : "değişim yok"} · ${pc(x.chg, 2)} · açık poz. ${x.doi > 0 ? "+" : ""}${fmt.int(x.doi)}"></i>`).join("")}</div>
       <div class="chart-legend">${Object.values(VST).map(([l, c]) => `<span><i style="background:${c}"></i>${l}</span>`).join("")}</div>`;
-    const ct = `<div class="tbl-scroll"><table class="tx"><thead><tr><th>Vade</th><th class="num">Uzlaşma</th><th class="num">Değişim</th><th class="num">Açık poz.</th><th class="num">Günlük</th><th class="num">Hacim (adet)</th></tr></thead><tbody>
-      ${v.contracts.map(c => `<tr><th scope="row">${vade(c.code)} <span class="t3 mono">${esc(c.code)}</span></th><td class="num">${fmt.num(c.f, 0)}</td><td class="num ${sgn(c.chg)}">${pc(c.chg, 2)}</td><td class="num">${fmt.int(c.oi)}</td><td class="num ${sgn(c.doi)}">${c.doi > 0 ? "+" : c.doi < 0 ? "−" : ""}${fmt.int(Math.abs(c.doi))}</td><td class="num">${fmt.int(c.qty)}</td></tr>`).join("")}</tbody></table></div>`;
+    const ct = `<div class="tbl-scroll"><table class="tx vp-tx"><thead><tr><th>Vade</th><th class="num">Uzlaşma</th><th class="num">Değişim</th><th class="num">Açık poz.</th><th class="num" data-tip="Açık pozisyonun bir önceki güne göre değişimi">Günlük</th><th class="num vp-sm-hide">Hacim (adet)</th></tr></thead><tbody>
+      ${v.contracts.map(c => `<tr><th scope="row">${vade(c.code)}<span class="vp-code">${esc(c.code)}</span></th><td class="num">${fmt.num(c.f, 0)}</td><td class="num ${sgn(c.chg)}">${pc(c.chg, 2)}</td><td class="num">${fmt.int(c.oi)}</td><td class="num ${sgn(c.doi)}">${c.doi > 0 ? "+" : c.doi < 0 ? "−" : ""}${fmt.int(Math.abs(c.doi))}</td><td class="num vp-sm-hide">${fmt.int(c.qty)}</td></tr>`).join("")}</tbody></table></div>`;
     const R = v.roll;
     const roll = R ? `<section class="card" aria-labelledby="vpR"><div class="card-head"><h2 class="card-title" id="vpR">Vade geçişi · ${vade(R.code)} → ${vade(R.next)}</h2><span class="card-meta">vade sonuna ${R.bd_left} iş günü</span></div>
         <p>Açık pozisyonun <b>${pp(R.share, 0)}</b>'i ${vade(R.next)} vadesinde.${R.prev_same != null ? ` Önceki vadede (${vade(R.prev_code)}) aynı noktada bu oran ${pp(R.prev_same, 0)} idi${R.share < R.prev_same - 0.05 ? " — taşıma yavaş, pozisyonların bir kısmı kapatılıyor olabilir" : R.share > R.prev_same + 0.05 ? " — taşıma önceki vadeden hızlı" : ""}.` : ""}</p>
@@ -462,8 +462,8 @@
     const F = v.fx, fh = F.hist.slice(-260);
     const fx = F.curve.length ? `<section class="card" aria-labelledby="vpF"><div class="card-head"><h2 class="card-title" id="vpF">Dolar/TL vadelilerinden ima edilen TL faizi</h2><span class="card-meta">${dlab(F.asof)}</span></div>
       ${fh.length > 5 ? chart(fh.map(x => x.d), [{ v: fh.map(x => x.m1 == null ? null : x.m1 * 100), color: "var(--series-2, #c98a1b)", label: "1 ay" }, { v: fh.map(x => x.m3 == null ? null : x.m3 * 100), color: "var(--series-1)", label: "3 ay" }, { v: fh.map(x => x.m6 == null ? null : x.m6 * 100), color: "var(--text-3)", label: "6 ay" }], { h: 200, fmtY: x => `%${fmt.num(x, 0)}`, title: "ima edilen TL faizi" }) : ""}
-      <div class="tbl-scroll"><table class="tx"><thead><tr><th>Vade</th><th class="num">Gün</th><th class="num">Uzlaşma</th><th class="num">Açık poz.</th><th class="num">İma edilen TL faizi</th></tr></thead><tbody>
-        ${F.curve.slice(0, 8).map(c => `<tr><th scope="row">${vade(c.code)}</th><td class="num">${c.d}</td><td class="num">${fmt.num(c.f, 4)}</td><td class="num">${fmt.int(c.oi)}</td><td class="num"><b>${pp(c.r, 1)}</b></td></tr>`).join("")}</tbody></table></div></div>
+      <div class="tbl-scroll"><table class="tx vp-tx"><thead><tr><th>Vade</th><th class="num">Gün</th><th class="num" data-tip="Dolar/TL vadelisinden ima edilen yıllık TL faizi">TL faizi</th><th class="num">Uzlaşma</th><th class="num">Açık poz.</th></tr></thead><tbody>
+        ${F.curve.slice(0, 8).map(c => `<tr><th scope="row">${vade(c.code)}</th><td class="num">${c.d}</td><td class="num"><b>${pp(c.r, 1)}</b></td><td class="num">${fmt.num(c.f, 4)}</td><td class="num">${fmt.int(c.oi)}</td></tr>`).join("")}</tbody></table></div></div>
       <p class="t3 gc-foot">Faiz paritesi: ((vadeli / spot) × (1 + ABD faizi × gün/360) − 1) × 365 / gün; ABD faizi 3 aylık hazine bonosu, spot Yahoo kapanışı. Spot ile vadeli kapanış saatleri tam örtüşmediği için 1 aydan kısa vadeler gösterilmez. TCMB politika faiziyle karşılaştırınca piyasanın faiz beklentisini verir.</p></section>` : "";
     return `<div class="kpi-grid vp-kpi">${kp}</div>
       <section class="card" aria-labelledby="vpP"><div class="card-head"><h2 class="card-title" id="vpP">BIST 30 vadeli · fiyat ve açık pozisyonun tahmini maliyeti</h2><span class="card-meta">${vade(near)} vadesi · son ${cd.length} gün</span></div>

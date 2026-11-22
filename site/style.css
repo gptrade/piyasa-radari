@@ -2024,3 +2024,16 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 .vp-strip { display: grid; grid-template-columns: repeat(60, minmax(0, 1fr)); gap: 2px; margin: var(--s-3) 0 var(--s-2); }
 .vp-strip i { display: block; height: 28px; border-radius: 2px; }
 .vp-kpi .kpi-sub { white-space: normal; overflow: visible; text-overflow: clip; }
+/* .tx tabloları: başlıklar sola, sayı sütunları (başlık + hücre) sağa hizalı, eşit genişlikli rakam */
+.tx th { text-align: left; }
+.tx th.num, .tx td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tx td.num { font-family: var(--font-mono); }
+.tx tbody th[scope=row] { font-weight: var(--fw-medium, 500); white-space: nowrap; }
+.vp-tx { border: 0; }
+.vp-tx th:first-child, .vp-tx td:first-child { padding-left: var(--s-4); } .vp-tx th:last-child, .vp-tx td:last-child { padding-right: var(--s-4); }
+.vp-tx .vp-code { display: block; font: var(--fs-2xs) var(--font-mono); color: var(--text-3); font-weight: 400; }
+.tx tbody th[scope=row] { border-bottom: 1px solid var(--border); }
+.vp-tx tbody th[scope=row] { text-align: left; }
+@media (max-width: 600px) { .vp-sm-hide { display: none; } .vp-tx th, .vp-tx td { padding-left: 6px; padding-right: 6px; } }
+.vp-tx { max-width: 760px; }
+.kk-zt { max-width: 760px; }
