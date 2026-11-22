@@ -2023,3 +2023,4 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 /* VİOP: fiyat × açık pozisyon şeridi */
 .vp-strip { display: grid; grid-template-columns: repeat(60, minmax(0, 1fr)); gap: 2px; margin: var(--s-3) 0 var(--s-2); }
 .vp-strip i { display: block; height: 28px; border-radius: 2px; }
+.vp-kpi .kpi-sub { white-space: normal; overflow: visible; text-overflow: clip; }
