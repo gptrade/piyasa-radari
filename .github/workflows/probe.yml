@@ -24,7 +24,7 @@ jobs:
           true
           git archive origin/fin _universe.json | tar -x -C fin
           pip install -q -r main/requirements.txt
-          cd main && python ../probe/scripts/semafor.py > ../probe/semafor.txt 2>&1; cd ..; true
+          cd main && python ../probe/scripts/regtom.py > ../probe/regtom.txt 2>&1; cd ..; true
           rm -rf main guc fin
 
       - name: kaydet
