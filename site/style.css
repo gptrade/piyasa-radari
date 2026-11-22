@@ -2037,3 +2037,17 @@ tr:hover .tk-pi, .tk-pi:focus-visible { opacity: 1; }
 @media (max-width: 600px) { .vp-sm-hide { display: none; } .vp-tx th, .vp-tx td { padding-left: 6px; padding-right: 6px; } }
 .vp-tx { max-width: 760px; }
 .kk-zt { max-width: 760px; }
+/* Analist beklentisi kartı */
+.sa-top { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: var(--s-5); align-items: center; }
+@media (max-width: 700px) { .sa-top { grid-template-columns: 1fr 1fr; } .sa-w { grid-column: 1 / -1; } }
+.sa-k { display: flex; flex-direction: column; gap: 2px; } .sa-k b { font-size: var(--fs-lg); }
+.sa-dist { display: flex; height: 12px; border-radius: 3px; overflow: hidden; gap: 1px; }
+.sa-dl { font-size: var(--fs-2xs); color: var(--text-3); margin-top: 4px; }
+.sa-rng { position: relative; height: 10px; margin: var(--s-4) 8px 4px; background: var(--border); border-radius: 5px; }
+.sa-band { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--series-1) 35%, transparent); border-radius: 5px; }
+.sa-rng i { position: absolute; top: -4px; width: 3px; height: 18px; transform: translateX(-1px); border-radius: 2px; }
+.sa-avg { background: var(--series-1); } .sa-px { background: var(--text); }
+.sa-rl { display: flex; justify-content: space-between; font: var(--fs-2xs) var(--font-mono); color: var(--text-3); margin: 0 4px var(--s-3); }
+.sa-kv { margin-top: var(--s-2); } .sa-sur { margin-top: var(--s-3); max-width: 760px; }
+.sa-kv { max-width: 760px; } .sa-sh { margin: var(--s-4) 0 var(--s-2); font-weight: var(--fw-medium, 500); font-size: var(--fs-sm); }
+@media (max-width: 600px) { .sa-mid { display: none; } }

@@ -222,6 +222,14 @@ jobs:
 
       # Kapalı grup sitesi (Cloudflare Pages + Cloudflare Access). Secret'lar tanımlı değilse atlanır;
       # geçiş süresince GitHub Pages yayını da sürer.
+      # Analist beklentileri (radar/sa.py, gizli repoda): yalnız giriş korumalı Cloudflare kopyasına eklenir,
+      # data dalına ve GitHub Pages'e girmez (aşağıda Pages artifact'inden önce silinir).
+      - name: Analist verisini Cloudflare kopyasına ekle
+        if: env.HAS_RAPOR == 'true'
+        continue-on-error: true
+        run: |
+          if [ -f _raporlar/analist/analist.json ]; then mkdir -p site/data/sa && cp _raporlar/analist/analist.json site/data/sa/; fi
+
       - name: Cloudflare Pages'e yükle
         if: ${{ env.HAS_CF == 'true' }}
         continue-on-error: true
@@ -233,6 +241,9 @@ jobs:
           command: pages deploy site --project-name=piyasa-radari --branch=main --commit-dirty=true
 
       - uses: actions/configure-pages@v5
+      - name: Gizli veriyi GitHub Pages kopyasından çıkar
+        run: rm -rf site/data/sa
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

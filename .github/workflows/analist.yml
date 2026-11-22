@@ -1,0 +1,64 @@
+name: analist
+
+# Analist beklentileri ve ek istatistikler (radar/sa.py · stockanalysis.com, kişisel kullanım).
+# robots.txt'e uyan yavaş okuma: istekler arası 4 sn, günlük bütçe ~25 dk (~230 sayfa); tüm BIST + ABD evreni haftada bir yenilenir.
+# Çıktı herkese açık dallara YAZILMAZ: gizli rapor reposunun analist/ klasörüne gider; radar iş akışı yalnız
+# giriş korumalı Cloudflare kopyasına ekler (GitHub Pages kopyasında yok).
+# Gerekli secret: RAPOR_YAZMA_TOKEN (gptrade/piyasa-radari-raporlar için Contents: Read and write).
+on:
+  schedule:
+    - cron: "43 3 * * *"      # her gün 06:43 İstanbul
+  push:
+    branches: [onizleme-analist]
+    paths: ["radar/sa.py", ".github/workflows/analist.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: analist
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Evreni geri yükle (BIST ve ABD tarama özetleri)
+        run: |
+          mkdir -p site/data/fin site/data/fin_us
+          git fetch --depth 1 origin fin && git archive FETCH_HEAD _screen.json | tar -x -C site/data/fin || true
+          git fetch --depth 1 origin fin_us && git archive FETCH_HEAD _screen.json | tar -x -C site/data/fin_us || true
+
+      - name: Gizli repoyu çek
+        uses: actions/checkout@v4
+        with:
+          repository: gptrade/piyasa-radari-raporlar
+          token: ${{ secrets.RAPOR_YAZMA_TOKEN }}
+          path: _raporlar
+
+      - name: Analist beklentileri
+        timeout-minutes: 28
+        run: python -m radar.sa --out _raporlar/analist --budget 1500 --max 400
+
+      - name: Gizli repoya kaydet
+        if: always()
+        working-directory: _raporlar
+        run: |
+          [ -f analist/analist.json ] || exit 0
+          git config user.name "radar-bot"
+          git config user.email "radar-bot@users.noreply.github.com"
+          git add analist
+          git diff --cached --quiet && exit 0
+          git commit -q -m "analist: $(date -u +%F)"
+          git push -q

@@ -77,20 +77,43 @@
     combined: ["Birleşik oran", pct, -1, "Teknik karlılık"], tech_margin: ["Teknik denge / kazanılmış prim", pct, 1, "Teknik karlılık"],
     retention: ["Saklama oranı (net / brüt prim)", pct, 1, "Verimlilik"], reserves_cover: ["Nakit+finansal varlık / teknik karşılık", x, 1, "Likidite"],
     premium_growth: ["Reel brüt prim büyümesi", pctS, 1, "Reel büyüme"],
+    // analist (radar/sa.py; yalnız giriş korumalı sitede dolu)
+    an_pot: ["Analist hedefine göre potansiyel", pctS, 1, "Analist"], an_n: ["Analist sayısı", v => v == null ? "—" : fmt.int(v), 1, "Analist"],
+    an_buy: ["Al tavsiyesi oranı", pct, 1, "Analist"], an_epsg: ["Bu yıl beklenen HBK büyümesi", pctS, 1, "Analist"],
+    an_epsg2: ["Gelecek yıl beklenen HBK büyümesi", pctS, 1, "Analist"], an_revg: ["Bu yıl beklenen gelir büyümesi", pctS, 1, "Analist"],
+    an_fpe: ["İleriye dönük F/K", x, -1, "Analist"], an_short: ["Açığa satış / halka açık pay", pct, -1, "Analist"],
   };
+  const ANK = ["an_pot", "an_n", "an_buy", "an_epsg", "an_epsg2", "an_revg", "an_fpe", "an_short"];
   const MET_T = {
     sanayi: ["gross_margin", "ebitda_margin", "op_margin", "core_margin", "net_margin", "roe", "roa", "roic", "rev_growth", "ebitda_growth", "net_growth", "asset_growth",
       "net_debt_ebitda", "debt_equity", "fin_debt_equity", "liab_assets", "interest_cov", "current", "quick", "cash_ratio", "cfo_ni", "fcf_margin", "accruals", "fcf_conv", "mon_share", "pbt_ex_mon_margin", "rule40",
-      "asset_turnover", "inv_days", "rec_days", "pay_days", "ccc", "ccc_chg", "pe", "pb", "pb_med3", "pb_rel3", "ev_ebitda", "ev_sales", "ps", "peg", "earnings_yield", "fcf_yield", "div_yield"],
+      "asset_turnover", "inv_days", "rec_days", "pay_days", "ccc", "ccc_chg", "pe", "pb", "pb_med3", "pb_rel3", "ev_ebitda", "ev_sales", "ps", "peg", "earnings_yield", "fcf_yield", "div_yield", ...ANK],
     banka: ["roe", "real_roe", "roa", "inflation", "tax_rate", "nim", "fee_share", "cost_income", "fee_cover", "cost_of_risk", "ldr", "equity_assets",
-      "loan_growth", "deposit_growth", "net_growth", "rev_growth", "pe", "pb", "pb_med3", "pb_rel3", "peg", "earnings_yield", "div_yield"],
+      "loan_growth", "deposit_growth", "net_growth", "rev_growth", "pe", "pb", "pb_med3", "pb_rel3", "peg", "earnings_yield", "div_yield", ...ANK],
     sigorta: ["roe", "real_roe", "roa", "inflation", "loss_ratio", "expense_ratio", "combined", "tech_margin", "retention", "equity_assets", "reserves_cover",
-      "premium_growth", "net_growth", "pe", "pb", "pb_med3", "pb_rel3", "peg", "earnings_yield", "div_yield"],
+      "premium_growth", "net_growth", "pe", "pb", "pb_med3", "pb_rel3", "peg", "earnings_yield", "div_yield", ...ANK],
   };
   const TPL = { sanayi: "Sanayi/hizmet", banka: "Banka", sigorta: "Sigorta" };
   const tplOf = x => x?.metrics?.template || x?.template || x?.t || "sanayi";
   const VALK = new Set(["pe", "pb", "ev_ebitda", "ev_sales", "ps", "peg", "earnings_yield", "fcf_yield", "div_yield"]);
-  const mval = (row, k) => VALK.has(k) ? row.v?.[k] : row.r?.[k];
+  const mval = (row, k) => k.startsWith("an_") ? anVal(row, k) : VALK.has(k) ? row.v?.[k] : row.r?.[k];
+  // analist metrikleri: SA.doc yüklüyse satırdan türetilir (yoksa null → tarama süzgeci "veri yok" sayar)
+  function anVal(row, k) {
+    const a = SA.doc?.rows?.[`${row.mkt === "us" ? "US" : "BIST"}:${row.code}`];
+    if (!a) return null;
+    const rt = a.rt, n = rt ? rt.n : null;
+    switch (k) {
+      case "an_pot": return a.pt?.avg && row.price ? a.pt.avg / row.price - 1 : a.st?.priceTargetChange ?? null;
+      case "an_n": return n;
+      case "an_buy": return n ? (rt.strongBuy + rt.buy) / n : null;
+      case "an_epsg": return a.an?.epsThis?.growth != null ? a.an.epsThis.growth / 100 : null;
+      case "an_epsg2": return a.an?.epsNext?.growth != null ? a.an.epsNext.growth / 100 : null;
+      case "an_revg": return a.an?.revenueThis?.growth != null ? a.an.revenueThis.growth / 100 : null;
+      case "an_fpe": return a.st?.peForward ?? (a.fcur === a.cur && row.price && a.fy?.eps?.avg > 0 ? row.price / a.fy.eps.avg : null);
+      case "an_short": return a.st?.shortFloat ?? null;
+    }
+    return null;
+  }
   const mOf = (m, k) => VALK.has(k) ? m.valuation?.[k] : m.ratios?.[k];
 
   // ───────────── veri
@@ -405,11 +428,71 @@
     $("#faCmpAdd").onclick = () => { if (!S.cmp.includes(code)) S.cmp = [...S.cmp, code].slice(-5); store.set("radar.finCmp", S.cmp); sh.go("karsilastir", { param: S.cmp.join(",") }); };
     $("#faSig") && ($("#faSig").onclick = e => { sh.go("sinyal"); setTimeout(() => window.radar?.openTicker?.(code, e.target), 60); });
     const body = $("#faBody");
-    if (S.tab === "ozet") body.innerHTML = T(tabSummary(d, row));
+    if (S.tab === "ozet") { body.innerHTML = T(tabSummary(d, row)); analystCard(body, code, US, US ? null : v.price); }
     else if (S.tab === "fin") { body.innerHTML = T(tabFin(d)); bindFin(body, d); }
     else if (S.tab === "graf") { body.innerHTML = T(tabCharts(d)); bindCharts(body, d); }
     else { body.innerHTML = T(tabDetail(d)); if (!US) divHistory(code); }
     $$(".tk-cmp", body).forEach(b => b.onclick = () => sh.go("hisse", { param: b.dataset.code }));
+  }
+
+  // ─────────────────────────────── analist beklentisi (radar/sa.py · yalnız giriş korumalı sitede; dosya yoksa kart çıkmaz)
+  const SA = { doc: null, p: null };
+  const loadSA = () => SA.p ||= fetch(`data/sa/analist.json?t=${Math.floor(Date.now() / 36e5)}`).then(r => r.ok ? r.json() : null).catch(() => null)
+    .then(j => { SA.doc = j; if (j && sh.route === "tarama") renderScreen(); return j; });
+  const REC = { "Strong Buy": "Güçlü al", Buy: "Al", Hold: "Tut", Sell: "Sat", "Strong Sell": "Güçlü sat" };
+  function analystCard(body, code, US, price) {
+    const host = body.querySelector(".fa-exec");
+    if (!host) return;
+    loadSA().then(doc => {
+      const a = doc?.rows?.[`${US ? "US" : "BIST"}:${code}`];
+      if (!a || !body.isConnected) return;
+      const cur = a.cur === "USD" ? "$" : a.cur === "TRY" ? "₺" : (a.cur || "");
+      const money = x => x == null ? "—" : `${fmt.num(x, x >= 1000 ? 0 : 2)} ${cur}`;
+      const fc = a.fcur === "USD" ? "$" : a.fcur === "TRY" ? "₺" : (a.fcur || "");
+      const big = x => x == null ? "—" : Math.abs(x) >= 1e9 ? `${fmt.num(x / 1e9, 1)} mr ${fc}` : Math.abs(x) >= 1e6 ? `${fmt.num(x / 1e6, 0)} mn ${fc}` : fmt.num(x, 0);
+      const g = x => x == null ? "" : ` <small class="${x >= 0 ? "up" : "down"}">${x >= 0 ? "+" : "−"}%${fmt.num(Math.abs(x), 1)}</small>`;
+      const pt = a.pt, rt = a.rt;
+      const pot = pt?.avg && price ? pt.avg / price - 1 : a.st?.priceTargetChange ?? null;
+      let range = "";
+      if (pt?.low != null && pt?.high != null && pt.high > pt.low) {
+        const lo = Math.min(pt.low, price ?? pt.low), hi = Math.max(pt.high, price ?? pt.high), X = x => ((x - lo) / (hi - lo) * 100).toFixed(1);
+        range = `<div class="sa-rng" aria-label="Hedef fiyat aralığı"><span class="sa-band" style="left:${X(pt.low)}%;width:${X(pt.high) - X(pt.low)}%"></span>
+          <i class="sa-avg" style="left:${X(pt.avg)}%" data-tip="Ortalama hedef ${money(pt.avg)}"></i>${price ? `<i class="sa-px" style="left:${X(price)}%" data-tip="Fiyat ${money(price)}"></i>` : ""}</div>
+          <div class="sa-rl"><span>${money(pt.low)}</span><span class="sa-mid">ort. ${money(pt.avg)} · medyan ${money(pt.med)}</span><span>${money(pt.high)}</span></div>`;
+      }
+      const dist = rt ? (() => { const parts = [["strongBuy", "Güçlü al", "var(--up)"], ["buy", "Al", "color-mix(in srgb, var(--up) 55%, var(--surface))"], ["hold", "Tut", "var(--text-3)"], ["sell", "Sat", "color-mix(in srgb, var(--down) 55%, var(--surface))"], ["strongSell", "Güçlü sat", "var(--down)"]];
+        return `<div class="sa-dist">${parts.filter(([k]) => rt[k]).map(([k, l, c]) => `<i style="flex:${rt[k]};background:${c}" data-tip="${l}: ${rt[k]}"></i>`).join("")}</div>
+          <div class="sa-dl">${parts.filter(([k]) => rt[k]).map(([k, l]) => `<span>${l} ${rt[k]}</span>`).join(" · ")}</div>`; })() : "";
+      const tr = (a.rtr || []).filter(x => x[1] != null);
+      const trend = tr.length > 1 ? (() => { const d0 = tr[0][1], d1 = tr.at(-1)[1]; return d1 > d0 + 0.3 ? `<span class="up">son ${tr.length} ayda iyileşiyor</span>` : d1 < d0 - 0.3 ? `<span class="down">son ${tr.length} ayda zayıflıyor</span>` : "son aylarda yatay"; })() : "";
+      const an = a.an || {}, fy = a.fy || {};
+      const fyLab = fy.end ? `${fy.end.slice(0, 4)}${fy.end.slice(5, 7) !== "12" ? ` (${fy.end.slice(5, 7)}/${fy.end.slice(2, 4)} mali yıl)` : ""}` : "bu yıl";
+      const kv = [
+        fy.eps ? [`${fyLab} hisse başı kâr`, `${fmt.num(fy.eps.avg, 2)} ${fc}${g(an.epsThis?.growth)}`, `${fy.eps.n || "?"} analist · ${fmt.num(fy.eps.low, 2)}–${fmt.num(fy.eps.high, 2)}`] : null,
+        fy.rev ? [`${fyLab} gelir`, `${big(fy.rev.avg)}${g(an.revenueThis?.growth)}`, `${fy.rev.n || "?"} analist`] : null,
+        an.epsNext?.this != null ? ["Gelecek yıl hisse başı kâr", `${fmt.num(an.epsNext.this, 2)} ${fc}${g(an.epsNext.growth)}`, ""] : null,
+        an.revenueNext?.this != null ? ["Gelecek yıl gelir", `${big(an.revenueNext.this)}${g(an.revenueNext.growth)}`, ""] : null,
+        a.qt?.epsThis?.this != null ? ["Gelecek çeyrek hisse başı kâr", `${fmt.num(a.qt.epsThis.this, 2)} ${fc}${g(a.qt.epsThis.growth)}`, "geçen yılın aynı çeyreğine göre"] : null,
+        a.st?.peForward != null ? ["İleriye dönük F/K", fmt.num(a.st.peForward, 1), a.st.peg != null ? `PEG ${fmt.num(a.st.peg, 2)}` : ""] : null,
+        a.st?.shortFloat != null ? ["Açığa satış", `%${fmt.num(a.st.shortFloat * 100, 2)} halka açık payın`, a.st.shortRatio != null ? `kapatma ${fmt.num(a.st.shortRatio, 1)} gün` : ""] : null,
+        a.st?.earningsdate ? ["Sonraki bilanço", esc(a.st.earningsdate), ""] : null,
+      ].filter(Boolean);
+      const sur = (a.sur || []).filter(x => x.eps_s != null || x.rev_s != null);
+      const surT = sur.length ? `<p class="sa-sh">Bilanço sürprizi · hisse başı kâr</p><div class="tbl-scroll"><table class="tx sa-sur"><thead><tr><th>Çeyrek</th><th class="num">Beklenti</th><th class="num">Gerçekleşen</th><th class="num">Sürpriz</th><th class="num" data-tip="Gelirde gerçekleşenin beklentiden farkı">Gelir</th></tr></thead><tbody>
+        ${sur.map(x => `<tr><th scope="row">${x.d.slice(0, 7)}</th><td class="num">${fmt.num(x.eps_e, 2)}</td><td class="num">${fmt.num(x.eps_a, 2)}</td><td class="num ${x.eps_s >= 0 ? "up" : "down"}">${x.eps_s == null ? "—" : `${x.eps_s >= 0 ? "+" : "−"}%${fmt.num(Math.abs(x.eps_s) * 100, 1)}`}</td><td class="num ${x.rev_s >= 0 ? "up" : "down"}">${x.rev_s == null ? "—" : `${x.rev_s >= 0 ? "+" : "−"}%${fmt.num(Math.abs(x.rev_s) * 100, 1)}`}</td></tr>`).join("")}</tbody></table></div>` : "";
+      if (!rt && !pt && !kv.length) return;
+      host.insertAdjacentHTML("afterend", `<section class="card sa-card" aria-labelledby="saT"><div class="card-head"><h2 class="card-title" id="saT">Analist beklentisi</h2>
+          <span class="card-meta">${rt ? `${rt.n} analist` : ""}${a.t ? ` · ${fmt.date(a.t, { day: "numeric", month: "short" })}` : ""}</span></div>
+        <div class="sa-top">
+          <div class="sa-k"><span class="t3">Konsensüs</span><b class="${rt && /Buy/.test(rt.c) ? "up" : rt && /Sell/.test(rt.c) ? "down" : ""}">${rt ? REC[rt.c] || esc(rt.c) : "—"}</b><small class="t3">${trend}</small></div>
+          <div class="sa-k"><span class="t3">Ortalama hedef</span><b class="mono">${money(pt?.avg)}</b><small>${pot != null ? `<span class="${pot >= 0 ? "up" : "down"}">${pot >= 0 ? "+" : "−"}%${fmt.num(Math.abs(pot) * 100, 1)}</span> potansiyel` : ""}${pt ? ` · ${pt.n} hedef` : ""}</small></div>
+          <div class="sa-k sa-w">${dist}</div>
+        </div>
+        ${range}
+        ${kv.length ? `<table class="fa-kv sa-kv"><tbody>${kv.map(([k, val, ex]) => `<tr><th scope="row">${k}</th><td class="num">${val}${ex ? ` <small class="t3">${ex}</small>` : ""}</td></tr>`).join("")}</tbody></table>` : ""}
+        ${surT}
+        <p class="t3 gc-foot">stockanalysis.com · tahminler S&amp;P Global Market Intelligence. ${fc !== cur && fc ? `Tahminler şirketin raporlama para biriminde (${esc(a.fcur)}).` : ""}</p></section>`);
+    });
   }
 
   function summaryFin(d, row, tmpl) {
@@ -696,7 +779,7 @@
   // Detaylı analiz: tüm oranlar + kriter ayrıntısı
   function tabDetail(d) {
     const m = d.metrics, groups = {};
-    (MET_T[tplOf(d)] || MET_T.sanayi).forEach(k => { const [l, f, , g] = MET[k]; (groups[g] ||= []).push([l, f(mOf(m, k))]); });
+    (MET_T[tplOf(d)] || MET_T.sanayi).filter(k => !k.startsWith("an_")).forEach(k => { const [l, f, , g] = MET[k]; (groups[g] ||= []).push([l, f(mOf(m, k))]); });
     return `<div class="fa-two">
       <section class="card"><div class="card-head"><h2 class="card-title">Tüm oranlar</h2><span class="card-meta">${m.period} · son 12 ay</span></div>
         ${Object.entries(groups).map(([g, xs]) => `<p class="d-sub">${g}</p><table class="fa-kv"><tbody>${xs.map(([l, v]) => `<tr><th scope="row">${l}</th><td class="num">${v}</td></tr>`).join("")}</tbody></table>`).join("")}</section>
@@ -791,6 +874,7 @@
   function renderScreen() {
     const el = $("#view-tarama");
     if (notReady(el)) return;
+    loadSA();
     if (S.mkt === "us" && !S.us) {
       if (!S.usErr) { loadUS(); el.innerHTML = `<section class="card"><div class="card-head">${mktSeg()}</div><div class="skeleton sk-block" style="height:220px"></div></section>`; }
       else el.innerHTML = `<section class="card"><div class="card-head">${mktSeg()}</div>${sh.stateHTML({ title: "ABD temel analiz verisi henüz hazır değil", msg: "SEC EDGAR verisi günlük olarak derlenir; ilk derleme tamamlanınca burada görünür.", compact: true })}</section>`;
@@ -840,7 +924,7 @@
       const keys = [...new Set(S.filters.map(f => f[0]))];
       body = `<section class="card"><div class="card-head"><h2 class="card-title">Filtreler</h2><div class="fa-scope">${ixSeg()}${secSel}</div></div>
           <div class="fa-filters">${S.filters.map(([k, op, v], i) => `<div class="fa-f" data-i="${i}">
-            <select class="fa-select" data-f="k">${Object.entries(MET).map(([mk, [l]]) => `<option value="${mk}" ${mk === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+            <select class="fa-select" data-f="k">${Object.entries(MET).filter(([mk]) => SA.doc || !mk.startsWith("an_")).map(([mk, [l]]) => `<option value="${mk}" ${mk === k ? "selected" : ""}>${l}</option>`).join("")}</select>
             <select class="fa-select" data-f="op"><option ${op === ">=" ? "selected" : ""}>&gt;=</option><option ${op === "<=" ? "selected" : ""}>&lt;=</option></select>
             <input class="fa-num" data-f="v" type="number" step="any" value="${PCTK(k) ? +(v * 100).toFixed(4) : v}" aria-label="Eşik">${PCTK(k) ? "<span class='muted'>%</span>" : ""}
             <button type="button" class="btn btn-icon" data-f="rm" aria-label="Filtreyi kaldır">×</button></div>`).join("")}
@@ -919,7 +1003,7 @@
     const allP0 = [...new Set(ok.flatMap(o => o.d.metrics.history.periods))].sort();
     const p0 = allP0.findIndex(p => ok.filter(o => o.d.metrics.history.periods.includes(p)).length >= Math.min(2, ok.length));
     const allP = allP0.slice(Math.max(0, p0));
-    const metKeys = [...new Set(tpls.flatMap(t => MET_T[t] || []))];
+    const metKeys = [...new Set(tpls.flatMap(t => MET_T[t] || []))].filter(k => !k.startsWith("an_"));
     const tbl = metKeys.map(k => [k, MET[k]]).map(([k, [l, f, dir, g]]) => {
       const vs = ok.map(o => mOf(o.d.metrics, k));
       const valid = vs.filter(v => v != null);
