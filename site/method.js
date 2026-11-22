@@ -115,7 +115,13 @@
         ["Grafik", "her gün için o güne verisi olan dalgaların ortalaması; gölge basit %95 aralıktır (kümelenme hesaba katılmaz, gerçek belirsizlik daha geniştir)."],
         ["Sınırlar", "örnek takipçinin başladığı Ağustos 2025'ten beri, kısa. İşlem maliyeti ve likidite yok sayılır. Geri alım şirketin kendi fiyatını desteklemesidir; sonuç geçmişin ortalamasıdır, tek hisse için öngörü değildir. Fiyat: Yahoo (yalnız yüzde getiriler yayımlanır)."],
       ]))],
-    ["temel", "Temel Analiz", () => window.radarFundamentals?.methodHTML?.() || ""],
+    ["temel", "Temel Analiz", () => (window.radarFundamentals?.methodHTML?.() || "") + card("Analist beklentileri", ul([
+        ["Kaynak", "stockanalysis.com şirket tahmin ve istatistik sayfaları (tahminlerin kaynağı S&P Global Market Intelligence). Kişisel kullanım için, robots.txt'e uyan yavaş okuma: istekler arası 4 saniye, günde ~230 sayfa; tüm BIST ve ABD evreni haftada bir yenilenir, analist takibi olmayan hisseler ayda bir denenir. Ücretli (PRO) alanlar alınmaz."],
+        ["Gösterim", "Veri herkese açık dallara yazılmaz; gizli repoda tutulur ve yalnız giriş korumalı sitede görünür. Şirket sayfasında Analist beklentisi kartı ve taramada 'Analist' metrikleri."],
+        ["Alanlar", "Ortalama/medyan/düşük/yüksek hedef fiyat ve hedef sayısı; tavsiye dağılımı ve son aylardaki eğilimi; bu ve gelecek mali yıl hisse başı kâr ve gelir tahmini (büyüme geçen yılın gerçekleşenine göre); ABD'de ileriye dönük F/K, PEG, açığa satış oranı ve sonraki bilanço tarihi. BIST'te bazı şirketlerin tahminleri raporlama para biriminde (ör. THYAO USD)."],
+        ["Potansiyel", "Ortalama hedef / son fiyat − 1 (ABD'de sayfadaki hedef farkı)."],
+        ["Bilanço sürprizi", "Her hafta gelecek çeyreklerin tahmini kaydedilir; çeyrek raporlanınca raporlamadan önceki son tahmin gerçekleşenle karşılaştırılır: (gerçekleşen − beklenti) / |beklenti|. Kayıt Kasım 2026'da başladığı için ilk sürprizler bir sonraki bilanço döneminde oluşur."],
+      ]))],
     ["banka-faiz", "Banka Faiz Duyarlılığı", () => card("Yöntem ve sınırlar", `<ul>
         <li><b>Veri.</b> KAP'taki banka mali tabloları (solo/konsolide, bankanın yayımladığı): faiz gelirleri ve giderleri çeyreklere ayrılır, ortalama toplam aktife bölünüp yıllıklandırılır. Politika faizi: TCMB ağırlıklı ortalama fonlama maliyeti (EVDS, günlük → çeyrek ortalaması). Beklenti: TCMB Piyasa Katılımcıları Anketi, 12 ay sonrası politika faizi.</li>
         <li><b>Model.</b> Aktif getirisi ve fonlama maliyeti ayrı ayrı faizin bu ve önceki çeyrek ortalamasına regrese edilir. Banka katsayıları bankalar arası havuz tahminine doğru gözlem gürültüsüyle orantılı büzülür (az çeyreği olan banka sektöre daha çok benzer). 1 yıllık etki = bu çeyrek katsayısı + önceki çeyreğin ¾'ü (12 ayda geçişin dört çeyreğe yayıldığı varsayımı).</li>
