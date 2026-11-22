@@ -105,6 +105,14 @@ regulators:
     note: "Site yurt dışı sunuculardan bağlantı kabul etmiyor; Google News üzerinden"
     sources:
       - { type: gnews, site: cbar.az }
+  - id: nrf
+    name: "Global Regulation Tomorrow (Norton Rose Fulbright)"
+    country: Uluslararası
+    note: "Düzenleyici değil: hukuk bürosunun FCA, PRA, ECB, BaFin, IOSCO… yayınlarını derleyen blogu (WordPress RSS). robots.txt Crawl-delay 30 sn'ye uyulur; günde ~10–15 yazı için ilk 3 sayfa okunur"
+    sources:
+      - { type: rss, url: "https://www.regulationtomorrow.com/feed/", delay: 30 }
+      - { type: rss, url: "https://www.regulationtomorrow.com/feed/?paged=2", delay: 30 }
+      - { type: rss, url: "https://www.regulationtomorrow.com/feed/?paged=3", delay: 30 }
 
 # Konular (AI sınıflandırmasının kullandığı anahtarlar)
 topics:
