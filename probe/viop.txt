@@ -1,72 +1,10 @@
-== sheet TR - www.borsaistanbul.com 34
- | Web sitemizde yer alan veri dosyaları ve bu dosyalara erişim için kullanılması gereken dizin yapısı aşağıdaki tabloda listelenmektedir. |  |  | 
- |  |  |  | 
- | Açıklama | Web Sitesi Dizin Adresi | BISTECH Faz-2 Geçiş Sonrası Dosya Adı  (06-03-2017 ve sonrası) | BISTECH Faz-2 Geçiş Öncesi Dosya Adı
- | Özsermaye Duyuruları | /viopdata/ | viopoz_YYYYAAGG.zip | viopoz_GGAAYYYY.doc
- | Özsermaye Raporları  | /viopdata/ | viopoz_YYYYAAGG.csv | viopoz_GGAAYYYY.xls
- | Vadeli İşlem ve Opsiyon Piyasası Günlük Bülteni (Geçici)* | /viopdata/ | viop_gecici_tmp_YYYYAAGG.csv | -
- | Vadeli İşlem ve Opsiyon Piyasası Günlük Bülteni | /viopdata/ | viop_YYYYAAGG.csv | tviop_GGAAYYYY.xls
- | Vadeli İşlem ve Opsiyon Piyasası Günlük Özet Bülteni | /viopdata/ | viop_YYYYAAGGozet.zip | tviop_GGAAYYYYozet.pdf
- | Üye Bazında İşlem Hacimleri | /viopdata/ | viopishac_YYYYAAGG.zip | viopishac_GGAAYYYY.xls
- | Aylık Üye Bazında İşlem Hacimleri | /viopdata/ | viopaylikishacYYYYAA.zip | viopaylikishacYYYYAA.xls
- | Yıllık Üye Bazında İşlem Hacimleri | /viopdata/ | viopyillikishacYYYY.zip | viopyillikishacYYYY.xls
- | Günsonu Pozisyon Dosyası | /viopdata/ | viopgs_YYYYAAGG.csv | viopgs_GGAAYYYY.xls
- | Mevcut Sözleşmeler | /viopdata/ | viopms_YYYYAAGG.csv | viopms_GGAAYYYY.xls
- | Sözleşme Değişiklik Dosyası  | /viopdata/ | viopsz_YYYYAAGG.csv | -
- | Vadesonu Uzlaşma Fiyatları | /viopdata/ | viopvadesonuuzlasmafiyatlariYYYYAAGG.zip | viopvadesonuuzlasmafiyatlariYYYYAA.zip
- | İşlem Hacmi Yerli/Yabancı Dağılımı  | /viopdata/ | viopyyishacYYYYAA.zip | viopyyishac.zip
- | Günlük Üye Net Alım/Satım Miktarı | /viopdata/ | - | vnet_YYYYAAGG.zip
- | Basamaklandırma Dosyası  | /viopdata/ | viopbs_YYYYAAGG.csv | -
- |  |  |  | 
- |  |  |  | 
- |  |  |  | 
- | *Geçici Bülten açık pozisyon değerlerini içermemektedir.  |  |  | 
- |  |  |  | 
- |  |  |  | 
- | Dosya ve dizin isimlerinde kullanılan kodlar ve açıklamaları |  |  | 
- | YYYY: Yıl |  |  | 
- | AA: Ay |  |  | 
- | GG: Gün |  |  | 
- | S: Seans no |  |  | 
- | HA: Yıl içerisindeki hafta numarası |  |  | 
- | HİSSE: Hisse Kodu |  |  | 
- | ENDEKS: Endeks Kodu |  |  | 
- | SIRKET: Şirket Kodu |  |  | 
- | UYE: Üye Kodu |  |  | 
-== sheet EN - www.borsaistanbul.com 36
- |  |  |  | 
- |  |  |  | 
- | Name | Directory Structure | File Name After BISTECH Migration (March 6, 2017 onwards) | File Name Before BISTECH Migration (before March 6, 2017)
- | Corporate Action | /viopdata/ | viopoz_YYYYAAGG.zip | viopoz_GGAAYYYY.doc
- | Corporate Actions Data | /viopdata/ | viopoz_YYYYAAGG.csv | viopoz_GGAAYYYY.xls
- | Derivatives Market Temporary Bulletin* | /viopdata/ | viop_gecici_tmp_YYYYAAGG.csv | -
- | Derivatives Market Bulletin | /viopdata/ | viop_YYYYAAGG.csv | eviop_GGAAYYYY.xls
- | Vadeli İşlem ve Opsiyon Piyasası Günlük Özet Bülteni | /viopdata/ | viop_YYYYAAGGozet.zip | eviop_GGAAYYYYozet.pdf
- | Traded Value By Members | /viopdata/ | viopishac_YYYYAAGG.zip | viopishac_GGAAYYYY.xls
- | Breakdown of Monthly Traded Value on Member Basis | /viopdata/ | viopaylikishacYYYYAA.zip | viopaylikishacYYYYAA.xls
- | Breakdown of Annual Traded Value on Member Basis  | /viopdata/ | viopyillikishacYYYY.zip | viopyillikishacYYYY.xls
- | End of Day Holdings Report | /viopdata/ | viopgs_YYYYAAGG.csv | viopgs_GGAAYYYY.xls
- | Contracts | /viopdata/ | viopms_YYYYAAGG.csv | viopms_GGAAYYYY.xls
- | List of Newly Listed/Delisted/Expired Contracts  | /viopdata/ | viopsz_YYYYAAGG.csv | -
- | Final Settlement Prices  | /viopdata/ | viopvadesonuuzlasmafiyatlariYYYYAAGG.zip | viopvadesonuuzlasmafiyatlariYYYYAA.zip
- | Breakdown of Domestic/Foreign Investors Trades  | /viopdata/ | viopyyishacYYYYAA.zip | viopyyishac.zip
- | Member Based Net Traded Volume | /viopdata/ | - | vnet_YYYYAAGG.zip
- | Cascade File | /viopdata/ | viopbs_YYYYAAGG.csv | -
- |  |  |  | 
- |  |  |  | 
- |  |  |  | 
- | *Temporary Bulletin does not include open position information.  |  |  | 
- |  |  |  | 
- |  |  |  | 
- |  |  |  | 
- |  |  |  | 
- | Definition of Symbols in directory structure |  |  | 
- | YYYY: Year |  |  | 
- | AA: Month |  |  | 
- | GG: Day |  |  | 
- | S: Session no |  |  | 
- | HA: Week number |  |  | 
- | HİSSE: Stock Code |  |  | 
- | ENDEKS: Index Code |  |  | 
- | SIRKET: Company Code |  |  | 
- | UYE: Member Code |  |  | 
+viop_20261120.csv https://www.borsaistanbul.com/data/viopdata/ 404 8558 text/html
+viop_20261120.csv https://borsaistanbul.com/data/viopdata/ 404 8558 text/html
+viopgs_20261120.csv https://www.borsaistanbul.com/data/viopdata/ 404 8558 text/html
+viopgs_20261120.csv https://borsaistanbul.com/data/viopdata/ 404 8558 text/html
+viopishac_20261120.zip https://www.borsaistanbul.com/data/viopdata/ 404 8558 text/html
+viopishac_20261120.zip https://borsaistanbul.com/data/viopdata/ 404 8558 text/html
+viopms_20261120.csv https://www.borsaistanbul.com/data/viopdata/ 404 8558 text/html
+viopms_20261120.csv https://borsaistanbul.com/data/viopdata/ 404 8558 text/html
+viopyyishac202610.zip https://www.borsaistanbul.com/data/viopdata/ 404 8558 text/html
+viopyyishac202610.zip https://borsaistanbul.com/data/viopdata/ 404 8558 text/html
