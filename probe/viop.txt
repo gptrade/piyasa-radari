@@ -1,48 +1,149 @@
-== /stocks/aapl/forecast/ 200 185349 | Apple (AAPL) Stock Forecast &amp; Analyst Price Targets
-   bolumler: ['Stock Price Forecast', 'Price Target', 'Analyst Ratings', 'Recommendation Trends', 'Latest Forecasts', 'Financial Forecast', 'Revenue Forecast', 'Revenue Growth', 'EPS Forecast', 'EPS Growth']
-   pro-kilit izi: 0
-   anahtarlar: ['action_rt', 'adjustedEps', 'adjustedEpsGrowth', 'adrPriceDivisor', 'analyst', 'analyst_rank', 'analysts', 'annual', 'archived', 'average', 'avg', 'avg_return', 'base', 'ble', 'buy', 'cdr', 'chart', 'cik', 'common_name', 'consensus', 'count', 'csp', 'curr', 'currency', 'currentRatings', 'data', 'date', 'dates', 'days', 'dht', 'dividend', 'dps', 'dpsGrowth', 'ecp', 'employees', 'epd', 'eps', 'epsBasis', 'epsGrowth', 'epsNext', 'epsThis', 'error', 'estimates', 'estimatesCharts', 'estimatesSource', 'etd', 'ets', 'exchange', 'exchangeRate', 'exp', 'features', 'ffo', 'ffoShare', 'filings', 'filingsLinkSymbol', 'filtered', 'financial', 'financials', 'firm', 'fiscalQuarter', 'fiscalYear', 'fms', 'forecast', 'forecastDivider', 'form', 'freeCashFlow', 'freshnessLag', 'grossMargin', 'grossProfit', 'growth', 'hideNewsSources', 'high', 'history', 'hold', 'https', 'info', 'interval', 'ipoDate', 'ipoInfo', 'last']
-== /stocks/aapl/statistics/ 200 132175 | Apple (AAPL) Statistics &amp; Valuation
-   bolumler: ['Total Valuation', 'Important Dates', 'Share Statistics', 'Valuation Ratios', 'Enterprise Valuation', 'Financial Position', 'Financial Efficiency', 'Taxes', 'Stock Price Statistics', 'Short Selling Information', 'Income Statement', 'Balance Sheet', 'Cash Flow', 'Margins', 'Dividends & Yields', 'Analyst Forecast', 'Fair Value', 'Stock Splits', 'Scores']
-   pro-kilit izi: 0
-   anahtarlar: ['analystForecasts', 'archived', 'balanceSheet', 'base', 'ble', 'cashFlow', 'cdr', 'chart', 'cik', 'common_name', 'csp', 'curr', 'data', 'dates', 'days', 'dht', 'dividend', 'dividends', 'ecp', 'employees', 'epd', 'error', 'etd', 'ets', 'evRatios', 'exchange', 'exp', 'extraSummaryLinks', 'fairValue', 'features', 'filings', 'filingsLinkSymbol', 'financial', 'financialEfficiency', 'financialPosition', 'financials', 'fms', 'forecast', 'form', 'freshnessLag', 'hideNewsSources', 'history', 'hover', 'https', 'incomeStatement', 'info', 'interval', 'ipoDate', 'ipoInfo', 'lastChecked', 'lastUpdated', 'loc', 'main', 'margins', 'market_cap', 'metrics', 'mfaPending', 'mfaSession', 'name', 'nameFull', 'node_ids', 'notice', 'params', 'post', 'pre', 'price', 'proOnly', 'profile', 'psq', 'quote', 'ratings', 'ratios', 'revenue', 'scores', 'session', 'shares', 'short', 'shortSelling', 'slash', 'sources']
-== /stocks/aapl/ 200 156323 | Apple (AAPL) Stock Price, Chart &amp; News
-   bolumler: ['About AAPL', 'Financial Performance', 'Analyst Summary', 'News', 'Startup sues Apple in India over tap-to-share contacts feature', "Would be unprecedented to see final bottom on S&P with Apple where it is: BTIG's Jonathan Krinsky", 'Apple job posting shows plans to build its own AI agent: Report', 'Apple Duo wait times materially shorten, says UBS', "Apple seems to be building its own AI agent. This could be bad news for Meta's Muse.", 'UK loses bid to keep Apple â\x80\x98backdoorâ\x80\x99 order secret, Bloomberg reports', 'Appleâ\x80\x99s New AI Agent Could Put It Up Against OpenAI, Meta, and Anthropic', 'Apple Expands Team Building Privacy-First AI Agent', 'Apple may be developing its own AI agent that runs your Mac', 'Apple working on its own AI agent, Bloomberg reports', 'Apple (AAPL) Board Member Sells $31 Million of Company Stock', "Apple's Software Problem with Joanna Stern | Power On with Mark Gurman", 'Apple (AAPL) Music Radio Hits 50 Million Listeners as Audio Streaming Competition Accelerates', 'U.K government forced to disclose secret Apple backdoor order', 'UK tribunal confirms government order demanding access to Apple data', 'Jamf Brings Apple Device Management and Security Apps to CrowdStrike Falcon Foundry', "Is Apple the safe haven investors think it is?Â\xa0Here's a way to trade it with less risk", 'Apple joins a parade of technology hiccups in recent days', 'Yet more tech outages in the US - hitting top spy agency and Apple', 'Apple: Many of our systems back up and running after an internal update caused some outages', 'Apple works to restore services after outage caused by internal update']
-   pro-kilit izi: 0
-   anahtarlar: ['Apple', 'agent', 'ago', 'analystChart', 'analystIntro', 'analystTarget', 'analysts', 'archived', 'base', 'beta', 'ble', 'buy', 'cdr', 'change', 'changeWord', 'changes', 'chart', 'cik', 'common_name', 'csp', 'curr', 'data', 'days', 'description', 'dht', 'dividend', 'earnings', 'earningsDate', 'earningsDateLabel', 'earningsGrowth', 'ecp', 'employees', 'epd', 'eps', 'epsGrowth', 'error', 'etd', 'ets', 'exDividendDate', 'exchange', 'exp', 'expiration', 'features', 'filings', 'filingsLinkSymbol', 'financial', 'financialChart', 'financialIntro', 'financials', 'fms', 'forecast', 'form', 'forwardPE', 'hideNewsSources', 'history', 'hold', 'https', 'img', 'info', 'infoTable', 'interval', 'ipoDate', 'ipoInfo', 'isUSVisitor', 'lastChecked', 'loc', 'main', 'marketCap', 'marketCapGrowth', 'market_cap', 'metrics', 'mfaPending', 'mfaSession', 'name', 'nameFull', 'netIncome', 'netIncomeGrowth', 'news', 'noUtm', 'node_ids']
-== /quote/ist/THYAO/ 200 140181 | TÃ¼rk Hava Yollari Anonim Ortakligi (IST:THYAO) Stock Price &amp; Overview
-   bolumler: ['About IST:THYAO', 'Financial Performance', 'Analyst Summary', 'News', 'TÃ¼rk Hava Yollari Anonim Ortakligi Earnings Call Transcript: Q3 2026', 'TÃ¼rk Hava Yollari Anonim Ortakligi Quarterly report: Q3 2026', 'TÃ¼rk Hava Yollari Anonim Ortakligi Slides: Q3 2026', 'Boeing salvages delayed Turkish Airlines order, sources say', 'TÃ¼rk Hava Yollari Anonim Ortakligi Earnings Call Transcript: Q2 2026', 'TÃ¼rk Hava Yollari Anonim Ortakligi Quarterly report: Q2 2026', 'TÃ¼rk Hava Yollari Anonim Ortakligi Slides: Q2 2026', 'Turkish Airlines Joins SAFFA Fund', 'TÃ¼rk Hava Yollari Anonim Ortakligi Earnings Call Transcript: Q1 2026', 'TÃ¼rk Hava Yollari Anonim Ortakligi Quarterly report: Q1 2026', 'TÃ¼rk Hava Yollari Anonim Ortakligi Slides: Q1 2026', 'TÃ¼rk Hava Yollari Anonim Ortakligi Earnings Call Transcript: Q4 2025', 'TÃ¼rk Hava Yollari Anonim Ortakligi Annual report: Q4 2025', 'TÃ¼rk Hava Yollari Anonim Ortakligi Slides: Q4 2025', 'TÃ¼rk Hava Yollari Anonim Ortakligi Annual report: Q4 2025', 'TÃ¼rk Hava Yollari Anonim Ortakligi Earnings Call Transcript: Q3 2025', 'TÃ¼rk Hava Yollari Anonim Ortakligi Quarterly report: Q3 2025', 'TÃ¼rk Hava Yollari Anonim Ortakligi Slides: Q3 2025', 'Turkish Airlines reaches engine deal with GE Aerospace for 75 Boeing planes', 'Turkish Airlines to meet Boeing, CFM in coming weeks, chairman says', 'Turkish Airlines chair says may switch Boeing 737 order to Airbus if engine talks fail']
-   pro-kilit izi: 0
-   anahtarlar: ['IST', 'Slides', 'Transcript', 'ago', 'analystChart', 'analystIntro', 'analystTarget', 'analysts', 'apiext', 'archived', 'aum', 'base', 'beta', 'ble', 'buy', 'cdr', 'change', 'changeWord', 'changes', 'chart', 'closeHour', 'closeMinute', 'country', 'country_list_slug', 'country_short', 'csp', 'curr', 'data', 'days', 'db_symbol', 'description', 'dht', 'disableChartIntraday', 'dividend', 'dividendTable', 'dividendYield', 'dps', 'earnings', 'earningsDate', 'earningsDateLabel', 'earningsGrowth', 'employees', 'eps', 'epsGrowth', 'error', 'ets', 'exDivDate', 'exDividendDate', 'exchange', 'exchange_code', 'exchange_full', 'exchange_symbol', 'exp', 'expTS', 'expiration', 'features', 'filings', 'filingsLinkSymbol', 'financial', 'financialChart', 'financialIntro', 'financials', 'fms', 'forecast', 'form', 'forwardPE', 'hideNewsSources', 'history', 'hold', 'holdings', 'holdingsTable', 'https', 'img', 'inception', 'info', 'infoTable', 'interval', 'lastChecked', 'list_slug', 'liveChart']
-== /quote/ist/THYAO/forecast/ 200 162085 | TÃ¼rk Hava Yollari Anonim Ortakligi (IST:THYAO) Stock Forecast &amp; Price Targets
-   bolumler: ['Stock Price Forecast', 'Price Target', 'Analyst Ratings', 'Recommendation Trends', 'Financial Forecast', 'Revenue Forecast', 'Revenue Growth', 'EPS Forecast', 'EPS Growth']
-   pro-kilit izi: 0
-   anahtarlar: ['IST', 'adjustedEps', 'adjustedEpsGrowth', 'adrPriceDivisor', 'analysts', 'annual', 'apiext', 'archived', 'average', 'avg', 'base', 'ble', 'buy', 'cdr', 'chart', 'closeHour', 'closeMinute', 'consensus', 'count', 'country', 'country_list_slug', 'country_short', 'csp', 'curr', 'currency', 'currentRatings', 'data', 'date', 'dates', 'days', 'db_symbol', 'dht', 'disableChartIntraday', 'dividend', 'dps', 'dpsGrowth', 'employees', 'eps', 'epsBasis', 'epsGrowth', 'epsNext', 'epsThis', 'error', 'estimates', 'estimatesCharts', 'estimatesSource', 'ets', 'exchange', 'exchangeRate', 'exchange_code', 'exchange_full', 'exchange_symbol', 'exp', 'expTS', 'features', 'ffo', 'ffoShare', 'filings', 'filingsLinkSymbol', 'financial', 'financials', 'fiscalQuarter', 'fiscalYear', 'fms', 'forecast', 'forecastDivider', 'form', 'freeCashFlow', 'freshnessLag', 'grossMargin', 'grossProfit', 'growth', 'hideNewsSources', 'high', 'history', 'hold', 'https', 'info', 'interval', 'last']
-== /quote/ist/THYAO/statistics/ 200 130935 | TÃ¼rk Hava Yollari Anonim Ortakligi (IST:THYAO) Statistics &amp; Valuation Metrics
-   bolumler: ['Total Valuation', 'Important Dates', 'Share Statistics', 'Valuation Ratios', 'Enterprise Valuation', 'Financial Position', 'Financial Efficiency', 'Taxes', 'Stock Price Statistics', 'Short Selling Information', 'Income Statement', 'Balance Sheet', 'Cash Flow', 'Margins', 'Dividends & Yields', 'Fair Value', 'Analyst Forecast', 'Stock Splits', 'Scores']
-   pro-kilit izi: 0
-   anahtarlar: ['IST', 'analystForecasts', 'apiext', 'archived', 'balanceSheet', 'base', 'ble', 'cashFlow', 'cdr', 'chart', 'closeHour', 'closeMinute', 'country', 'country_list_slug', 'country_short', 'csp', 'curr', 'data', 'dates', 'days', 'db_symbol', 'dht', 'disableChartIntraday', 'dividend', 'dividends', 'employees', 'error', 'ets', 'evRatios', 'exchange', 'exchange_code', 'exchange_full', 'exchange_symbol', 'exp', 'expTS', 'extraSummaryLinks', 'fairValue', 'features', 'filings', 'filingsLinkSymbol', 'financial', 'financialEfficiency', 'financialPosition', 'financials', 'fms', 'forecast', 'form', 'freshnessLag', 'hideNewsSources', 'history', 'hover', 'https', 'incomeStatement', 'info', 'interval', 'lastChecked', 'lastUpdated', 'list_slug', 'liveChart', 'loc', 'main', 'margins', 'market_cap', 'market_time', 'meta', 'mfaPending', 'mfaSession', 'name', 'nameFull', 'node_ids', 'onlySPG', 'openHour', 'openMinute', 'params', 'post', 'pre', 'price', 'proOnly', 'profile', 'psq']
-== /stocks/aapl/financials/ 200 235425 | Apple (AAPL) Financials Overview
-   bolumler: ['Revenue & Profits', 'Revenue by Segment', 'Cash & Debt', 'Cash Flow & CapEx', 'Margins', 'Dividends', 'Valuation']
-   pro-kilit izi: 0
-   anahtarlar: ['absolute', 'archived', 'availableSources', 'base', 'ble', 'capex', 'cashAndInvestments', 'cdr', 'chart', 'chartTitle', 'chartType', 'cik', 'classicStatementLayout', 'common_name', 'csp', 'curr', 'currency', 'daily', 'data', 'datekey', 'days', 'debt', 'defaultChartType', 'defaultExpanded', 'defaultSource', 'defaultVisible', 'description', 'details', 'dht', 'dividend', 'dividendyield', 'dps', 'ecp', 'employees', 'epd', 'epsdil', 'error', 'etd', 'ets', 'exchange', 'exp', 'extraSummaryLinks', 'fcf', 'fcfMargin', 'features', 'filings', 'filingsLinkSymbol', 'financial', 'financialData', 'financialState', 'financials', 'fiscalQuarter', 'fiscalYear', 'fiscalYearShort', 'fms', 'forecast', 'form', 'format', 'freshnessLag', 'fullWidthFinancials', 'full_count', 'grossMargin', 'head', 'heading', 'hideNewsSources', 'history', 'https', 'indicators', 'info', 'interval', 'ipad_revenue', 'iphone_revenue', 'ipoDate', 'ipoInfo', 'isTotal', 'key', 'kind', 'lastChecked', 'lastUpdated', 'loc']
-== /stocks/aapl/dividend/ 200 90388 | Apple (AAPL) Dividend History, Dates &amp; Yield
-   bolumler: ['Dividend History', 'Dividend Charts', 'AAPL News']
-   pro-kilit izi: 0
-   anahtarlar: ['amount', 'amt', 'annual', 'archived', 'availableIndicators', 'availableSources', 'base', 'ble', 'buybackYield', 'cdr', 'chart', 'chartData', 'chartOptions', 'cik', 'common_name', 'csp', 'curr', 'data', 'date', 'days', 'dec', 'defaultSource', 'dht', 'dividend', 'dividendFrequencyListUrl', 'ecp', 'employees', 'epd', 'error', 'etd', 'ets', 'exchange', 'exdiv', 'exp', 'extraSummaryLinks', 'features', 'filings', 'filingsLinkSymbol', 'financial', 'financials', 'fms', 'forecast', 'form', 'frequency', 'freshnessLag', 'growth', 'growthTTM', 'has_more_dividends', 'has_special', 'hideNewsSources', 'history', 'https', 'info', 'infoBox', 'infoTable', 'interval', 'ipoDate', 'ipoInfo', 'lastChecked', 'lastUpdated', 'loc', 'main', 'market_cap', 'meta', 'metrics', 'mfaPending', 'mfaSession', 'name', 'nameFull', 'news', 'node_ids', 'notice', 'params', 'pay', 'payoutRatio', 'post', 'pre', 'price', 'profile', 'psq']
-== /markets/gainers/ 200 133362 | Today's Top Stock Gainers
-   bolumler: []
-   pro-kilit izi: 0
-   anahtarlar: ['DIA', 'IWM', 'QQQ', 'SPY', 'base', 'beta', 'change', 'chart', 'chartData', 'classes', 'colName', 'columns', 'count', 'country', 'csp', 'data', 'dataPoints', 'dht', 'employees', 'eps', 'error', 'etfName', 'exchange', 'filters', 'form', 'format', 'founded', 'grossProfit', 'hideNewsSources', 'index', 'industry', 'last', 'lazyColumnMeta', 'line', 'loc', 'main', 'marketCap', 'mfaPending', 'mfaSession', 'name', 'netIncome', 'node_ids', 'operatingIncome', 'page', 'percent', 'postmarket', 'premarket', 'price', 'priceDate', 'psq', 'query', 'resultsCount', 'revenue', 'revenueGrowth', 'route', 'rsi', 'session', 'slash', 'sortDirection', 'sortable', 'theme', 'trYTD', 'tradingTimestamps', 'type', 'user', 'userIsFresh', 'uses', 'volume', 'widthMode']
-== /ipos/calendar/ 200 78553 | IPO Calendar - Upcoming IPOs
-   bolumler: ['This Week Â· 1 IPOs', 'Next Week Â· 0 IPOs', 'After Next Week', 'More IPO Resources']
-   pro-kilit izi: 0
-   anahtarlar: ['active', 'assets', 'base', 'capex', 'cash', 'cat', 'classes', 'colName', 'columns', 'country', 'csp', 'data', 'dataPointCategories', 'dataPointIds', 'dataPoints', 'dataPointsModal', 'debt', 'default', 'dht', 'displayOn', 'ebit', 'ebitMargin', 'ebitda', 'ebitdaMargin', 'employees', 'eps', 'equity', 'error', 'etfName', 'exchange', 'fcf', 'fcfMargin', 'fcfPerShare', 'filters', 'financingCF', 'form', 'format', 'founded', 'grossMargin', 'grossProfit', 'hideIfNotUS', 'hideNewsSources', 'https', 'ids', 'inETFs', 'index', 'industry', 'initialDynamicViews', 'investingCF', 'ipoDate', 'ipoPriceHigh', 'ipoPriceLow', 'ipoPriceRange', 'ipoSharesOut', 'isSpac', 'items', 'laterData', 'laterQuery', 'liabilities', 'loc', 'main', 'marketCap', 'mfaPending', 'mfaSession', 'name', 'netCF', 'netIncome', 'nextWeekData', 'nextWeekQuery', 'node_ids', 'operatingCF', 'operatingIncome', 'operatingMargin', 'profitMargin', 'psq', 'revenue', 'route', 'sector', 'session', 'sharesOffered']
-== /stocks/earnings-calendar/ 200 97561 | Earnings Calendar
-   bolumler: ['Nov 23 Â· 23 Earnings']
-   pro-kilit izi: 0
-   anahtarlar: ['afterCloseCount', 'base', 'beforeOpenCount', 'count', 'csp', 'data', 'date', 'day', 'days', 'dht', 'earnings', 'earningsLoaded', 'error', 'form', 'hideNewsSources', 'initialDateIndex', 'loc', 'mfaPending', 'mfaSession', 'node_ids', 'psq', 'session', 'slash', 'symbols', 'theme', 'type', 'user', 'userIsFresh', 'uses', 'view', 'weekOf']
-== /etf/spy/holdings/ 200 103322 | SPY Holdings List - State Street SPDR S&amp;P 500 ETF
-   bolumler: ['Breakdown by Sector', 'Top 25 Holdings', 'SPY News']
-   pro-kilit izi: 0
-   anahtarlar: ['active', 'allocationChartData', 'archived', 'assetClass', 'asset_allocation', 'assets', 'aum', 'base', 'category', 'categoryLabel', 'cdr', 'change', 'chart', 'classes', 'code', 'colName', 'columns', 'correction', 'count', 'countries', 'country', 'csp', 'data', 'dataPoints', 'date', 'days', 'default', 'dht', 'dividend', 'dividendGrowth', 'dividendYield', 'dps', 'ecp', 'employees', 'epd', 'error', 'etd', 'ets', 'exDivDate', 'exchange', 'exp', 'extraSummaryLinks', 'features', 'fms', 'form', 'format', 'founded', 'freshnessLag', 'hasShares', 'heatmapUrl', 'hideNewsSources', 'history', 'holdingShares', 'holdingWeight', 'holdings', 'holdingsOf', 'holdingsTable', 'https', 'ids', 'inception', 'index', 'industry', 'info', 'infoBox', 'infoTable', 'initialDynamicViews', 'interval', 'items', 'key', 'lastChecked', 'lastUpdated', 'lazyColumnMeta', 'loc', 'main', 'mfaPending', 'mfaSession', 'mobileColName', 'name', 'news', 'node_ids']
+===== /quote/ist/THYAO/forecast/ 200 10035 application/json
+--- node 0 ['session', 'user', 'userIsFresh', 'mfaPending', 'mfaSession', 'loc', 'theme', 'hideNewsSources', 'bf', 'ab', 'tp']
+--- node 1 ['info']
+--- node 2 ['estimates', 'estimatesCharts', 'estimatesSource', 'trust', 'recommendations', 'targets', 'ratings', 'meta', 'title', 'priceTargets', 'currentRatings', 'forecastDivider']
+estimates: {stats,table,epsBasis}
+  stats: {annual,quarterly}
+    annual: {"epsNext": {"last": 1.624223668886705, "this": 1.5862912617825815, "growth": -2.3354177032848846}, "epsThis": {"last": 2.109999954507406, "this": 1.62422366888
+    quarterly: {"epsNext": {"last": null, "this": null, "growth": null}, "epsThis": {"last": null, "this": null, "growth": null}, "revenueNext": {"last": null, "this": null, "
+  table: {annual,quarterly}
+    annual: {"dps": [null, null, null, 0.194636, null, 0.09744513593187028, "[PRO]", "[PRO]"], "eps": [0.69, 1.97, 4.359999, 2.48, 2.108788, 1.6892011955453654, "[PRO]", "[
+    quarterly: {"dps": [null, null, null, null, null], "eps": [0.998594, 0.639159, 0.159999, 0.14, 0.93], "ffo": [null, null, null, null, null], "pFFO": [null, null, null, nul
+  epsBasis: "normalized"
+estimatesCharts: {eps,revenue,epsGrowth,revenueGrowth}
+  eps: {2026-12-31,2027-12-31,2028-12-31}
+    2026-12-31: {"no": 6, "avg": 1.624223668886705, "low": 1.2993367179823123, "high": 2.0391145321541653}
+    2027-12-31: "[PRO]"
+    2028-12-31: "[PRO]"
+  revenue: {2026-12-31,2027-12-31,2028-12-31}
+    2026-12-31: {"no": 8, "avg": 31290264442.76122, "low": 29212682425.30116, "high": 32634887928.99516}
+    2027-12-31: "[PRO]"
+    2028-12-31: "[PRO]"
+  epsGrowth: {2026-12-31,2027-12-31,2028-12-31}
+    2026-12-31: {"avg": -23.022573274609805, "low": -38.4200594314396, "high": -3.359498762159433}
+    2027-12-31: "[PRO]"
+    2028-12-31: "[PRO]"
+  revenueGrowth: {2026-12-31,2027-12-31,2028-12-31}
+    2026-12-31: {"avg": 29.85667514426137, "low": 21.2345718181489, "high": 35.43695189656025}
+    2027-12-31: "[PRO]"
+    2028-12-31: "[PRO]"
+estimatesSource: "spg"
+trust: {sources,freshnessLag,lastUpdated,lastChecked,topic,ticker,summary}
+  sources: [1] [{"name": "S&P Global Market Intelligence", "short": "S&P Global", "url": "https://www.spglobal.com/market-intelligence/en"}]
+  freshnessLag: "hours"
+  lastUpdated: null
+  lastChecked: "1795371589583"
+  topic: "forecast"
+  ticker: "IST-THYAO"
+  summary: {text}
+    text: "Price targets, consensus ratings and financial forecasts are provided by S&P Global Market Intelligence. Price targets and consensus ratings update every hour 
+recommendations: [12] [{"buy": 3, "date": "2025-12-26", "hold": 1, "sell": 0, "month": "Dec '25", "score": 8.076923076923077, "total": 13, "updated": "2025-12-26", "consensus": "Stro
+targets: {low,high,average,median,count,updated,currency,chart}
+  low: null
+  high: null
+  average: null
+  median: null
+  count: 0
+  updated: ""
+  currency: "TRY"
+  chart: [14] [{"c": 272.75, "t": "2025-11-01"}, {"c": 268.5, "t": "2025-12-01"}]
+ratings: [0] []
+meta: {exchangeRate,adrPriceDivisor}
+  exchangeRate: 0.019786775726097994
+  adrPriceDivisor: null
+title: "Türk Hava Yollari Anonim Ortakligi (IST-THYAO) Stock Forecast & Price Targets"
+priceTargets: {source,currency,avg,median,low,high,numPriceTargets}
+  source: "spg"
+  currency: "TRY"
+  avg: 454.31
+  median: 460.5
+  low: 315
+  high: 580
+  numPriceTargets: 14
+currentRatings: {source,consensus,score,count,strongBuy,buy,hold,sell,strongSell}
+  source: "spg"
+  consensus: "Buy"
+  score: 7.5
+  count: 14
+  strongBuy: 9
+  buy: 3
+  hold: 2
+  sell: 0
+  strongSell: 0
+forecastDivider: null
+===== /stocks/aapl/statistics/ 200 15645 application/json
+--- node 0 ['session', 'user', 'userIsFresh', 'mfaPending', 'mfaSession', 'loc', 'theme', 'hideNewsSources', 'bf', 'ab', 'tp']
+--- node 1 ['info']
+--- node 2 ['trust', 'valuation', 'dates', 'shares', 'ratios', 'evRatios', 'financialPosition', 'financialEfficiency', 'taxes', 'stockPrice', 'shortSelling', 'incomeStatement', 'balanceSheet', 'cashFlow', 'margins', 'dividends', 'analystForecasts', 'stockSplits', 'scores', 'fairValue']
+trust: {sources,freshnessLag,updateFrequency,lastUpdated,lastChecked,topic,ticker,summary,extraSummaryLinks}
+  sources: [1] [{"name": "S&P Global Market Intelligence", "short": "S&P Global", "url": "https://www.spglobal.com/market-intelligence/en"}]
+  freshnessLag: "hours"
+  updateFrequency: "daily"
+  lastUpdated: 1795366259542
+  lastChecked: 1795366259542
+  topic: "statistics"
+  ticker: "AAPL"
+  summary: {pre,post}
+    pre: "Financial statistics are provided by "
+    post: ". Financial numbers update within hours after each earnings release, while price-based statistics and ratios update throughout each trading day."
+  extraSummaryLinks: null
+valuation: {text,data}
+  text: "Apple has a market cap or net worth of $4.98 trillion. The enterprise value is $4.94 trillion."
+  data: [2] [{"id": "marketcap", "title": "Market Cap", "value": "4.98T", "hover": "4,978,144,265,920", "url": "market-cap"}, {"id": "enterpriseValue", "title": "Enterprise
+dates: {text,data}
+  text: "The last earnings date was Monday, November 2, 2026, after market close."
+  data: [2] [{"id": "earningsdate", "title": "Earnings Date", "value": "Nov 2, 2026", "hover": "Nov 2, 2026"}, {"id": "exdivdate", "title": "Ex-Dividend Date", "value": "No
+shares: {text,data}
+  text: "Apple has 14.53 billion shares outstanding. The number of shares has decreased by -1.90% in one year."
+  data: [7] [{"id": "sharesOutClass", "title": "Current Share Class", "value": "14.53B", "hover": "14,532,182,000"}, {"id": "sharesout", "title": "Shares Outstanding", "val
+ratios: {text,data}
+  text: "The trailing PE ratio is 38.15 and the forward PE ratio is 36.37. Apple's PEG ratio is 4.23."
+  data: [9] [{"id": "pe", "title": "PE Ratio", "value": "38.15", "hover": "38.147"}, {"id": "peForward", "title": "Forward PE", "value": "36.37", "hover": "36.367"}]
+evRatios: {text,data}
+  text: "The stock's EV/EBITDA ratio is 28.78, with an EV/FCF ratio of 36.28."
+  data: [5] [{"id": "evEarnings", "title": "EV / Earnings", "value": "37.34", "hover": "37.34"}, {"id": "evSales", "title": "EV / Sales", "value": "10.31", "hover": "10.31"
+financialPosition: {text,data}
+  text: "The company has a current ratio of 1.02, with a Debt / Equity ratio of 0.84."
+  data: [6] [{"id": "currentRatio", "title": "Current Ratio", "value": "1.02", "hover": "1.023"}, {"id": "quickRatio", "title": "Quick Ratio", "value": "0.83", "hover": "0.
+financialEfficiency: {text,data}
+  text: "Return on equity (ROE) is 142.26% and return on invested capital (ROIC) is 93.94%."
+  data: [10] [{"id": "roe", "title": "Return on Equity (ROE)", "value": "142.26%", "hover": "142.257%"}, {"id": "roa", "title": "Return on Assets (ROA)", "value": "34.61%", 
+taxes: {text,data}
+  text: "In the past 12 months, Apple has paid $27.06 billion in taxes."
+  data: [2] [{"id": "taxexp", "title": "Income Tax", "value": "27.06B", "hover": "27.06B"}, {"id": "taxrate", "title": "Effective Tax Rate", "value": "16.99%", "hover": "16
+stockPrice: {text,data}
+  text: "The stock price has increased by +27.55% in the last 52 weeks. The beta is 1.09, so Apple's price volatility has been similar to the market average."
+  data: [6] [{"id": "beta", "title": "Beta (5Y)", "value": "1.09", "hover": "1.090"}, {"id": "ch1y", "title": "52-Week Price Change", "value": "+27.55%", "hover": "27.55%"}
+shortSelling: {text,data}
+  text: "The latest short interest is 144.79 million, so 1.00% of the outstanding shares have been sold short."
+  data: [5] [{"id": "shortInterest", "title": "Short Interest", "value": "144.79M", "hover": "144,791,472"}, {"id": "shortPriorMonth", "title": "Short Previous Month", "val
+incomeStatement: {text,data}
+  text: "In the last 12 months, Apple had revenue of $478.83 billion and earned $132.18 billion in profits. Earnings per share was $8.98."
+  data: [8] [{"id": "revenue", "title": "Revenue", "value": "478.83B", "hover": "478,834,000,000", "url": "revenue"}, {"id": "gp", "title": "Gross Profit", "value": "233.60
+balanceSheet: {text,data}
+  text: "Apple has $136.94 billion in cash and marketable securities with $94.48 billion in debt, giving a net cash position of $42.46 billion or $2.92 per share."
+  data: [7] [{"id": "totalcash", "title": "Cash & Marketable Securities", "value": "136.94B", "hover": "136,935,000,000"}, {"id": "debt", "title": "Total Debt", "value": "9
+cashFlow: {text,data}
+  text: "In the last 12 months, operating cash flow was $145.10 billion and capital expenditures -$9.04 billion, giving a free cash flow of $136.06 billion."
+  data: [6] [{"id": "ncfo", "title": "Operating Cash Flow", "value": "145.10B", "hover": "145,097,000,000"}, {"id": "capex", "title": "Capital Expenditures", "value": "-9.0
+margins: {text,data}
+  text: "Gross margin is 48.79%, with operating and profit margins of 33.01% and 27.60%."
+  data: [7] [{"id": "grossMargin", "title": "Gross Margin", "value": "48.79%", "hover": "48.786%"}, {"id": "operatingMargin", "title": "Operating Margin", "value": "33.01%"
+dividends: {text,data}
+  text: "This stock pays an annual dividend of $1.08, which amounts to a dividend yield of 0.32%."
+  data: [10] [{"id": "dps", "title": "Dividend Per Share", "value": "$1.08", "hover": "$1.080"}, {"id": "dividendYield", "title": "Dividend Yield", "value": "0.32%", "hover"
+analystForecasts: {text,data}
+  text: "The average price target for Apple is $345.63, which is 0.90% higher than the current price. The consensus rating is \"Buy\"."
+  data: [6] [{"id": "priceTarget", "title": "Price Target", "value": "$345.63", "hover": "$345.63"}, {"id": "priceTargetChange", "title": "Price Target Difference", "value"
+stockSplits: {text,data}
+  text: "The last stock split was on August 31, 2020. It was a forward split with a ratio of 4:1."
+  data: [3] [{"id": "lastSplitDate", "title": "Last Split Date", "value": "Aug 31, 2020", "hover": "August 31, 2020"}, {"id": "lastSplitType", "title": "Split Type", "value
+scores: {text,data}
+  text: "Apple has an Altman Z-Score of 11.08 and a Piotroski F-Score of 8."
+  data: [2] [{"id": "zScore", "title": "Altman Z-Score", "value": "11.08", "hover": "11.08"}, {"id": "fScore", "title": "Piotroski F-Score", "value": "8", "hover": "8"}]
+fairValue: {text,data}
+  text: "There are several formulas that can be used to estimate the intrinsic value of a stock."
+  data: [6] [{"id": "lynchFairValue", "title": "Lynch Fair Value", "value": null, "hover": null, "proOnly": true}, {"id": "lynchUpside", "title": "Lynch Upside", "value": n
+===== /quote/ist/ADESE/forecast/ 200 1755 application/json
+--- node 0 ['session', 'user', 'userIsFresh', 'mfaPending', 'mfaSession', 'loc', 'theme', 'hideNewsSources', 'bf', 'ab', 'tp']
+--- node 1 ['info']
