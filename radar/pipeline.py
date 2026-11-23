@@ -309,14 +309,17 @@ def fair_order(queue: list[Item], watch: set[str]) -> list[Item]:
 
 
 def _drop_stale_analyst(items: list[dict], stocks) -> list[dict]:
-    """Eski sürümün analist sorgusundan kalan alakasız haberleri akıştan çıkarır."""
+    """Eski sürümün Google News hisse/analist sorgularından kalan alakasız haberleri akıştan çıkarır."""
     by = {st.symbol: st for st in stocks}
     keep = []
     for it in items:
+        st = next((by[t] for t in it.get("tickers") or [] if t in by), None)
         if (it.get("extra") or {}).get("analyst_query"):
-            st = next((by[t] for t in it.get("tickers") or [] if t in by), None)
             if st is not None and not feeds.analyst_relevant(it.get("title", ""), st):
                 continue
+        elif "Google News" in (it.get("source") or "") and len(it.get("tickers") or []) == 1 and st is not None \
+                and not feeds.names_stock(it.get("title", ""), st):
+            continue                                   # hisse sorgusundan dönen ama başlıkta hisseyi anmayan haber
         keep.append(it)
     if len(keep) != len(items):
         log.info("Analist süzgeci: %d eski haber çıkarıldı", len(items) - len(keep))

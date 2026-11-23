@@ -46,6 +46,10 @@ Kurallar:
 - Yatırım tavsiyesi verme; olasılıksal değerlendirme yap.
 - Yayın zamanına bak: metindeki olay aylar ya da yıllar önce olmuşsa (ör. 2026'da "lansman 2023'e ertelendi") bu yeniden
   yayımlanmış eski bir haberdir; stale_news=true yaz, sentiment neutral, materiality low.
+- Metin ilgili hisseyi (sembol, şirket adı ya da kısaltması) açıkça anmıyorsa o şirkete özgü bir olay uydurma:
+  "2 hisse yakın izleme pazarına alındı" gibi adı geçmeyen haberi o şirkete bağlama. Bu durumda affected_tickers boş,
+  sentiment neutral, confidence ≤ 30, materiality low yaz ve özette hangi şirketlerin kastedildiğinin metinden
+  anlaşılmadığını söyle.
 - Yanıt dili: {language}. Metin İngilizce olsa bile özeti {language} yaz."""
 
 TOOL = {

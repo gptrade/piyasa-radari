@@ -1175,9 +1175,11 @@
     return sec;
   }
   // Panelde tek bir kaydın ayrıntısı (hisse panelinden açılınca "← hisse" ile geri dönülür)
-  function openItem(id, backTo) {
+  function openItem(id, backTo, opener) {
     const it = state.feed.items.find(i => i.id === id);
     if (!it) return;
+    if (backTo instanceof Element) { opener = backTo; backTo = null; }    // eski çağrı: ikinci argüman açan öğeydi
+    if (opener) state.panelFrom = opener;
     const from = state.panelFrom;
     state.panel = "item"; state.sel = id; $("#sidePanel").dataset.mode = "ticker";
     $("#spTitle").textContent = [relTickers(it)[0], it.analysis?.event_label].filter(Boolean).join(" · ") || "Ayrıntı";
@@ -1610,7 +1612,7 @@
   addEventListener("minechange", () => { if (state.feed) { state.limit = PAGE; render(); } });
   addEventListener("radar:bankrate", () => { if (state.panel === "ticker" && state.panelTk && !$("#sidePanel").hidden && window.radarBankRate?.forTicker(state.panelTk)) openTicker(state.panelTk, state.panelFrom); });
   addEventListener("radar:bb", () => { if (state.panel === "ticker" && state.panelTk && !$("#sidePanel").hidden) openTicker(state.panelTk, state.panelFrom); });
-  window.radar = { get state() { return state; }, ready: null, poll: () => poll(), rerender: () => { if (state.feed && sh.route === "sinyal") render(); }, openTicker: (sym, from) => openTicker(sym, from), openItem: (id, back) => openItem(id, back),
+  window.radar = { get state() { return state; }, ready: null, poll: () => poll(), rerender: () => { if (state.feed && sh.route === "sinyal") render(); }, openTicker: (sym, from) => openTicker(sym, from), openItem: (id, back, opener) => openItem(id, back, opener),
     focusTicker(sym) { if (!state.feed) return; state.ticker = sym; state.ids = null; state.idsLabel = ""; state.focusText = ""; state.limit = PAGE;
       if (state.view === "tickers" || state.view === "karne") state.view = "feed";
       $$("#viewSeg button").forEach(x => x.setAttribute("aria-checked", String(x.dataset.view === state.view))); render(); } };

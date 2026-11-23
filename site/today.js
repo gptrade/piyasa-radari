@@ -189,7 +189,7 @@
 
   $("#tdBody").addEventListener("click", e => {
     const it = e.target.closest("[data-item]"), tk = e.target.closest("[data-tk]");
-    if (it) window.radar?.openItem?.(it.dataset.item, it);
+    if (it) window.radar?.openItem?.(it.dataset.item, null, it);
     else if (tk) window.radar?.openTicker?.(tk.dataset.tk, tk);
   });
   addEventListener("radar:pf", () => render());

@@ -165,17 +165,26 @@ def _tr_lower(s: str) -> str:
     return s.replace("I", "ı").replace("İ", "i").lower()
 
 
-def analyst_relevant(title: str, st) -> bool:
-    """Başlık bu hisseyle ilgili bir analist/kurum görüşü mü?"""
+def names_stock(title: str, st) -> bool:
+    """Başlık bu hisseyi (sembol, ad ya da takma ad) anıyor mu? Google News sorgu sonucunu sayfa gövdesindeki
+    kelimelerle de eşleştirir (kenar çubuğu, ilgili haberler); başlıkta anılmayan haber o hisseye bağlanmaz.
+    Örnek: "2 hisse yakın izleme pazarında işleme başlayacak - Rota Borsa" THYAO sorgusunda dönüyordu."""
     t = title or ""
-    # Google News başlığın sonuna " - Kaynak adı" ekler; kaynak adındaki kelimeler eşleşmesin.
-    if " - " in t:
+    if " - " in t:                       # Google News başlığın sonuna " - Kaynak adı" ekler
         t = t.rsplit(" - ", 1)[0]
     low = _tr_lower(t)
     names = [st.name, *getattr(st, "aliases", [])]
     sym = re.search(rf"(?<![A-Za-z0-9])\$?{re.escape(st.symbol)}(?![A-Za-z0-9])", t)
-    named = sym or any(n and _tr_lower(n) in low for n in names)
-    if not named:
+    return bool(sym or any(n and _tr_lower(n) in low for n in names))
+
+
+def analyst_relevant(title: str, st) -> bool:
+    """Başlık bu hisseyle ilgili bir analist/kurum görüşü mü?"""
+    t = title or ""
+    if " - " in t:
+        t = t.rsplit(" - ", 1)[0]
+    low = _tr_lower(t)
+    if not names_stock(title, st):
         return False
     rx = ANALYST_RE.get(st.market) or ANALYST_RE["US"]
     return bool(rx.search(low if st.market == "BIST" else t))
@@ -195,9 +204,9 @@ def collect_google_news(ctx: Context) -> list[Item]:
             q = f'"{st.name}" OR "{st.symbol}" stock'
             url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:2d&hl=en-US&gl=US&ceid=US:en"
             lang = "en"
-        out += entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
-                                market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol],
-                                limit=int(gcfg.get("max_per_stock", 8)))
+        out += [it for it in entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
+                                              market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol],
+                                              limit=int(gcfg.get("max_per_stock", 8))) if names_stock(it.title, st)]
         # Doğrudan RSS'i olmayan siteler (Barchart, MarketWatch, TradingView, Fintables): Google News
         # "site:" aramasıyla. İstek sayısını düşük tutmak için siteler tek sorguda OR ile birleşir.
         hl = "hl=en-US&gl=US&ceid=US:en" if st.market == "US" else "hl=tr&gl=TR&ceid=TR:tr"
@@ -205,9 +214,9 @@ def collect_google_news(ctx: Context) -> list[Item]:
         if sites:
             q = site_query(st, sites)
             url = f"https://news.google.com/rss/search?q={quote_plus(q)}+when:7d&{hl}"
-            out += entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
-                                    market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol],
-                                    limit=int(gcfg.get("max_per_site_query", 6)))
+            out += [it for it in entries_to_items(fetch_feed(url, warn_empty=False), source="Google News", source_type="news",
+                                                  market=st.market, since=ctx.since, lang=lang, tickers=[st.symbol],
+                                                  limit=int(gcfg.get("max_per_site_query", 6))) if names_stock(it.title, st)]
         # Analist görüşleri (hedef fiyat, tavsiye, not değişikliği)
         terms = (gcfg.get("analyst_terms") or {}).get(st.market)
         if terms:
