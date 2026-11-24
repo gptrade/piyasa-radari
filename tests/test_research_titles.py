@@ -36,3 +36,13 @@ def test_titles():
 def test_non_notes():
     for t in NONE:
         assert rs.parse_note(t, "", KNOWN) is None, (t, rs.parse_note(t, "", KNOWN))
+
+
+def test_subject_fixes_2026_11():
+    from radar import research as r
+    n = r.parse_note("Wedbush, CEO’nun görevine dönüşünün ardından Nvidia hisse tavsiyesini korudu - Investing.com Türkiye")
+    assert n["name"] == "Nvidia"                                           # "CEO" özne değil
+    n = r.parse_note("Stifel, BJ’s Wholesale hissesi için 105 dolarlık Tut tavsiyesini korudu - Investing.com Türkiye")
+    assert n["name"] == "BJ’s Wholesale"                                   # İngilizce iyelik Türkçe ek sayılmaz
+    n = r.parse_note("BRSAN Hisse Hedef Fiyat: İş Yatırım'dan Al Tavsiyesi - Finans Hattı")
+    assert n is None or n["t"] in (None, "BRSAN") and n.get("name") != "Al"

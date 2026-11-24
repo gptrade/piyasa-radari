@@ -15,6 +15,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import os
 import re
 import statistics
 from datetime import datetime, timedelta
@@ -99,8 +100,12 @@ TP_ANY = re.compile(rf"(?:hedef(?: fiyat\w*)?|price target|PT)[^.;:]{{0,60}}?(?:
                     re.I)
 HINT = re.compile(r"hedef fiyat|tavsiye|kapsama|model portf|price target|upgrade|downgrade|initiat|overweight|underweight", re.I)
 LEAD = re.compile(r"^(?P<b>[A-ZÇĞİÖŞÜ0-9][^,:]{1,40}?)(?:,\s+|['’](?:dan|den|tan|ten)\s+)")
-SUBJ = re.compile(r"^(?P<s>.+?)(?:['’][a-zçğıöşü]{1,4}\b|\s+(?:hisse\w*|için|model portf\w*|hedef\w*|tavsiye\w*)\b|\s+[\"'“‘])",
+SUBJ = re.compile(r"^(?P<s>.+?)(?:['’](?!s\s+[A-Z])[a-zçğıöşü]{1,4}\b|\s+(?:hisse\w*|için|model portf\w*|hedef\w*|tavsiye\w*)\b|\s+[\"'“‘])",
                   re.I)
+
+
+GENERIC_SUBJ = {"ceo", "cfo", "sec", "fed", "abd", "ab", "ai", "yz", "cin", "al", "sat", "tut", "endeks", "yeni", "son",
+                "yapay zeka", "piyasa", "borsa", "sirket", "hisse", "analist", "turkiye", "avrupa", "asya", "trump", "beyaz saray"}
 
 
 def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict | None:
@@ -130,7 +135,13 @@ def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict
         subj_src = rest.split(":", 1)[0]
     sm = SUBJ.search(subj_src)
     subj = sm.group("s") if sm else subj_src[:40]
-    runs = re.findall(r"[A-ZÇĞİÖŞÜ][\w.&\-]*(?:\s+[A-ZÇĞİÖŞÜ0-9][\w.&\-]*)*", subj)
+    for _ in range(3):                    # "CEO'nun görevine dönüşünün ardından Nvidia hisse…" → özne Nvidia
+        if not sm or _fold(subj.strip(" ,-")) not in GENERIC_SUBJ:
+            break
+        subj_src = subj_src[sm.end():]
+        sm = SUBJ.search(subj_src)
+        subj = sm.group("s") if sm else subj_src[:40]
+    runs = re.findall(r"[A-ZÇĞİÖŞÜ][\w.&\-]*(?:['’]s)?(?:\s+[A-ZÇĞİÖŞÜ0-9][\w.&\-]*(?:['’]s)?)*", subj)
     if runs:
         subj = runs[-1]                                   # "Meta rekabeti … gerekçe göstererek Apple" → "Apple"
     else:                                                 # "yatırım tavsiyesini DOAS için yükseltti"
@@ -143,6 +154,12 @@ def parse_note(title: str, summary: str = "", known: dict | None = None) -> dict
     if not ticker and known:
         low = f"{subj} {rest}".lower()
         ticker = next((sy for sy, names in known.items() if any(n.lower() in low for n in names if len(n) > 2)), None)
+    if not ticker:                        # "BRSAN Hisse Hedef Fiyat: İş Yatırım'dan Al Tavsiyesi" — kod kurumdan önce
+        cc = [c for c in CODE.findall(text) if c not in NOT_CODE and c in bist_codes()]
+        if cc and (not subj or _fold(subj) in GENERIC_SUBJ or len(subj) <= 3):
+            ticker = cc[0]
+    if subj and _fold(subj) in GENERIC_SUBJ:
+        subj = ""
     name = re.sub(r"\s*\([A-Z]{3,6}\)", "", subj)[:40] if not ticker else None
     if not ticker and (not name or len(name) < 2):
         return None
@@ -470,9 +487,41 @@ def us_names() -> dict:
     return _US_NAMES
 
 
-def us_ticker(name: str | None) -> str | None:
-    """Notta yalnız şirket adı varsa (çoğu ABD notu: "Raymond James, Dine Brands…") sembolü bul: tam eşleşme ya da tek aday önek."""
-    names = us_names()
+SEC_TICKERS = DATA / "sec_tickers.json"
+_SEC: dict | None = None
+
+
+def sec_names(fetch: bool = False) -> dict:
+    """SEC company_tickers.json (tüm ABD listeli şirketler; herkese açık resmi veri) → normalize ad: sembol.
+    Haftada bir yenilenir (data dalında önbellek). S&P 500 / Nasdaq-100 dışındaki şirketlerin notlarını eşlemek için."""
+    global _SEC
+    if _SEC is not None and not fetch:
+        return _SEC
+    doc = {}
+    try:
+        doc = json.loads(SEC_TICKERS.read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        pass
+    fresh = doc.get("updated") and (now_utc() - parse_iso(doc["updated"])).days < 7
+    if fetch and not fresh and not os.environ.get("PYTEST_CURRENT_TEST"):
+        try:
+            r = http.get("https://www.sec.gov/files/company_tickers.json", headers={"User-Agent": os.environ.get("SEC_USER_AGENT") or http.SEC_UA})
+            rows = r.json().values() if r is not None and r.status_code == 200 else []
+            m = {}
+            for x in rows:                          # sıra piyasa değerine yakın: ilk gelen (büyük şirket) kalır
+                t, n = str(x.get("ticker") or "").upper(), x.get("title") or ""
+                if t and n:
+                    m.setdefault(_nm(n), t)
+            if m:
+                doc = {"updated": iso(now_utc()), "names": m}
+                SEC_TICKERS.write_text(json.dumps(doc, separators=(",", ":")), encoding="utf-8")
+        except Exception as e:  # noqa: BLE001
+            log.info("SEC şirket listesi alınamadı: %s", e)
+    _SEC = doc.get("names") or {}
+    return _SEC
+
+
+def _lookup(names: dict, name: str) -> str | None:
     if re.fullmatch(r"[A-Z]{2,5}", (name or "").strip()) and name.strip() in set(names.values()):
         return name.strip()                                  # ad yerine sembol yazılmış (AMD)
     k = _nm(name or "")
@@ -482,6 +531,12 @@ def us_ticker(name: str | None) -> str | None:
         return names[k]
     c = [v for n, v in names.items() if n.startswith(k + " ")]
     return c[0] if len(set(c)) == 1 else None
+
+
+def us_ticker(name: str | None) -> str | None:
+    """Notta yalnız şirket adı varsa (çoğu ABD notu: "Raymond James, Dine Brands…") sembolü bul: önce S&P 500 + Nasdaq-100,
+    sonra tüm SEC listesi; tam eşleşme ya da tek aday önek."""
+    return _lookup(us_names(), name) or _lookup(sec_names(), name)
 
 
 BIST_ALIAS = {"erdemir": "EREGL", "kardemir": "KRDMD", "tav": "TAVHL", "tav havalimanlari": "TAVHL", "thy": "THYAO", "turk hava yollari": "THYAO",
@@ -514,12 +569,26 @@ def bist_names() -> dict:
             u = []
         cnt: dict = {}
         for m in u:
-            w = _fold(m.get("title") or "").split()
-            for k in {" ".join(w[:1]), " ".join(w[:2])}:
-                if len(k) >= 4:
-                    cnt.setdefault(k, set()).add(m["code"])
+            t = m.get("title") or ""
+            for w in {tuple(_fold(t).split()), tuple(_fold(re.sub(r"(?<=\w)[-.](?=\w)", "", t)).split())}:   # "GÜR-SEL" → gursel
+                for k in {" ".join(w[:1]), " ".join(w[:2])}:
+                    if len(k) >= 4:
+                        cnt.setdefault(k, set()).add(m["code"])
         _BIST = {k: next(iter(v)) for k, v in cnt.items() if len(v) == 1}
     return _BIST
+
+
+def bist_codes() -> set:
+    global _BIST_CODES
+    if _BIST_CODES is None:
+        try:
+            _BIST_CODES = {m["code"] for m in json.loads((DATA / "fin" / "_universe.json").read_text(encoding="utf-8")).get("members") or []}
+        except (FileNotFoundError, ValueError):
+            _BIST_CODES = set()
+    return _BIST_CODES
+
+
+_BIST_CODES: set | None = None
 
 
 def bist_ticker(name: str | None) -> str | None:
@@ -635,6 +704,7 @@ def tidy(store: dict) -> None:
 def update(items: list[dict], px: dict, analyzer, watch: list, cfg: dict) -> dict:
     """Kurum notlarını ve görünümleri research.json'a yazar; günde bir sentez üretir."""
     store = load()
+    sec_names(fetch=True)                 # haftalık SEC ad → sembol önbelleği (eşleşmeyen ABD notları için)
     # Aynı not aynı gün birden çok kaynaktan gelebilir (biri hedefli, biri hedefsiz): kurum + hisse + gün aynıysa
     # yeni kayıt açılmaz, eksik alanlar (hedef, tavsiye, önceki hedef) mevcut kayda tamamlanır.
     key = lambda n: note_key(resolve(n))
